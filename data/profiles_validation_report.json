@@ -1,0 +1,15 @@
+{
+ "total": 1625,
+ "tiers": {
+  "hero": 18,
+  "background": 1607
+ },
+ "empty_menu": 9,
+ "no_reviews": 971,
+ "missing_geo": 0,
+ "competitor_broken_refs": 0,
+ "trending_empty": 0,
+ "vision_hero": 18,
+ "issue_counts": {},
+ "issues_sample": []
+}

@@ -15,7 +15,7 @@ import dimension_scoring as ds
 
 CRAWLED = Path("data/crawled")
 CACHE = Path("data/profile_cache")
-OUTDIR = Path("data/profiles")
+OUT = Path("data/profiles.jsonl")  # 1 file hop nhat, moi dong 1 profile
 
 
 def load_catalog():
@@ -90,17 +90,19 @@ def build_dimensions(crawled, ops, text, vision, cat, median_price):
 
 
 def main():
-    OUTDIR.mkdir(parents=True, exist_ok=True)
     cat = load_catalog()
     ops_map = load_jsonl_map("data/synthetic/operational.jsonl")
     hero_ids = {m["merchant_id"] for m in
                 json.loads(Path("data/synthetic/hero_set.json").read_text(encoding="utf-8"))["merchants"]}
     trending = json.loads((CACHE / "trending_by_cluster.json").read_text(encoding="utf-8"))
     competitors = json.loads((CACHE / "competitors_by_merchant.json").read_text(encoding="utf-8"))
+    hero_text_map = load_jsonl_map("data/synthetic/hero_text.jsonl")
+    vision_map = load_jsonl_map(CACHE / "vision.jsonl") if (CACHE / "vision.jsonl").exists() else {}
     prices = [m["price"] for m in cat.values() if m.get("price")]
     median_price = statistics.median(prices)
 
     n = hero_n = 0
+    all_profiles = []
     for fp in glob.glob("data/crawled/*.json"):
         crawled = json.load(open(fp, encoding="utf-8"))
         mid = crawled["merchant_id"]
@@ -110,12 +112,8 @@ def main():
         text = {}
         vision = None
         if is_hero:
-            tfp = Path(f"data/synthetic/text/{mid}.json")
-            if tfp.exists():
-                text = json.loads(tfp.read_text(encoding="utf-8"))
-            vfp = CACHE / "vision" / f"{mid}.json"
-            if vfp.exists():
-                vision = json.loads(vfp.read_text(encoding="utf-8"))
+            text = hero_text_map.get(mid, {})
+            vision = vision_map.get(mid)
 
         dims = build_dimensions(crawled, ops, text, vision, c, median_price)
         overall = round(sum(d["score"] for d in dims.values()) / len(dims), 3)
@@ -156,11 +154,16 @@ def main():
             },
             "updated_at": time.strftime("%Y-%m-%dT%H:%M:%S"),
         }
-        (OUTDIR / f"{mid}.json").write_text(
-            json.dumps(profile, ensure_ascii=False, indent=1), encoding="utf-8")
+        all_profiles.append(profile)
         n += 1
         hero_n += is_hero
-    print(f"built {n} profiles ({hero_n} hero, {n - hero_n} background) -> {OUTDIR}")
+
+    # gop tat ca vao 1 file jsonl (sap xep theo merchant_id cho on dinh)
+    all_profiles.sort(key=lambda p: int(p["merchant_id"]))
+    with OUT.open("w", encoding="utf-8") as f:
+        for p in all_profiles:
+            f.write(json.dumps(p, ensure_ascii=False) + "\n")
+    print(f"built {n} profiles ({hero_n} hero, {n - hero_n} background) -> {OUT}")
 
 
 if __name__ == "__main__":

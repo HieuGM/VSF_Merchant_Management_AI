@@ -17,7 +17,7 @@ load_dotenv()
 
 HERO = Path("data/synthetic/hero_set.json")
 CRAWLED = Path("data/crawled")
-OUTDIR = Path("data/profile_cache/vision")
+OUT = Path("data/profile_cache/vision.jsonl")
 
 PROMPT = ("Bạn là chuyên gia đánh giá ảnh món ăn trên app giao đồ ăn. "
           "Dưới đây là vài ảnh món của một quán. Đánh giá TỔNG THỂ chất lượng hình ảnh "
@@ -58,27 +58,25 @@ def main():
         print("NIM chua cau hinh trong .env")
         return
     client = OpenAI(base_url=base, api_key=key)
-    OUTDIR.mkdir(parents=True, exist_ok=True)
     hero = json.loads(HERO.read_text(encoding="utf-8"))["merchants"]
 
-    ok = skip = fail = 0
+    rows, ok, fail = [], 0, 0
     for i, m in enumerate(hero):
         mid = m["merchant_id"]
-        out = OUTDIR / f"{mid}.json"
-        if out.exists():
-            skip += 1
-            continue
         try:
             crawled = json.load(open(CRAWLED / f"{mid}.json", encoding="utf-8"))
             res = score_merchant(client, model, crawled)
-            out.write_text(json.dumps(res, ensure_ascii=False, indent=1), encoding="utf-8")
+            rows.append({"merchant_id": mid, **res})
             ok += 1
             print(f"[{i+1}/{len(hero)}] {mid} {m['name'][:28]:28} score={res.get('score')} imgs={res.get('n_images')}")
         except Exception as e:
             fail += 1
             print(f"[{i+1}/{len(hero)}] {mid} FAIL {str(e)[:90]}")
         time.sleep(1)
-    print(f"\ndone. ok={ok} skip={skip} fail={fail} -> {OUTDIR}")
+    with OUT.open("w", encoding="utf-8") as f:
+        for r in rows:
+            f.write(json.dumps(r, ensure_ascii=False) + "\n")
+    print(f"\ndone. ok={ok} fail={fail} -> {OUT}")
 
 
 if __name__ == "__main__":

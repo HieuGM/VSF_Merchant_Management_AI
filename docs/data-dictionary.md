@@ -3,7 +3,7 @@
 Tài liệu mô tả toàn bộ dữ liệu đã chuẩn bị. **Đọc file này thay vì lục thư mục `data/`.**
 
 ## Nguồn sự thật (source of truth) cho Agent/UI
-➡️ **`data/profiles/{merchant_id}.json`** — Merchant Profile hợp nhất, mỗi quán 1 file, TỰ CHỨA ĐỦ. Agent chỉ cần đọc file này.
+➡️ **`data/profiles.jsonl`** — MỘT file duy nhất, mỗi dòng là 1 Merchant Profile hợp nhất (1.625 dòng), TỰ CHỨA ĐỦ. Agent/UI chỉ cần đọc file này. Load: `for line in open(...): json.loads(line)`.
 
 ## Sơ đồ thư mục `data/`
 ```
@@ -14,17 +14,17 @@ data/
 ├── synthetic/
 │   ├── operational.jsonl           # ops metrics + delivery stats + segments (procedural, 1.625)
 │   ├── hero_set.json               # 18 hero merchant + lý do chọn
-│   ├── text/{id}.json              # complaints + delivery_feedback + filled_reviews (LLM, 18 hero)
-│   └── model_comparison/           # output so sánh 3 model LLM (tham khảo)
+│   ├── hero_text.jsonl             # complaints + delivery_feedback + filled_reviews (LLM, 18 hero)
+│   └── model_comparison.jsonl      # so sánh 3 model LLM (tham khảo QA)
 ├── profile_cache/
 │   ├── trending_by_cluster.json    # trending dishes theo "city||cuisine"
 │   ├── competitors_by_merchant.json# đối thủ gần nhất theo merchant
-│   └── vision/{id}.json            # image score Vision LLM (18 hero)
-└── profiles/{id}.json              # ⭐ MERCHANT PROFILE HỢP NHẤT (1.625) — đọc cái này
-    └── _validation_report.json     # báo cáo kiểm tra
+│   └── vision.jsonl                # image score Vision LLM (18 hero)
+└── profiles.jsonl                  # ⭐ MERCHANT PROFILE HỢP NHẤT (1.625 dòng) — đọc CÁI NÀY
+data/profiles_validation_report.json # báo cáo kiểm tra
 ```
 
-## Cấu trúc `data/profiles/{merchant_id}.json`
+## Cấu trúc mỗi dòng trong `data/profiles.jsonl`
 | Trường | Ý nghĩa |
 |---|---|
 | `merchant_id` | ID ShopeeFood (số) |
@@ -65,10 +65,10 @@ scripts/crawl/dedupe_catalog.py          # -> merchants_unique.jsonl
 scripts/crawl/crawl_merchants.py         # -> crawled/  (Playwright + Foody)
 scripts/synth/generate_operational.py    # -> synthetic/operational.jsonl
 scripts/synth/select_hero_set.py         # -> synthetic/hero_set.json
-scripts/synth/generate_hero_batch.py     # -> synthetic/text/  (cần .env LLM)
+scripts/synth/generate_hero_batch.py     # -> synthetic/hero_text.jsonl  (cần .env LLM)
 scripts/profile/trending_and_competitors.py  # -> profile_cache/{trending,competitors}
-scripts/profile/vision_image_score.py    # -> profile_cache/vision/  (cần NIM vision)
-scripts/profile/build_profiles.py        # -> profiles/  ⭐
+scripts/profile/vision_image_score.py    # -> profile_cache/vision.jsonl  (cần NIM vision)
+scripts/profile/build_profiles.py        # -> profiles.jsonl  ⭐
 scripts/profile/validate_profiles.py     # kiểm tra
 ```
 

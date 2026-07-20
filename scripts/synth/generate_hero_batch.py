@@ -12,31 +12,24 @@ from pathlib import Path
 from generate_text_data import generate_for
 
 HERO = Path("data/synthetic/hero_set.json")
-OUTDIR = Path("data/synthetic/text")
+OUT = Path("data/synthetic/hero_text.jsonl")  # 1 file gop, moi dong 1 hero merchant
 
 
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--model", default="fpt-deepseek")
     args = ap.parse_args()
-    OUTDIR.mkdir(parents=True, exist_ok=True)
 
     hero = json.loads(HERO.read_text(encoding="utf-8"))["merchants"]
     print(f"generating text data for {len(hero)} hero merchants with model={args.model}\n")
 
-    ok = fail = skip = 0
+    rows, ok, fail = [], 0, 0
     for i, m in enumerate(hero):
         mid = m["merchant_id"]
-        out = OUTDIR / f"{mid}.json"
-        if out.exists():
-            skip += 1
-            continue
         try:
             data, meta = generate_for(args.model, mid)
-            out.write_text(json.dumps(
-                {"merchant_id": mid, "model": meta["model_id"],
-                 "generated_at": time.strftime("%Y-%m-%dT%H:%M:%S"), **data},
-                ensure_ascii=False, indent=1), encoding="utf-8")
+            rows.append({"merchant_id": mid, "model": meta["model_id"],
+                         "generated_at": time.strftime("%Y-%m-%dT%H:%M:%S"), **data})
             ok += 1
             print(f"[{i+1}/{len(hero)}] {mid} {m['name'][:30]:30} "
                   f"{meta['latency_s']}s counts={meta['counts']}")
@@ -45,7 +38,10 @@ def main():
             print(f"[{i+1}/{len(hero)}] {mid} ERROR {type(e).__name__}: {str(e)[:100]}")
         time.sleep(1)
 
-    print(f"\ndone. ok={ok} fail={fail} skipped={skip} -> {OUTDIR}")
+    with OUT.open("w", encoding="utf-8") as f:
+        for r in rows:
+            f.write(json.dumps(r, ensure_ascii=False) + "\n")
+    print(f"\ndone. ok={ok} fail={fail} -> {OUT}")
 
 
 if __name__ == "__main__":

@@ -1,7 +1,7 @@
 # Crawled / generated data (large, regenerable — do not commit)
 data/crawled/
 data/merchants_unique.jsonl
-data/profiles/
+data/profiles.jsonl
 plans/reports/crawl-progress.log
 plans/reports/*-batch.log
 plans/reports/model-compare.log

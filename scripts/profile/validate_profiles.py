@@ -3,21 +3,19 @@ Kiem: truong bat buoc, range score, evidence, referential integrity (competitor 
 hero co du complaints/delivery/vision, phat hien anomaly. In summary + ghi validation_report.json
 """
 import json
-import glob
 from pathlib import Path
 
-PROFILES = Path("data/profiles")
+PROFILES = Path("data/profiles.jsonl")
 DIMS = ["food_quality", "image_quality", "delivery_quality", "packaging",
         "service", "waiting_time", "menu_diversity", "price_level"]
 
 
 def main():
-    files = [f for f in glob.glob(str(PROFILES / "*.json"))
-             if not Path(f).name.startswith("_")]
     profiles = {}
-    for fp in files:
-        p = json.load(open(fp, encoding="utf-8"))
-        profiles[p["merchant_id"]] = p
+    with PROFILES.open(encoding="utf-8") as f:
+        for line in f:
+            p = json.loads(line)
+            profiles[p["merchant_id"]] = p
     ids = set(profiles)
     issues = []
 
@@ -99,10 +97,10 @@ def main():
               "competitor_broken_refs": comp_broken, "trending_empty": trending_empty,
               "vision_hero": vision_hero, "issue_counts": dict(kinds),
               "issues_sample": issues[:30]}
-    Path("data/profiles/_validation_report.json").write_text(
+    Path("data/profiles_validation_report.json").write_text(
         json.dumps(report, ensure_ascii=False, indent=1), encoding="utf-8")
     verdict = "PASS" if not [i for i in issues if i["kind"] not in ("missing", "hero_no_complaints")] else "REVIEW"
-    print(f"\nVERDICT: {verdict} (chi tiet -> data/profiles/_validation_report.json)")
+    print(f"\nVERDICT: {verdict} (chi tiet -> data/profiles_validation_report.json)")
 
 
 if __name__ == "__main__":
