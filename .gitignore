@@ -6,12 +6,6 @@ plans/reports/crawl-progress.log
 plans/reports/*-batch.log
 plans/reports/model-compare.log
 
-# Python
-__pycache__/
-*.pyc
-.venv/
-venv/
-
 # Claude Code / claude-kit tooling (không đưa lên repo dự án)
 .claude/
 .agents/
@@ -19,6 +13,21 @@ CLAUDE.md
 AGENTS.md
 .mcp.json
 .opencode/
+
+# Superpowers tooling
+.superpowers
+docs/superpowers/*
+
+# Python
+__pycache__/
+*/__pycache__
+*.pyc
+.venv/
+.venv/*
+.pytest_cache
+
+# Logs
+*.log
 
 # Env / secrets
 .env

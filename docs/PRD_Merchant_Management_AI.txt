@@ -1,0 +1,415 @@
+PROJECT REQUIREMENT DOCUMENT
+Merchant Management & AI Agent Platform
+Đánh giá chất lượng nhà hàng đa chiều & Trợ lý AI cho Merchant Owner và Người dùng cuối
+Phiên bản: 1.0  |  Loại tài liệu: Demo / Proof-of-Concept (Local Web Demo)
+Ngày phát hành: 18/07/2026
+Phạm vi: Dự án cá nhân — Demo trên môi trường Development, phục vụ pitching ý tưởng
+
+Mục lục
+
+
+
+
+1. Tổng quan dự án
+1.1. Bối cảnh
+Trên các nền tảng đặt đồ ăn hiện nay, việc đánh giá chất lượng một nhà hàng/merchant thường chỉ dựa vào một con số duy nhất (rating trung bình), khiến merchant owner khó biết chính xác mình đang yếu ở khâu nào (hình ảnh món ăn, thời gian giao hàng, đóng gói, giá cả...), còn người dùng cuối khó tìm được quán phù hợp với sở thích và ngữ cảnh thực tế (thời tiết, ngân sách, khẩu vị).
+Dự án xây dựng một hệ thống Merchant Management tập trung vào việc mô hình hoá merchant thành một Merchant Profile đa chiều (multi-dimension), có evidence rõ ràng cho từng điểm số, làm nền tảng dữ liệu (knowledge base) cho hai AI Agent: Merchant AI Agent (hỗ trợ chủ quán) và Customer AI Agent (hỗ trợ khách hàng tìm quán).
+1.2. Mục tiêu dự án
+Xây dựng Merchant Profile Framework: biểu diễn merchant qua nhiều dimension có evidence, thay vì một điểm số duy nhất.
+Xây dựng Merchant AI Agent giúp chủ quán chẩn đoán vấn đề, nhận gợi ý cải thiện doanh thu, và so sánh với đối thủ cạnh tranh.
+Xây dựng Customer AI Agent giúp người dùng tìm kiếm và được gợi ý quán ăn phù hợp với sở thích, ngân sách, ngữ cảnh (thời tiết, thời điểm).
+Demo hoá toàn bộ luồng trên một web app chạy local, giao diện tối ưu cho mobile (responsive), phục vụ mục đích pitching ý tưởng, không yêu cầu chuẩn production.
+1.3. Đối tượng sử dụng
+Đối tượng
+Nhu cầu chính
+Tương tác với
+Ưu tiên
+Merchant Owner (chủ quán)
+Hiểu lý do quán hoạt động kém, nhận gợi ý cải thiện, so sánh đối thủ
+Merchant AI Agent
+Cao
+Customer (khách hàng)
+Tìm quán ăn phù hợp sở thích, ngân sách, ngữ cảnh
+Customer AI Agent
+Cao
+Người xem demo / nhà đầu tư
+Đánh giá tính khả thi & giá trị của ý tưởng
+Toàn bộ hệ thống (qua kịch bản demo)
+Trung bình
+1.4. Ghi chú quan trọng về phạm vi triển khai
+Đây là dự án cá nhân, mục tiêu là demo trên môi trường development để pitching ý tưởng. Vì vậy:
+Không yêu cầu kiến trúc chuẩn production (không cần HA, auto-scaling, CI/CD phức tạp).
+Ưu tiên tốc độ phát triển, đơn giản hoá hạ tầng (chạy local, dữ liệu mock/seed).
+Không xử lý dữ liệu Business KPI thật (theo đúng ghi chú trong Merchant Profile Framework — vấn đề bảo mật thông tin).
+Sản phẩm là web app chạy local nhưng giao diện phải responsive, tối ưu trải nghiệm trên mobile vì đây là kênh chính khi demo.
+2. Business Requirements
+2.1. Mục tiêu kinh doanh
+Chứng minh giá trị của việc biểu diễn merchant đa chiều (multi-dimension) thay vì single score, giúp insight rõ ràng và actionable hơn.
+Chứng minh khả năng AI Agent có thể suy luận (reasoning) trên dữ liệu thực tế của merchant để đưa ra chẩn đoán và gợi ý có evidence, không phải trả lời chung chung.
+Chứng minh khả năng cá nhân hoá trải nghiệm tìm kiếm của khách hàng dựa trên user profile & ngữ cảnh (context memory).
+2.2. Yêu cầu nghiệp vụ chính
+Mã
+Yêu cầu
+Mô tả chi tiết
+BR-01
+Đánh giá merchant đa chiều
+Hệ thống phải biểu diễn merchant qua tối thiểu các dimension: Food Quality, Image Quality, Delivery Quality, Packaging, Service, Waiting Time, Menu Diversity, Price Level.
+BR-02
+Evidence-based scoring
+Mọi điểm số/dimension phải đi kèm evidence cụ thể (số lượng review tích cực/tiêu cực, complaint, image score...), Agent trả lời phải luôn trích evidence.
+BR-03
+Chẩn đoán nguyên nhân
+Merchant Owner phải nhận được lý do cụ thể vì sao quán hoạt động kém (VD: thời gian chờ lâu, giá cao, vệ sinh kém) kèm mức độ ảnh hưởng.
+BR-04
+Gợi ý cải thiện có ưu tiên
+Gợi ý cải thiện phải được xếp hạng theo mức độ tác động dự kiến đến doanh thu/rating.
+BR-05
+So sánh đối thủ
+Merchant Owner có thể so sánh quán của mình với các merchant tương tự (cùng khu vực/loại món) về giá, hình ảnh, đánh giá.
+BR-06
+Tìm kiếm & gợi ý cho khách hàng
+Khách hàng tìm quán theo tiêu chí tường minh (vị trí, loại món, giá, rating) và tiêu chí ngầm định qua reasoning (thời tiết, sở thích đã lưu).
+BR-07
+Ghi nhớ hồ sơ người dùng
+Hệ thống lưu & sử dụng lại user profile (food preference, budget, distance, cuisine, diet, taste) xuyên suốt phiên sử dụng.
+2.3. Tiêu chí thành công (Success Metrics cho bản Demo)
+Demo được đầy đủ 5 use case chính (Merchant Diagnosis, Recommendation, Competitor Analysis, Restaurant Search, Preference Reasoning) với dữ liệu mẫu thuyết phục.
+Mỗi câu trả lời của AI Agent đều hiển thị evidence/nguồn dữ liệu đi kèm — tăng độ tin cậy khi pitching.
+Giao diện chạy mượt trên trình duyệt mobile (responsive), vì buổi demo/pitch có thể thực hiện trên điện thoại.
+Thời gian phản hồi của Agent ở mức chấp nhận được cho demo trực tiếp (không yêu cầu tối ưu production, nhưng không được gây gián đoạn trải nghiệm pitching).
+3. Merchant Profile Framework (Data & Knowledge Representation)
+Đây là thành phần lõi của hệ thống: chuyển dữ liệu thô của merchant (reviews, food images, menu/catalog, complaint, delivery feedback, operational metrics, merchant metadata) thành một Merchant Profile có cấu trúc, làm input thống nhất cho cả Merchant AI Agent và Customer AI Agent.
+3.1. Nguồn dữ liệu đầu vào (Merchant Data)
+Reviews — đánh giá & bình luận của khách hàng
+Food Images — hình ảnh món ăn do merchant/khách hàng đăng
+Menu / Catalog — danh sách món, giá, mô tả
+Complaint — khiếu nại từ khách hàng
+Delivery Feedback — phản hồi từ tài xế giao hàng
+Operational Metrics — chỉ số vận hành (thời gian chuẩn bị, tỉ lệ huỷ đơn...)
+Merchant Metadata — thông tin tĩnh (vị trí, giờ mở cửa, loại hình...)
+3.2. Cấu trúc Merchant Profile
+Thay vì chỉ có một score tổng, merchant được biểu diễn thành nhiều dimension, mỗi dimension có score + evidence đi kèm:
+Dimension
+Ý nghĩa
+Food Quality
+Chất lượng món ăn, dựa trên review tích cực/tiêu cực, độ phổ biến món
+Image Quality
+Chất lượng hình ảnh món ăn (độ nét, ánh sáng, trình bày) — phân tích bằng Vision
+Delivery Quality
+Chất lượng giao hàng — dựa trên delivery feedback, thời gian giao
+Packaging
+Chất lượng đóng gói — dựa trên review/feedback liên quan đóng gói
+Service
+Thái độ phục vụ, phản hồi khiếu nại
+Waiting Time
+Thời gian chờ, thời gian chuẩn bị đơn
+Menu Diversity
+Độ đa dạng món ăn trong catalog
+Price Level
+Mức giá so với phân khúc/khu vực
+Customer Segments
+Phân khúc khách hàng chính của quán
+Peak Time
+Khung giờ cao điểm của quán
+Competitor
+Danh sách merchant cạnh tranh trực tiếp (cùng khu vực/loại món)
+Trending Dishes
+Món ăn đang thịnh hành (tham khảo mạng xã hội, food reviewer)
+Operation KPIs
+Các chỉ số vận hành nội bộ liên quan hiệu suất
+Lưu ý: 'Business KPI' (doanh thu thực, lợi nhuận...) được loại khỏi phạm vi framework do vấn đề bảo mật thông tin.
+Ví dụ cấu trúc dimension (Food Quality)
+Trường
+Giá trị ví dụ
+dimension
+Food Quality
+score
+0.82
+evidence
+320 positive reviews · 28 complaints · Image score · Dish popularity
+Nguyên tắc bắt buộc: Agent trả lời phải luôn có evidence — không suy diễn hoặc đưa nhận định thiếu số liệu/dữ liệu hỗ trợ.
+3.3. Phân loại metric theo nhóm dữ liệu
+Loại
+Metric
+Ghi chú
+Merchant Static
+Cuisine, Location, Open hour, Price, Menu
+Dữ liệu tĩnh, ít thay đổi
+Merchant Dynamic
+Order, Review, Complaint, Promotion, Driver Feedback
+Dữ liệu cập nhật liên tục theo hoạt động
+Vision
+Food image quality, Dish detection, Packaging, Environment, Cleanliness, Serving size
+Trích xuất bằng mô hình/agent phân tích hình ảnh
+NLP
+Review Topic, Sentiment, Complaint Category, Trending Topic, Keyword
+Trích xuất bằng mô hình/agent xử lý ngôn ngữ
+Business KPI
+—
+Không đưa vào phạm vi — vấn đề bảo mật thông tin
+4. Use Cases
+Hệ thống gồm hai nhóm AI Agent, đều sử dụng chung Merchant Profile Framework làm nguồn tri thức.
+4.1. Merchant AI Agent
+Đối tượng: Merchant Owner. Mục tiêu: giúp chủ quán hiểu tình trạng hoạt động và cải thiện hiệu quả kinh doanh.
+UC-01: Merchant Diagnosis
+UC-01
+Merchant Diagnosis (Chẩn đoán nguyên nhân hoạt động kém)
+Actor
+Merchant Owner
+Mục tiêu
+Trả lời câu hỏi 'Tại sao quán ít đơn?' bằng các lý do cụ thể, có evidence.
+Trigger
+Merchant Owner đặt câu hỏi hoặc mở mục 'Chẩn đoán quán' trên dashboard.
+Điều kiện tiên quyết
+Merchant Profile của quán đã được tính toán (đủ dữ liệu review/complaint/operational metrics tối thiểu).
+Luồng xử lý chính
+1. Agent truy vấn Merchant Profile của quán (các dimension liên quan: Waiting Time, Price Level, Food Quality, Service...).
+2. Agent phân tích/xếp hạng các dimension có score thấp hoặc evidence tiêu cực nổi bật.
+3. Agent tổng hợp thành danh sách Top nguyên nhân, sắp xếp theo mức độ ảnh hưởng.
+4. Agent hiển thị kết quả kèm evidence trích dẫn cho từng nguyên nhân.
+Output
+• Danh sách Top lý do khiến quán hoạt động kém (VD: thời gian chờ lâu, giá cao, vệ sinh chưa tốt)
+• Evidence đi kèm mỗi lý do (số liệu review/complaint liên quan)
+Business Rules
+• Mỗi lý do đưa ra bắt buộc phải có evidence cụ thể.
+• Tối đa hiển thị Top 5 nguyên nhân để tránh gây quá tải thông tin.
+UC-02: Merchant Recommendation
+UC-02
+Merchant Recommendation (Gợi ý cải thiện & tăng doanh thu)
+Actor
+Merchant Owner
+Mục tiêu
+Đưa ra các khuyến nghị hành động cụ thể để cải thiện hiệu quả kinh doanh.
+Trigger
+Merchant Owner yêu cầu gợi ý cải thiện, hoặc sau khi xem kết quả Diagnosis.
+Điều kiện tiên quyết
+Đã có kết quả Merchant Diagnosis hoặc Merchant Profile đầy đủ.
+Luồng xử lý chính
+1. Agent phân tích các dimension yếu và đối chiếu với các pattern cải thiện đã biết (VD: image score thấp → gợi ý chụp lại ảnh món ăn).
+2. Agent thực hiện Trending Mining: tham khảo dữ liệu xu hướng từ mạng xã hội/food reviewer liên quan loại món của quán.
+3. Agent tổng hợp danh sách khuyến nghị, ước lượng mức độ tác động (compact rate) cho từng khuyến nghị.
+4. Agent hiển thị danh sách gợi ý kèm evidence và mức ưu tiên.
+Output
+• Danh sách khuyến nghị cải thiện (VD: chụp ảnh món ăn bắt mắt hơn, tạo ưu đãi, bổ sung món đang trending)
+• Mức độ ưu tiên/tác động ước tính cho từng khuyến nghị
+Business Rules
+• Khuyến nghị phải gắn với ít nhất một dimension/evidence cụ thể trong Merchant Profile.
+• Trending mining chỉ tham khảo dữ liệu công khai (social/food reviewer), không dùng dữ liệu nội bộ đối thủ.
+UC-03: Competitor Analysis
+UC-03
+Competitor Analysis (Phân tích đối thủ cạnh tranh)
+Actor
+Merchant Owner
+Mục tiêu
+So sánh quán của mình với các merchant tương tự để hiểu vị thế cạnh tranh.
+Trigger
+Merchant Owner chọn mục 'So sánh đối thủ' trên dashboard.
+Điều kiện tiên quyết
+Có tối thiểu 2-3 merchant cùng khu vực/loại món trong tập dữ liệu demo để so sánh.
+Luồng xử lý chính
+1. Agent xác định tập Competitor (cùng khu vực và/hoặc loại món) từ dimension 'Competitor' trong Merchant Profile.
+2. Agent so sánh các dimension công khai: chất lượng hình ảnh, giá cả, đánh giá khách hàng.
+3. Agent tổng hợp bảng so sánh và chỉ ra điểm mạnh/yếu tương đối.
+Output
+• Bảng so sánh merchant hiện tại với các đối thủ theo từng dimension
+• Nhận định điểm mạnh/yếu tương đối
+Business Rules
+• Chỉ so sánh dựa trên thông tin công khai/hợp lệ (không dùng Business KPI nội bộ của đối thủ).
+4.2. Customer AI Agent
+Đối tượng: Khách hàng (Customer). Mục tiêu: giúp người dùng tìm và chọn quán ăn phù hợp nhanh chóng, cá nhân hoá.
+UC-04: Restaurant Search
+UC-04
+Restaurant Search (Tìm kiếm nhà hàng)
+Actor
+Customer
+Mục tiêu
+Tìm danh sách quán ăn phù hợp theo tiêu chí tường minh.
+Trigger
+Customer nhập yêu cầu tìm kiếm (text/chat) trên Customer Agent.
+Điều kiện tiên quyết
+Merchant Profile của các quán trong khu vực đã sẵn sàng.
+Luồng xử lý chính
+1. Agent trích xuất tiêu chí tìm kiếm từ câu hỏi của khách hàng: vị trí, loại món ăn (cuốn, nước, cơm, nhậu...), giá cả, rating.
+2. Agent (Tool: search) truy vấn tập merchant thoả điều kiện.
+3. Agent trả về danh sách quán phù hợp, sắp xếp theo mức độ liên quan.
+Output
+• Danh sách quán ăn phù hợp tiêu chí tìm kiếm, kèm thông tin tóm tắt (rating, giá, khoảng cách)
+UC-05: Preference Reasoning
+UC-05
+Preference Reasoning (Gợi ý theo sở thích & ngữ cảnh)
+Actor
+Customer
+Mục tiêu
+Gợi ý quán ăn phù hợp dựa trên sở thích cá nhân đã lưu và ngữ cảnh hiện tại (thời tiết, thời điểm).
+Trigger
+Customer đặt câu hỏi gợi ý chung chung (VD: 'gợi ý quán ăn trưa nay') hoặc hệ thống chủ động gợi ý.
+Điều kiện tiên quyết
+User Profile đã được khởi tạo/cập nhật qua các lượt hội thoại trước (context memory).
+Luồng xử lý chính
+1. Agent đọc User Profile: Food preference, Budget, Distance, Cuisine, Diet, Taste (VD: không thích cay, không thích cơm, không ăn món Nhật, ngân sách sinh viên).
+2. Agent lấy thêm ngữ cảnh hiện tại: thời tiết (Weather), thời điểm trong ngày.
+3. Agent (Tool + Agent: aggregate rating, feedback) kết hợp tiêu chí ngầm định với dữ liệu Merchant Profile để lọc & xếp hạng quán phù hợp.
+4. Agent trả kết quả kèm giải thích ngắn gọn vì sao gợi ý phù hợp với sở thích/ngữ cảnh của khách.
+Output
+• Danh sách quán được gợi ý kèm lý do cá nhân hoá (VD: 'phù hợp vì không cay, giá sinh viên, gần vị trí hiện tại')
+Business Rules
+• User Profile phải được cập nhật dần qua hội thoại và tái sử dụng cho các lượt tìm kiếm sau.
+• Khi thiếu dữ liệu ngữ cảnh (VD: không lấy được thời tiết), Agent vẫn phải trả kết quả dựa trên các tiêu chí còn lại.
+5. Phân loại câu hỏi cho AI & Yêu cầu xử lý tương ứng
+Bảng dưới đây là kim chỉ nam thiết kế logic Agent — mỗi cấp độ câu hỏi đòi hỏi tool/khả năng xử lý khác nhau, tăng dần độ phức tạp.
+Level
+Kiểu câu hỏi / Ví dụ
+Yêu cầu xử lý
+1. Retrieval
+Lọc theo tiêu chí, trường có sẵn của merchant (VD: quán cơm gần đây giá dưới 50k)
+Tool: search theo vị trí, lọc quán theo tiêu chí query
+2. Aggregation
+Lọc theo đánh giá; reasoning dựa trên user profile để tự sinh tiêu chí lọc
+Context memory → spec tiêu chí; Tool: search; Tool + Agent: aggregate rating, feedback
+3. Analysis
+Khách hàng thích/ghét điều gì ở quán của tôi?
+Tool lấy review liên quan, lọc dữ liệu; Agent phân tích & sentiment analysis
+4. Recommendation
+Gợi ý cách cải thiện, tăng doanh thu
+Tổng hợp từ phân tích chất lượng, review, order rate → Top gợi ý cải thiện kèm mức độ tác động
+5. Strategic Comparison
+Merchant nào tương tự đang làm tốt hơn tôi?
+So sánh dựa trên thông tin công khai của thị trường/quán khác
+Mapping với Use Case: Level 1–2 phục vụ chủ yếu UC-04 (Restaurant Search); Level 2–3 phục vụ UC-05 (Preference Reasoning) và UC-01 (Merchant Diagnosis); Level 4 phục vụ UC-02 (Merchant Recommendation); Level 5 phục vụ UC-03 (Competitor Analysis).
+6. Technical Requirements
+6.1. Nguyên tắc thiết kế kỹ thuật (cho bản Demo)
+Ưu tiên đơn giản, dễ chạy local, hạn chế dependency ngoài — vì đây là bản demo/pitching, không phải production.
+Tách rõ 2 lớp: Data & Knowledge Layer (Merchant Profile Framework) và Agent Layer (Merchant AI Agent, Customer AI Agent).
+Toàn bộ câu trả lời của Agent phải truy vấn được evidence gốc (traceable), phục vụ việc trình bày khi pitching.
+Giao diện web, responsive, tối ưu trải nghiệm mobile trước, desktop chỉ cần đảm bảo hiển thị tốt.
+6.2. Kiến trúc tổng thể (đề xuất)
+Kiến trúc gồm 4 lớp chính, dữ liệu chảy một chiều từ nguồn thô đến Agent, phục vụ cả 2 nhóm người dùng:
+Data Layer: lưu trữ dữ liệu thô merchant (mock/seed data) — reviews, images, catalog, complaint, delivery feedback, operational metrics, metadata.
+Processing Layer (Vision + NLP): trích xuất feature từ dữ liệu thô → sinh score & evidence cho từng dimension.
+Knowledge Layer (Merchant Profile Store): lưu Merchant Profile đã chuẩn hoá (dimension, score, evidence) — nguồn sự thật (source of truth) cho Agent.
+Agent Layer: Merchant AI Agent & Customer AI Agent, dùng LLM (tool-calling/RAG) truy vấn Knowledge Layer để trả lời theo 5 level câu hỏi ở mục 5.
+Presentation Layer: Web app responsive (mobile-first), gồm Merchant Dashboard và Customer Search/Chat UI.
+6.3. Đề xuất Tech Stack (tối giản cho demo local)
+Thành phần
+Đề xuất
+Lý do
+Frontend
+React (Vite) + TailwindCSS, thiết kế mobile-first responsive
+Phát triển nhanh, dễ style responsive, phù hợp demo
+Backend / API
+Node.js (Express) hoặc Python (FastAPI)
+Đơn giản, dễ tích hợp gọi LLM API, đủ cho local demo
+Lưu trữ dữ liệu
+SQLite hoặc file JSON (mock data)
+Không cần hạ tầng DB phức tạp cho demo local
+AI / LLM
+Claude API (tool use / function calling) cho Agent reasoning
+Hỗ trợ tool-calling tốt, phù hợp kiến trúc Agent + Evidence
+Vision Analysis
+LLM Vision (phân tích ảnh món ăn) hoặc heuristic đơn giản cho demo
+Đủ để tạo Image Quality score có evidence, không cần train model riêng
+NLP Analysis
+LLM (sentiment, topic, complaint classification)
+Không cần pipeline NLP riêng, tận dụng LLM có sẵn
+Triển khai
+Chạy local (localhost), không cần deploy cloud
+Đúng phạm vi 'demo trên development'
+6.4. Mô hình dữ liệu Merchant Profile (đề xuất JSON Schema)
+{
+  "merchant_id": "string",
+  "metadata": { "name": "string", "cuisine": "string", "location": {...}, "open_hour": "string", "price_level": "string" },
+  "dimensions": [
+    {
+      "name": "Food Quality",
+      "score": 0.82,
+      "evidence": [
+        { "type": "positive_review_count", "value": 320 },
+        { "type": "complaint_count", "value": 28 },
+        { "type": "image_score", "value": 0.77 },
+        { "type": "dish_popularity", "value": "..." }
+      ]
+    }
+  ],
+  "competitors": ["merchant_id_1", "merchant_id_2"],
+  "updated_at": "ISO-8601"
+}
+6.5. Yêu cầu API (mức cao)
+Endpoint (đề xuất)
+Mục đích
+Dùng bởi
+GET /merchants/:id/profile
+Lấy Merchant Profile đầy đủ (dimensions + evidence)
+Merchant Dashboard, Merchant Agent
+POST /agent/merchant/diagnosis
+Chạy UC-01 Merchant Diagnosis
+Merchant Dashboard
+POST /agent/merchant/recommendation
+Chạy UC-02 Merchant Recommendation
+Merchant Dashboard
+POST /agent/merchant/competitor-analysis
+Chạy UC-03 Competitor Analysis
+Merchant Dashboard
+POST /agent/customer/search
+Chạy UC-04 Restaurant Search
+Customer App
+POST /agent/customer/recommend
+Chạy UC-05 Preference Reasoning
+Customer App
+GET/PUT /users/:id/profile
+Đọc/cập nhật User Profile (preference)
+Customer App
+6.6. Yêu cầu về Frontend / UI
+Thiết kế mobile-first: layout, typography, khoảng cách chạm (tap target) tối ưu cho màn hình điện thoại trước tiên.
+Responsive breakpoints tối thiểu cho mobile và desktop để demo linh hoạt trên nhiều thiết bị khi pitching.
+Merchant Dashboard: hiển thị Merchant Profile dạng dimension cards (score + evidence), khu vực Diagnosis/Recommendation/Competitor dạng tab hoặc section riêng.
+Customer App: giao diện dạng chat/search kết hợp danh sách kết quả dạng card (tên quán, rating, giá, khoảng cách, lý do gợi ý).
+Mọi kết quả Agent hiển thị phải có phần 'Vì sao gợi ý này' / 'Evidence' có thể mở rộng xem chi tiết.
+7. Non-Functional Requirements
+Hạng mục
+Yêu cầu
+Hiệu năng
+Đủ mượt cho demo trực tiếp (phản hồi Agent trong vài giây); không yêu cầu chịu tải nhiều người dùng đồng thời.
+Bảo mật
+Không xử lý dữ liệu thật/nhạy cảm; không đưa Business KPI thật vào hệ thống; dùng dữ liệu mock/giả lập.
+Khả năng mở rộng
+Không bắt buộc cho bản demo; kiến trúc nên tách lớp rõ ràng để dễ mở rộng về sau nếu cần.
+Khả năng sử dụng
+Ưu tiên trải nghiệm mobile mượt mà, giao diện trực quan, dễ demo trong thời gian ngắn (pitching).
+Độ tin cậy dữ liệu
+Dữ liệu mock cần đủ phong phú và nhất quán để các use case cho ra kết quả hợp lý, thuyết phục khi demo.
+Khả năng triển khai
+Chạy được hoàn toàn trên máy local (localhost), không phụ thuộc hạ tầng cloud phức tạp.
+8. Ngoài phạm vi (Out of Scope)
+Xử lý Business KPI thật (doanh thu, lợi nhuận nội bộ merchant) — không đưa vào framework vì lý do bảo mật.
+Hạ tầng production: CI/CD, auto-scaling, multi-region, giám sát (monitoring) chuyên sâu.
+Thanh toán, đặt đơn thực tế, tích hợp tài xế thời gian thực.
+Xác thực người dùng (authentication) đầy đủ theo chuẩn bảo mật production — có thể dùng cơ chế đơn giản (mock login/user id) cho demo.
+Đa ngôn ngữ, đa khu vực (chỉ cần phù hợp thị trường demo hiện tại).
+9. Giả định & Ràng buộc
+9.1. Giả định
+Dữ liệu merchant (review, ảnh, catalog, complaint, delivery feedback...) sẽ được mock/seed sẵn, đủ để minh hoạ các dimension trong Merchant Profile Framework.
+Có quyền truy cập LLM API (Claude) để xử lý reasoning, Vision, NLP trong suốt quá trình phát triển và demo.
+Người dùng demo/pitching sẽ trải nghiệm sản phẩm trên trình duyệt (mobile hoặc desktop) kết nối tới server chạy local.
+9.2. Ràng buộc
+Thời gian phát triển: 6 tuần (xem chi tiết tại file Sprint Tracking đi kèm).
+Nguồn lực: dự án cá nhân — không có đội ngũ QA/DevOps riêng, tự kiểm thử ở mức đủ dùng cho demo.
+Không dùng dữ liệu thật của bất kỳ nền tảng/thương hiệu cụ thể nào để tránh vấn đề pháp lý/bảo mật.
+10. Kịch bản Demo & Tiêu chí nghiệm thu
+10.1. Kịch bản demo đề xuất
+Mở Merchant Dashboard của một quán mẫu → xem Merchant Profile với các dimension score + evidence.
+Chạy Merchant Diagnosis → hệ thống chỉ ra Top nguyên nhân khiến quán ít đơn kèm evidence.
+Chạy Merchant Recommendation → hệ thống gợi ý hành động cải thiện, có tham khảo trending dishes.
+Chạy Competitor Analysis → so sánh quán với 2-3 đối thủ cùng khu vực/loại món.
+Chuyển sang Customer App → thực hiện Restaurant Search theo tiêu chí (vị trí, loại món, giá, rating).
+Thực hiện Preference Reasoning → đặt câu hỏi gợi ý chung, hệ thống dùng User Profile + ngữ cảnh (thời tiết/thời điểm) để gợi ý quán phù hợp kèm giải thích.
+10.2. Tiêu chí nghiệm thu (Definition of Done cho bản Demo)
+Cả 5 use case (UC-01 → UC-05) chạy được end-to-end với dữ liệu mock, không lỗi chặn luồng demo.
+Mọi câu trả lời của Agent hiển thị evidence liên kết tới dữ liệu Merchant Profile.
+Giao diện hiển thị tốt trên màn hình mobile phổ biến (kiểm thử tối thiểu 1 thiết bị/kích thước mô phỏng mobile).
+Có ít nhất 3-5 merchant mẫu + tương ứng user profile mẫu đủ đa dạng để kịch bản demo thuyết phục.
+11. Phụ lục
+11.1. Sơ đồ luồng dữ liệu tổng quan (mô tả)
+Merchant Data (Reviews, Food Images, Menu/Catalog, Complaint, Delivery Feedback, Operational Metrics, Merchant Metadata) → Merchant Profile Framework (Knowledge Representation: Vision + NLP xử lý → dimension score + evidence) → phân phối tới Merchant AI Agent (Diagnosis, Recommendation, Competitor Analysis) và Customer AI Agent (Search, Preference Reasoning).
+11.2. Tài liệu tham chiếu
+Tài liệu Knowledge - Agent gốc (Merchant Profile Framework, phân loại câu hỏi cho AI) — nguồn ý tưởng ban đầu của dự án.
+File đi kèm: Sprint_Tracking_6_Tuan.xlsx — kế hoạch triển khai chi tiết theo 6 sprint tuần.
