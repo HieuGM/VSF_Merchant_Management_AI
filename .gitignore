@@ -1,0 +1,10 @@
+.env
+*.log
+.superpowers
+.pytest_cache
+*/__pycache__
+__pycache__/
+*.pyc
+.venv/
+.venv/*
+docs/
