@@ -1,0 +1,83 @@
+{
+ "merchant_id": "11206",
+ "model": "DeepSeek-V4-Flash",
+ "generated_at": "2026-07-20T14:25:09",
+ "complaints": [
+  {
+   "category": "giao_hàng_trễ",
+   "text": "Đặt lúc 11h30 mà mãi 12h15 mới nhận được, đồ uống tan đá hết. Món Deal Best Seller 1K.",
+   "severity": "medium",
+   "date": "2026-02-15"
+  },
+  {
+   "category": "sai_hoặc_thiếu_món",
+   "text": "Đặt Xanh Sữa Nhài Matcha Tươi nhưng nhận được Trà sữa Caramel Muối hồng Himalaya, khó chịu.",
+   "severity": "high",
+   "date": "2026-03-01"
+  },
+  {
+   "category": "chất_lượng_món",
+   "text": "Ly trà sữa hôm nay nhạt nhẽo, không ngon như mọi khi, món Combo Best Seller - Trà Sữa ToCoToCo size M.",
+   "severity": "low",
+   "date": "2026-03-10"
+  },
+  {
+   "category": "thái_độ_phục_vụ",
+   "text": "Nhân viên nói chuyện cộc lốc khi gọi điện xác nhận đơn, không chuyên nghiệp.",
+   "severity": "medium",
+   "date": "2026-02-20"
+  },
+  {
+   "category": "đóng_gói_kém",
+   "text": "Ly trà sữa bị đổ ra túi, ướt hết giấy tờ. Món Ô long dứa băng tuyết.",
+   "severity": "high",
+   "date": "2026-03-05"
+  },
+  {
+   "category": "giá_cao",
+   "text": "Món Combo Càng Đông Càng Vui giá cao nhưng topping ít, không đáng tiền.",
+   "severity": "low",
+   "date": "2026-02-25"
+  },
+  {
+   "category": "vệ_sinh",
+   "text": "Phát hiện có sợi tóc trong ly trà sữa, mất vệ sinh.",
+   "severity": "high",
+   "date": "2026-03-12"
+  },
+  {
+   "category": "giao_hàng_trễ",
+   "text": "Đặt giờ cao điểm 18h30, đợi 30 phút mới có, đồ nguội. Món Trà sữa Caramel Muối hồng Himalaya.",
+   "severity": "medium",
+   "date": "2026-03-08"
+  }
+ ],
+ "delivery_feedback": [
+  {
+   "text": "Giao đúng giờ, khách vui vẻ.",
+   "on_time": true,
+   "issue": null
+  },
+  {
+   "text": "Khách không nghe máy, phải chờ 5 phút.",
+   "on_time": false,
+   "issue": "khách không nghe máy"
+  },
+  {
+   "text": "Đường đông, nhưng vẫn kịp giờ.",
+   "on_time": true,
+   "issue": null
+  },
+  {
+   "text": "Giao nhầm địa chỉ, phải quay lại.",
+   "on_time": false,
+   "issue": "giao nhầm địa chỉ"
+  },
+  {
+   "text": "Đồ uống nặng, cẩn thận.",
+   "on_time": true,
+   "issue": null
+  }
+ ],
+ "filled_reviews": []
+}

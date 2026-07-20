@@ -1,0 +1,93 @@
+{
+ "meta": {
+  "model_key": "fpt-deepseek",
+  "model_id": "DeepSeek-V4-Flash",
+  "latency_s": 9.75,
+  "tokens": 3011,
+  "counts": {
+   "complaints": 8,
+   "delivery_feedback": 5,
+   "filled_reviews": 0
+  }
+ },
+ "data": {
+  "complaints": [
+   {
+    "category": "giao_hàng_trễ",
+    "text": "Đặt combo MIX & MATCH - COMBO 3 MÓN TUỲ CHỌN lúc 11h30, đến 12h45 mới nhận được, đồ ăn nguội ngắt. Giao hàng quá chậm so với dự kiến.",
+    "severity": "high",
+    "date": "2026-04-02"
+   },
+   {
+    "category": "món_nguội",
+    "text": "Nhận được Tenders BBQ Rice mà cơm nguội, gà không còn giòn. Đặt lúc 18h30, giao lúc 19h20, chắc do giao trễ.",
+    "severity": "medium",
+    "date": "2026-04-05"
+   },
+   {
+    "category": "sai_hoặc_thiếu_món",
+    "text": "Đặt Combo TRÙM DEAL- Gà Giòn & Popcorn nhưng thiếu mất phần Popcorn, chỉ có gà giòn và khoai. Gọi lại thì nói bận không giải quyết.",
+    "severity": "high",
+    "date": "2026-03-28"
+   },
+   {
+    "category": "đóng_gói_kém",
+    "text": "Combo Mala Malime 2 người bị đổ nước sốt ra túi, giấy bạc rách. Mở ra thấy dính hết vào nhau.",
+    "severity": "medium",
+    "date": "2026-04-01"
+   },
+   {
+    "category": "thái_độ_phục_vụ",
+    "text": "Gọi điện hỏi về đơn hàng bị thiếu món thì nhân viên nói cọc cằn, bảo 'tự check lại đi' rồi cúp máy. Quá tệ.",
+    "severity": "high",
+    "date": "2026-03-30"
+   },
+   {
+    "category": "chất_lượng_món",
+    "text": "Gà Không Xương Mala Malime bị khô, thịt dai, không thấm gia vị. Lần trước ăn ngon hơn nhiều.",
+    "severity": "medium",
+    "date": "2026-04-03"
+   },
+   {
+    "category": "giá_cao",
+    "text": "Combo TRÙM DEAL - MÌ Ý PHÔ MAI GÀ VIÊN giá 109k mà phần nhỏ, không đáng tiền. So với các quán khác thì đắt.",
+    "severity": "low",
+    "date": "2026-04-06"
+   },
+   {
+    "category": "vệ_sinh",
+    "text": "Thấy có sợi tóc trong hộp Gà Popcorn Mala Malime. Mất vệ sinh quá.",
+    "severity": "high",
+    "date": "2026-03-26"
+   }
+  ],
+  "delivery_feedback": [
+   {
+    "text": "Đường đông, khách chờ hơi lâu nhưng giao kịp giờ.",
+    "on_time": true,
+    "issue": null
+   },
+   {
+    "text": "Quán làm lâu quá, lấy hàng trễ 15 phút nên giao muộn.",
+    "on_time": false,
+    "issue": "Quán chậm chuẩn bị"
+   },
+   {
+    "text": "Khách ở chung cư, bảo vệ không cho lên, phải gọi xuống lấy.",
+    "on_time": true,
+    "issue": null
+   },
+   {
+    "text": "Mưa lớn, đường ngập nên giao trễ 10 phút.",
+    "on_time": false,
+    "issue": "Thời tiết xấu"
+   },
+   {
+    "text": "Đơn hàng nhiều, quán giao sai túi đồ, phải quay lại đổi mất thêm 20 phút.",
+    "on_time": false,
+    "issue": "Sai món từ quán"
+   }
+  ],
+  "filled_reviews": []
+ }
+}

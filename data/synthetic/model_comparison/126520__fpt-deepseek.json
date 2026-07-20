@@ -1,0 +1,93 @@
+{
+ "meta": {
+  "model_key": "fpt-deepseek",
+  "model_id": "DeepSeek-V4-Flash",
+  "latency_s": 13.42,
+  "tokens": 2919,
+  "counts": {
+   "complaints": 8,
+   "delivery_feedback": 5,
+   "filled_reviews": 0
+  }
+ },
+ "data": {
+  "complaints": [
+   {
+    "category": "giao_hàng_trễ",
+    "text": "Đặt món Mì kim chi thập cẩm lúc 12h, mãi đến 13h15 mới nhận được, đồ nguội hết.",
+    "severity": "medium",
+    "date": "2026-03-15"
+   },
+   {
+    "category": "món_nguội",
+    "text": "Mì Kim Chi Bò Mỹ giao đến nguội lạnh, không còn ngon.",
+    "severity": "medium",
+    "date": "2026-03-18"
+   },
+   {
+    "category": "sai_hoặc_thiếu_món",
+    "text": "Gọi Mì kim chi hải sản nhưng nhận được Mì kim chi bò, thiếu tôm.",
+    "severity": "high",
+    "date": "2026-03-20"
+   },
+   {
+    "category": "đóng_gói_kém",
+    "text": "Hộp mì bị đổ, nước sốt chảy ra túi, bẩn hết.",
+    "severity": "medium",
+    "date": "2026-03-22"
+   },
+   {
+    "category": "thái_độ_phục_vụ",
+    "text": "Nhân viên tư vấn trên app rất khó chịu, không hỗ trợ.",
+    "severity": "low",
+    "date": "2026-03-10"
+   },
+   {
+    "category": "chất_lượng_món",
+    "text": "Mì Kim Chi Bào Ngư hôm nay ăn không tươi, bào ngư có mùi.",
+    "severity": "high",
+    "date": "2026-03-25"
+   },
+   {
+    "category": "giá_cao",
+    "text": "Mì Kim Chi Ghẹ Thịt giá 80k mà ít ghẹ quá, không đáng.",
+    "severity": "low",
+    "date": "2026-03-12"
+   },
+   {
+    "category": "vệ_sinh",
+    "text": "Trong hộp có sợi tóc, mất vệ sinh.",
+    "severity": "high",
+    "date": "2026-03-28"
+   }
+  ],
+  "delivery_feedback": [
+   {
+    "text": "Giao đúng giờ, khách vui vẻ.",
+    "on_time": true,
+    "issue": null
+   },
+   {
+    "text": "Đường kẹt xe nên trễ 10 phút.",
+    "on_time": false,
+    "issue": "Kẹt xe"
+   },
+   {
+    "text": "Khách yêu cầu giao tận phòng, ok.",
+    "on_time": true,
+    "issue": null
+   },
+   {
+    "text": "Quán làm lâu, chờ mất 15 phút.",
+    "on_time": false,
+    "issue": "Chờ quán"
+   },
+   {
+    "text": "Giao đúng giờ, không vấn đề.",
+    "on_time": true,
+    "issue": null
+   }
+  ],
+  "filled_reviews": []
+ }
+}

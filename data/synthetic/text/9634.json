@@ -1,0 +1,77 @@
+{
+ "merchant_id": "9634",
+ "model": "DeepSeek-V4-Flash",
+ "generated_at": "2026-07-20T14:24:21",
+ "complaints": [
+  {
+   "category": "giao_hàng_trễ",
+   "text": "Đặt xôi mặn vừa lúc 11h30, đến 12h15 mới giao, trong khi quán báo 26 phút. Xôi nguội ngắt.",
+   "severity": "medium",
+   "date": "2026-03-15"
+  },
+  {
+   "category": "giao_hàng_trễ",
+   "text": "Giao trễ 20 phút so với dự kiến, xôi gà nhỏ gói lá chuối bị bung mép.",
+   "severity": "low",
+   "date": "2026-03-18"
+  },
+  {
+   "category": "món_nguội",
+   "text": "Xôi mặn lớn giao đến nguội lạnh, chắc do để lâu trên đường.",
+   "severity": "medium",
+   "date": "2026-03-20"
+  },
+  {
+   "category": "sai_hoặc_thiếu_món",
+   "text": "Đặt xôi chà bông lạp xưởng nhỏ nhưng nhận được xôi gà nhỏ, khác món.",
+   "severity": "high",
+   "date": "2026-03-22"
+  },
+  {
+   "category": "thái_độ_phục_vụ",
+   "text": "Nhân viên quán nói chuyện cộc lốc, bảo 'đợi tí' rồi cúp máy. Không chuyên nghiệp.",
+   "severity": "high",
+   "date": "2026-03-23"
+  },
+  {
+   "category": "chất_lượng_món",
+   "text": "Xôi nếp than nhỏ gói lá chuối ăn bị khô, không dẻo như mọi khi.",
+   "severity": "medium",
+   "date": "2026-03-25"
+  },
+  {
+   "category": "đóng_gói_kém",
+   "text": "Xôi ca dé nhỏ gói lá chuối bị rách, xôi tràn ra ngoài túi.",
+   "severity": "low",
+   "date": "2026-03-27"
+  }
+ ],
+ "delivery_feedback": [
+  {
+   "text": "Giao đúng giờ, quán đóng gói cẩn thận.",
+   "on_time": true,
+   "issue": null
+  },
+  {
+   "text": "Khách ở chung cư, gửi bảo vệ mất thêm 5 phút.",
+   "on_time": false,
+   "issue": "Chậm do bảo vệ"
+  },
+  {
+   "text": "Quán làm nhanh, lấy hàng ngay.",
+   "on_time": true,
+   "issue": null
+  },
+  {
+   "text": "Đường kẹt xe giờ cao điểm nên giao trễ 10 phút.",
+   "on_time": false,
+   "issue": "Kẹt xe"
+  },
+  {
+   "text": "Giao thành công, khách hài lòng.",
+   "on_time": true,
+   "issue": null
+  }
+ ],
+ "filled_reviews": []
+}

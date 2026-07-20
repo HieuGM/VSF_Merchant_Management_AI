@@ -1,0 +1,77 @@
+{
+ "merchant_id": "10344",
+ "model": "DeepSeek-V4-Flash",
+ "generated_at": "2026-07-20T14:22:25",
+ "complaints": [
+  {
+   "category": "giao_hàng_trễ",
+   "text": "Đặt lúc 11h30, đến 12h45 mới nhận được hàng. Món gà rán giòn nguội ngắt, không còn giòn nữa. Thất vọng về thời gian giao hàng.",
+   "severity": "medium",
+   "date": "2026-03-15"
+  },
+  {
+   "category": "món_nguội",
+   "text": "Nhận được combo Mala Malime 2 người nhưng gà và khoai tây chiên đều nguội, không còn hấp dẫn. Chắc do giao trễ quá lâu.",
+   "severity": "high",
+   "date": "2026-03-20"
+  },
+  {
+   "category": "sai_hoặc_thiếu_món",
+   "text": "Đặt Combo TRÙM DEAL- Gà Giòn & Popcorn nhưng chỉ có gà giòn, thiếu popcorn. Gọi lại quán thì bảo bù sau nhưng chẳng thấy đâu.",
+   "severity": "medium",
+   "date": "2026-03-22"
+  },
+  {
+   "category": "đóng_gói_kém",
+   "text": "Hộp đựng gà bị bung nắp, nước sốt chảy ra ngoài túi. Làm ướt hết các món khác. Đóng gói quá ẩu.",
+   "severity": "medium",
+   "date": "2026-03-25"
+  },
+  {
+   "category": "thái_độ_phục_vụ",
+   "text": "Bảo vệ quán thái độ rất tệ với shipper, không cho vào trú mưa, còn nói khó nghe. Khách đặt online cũng bị ảnh hưởng vì shipper không vui.",
+   "severity": "high",
+   "date": "2026-03-18"
+  },
+  {
+   "category": "chất_lượng_món",
+   "text": "Mì Ý Phô Mai Gà Viên trong combo bị nhão, phô mai không tan chảy, gà viên khô. Chất lượng kém hơn hẳn so với ăn tại quán.",
+   "severity": "low",
+   "date": "2026-04-01"
+  },
+  {
+   "category": "giá_cao",
+   "text": "Combo Mua 1 Tặng 1 chỉ 127K nhưng nhận được phần ăn rất ít, giá quá cao so với lượng đồ ăn. Không đáng tiền.",
+   "severity": "low",
+   "date": "2026-04-05"
+  }
+ ],
+ "delivery_feedback": [
+  {
+   "text": "Quán làm nhanh, lấy hàng ok, giao đúng giờ.",
+   "on_time": true,
+   "issue": null
+  },
+  {
+   "text": "Chờ lấy hàng hơi lâu vì quán đông, giao trễ 10 phút.",
+   "on_time": false,
+   "issue": "Quán đông, chờ lấy hàng lâu"
+  },
+  {
+   "text": "Địa chỉ khách khó tìm, phải gọi điện hỏi, giao trễ 5 phút.",
+   "on_time": false,
+   "issue": "Khách không có số nhà rõ ràng"
+  },
+  {
+   "text": "Giao đúng giờ, hàng đóng gói cẩn thận.",
+   "on_time": true,
+   "issue": null
+  },
+  {
+   "text": "Bảo vệ quán không cho xe vào, phải gửi xe ngoài, mất thời gian.",
+   "on_time": false,
+   "issue": "Bảo vệ quán gây khó dễ"
+  }
+ ],
+ "filled_reviews": []
+}

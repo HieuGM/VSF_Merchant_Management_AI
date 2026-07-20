@@ -1,0 +1,93 @@
+{
+ "meta": {
+  "model_key": "nim-qwen",
+  "model_id": "qwen/qwen3.5-397b-a17b",
+  "latency_s": 96.69,
+  "tokens": 2209,
+  "counts": {
+   "complaints": 8,
+   "delivery_feedback": 5,
+   "filled_reviews": 0
+  }
+ },
+ "data": {
+  "complaints": [
+   {
+    "category": "giao_hàng_trễ",
+    "text": "Đặt Combo TRÙM DEAL- Gà Giòn & Popcorn mà chờ tận 45 phút mới tới, gà nguội ngắt không còn giòn nữa. Tài xế báo kẹt xe nhưng quán cũng chuẩn bị quá lâu.",
+    "severity": "medium",
+    "date": "2026-05-12"
+   },
+   {
+    "category": "sai_hoặc_thiếu_món",
+    "text": "Order Cặp đôi hoàn hảo - Gà & Burger 109K có kèm nước ngọt, nhân viên giao thiếu chai Coca. Gọi lên thì bảo hết hàng nhưng không báo trước khi nhận đơn.",
+    "severity": "high",
+    "date": "2026-05-14"
+   },
+   {
+    "category": "đóng_gói_kém",
+    "text": "Gọi MÌ Ý PHÔ MAI GÀ VIÊN mà hộp bị nghiêng đổ hết sốt ra ngoài, giấy gói dầu mỡ thấm qua làm bẩn túi. Đóng gói sơ sài quá.",
+    "severity": "medium",
+    "date": "2026-05-15"
+   },
+   {
+    "category": "thái_độ_phục_vụ",
+    "text": "Nhân viên tổng đài thái độ rất kém, hỏi về món Gà Không Xương Mala Malime bị thiếu tương ớt thì trả lời cộc lốc 'hết thì thôi', không xin lỗi khách.",
+    "severity": "high",
+    "date": "2026-05-16"
+   },
+   {
+    "category": "chất_lượng_món",
+    "text": "Gà Rán Giòn 1P hôm nay bị ỉu, da không giòn mà dai nhách, cảm giác như chiên lại đồ cũ. Thất vọng vì giá cao cấp mà chất lượng kém.",
+    "severity": "high",
+    "date": "2026-05-18"
+   },
+   {
+    "category": "giao_hàng_trễ",
+    "text": "Shipper giao trễ 20 phút so với dự kiến, món Tenders BBQ Rice giao tới thì cơm đã vón cục, ăn không ngon.",
+    "severity": "low",
+    "date": "2026-05-19"
+   },
+   {
+    "category": "sai_hoặc_thiếu_món",
+    "text": "Đặt Promo Mua 1 Được 2 (MALA MALIME) mà chỉ giao có 1 phần, gọi điện xác nhận mất thời gian quá, trải nghiệm rất tệ.",
+    "severity": "medium",
+    "date": "2026-05-20"
+   },
+   {
+    "category": "đóng_gói_kém",
+    "text": "Hộp đựng gà bị móp méo, nắp không khít khiến Gà Popcorn Mala Malime bị rơi vãi hết ra túi ship.",
+    "severity": "low",
+    "date": "2026-05-21"
+   }
+  ],
+  "delivery_feedback": [
+   {
+    "text": "Quán chuẩn bị đồ hơi lâu làm mình phải chờ ở cửa 15 phút, may mà giao kịp giờ cho khách.",
+    "on_time": true,
+    "issue": "quán_chuẩn_bị_chậm"
+   },
+   {
+    "text": "Khách đặt số lượng lớn Combo Mala Malime 3 người, đóng gói cồng kềnh khó chở xe máy.",
+    "on_time": true,
+    "issue": "đóng_gói_cồng_kềnh"
+   },
+   {
+    "text": "Giao trễ do quán in sai bill phải làm lại, khách rất bực mình.",
+    "on_time": false,
+    "issue": "sai_đơn_từ_quán"
+   },
+   {
+    "text": "Nước sốt đi kèm món Gà Tắm Nước Mắm bị đổ leaking trong túi do nắp không kín.",
+    "on_time": true,
+    "issue": "rò_rỉ_thức_ăn"
+   },
+   {
+    "text": "Giao đúng giờ, quán hỗ trợ nhiệt tình sắp xếp đồ vào túi giữ nhiệt.",
+    "on_time": true,
+    "issue": null
+   }
+  ],
+  "filled_reviews": []
+ }
+}

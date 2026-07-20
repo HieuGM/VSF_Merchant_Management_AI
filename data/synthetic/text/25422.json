@@ -1,0 +1,77 @@
+{
+ "merchant_id": "25422",
+ "model": "DeepSeek-V4-Flash",
+ "generated_at": "2026-07-20T14:22:43",
+ "complaints": [
+  {
+   "category": "giao_hàng_trễ",
+   "text": "Đặt combo 99K - Burger Bò Phô Mai lúc 19h, đợi mãi đến 20h15 mới nhận được, giao trễ quá 30 phút so với dự kiến. Không hẹn trước gì cả.",
+   "severity": "medium",
+   "date": "2026-03-15"
+  },
+  {
+   "category": "món_nguội",
+   "text": "Nhận phần Mì Ý - Spaghetti mà nguội ngắt, sợi mì dính cục, chắc do giao lâu. Ăn không ngon.",
+   "severity": "medium",
+   "date": "2026-03-18"
+  },
+  {
+   "category": "sai_hoặc_thiếu_món",
+   "text": "Đặt Mua 2 Tặng 2 Gà Rán 119k kèm nước, nhưng nhận được chỉ có 4 miếng gà, thiếu nước uống. Gọi lại hotline thì bảo sẽ bù nhưng chưa thấy.",
+   "severity": "high",
+   "date": "2026-03-20"
+  },
+  {
+   "category": "đóng_gói_kém",
+   "text": "Phần 9 Miếng Gà Viên bị đổ tung trong túi, nước sốt chảy ra hết, bao bì không kín. Dọn dẹp mệt.",
+   "severity": "medium",
+   "date": "2026-03-22"
+  },
+  {
+   "category": "thái_độ_phục_vụ",
+   "text": "Nhân viên tổng đài cáu gắt khi mình gọi phản ánh thiếu món, không xin lỗi mà còn bảo do mình không kiểm tra. Thái độ rất tệ.",
+   "severity": "high",
+   "date": "2026-03-23"
+  },
+  {
+   "category": "chất_lượng_món",
+   "text": "Gà rán trong combo 3 Miếng Gà Rán Giòn Da Thấm Thịt bị khô xác, thịt không mềm, gia vị nhạt. McDonald's bây giờ tệ hơn trước.",
+   "severity": "medium",
+   "date": "2026-03-25"
+  },
+  {
+   "category": "vệ_sinh",
+   "text": "Khoai Tây Chiên có mùi dầu cũ, ăn thấy hơi đắng. Có lẽ dầu chiên đã dùng nhiều lần.",
+   "severity": "low",
+   "date": "2026-03-26"
+  }
+ ],
+ "delivery_feedback": [
+  {
+   "text": "Giao đúng giờ, khách vui vẻ nhận.",
+   "on_time": true,
+   "issue": null
+  },
+  {
+   "text": "Đường đông, giao trễ 10 phút, khách không phàn nàn.",
+   "on_time": false,
+   "issue": "Tắc đường"
+  },
+  {
+   "text": "Đơn nhiều món, phải kiểm tra kỹ, giao đủ.",
+   "on_time": true,
+   "issue": null
+  },
+  {
+   "text": "Khách bảo thiếu nước, tôi không biết, đã báo lại.",
+   "on_time": true,
+   "issue": "Khách báo thiếu món"
+  },
+  {
+   "text": "Giao đúng giờ, nhưng quán đóng gói lỏng lẻo, túi rách.",
+   "on_time": true,
+   "issue": "Bao bì rách"
+  }
+ ],
+ "filled_reviews": []
+}

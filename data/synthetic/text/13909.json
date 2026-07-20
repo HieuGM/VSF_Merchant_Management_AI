@@ -1,0 +1,83 @@
+{
+ "merchant_id": "13909",
+ "model": "DeepSeek-V4-Flash",
+ "generated_at": "2026-07-20T14:26:10",
+ "complaints": [
+  {
+   "category": "giao_hàng_trễ",
+   "text": "Đặt cơm thịt lợn kho trứng lúc 11h30, đến 12h15 mới nhận được, cơm nguội lạnh. Giao hàng chậm quá!",
+   "severity": "medium",
+   "date": "2026-03-15"
+  },
+  {
+   "category": "món_nguội",
+   "text": "Cơm gà rang gừng hôm nay bị nguội, ăn không ngon. Mong quán cải thiện.",
+   "severity": "low",
+   "date": "2026-03-12"
+  },
+  {
+   "category": "sai_hoặc_thiếu_món",
+   "text": "Gọi cơm thịt viên chua ngọt nhưng lại nhận được cơm thịt lợn kho tàu. Sai món rồi!",
+   "severity": "high",
+   "date": "2026-03-10"
+  },
+  {
+   "category": "đóng_gói_kém",
+   "text": "Cơm bò xào măng trúc bị đổ tung tóe trong túi vì hộp không kín. Đóng gói cẩn thận hơn nhé.",
+   "severity": "medium",
+   "date": "2026-03-08"
+  },
+  {
+   "category": "thái_độ_phục_vụ",
+   "text": "Nhân viên giao hàng thái độ cộc cằn, không chào hỏi. Không hài lòng.",
+   "severity": "low",
+   "date": "2026-03-05"
+  },
+  {
+   "category": "giá_cao",
+   "text": "Cơm gà chiên mắm giá 45k mà miếng gà nhỏ xíu, thấy đắt so với chất lượng.",
+   "severity": "low",
+   "date": "2026-03-18"
+  },
+  {
+   "category": "vệ_sinh",
+   "text": "Phát hiện có sợi tóc trong cơm cá kho. Mất vệ sinh quá!",
+   "severity": "high",
+   "date": "2026-03-20"
+  },
+  {
+   "category": "chất_lượng_món",
+   "text": "Cơm thịt lợn kho tiêu hôm nay bị mặn chát, không ngon như mọi khi.",
+   "severity": "medium",
+   "date": "2026-03-22"
+  }
+ ],
+ "delivery_feedback": [
+  {
+   "text": "Giao đúng giờ, khách vui vẻ.",
+   "on_time": true,
+   "issue": null
+  },
+  {
+   "text": "Khách chờ lâu, đường kẹt xe.",
+   "on_time": false,
+   "issue": "Kẹt xe"
+  },
+  {
+   "text": "Giao nhanh, không vấn đề.",
+   "on_time": true,
+   "issue": null
+  },
+  {
+   "text": "Khách khiếu nại vì thiếu món, phải quay lại lấy.",
+   "on_time": false,
+   "issue": "Thiếu món"
+  },
+  {
+   "text": "Đường đông, giao trễ 10 phút.",
+   "on_time": false,
+   "issue": "Đông xe"
+  }
+ ],
+ "filled_reviews": []
+}

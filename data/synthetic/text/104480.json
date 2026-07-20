@@ -1,0 +1,89 @@
+{
+ "merchant_id": "104480",
+ "model": "DeepSeek-V4-Flash",
+ "generated_at": "2026-07-20T14:24:52",
+ "complaints": [
+  {
+   "category": "vệ_sinh",
+   "text": "Đặt Combo S3: Gà Thái Sốt Chua Cay + Ổi & Cà Rốt Mocktail, đang ăn thì phát hiện móng tay trong cơm, ghê quá. Không dám ăn nữa.",
+   "severity": "high",
+   "date": "2026-03-15"
+  },
+  {
+   "category": "chất_lượng_món",
+   "text": "Mua Combo S4: Gà Mắm Xốc Tỏi + Táo Xoài về, gà có mùi hôi, cắn thử thấy thúi, vứt luôn cả phần. Thất vọng.",
+   "severity": "high",
+   "date": "2026-03-20"
+  },
+  {
+   "category": "sai_hoặc_thiếu_món",
+   "text": "Order Combo S1: Gà Hàn Sốt Cay + Táo Xoài, nhưng nhận được chỉ có cơm và gà, thiếu Táo Xoài. Gọi quán thì bảo bận không giải quyết.",
+   "severity": "medium",
+   "date": "2026-03-22"
+  },
+  {
+   "category": "sai_hoặc_thiếu_món",
+   "text": "Đặt Combo C2: Gà Thái Sốt Chua Cay + Gà Mắm Xốc Tỏi + 2 Coca, nhưng shipper giao thiếu 1 Coca và 1 phần gà. Quán nói sẽ bù nhưng chưa thấy.",
+   "severity": "medium",
+   "date": "2026-04-01"
+  },
+  {
+   "category": "giao_hàng_trễ",
+   "text": "Đặt lúc 11h30, dự kiến 12h nhận, nhưng 12h45 mới tới. Cơm nguội, gà cũng không còn nóng. Đặt Combo S2: Gà Malay Sốt Sả Ớt + Dưa Hấu.",
+   "severity": "medium",
+   "date": "2026-04-05"
+  },
+  {
+   "category": "món_nguội",
+   "text": "Nhận Combo S6: Gà Baby Sốt Caramel + Ổi & Cà Rốt, cơm và gà đều nguội, sốt đông lại. Ăn không ngon.",
+   "severity": "low",
+   "date": "2026-04-08"
+  },
+  {
+   "category": "đóng_gói_kém",
+   "text": "Đặt Combo S8: Gà Nướng Phile Đặc Biệt + Dưa Hấu, khi nhận thì hộp bị bung, nước sốt chảy ra túi, dưa hấu dập nát. Vệ sinh kém.",
+   "severity": "medium",
+   "date": "2026-04-10"
+  },
+  {
+   "category": "thái_độ_phục_vụ",
+   "text": "Gọi điện cho quán vì thiếu món, nhân viên nói cộc lốc 'đợi tí' rồi cúp máy. Không có thiện chí hỗ trợ.",
+   "severity": "low",
+   "date": "2026-04-12"
+  },
+  {
+   "category": "chất_lượng_món",
+   "text": "Combo S9: Gà Viên Sốt Chua Ngọt + Ổi & Cà Rốt, gà viên bị khô, sốt chua ngọt nhạt nhẽo, không đậm đà như trước.",
+   "severity": "low",
+   "date": "2026-04-14"
+  }
+ ],
+ "delivery_feedback": [
+  {
+   "text": "Giao đúng giờ, quán gói cẩn thận.",
+   "on_time": true,
+   "issue": null
+  },
+  {
+   "text": "Khách không nghe máy, chờ 5 phút mới giao được.",
+   "on_time": true,
+   "issue": "khách không nghe máy"
+  },
+  {
+   "text": "Quán làm hơi lâu, tôi phải đợi thêm 10 phút.",
+   "on_time": false,
+   "issue": "quán chậm giao món"
+  },
+  {
+   "text": "Đường kẹt xe nên trễ 7 phút, khách thông cảm.",
+   "on_time": false,
+   "issue": "kẹt xe"
+  },
+  {
+   "text": "Giao nhanh, đồ còn nóng, khách vui vẻ.",
+   "on_time": true,
+   "issue": null
+  }
+ ],
+ "filled_reviews": []
+}

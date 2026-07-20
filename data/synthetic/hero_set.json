@@ -1,0 +1,203 @@
+{
+ "count": 18,
+ "merchants": [
+  {
+   "merchant_id": "10208",
+   "name": "Burger King - Phạm Ngũ Lão",
+   "city": "TP. HCM",
+   "cuisine": "Châu Mỹ, Mỹ",
+   "category": "Châu Mỹ, Mỹ",
+   "rating": 4.7,
+   "reviews": 10,
+   "dishes": 78,
+   "why": "competitor-cluster: fast-food HCM (UC-03)"
+  },
+  {
+   "merchant_id": "10341",
+   "name": "Gà Rán Popeyes - Cộng Hòa",
+   "city": "TP. HCM",
+   "cuisine": "Châu Mỹ, Mỹ",
+   "category": "Châu Mỹ, Mỹ",
+   "rating": 4.7,
+   "reviews": 10,
+   "dishes": 55,
+   "why": "competitor-cluster: fast-food HCM (UC-03)"
+  },
+  {
+   "merchant_id": "10344",
+   "name": "Gà Rán Popeyes - Tùng Thiện Vương",
+   "city": "TP. HCM",
+   "cuisine": "Châu Mỹ, Mỹ",
+   "category": "Châu Mỹ, Mỹ",
+   "rating": 4.7,
+   "reviews": 10,
+   "dishes": 54,
+   "why": "competitor-cluster: fast-food HCM (UC-03)"
+  },
+  {
+   "merchant_id": "25422",
+   "name": "Gà Rán & Burger McDonald’s Satra Pham Hung",
+   "city": "TP. HCM",
+   "cuisine": "Quốc tế",
+   "category": "Quốc tế",
+   "rating": 4.8,
+   "reviews": 10,
+   "dishes": 102,
+   "why": "competitor-cluster: fast-food HCM (UC-03)"
+  },
+  {
+   "merchant_id": "27037",
+   "name": "Gà Rán & Burger Lotteria - Khu Phố Mỹ Khánh 4",
+   "city": "TP. HCM",
+   "cuisine": "Món Hàn, Món Á",
+   "category": "Món Hàn, Món Á",
+   "rating": 4.8,
+   "reviews": 10,
+   "dishes": 83,
+   "why": "competitor-cluster: fast-food HCM (UC-03)"
+  },
+  {
+   "merchant_id": "68814",
+   "name": "Dì Bảy - Bún Mắm & Bún Bò Huế",
+   "city": "TP. HCM",
+   "cuisine": "Món Việt",
+   "category": "Món Việt",
+   "rating": 4.4,
+   "reviews": 6,
+   "dishes": 76,
+   "why": "diagnosis/recommendation: HCM Món Việt rating-spread (UC-01/02)"
+  },
+  {
+   "merchant_id": "100810",
+   "name": "3 Râu - Gà Rán, Pizza & Trà Sữa - Hồng Lạc",
+   "city": "TP. HCM",
+   "cuisine": "Món Việt",
+   "category": "Món Việt",
+   "rating": 4.6,
+   "reviews": 6,
+   "dishes": 144,
+   "why": "diagnosis/recommendation: HCM Món Việt rating-spread (UC-01/02)"
+  },
+  {
+   "merchant_id": "2975",
+   "name": "Boom - Cà Phê & Trà Sữa - Sữa Tươi Trân Châu Đường Đen - Ngô Tất Tố",
+   "city": "TP. HCM",
+   "cuisine": "Món Việt",
+   "category": "Món Việt",
+   "rating": 4.9,
+   "reviews": 10,
+   "dishes": 133,
+   "why": "diagnosis/recommendation: HCM Món Việt rating-spread (UC-01/02)"
+  },
+  {
+   "merchant_id": "3752",
+   "name": "Bánh Mì Chim Chạy - Thịt Nướng Than",
+   "city": "TP. HCM",
+   "cuisine": "Món Việt",
+   "category": "Món Việt",
+   "rating": 4.9,
+   "reviews": 10,
+   "dishes": 39,
+   "why": "diagnosis/recommendation: HCM Món Việt rating-spread (UC-01/02)"
+  },
+  {
+   "merchant_id": "9634",
+   "name": "Xôi Bình Tiên - Minh Phụng",
+   "city": "TP. HCM",
+   "cuisine": "Món Việt",
+   "category": "Món Việt",
+   "rating": 4.9,
+   "reviews": 10,
+   "dishes": 14,
+   "why": "diagnosis/recommendation: HCM Món Việt rating-spread (UC-01/02)"
+  },
+  {
+   "merchant_id": "101948",
+   "name": "Gà Rán KFC - Nguyễn Văn Thoại",
+   "city": "Đà Nẵng",
+   "cuisine": "Châu Mỹ, Mỹ",
+   "category": "Châu Mỹ, Mỹ",
+   "rating": 4.6,
+   "reviews": 10,
+   "dishes": 104,
+   "why": "variety: Đà Nẵng (UC-04/05)"
+  },
+  {
+   "merchant_id": "104480",
+   "name": "Dứa - Cơm Gà",
+   "city": "Đồng Nai",
+   "cuisine": "Món Việt",
+   "category": "Món Việt",
+   "rating": 4.9,
+   "reviews": 10,
+   "dishes": 69,
+   "why": "variety: Đồng Nai (UC-04/05)"
+  },
+  {
+   "merchant_id": "11206",
+   "name": "Trà Sữa Tocotoco - Ô Chợ Dừa",
+   "city": "Hà Nội",
+   "cuisine": "Món Á, Đài Loan",
+   "category": "Món Á, Đài Loan",
+   "rating": 4.7,
+   "reviews": 10,
+   "dishes": 64,
+   "why": "variety: Hà Nội (UC-04/05)"
+  },
+  {
+   "merchant_id": "126520",
+   "name": "Mỳ cay Itada - 404A1 Nguyễn Văn Cừ Nối Dài",
+   "city": "Cần Thơ",
+   "cuisine": "Món Việt",
+   "category": "Món Việt",
+   "rating": 4.8,
+   "reviews": 10,
+   "dishes": 160,
+   "why": "variety: Cần Thơ (UC-04/05)"
+  },
+  {
+   "merchant_id": "131531",
+   "name": "Cháo Ếch Singapore NG - Hà Ra",
+   "city": "Khánh Hoà",
+   "cuisine": "Món Việt",
+   "category": "Món Việt",
+   "rating": 4.7,
+   "reviews": 10,
+   "dishes": 18,
+   "why": "variety: Khánh Hoà (UC-04/05)"
+  },
+  {
+   "merchant_id": "13909",
+   "name": "Cơm Tấm & Hot Pot BBQ - An Đà",
+   "city": "Hải Phòng",
+   "cuisine": "Món Việt",
+   "category": "Món Việt",
+   "rating": 4.5,
+   "reviews": 10,
+   "dishes": 76,
+   "why": "variety: Hải Phòng (UC-04/05)"
+  },
+  {
+   "merchant_id": "15625",
+   "name": "KEIKI Tea House - Hai Bà Trưng",
+   "city": "Huế",
+   "cuisine": "Món Nhật, Món Á",
+   "category": "Món Nhật, Món Á",
+   "rating": 4.8,
+   "reviews": 10,
+   "dishes": 46,
+   "why": "variety: Huế (UC-04/05)"
+  },
+  {
+   "merchant_id": "233150",
+   "name": "Sushi Lounge - Thống Nhất",
+   "city": "Vũng Tàu",
+   "cuisine": "Món Nhật, Món Á",
+   "category": "Món Nhật, Món Á",
+   "rating": 4.7,
+   "reviews": 10,
+   "dishes": 112,
+   "why": "variety: Vũng Tàu (UC-04/05)"
+  }
+ ]
+}

@@ -1,0 +1,31 @@
+# Crawled / generated data (large, regenerable — do not commit)
+data/crawled/
+data/merchants_unique.jsonl
+data/profiles/
+plans/reports/crawl-progress.log
+plans/reports/*-batch.log
+plans/reports/model-compare.log
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Claude Code / claude-kit tooling (không đưa lên repo dự án)
+.claude/
+.agents/
+CLAUDE.md
+AGENTS.md
+.mcp.json
+.opencode/
+
+# Env / secrets
+.env
+.env.*
+!.env.example
+*.key
+
+# OS / editor
+.DS_Store
+Thumbs.db

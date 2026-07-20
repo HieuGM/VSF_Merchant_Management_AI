@@ -1,0 +1,9925 @@
+{
+ "Đà Nẵng||Món Bắc": [
+  {
+   "dish": "Bún đậu thập cẩm",
+   "total_likes": 999,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bún đậu đặc biệt ⭐️",
+   "total_likes": 999,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Combo 4 : Phất Lộc Rẻ Vô Địch",
+   "total_likes": 500,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bún",
+   "total_likes": 500,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cá viên chiên",
+   "total_likes": 150,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Nem chua rán Hà Nội",
+   "total_likes": 150,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Combo: Bún Đậu Thập Cẩm + Trà Tắc",
+   "total_likes": 120,
+   "sold_by_n_merchants": 3
+  },
+  {
+   "dish": "Cháo quẩy",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Phở tái",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bánh Quẩy",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "TP. HCM||Món Việt": [
+  {
+   "dish": "Trà Sữa Trân Châu",
+   "total_likes": 2304,
+   "sold_by_n_merchants": 6
+  },
+  {
+   "dish": "Trà Sữa Trân Châu Hoàng Kim",
+   "total_likes": 1799,
+   "sold_by_n_merchants": 5
+  },
+  {
+   "dish": "Trà Sữa Socola",
+   "total_likes": 1209,
+   "sold_by_n_merchants": 6
+  },
+  {
+   "dish": "Trà Sữa Phô Mai Tươi",
+   "total_likes": 1209,
+   "sold_by_n_merchants": 5
+  },
+  {
+   "dish": "Trà sữa Bánh Flan",
+   "total_likes": 1169,
+   "sold_by_n_merchants": 5
+  },
+  {
+   "dish": "Bánh cuốn nhân tôm thịt",
+   "total_likes": 1000,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Bánh cuốn nhân thịt",
+   "total_likes": 1000,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Cơm tấm sườn size L",
+   "total_likes": 999,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cơm tấm sườn trứng",
+   "total_likes": 999,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "GÀ RÁN",
+   "total_likes": 912,
+   "sold_by_n_merchants": 13
+  }
+ ],
+ "Hà Nội||Món Việt": [
+  {
+   "dish": "TRÙM DEAL - Cơm Thố Bò + Gà + Dưa Chuột + Cốc Canh",
+   "total_likes": 2498,
+   "sold_by_n_merchants": 3
+  },
+  {
+   "dish": "Cơm Rang Dưa Bò",
+   "total_likes": 2109,
+   "sold_by_n_merchants": 6
+  },
+  {
+   "dish": "T3 - MÓN + TẶNG ĐỒ UỐNG 500ML ***",
+   "total_likes": 1500,
+   "sold_by_n_merchants": 3
+  },
+  {
+   "dish": "Cơm Thố Xá Xíu + Dưa Chuột + Cốc Canh",
+   "total_likes": 1100,
+   "sold_by_n_merchants": 3
+  },
+  {
+   "dish": "TRÙM DEAL - Cơm Thố Bò +Gà + Cốc Canh",
+   "total_likes": 1100,
+   "sold_by_n_merchants": 3
+  },
+  {
+   "dish": "Bánh tráng trộn",
+   "total_likes": 999,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Chân Gà Nướng",
+   "total_likes": 999,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cánh Gà Nướng",
+   "total_likes": 999,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "BÁNH TRÁNG CUỐN SỐT BƠ TRỨNG GÀ",
+   "total_likes": 999,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bánh tráng cuốn MAYONNAISE",
+   "total_likes": 999,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "Hải Phòng||Món Nhật, Món Á": [
+  {
+   "dish": "SÉT-1",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "SÉT-2",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cá Hồi Sốt",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Nigiri Lươn Nhật Nướng Sốt",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Maki Cá Hồi Tươi Cuốn Cơm",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bánh Xèo Nhật Bản",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bánh Bạch Tuộc",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cơm Cà Ri Thịt Chiên ( Cà Ri lợn)",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Mì Bò Udon",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cơm Thịt Chiên Sốt Trứng Gà",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "TP. HCM||Món Bắc": [
+  {
+   "dish": "Bún đậu thập cẩm",
+   "total_likes": 999,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bún đậu thịt",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bún đậu nem chiên",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bún đậu chả cốm",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bún thêm",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Đậu thêm",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Thịt thêm",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Nem Chiên Hà Nội",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Chả cốm Hà Nội",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Chả mực giã tay Hạ Long",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "Vũng Tàu||Món Việt": [
+  {
+   "dish": "Hồng Trà Chanh Sơn Quang",
+   "total_likes": 999,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Hồng Trà Sơn Quang",
+   "total_likes": 500,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Trà sữa Sơn Quang",
+   "total_likes": 500,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Trà Thanh Đào",
+   "total_likes": 300,
+   "sold_by_n_merchants": 4
+  },
+  {
+   "dish": "Trà Thạch Đào-Trà Sữa Highlands",
+   "total_likes": 300,
+   "sold_by_n_merchants": 4
+  },
+  {
+   "dish": "Trà Thạch Vải",
+   "total_likes": 300,
+   "sold_by_n_merchants": 4
+  },
+  {
+   "dish": "PhinĐI Kem Sữa - Cà phê (Coffee)",
+   "total_likes": 200,
+   "sold_by_n_merchants": 4
+  },
+  {
+   "dish": "Trà Sen Vàng (Củ Năng)",
+   "total_likes": 200,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "PhinĐI Hạnh Nhân - Cà phê (Coffee)",
+   "total_likes": 200,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Freeze Trà Xanh - Đá Xay",
+   "total_likes": 150,
+   "sold_by_n_merchants": 2
+  }
+ ],
+ "Đà Nẵng||Món Việt": [
+  {
+   "dish": "Cơm gà xối mỡ",
+   "total_likes": 1999,
+   "sold_by_n_merchants": 3
+  },
+  {
+   "dish": "Trà Thanh Đào",
+   "total_likes": 1100,
+   "sold_by_n_merchants": 17
+  },
+  {
+   "dish": "Cơm Ba Chỉ Giòn Da",
+   "total_likes": 1009,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Trà sữa nướng không thạch",
+   "total_likes": 1000,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Cơm Gà Xối Mỡ Nhỏ",
+   "total_likes": 999,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cơm Gà Xé",
+   "total_likes": 999,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cơm Gà Xối Mỡ",
+   "total_likes": 999,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bún Đậu Thập Cẩm Nhỏ",
+   "total_likes": 999,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Trà Sen Vàng (Củ Năng)",
+   "total_likes": 950,
+   "sold_by_n_merchants": 10
+  },
+  {
+   "dish": "Freeze Trà Xanh - Đá Xay",
+   "total_likes": 950,
+   "sold_by_n_merchants": 10
+  }
+ ],
+ "Đà Nẵng||Châu Mỹ, Mỹ": [
+  {
+   "dish": "Burger Tôm",
+   "total_likes": 210,
+   "sold_by_n_merchants": 4
+  },
+  {
+   "dish": "Gà rán (2 mieng)",
+   "total_likes": 160,
+   "sold_by_n_merchants": 3
+  },
+  {
+   "dish": "Gà rán (1 miếng)",
+   "total_likes": 110,
+   "sold_by_n_merchants": 3
+  },
+  {
+   "dish": "Tenders BBQ Rice",
+   "total_likes": 100,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "POPEYES - Mua 1 Được 2",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Căp đôi hoàn hảo - Gà & Burger 109K",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Gà Tắm Nước Mắm",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Combo Gà Tắm Nước Mắm",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Gà Viên Popcorn (vừa)",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Khoai tây chiên (vừa)",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "TP. HCM||Châu Mỹ, Mỹ": [
+  {
+   "dish": "POPEYES - Mua 1 Được 2 (MALA MALIME)",
+   "total_likes": 1000,
+   "sold_by_n_merchants": 6
+  },
+  {
+   "dish": "Gà Tắm Nước Mắm",
+   "total_likes": 1000,
+   "sold_by_n_merchants": 6
+  },
+  {
+   "dish": "1 Bánh Trứng (18)",
+   "total_likes": 800,
+   "sold_by_n_merchants": 10
+  },
+  {
+   "dish": "Burger Tôm",
+   "total_likes": 760,
+   "sold_by_n_merchants": 11
+  },
+  {
+   "dish": "Combo TRÙM DEAL- Gà Giòn & Popcorn",
+   "total_likes": 600,
+   "sold_by_n_merchants": 6
+  },
+  {
+   "dish": "Combo TRÙM DEAL- Gà Rán Giòn 1P",
+   "total_likes": 600,
+   "sold_by_n_merchants": 6
+  },
+  {
+   "dish": "Gà Rán Giòn - 1 miếng",
+   "total_likes": 600,
+   "sold_by_n_merchants": 6
+  },
+  {
+   "dish": "Combo Gà Tắm Nước Mắm",
+   "total_likes": 600,
+   "sold_by_n_merchants": 6
+  },
+  {
+   "dish": "Khoai tây chiên (vừa)",
+   "total_likes": 600,
+   "sold_by_n_merchants": 6
+  },
+  {
+   "dish": "Gà Viên Popcorn (vừa)",
+   "total_likes": 600,
+   "sold_by_n_merchants": 6
+  }
+ ],
+ "Đà Nẵng||Món Miền Trung": [
+  {
+   "dish": "Cơm Gà Xối Mỡ",
+   "total_likes": 999,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cơm gà xé",
+   "total_likes": 103,
+   "sold_by_n_merchants": 3
+  },
+  {
+   "dish": "Súp tôm chả trứng (trẻ em)",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Súp tôm chả trứng",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Quẩy",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cơm gà đùi",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cơm ba chỉ giòn da",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cơm gà cánh",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cơm sườn chiên giòn",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cơm dương châu",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "Cần Thơ||Món Việt": [
+  {
+   "dish": "Sinh tố bơ",
+   "total_likes": 1998,
+   "sold_by_n_merchants": 4
+  },
+  {
+   "dish": "Xoài Chấm Muối - 200gr",
+   "total_likes": 1000,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Mì kim chi thập cẩm",
+   "total_likes": 500,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bún Thái",
+   "total_likes": 500,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Sữa Tươi Trân Châu Đường Đen (Bán từ 8h sáng)",
+   "total_likes": 500,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Mì Trộn Tóp Mỡ Đặc Biệt",
+   "total_likes": 500,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Mì Trộn Tóp Mỡ",
+   "total_likes": 500,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Súp Mix 3 Món Tự Chọn",
+   "total_likes": 500,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Trà Thạch Đào-Trà Sữa Highlands",
+   "total_likes": 250,
+   "sold_by_n_merchants": 3
+  },
+  {
+   "dish": "Cơm gà kho sả ớt",
+   "total_likes": 210,
+   "sold_by_n_merchants": 4
+  }
+ ],
+ "Hải Phòng||Món Việt": [
+  {
+   "dish": "Cơm Gà Sốt Me",
+   "total_likes": 1998,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Cơm Gà Xối Mỡ",
+   "total_likes": 1000,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Xiên Thịt Nướng",
+   "total_likes": 1000,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Bánh Mì Xiên Nướng Ohio",
+   "total_likes": 1000,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Cơm Bò",
+   "total_likes": 500,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bạc Xỉu",
+   "total_likes": 400,
+   "sold_by_n_merchants": 6
+  },
+  {
+   "dish": "Trà Thanh Đào",
+   "total_likes": 400,
+   "sold_by_n_merchants": 4
+  },
+  {
+   "dish": "Trà Thạch Đào-Trà Sữa Highlands",
+   "total_likes": 300,
+   "sold_by_n_merchants": 3
+  },
+  {
+   "dish": "Trà Thạch Vải",
+   "total_likes": 200,
+   "sold_by_n_merchants": 4
+  },
+  {
+   "dish": "PhinĐI Kem Sữa - Cà phê (Coffee)",
+   "total_likes": 200,
+   "sold_by_n_merchants": 4
+  }
+ ],
+ "Đà Nẵng||Món Việt, Pháp": [
+  {
+   "dish": "Bít tết Bò Mỹ (100 gram)xúc xích",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Phở bò lúc lắc",
+   "total_likes": 3,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Phở áp chảo",
+   "total_likes": 2,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bít tết xBò Mỹ (150 gram) xuc xich Sốt tiêu,Nấm hoặc Bơ Tỏi",
+   "total_likes": 2,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bò lúc lắc (150 gram)",
+   "total_likes": 2,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cơm bò lúc lắc",
+   "total_likes": 2,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cơm chiên cá hồi",
+   "total_likes": 2,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bò lúc lắc (100 gram)",
+   "total_likes": 1,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bít tết bò Mỹ - Thăn nội",
+   "total_likes": 1,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Beef steak (250g)sốt tiêu,nấm hoặc bơ tỏi",
+   "total_likes": 1,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "Đồng Nai||Món Việt": [
+  {
+   "dish": "Combo 2",
+   "total_likes": 1000,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Gà Mắm Xóc Tỏi",
+   "total_likes": 999,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Gà Thái Sốt Chua Cay",
+   "total_likes": 999,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Trà Thạch Đào-Trà Sữa Highlands",
+   "total_likes": 950,
+   "sold_by_n_merchants": 10
+  },
+  {
+   "dish": "Trà Thanh Đào",
+   "total_likes": 830,
+   "sold_by_n_merchants": 13
+  },
+  {
+   "dish": "Freeze Trà Xanh - Đá Xay",
+   "total_likes": 600,
+   "sold_by_n_merchants": 6
+  },
+  {
+   "dish": "Trà mâm xôi lựu",
+   "total_likes": 600,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Cà Phê Phin Sữa Đá (Coffee)",
+   "total_likes": 550,
+   "sold_by_n_merchants": 6
+  },
+  {
+   "dish": "Bánh Mì Que Pate Highlands",
+   "total_likes": 540,
+   "sold_by_n_merchants": 12
+  },
+  {
+   "dish": "Freeze Sô Cô La - Đá Xay",
+   "total_likes": 500,
+   "sold_by_n_merchants": 6
+  }
+ ],
+ "Vũng Tàu||Món Hàn, Món Á": [
+  {
+   "dish": "Cơm Gà Viên",
+   "total_likes": 23,
+   "sold_by_n_merchants": 3
+  },
+  {
+   "dish": "Mì Ý (vừa)",
+   "total_likes": 20,
+   "sold_by_n_merchants": 3
+  },
+  {
+   "dish": "Khoai Tây Chiên (M)",
+   "total_likes": 20,
+   "sold_by_n_merchants": 3
+  },
+  {
+   "dish": "Gà Sốt HS 1 Miếng",
+   "total_likes": 19,
+   "sold_by_n_merchants": 3
+  },
+  {
+   "dish": "Phô Mai Que",
+   "total_likes": 19,
+   "sold_by_n_merchants": 3
+  },
+  {
+   "dish": "Gà Sốt Phô Mai 1 Miếng",
+   "total_likes": 18,
+   "sold_by_n_merchants": 3
+  },
+  {
+   "dish": "Cơm Gà Sốt Phô Mai",
+   "total_likes": 17,
+   "sold_by_n_merchants": 3
+  },
+  {
+   "dish": "Cơm Gà Sốt HS",
+   "total_likes": 16,
+   "sold_by_n_merchants": 3
+  },
+  {
+   "dish": "Mực Rán (3 miếng)",
+   "total_likes": 14,
+   "sold_by_n_merchants": 3
+  },
+  {
+   "dish": "Gà Sốt HS Phần",
+   "total_likes": 13,
+   "sold_by_n_merchants": 3
+  }
+ ],
+ "Huế||Món Miền Trung, Món Huế": [
+  {
+   "dish": "Bún đậu mắm tôm",
+   "total_likes": 999,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bún chả Hà Nội",
+   "total_likes": 500,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Nem Rán Hà Nội",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bún đậu mắm tôm ko thịt heo",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Đậu thêm",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Chè khúc bạch",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Sữa chua Mít",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Sữa chua Nếp Cẩm",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Chả Viên Lá Lốt",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Sấu dầm",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "Đà Nẵng||Món Nhật, Món Á": [
+  {
+   "dish": "Sashimi cá hồi",
+   "total_likes": 20,
+   "sold_by_n_merchants": 3
+  },
+  {
+   "dish": "Cơm cuộn cá hồi sốt mayjo phủ trứng tôm",
+   "total_likes": 20,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "SUSHI CÁ TRÍCH ĐỎ",
+   "total_likes": 20,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Bánh bạch tuộc",
+   "total_likes": 15,
+   "sold_by_n_merchants": 4
+  },
+  {
+   "dish": "Sashimi Cá hồi",
+   "total_likes": 14,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Set 9",
+   "total_likes": 11,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "MAKI TRỨNG",
+   "total_likes": 10,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "SUSHI TÔM",
+   "total_likes": 10,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "sashimi Cá hồi Nauy",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Sushi Cá Trích Vàng",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "Đà Nẵng||Món Bắc, Hà Nội": [
+  {
+   "dish": "Phở tái",
+   "total_likes": 59,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Phở nạm",
+   "total_likes": 15,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Phở gà",
+   "total_likes": 10,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Phở bò viên",
+   "total_likes": 10,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Phở gầu",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Miến gà",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Phở tái viên",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Phở tái bắp",
+   "total_likes": 7,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Thập cẩm lớn",
+   "total_likes": 7,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Phở tái nạm",
+   "total_likes": 7,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "Đà Nẵng||Pháp, Châu Mỹ": [
+  {
+   "dish": "Cơm bò xào",
+   "total_likes": 4,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Phở nạm",
+   "total_likes": 2,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bún chả giò",
+   "total_likes": 1,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Breadstick",
+   "total_likes": 1,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Phở tái",
+   "total_likes": 0,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Phở tái + nạm",
+   "total_likes": 0,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Chả giò",
+   "total_likes": 0,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cà ri gà Việt Nam",
+   "total_likes": 0,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Gà rán cay",
+   "total_likes": 0,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Gà chua ngọt",
+   "total_likes": 0,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "Cần Thơ||Món Việt, Món Thái": [
+  {
+   "dish": "Lẩu thái Thập Cẩm 1 Người",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cá hồi thêm (150g)",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Lẩu Thái Cá Hồi 1 Người",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bò Mỹ Ba Chỉ",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Rau Thêm",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bò Cuộn Nấm Kim Châm ( 5 cuộn)",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Trà Đào Hạt Chia Size M",
+   "total_likes": 20,
+   "sold_by_n_merchants": 4
+  },
+  {
+   "dish": "Lẩu Kim Chi thập cẩm 1 Người",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Lẩu THÁI Topping 1 Người",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Lẩu Kim Chi Topping1 Người",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "Hà Nội||Món Hàn, Món Á": [
+  {
+   "dish": "Khoai Tây Lắc (Vị Phô Mai)",
+   "total_likes": 50,
+   "sold_by_n_merchants": 5
+  },
+  {
+   "dish": "Sốt Phô Mai(1 hũ)",
+   "total_likes": 49,
+   "sold_by_n_merchants": 5
+  },
+  {
+   "dish": "Mì Ý (vừa)",
+   "total_likes": 48,
+   "sold_by_n_merchants": 5
+  },
+  {
+   "dish": "Mì Ý (lớn)",
+   "total_likes": 42,
+   "sold_by_n_merchants": 5
+  },
+  {
+   "dish": "Soup Gà",
+   "total_likes": 42,
+   "sold_by_n_merchants": 5
+  },
+  {
+   "dish": "Cơm Gà Viên",
+   "total_likes": 39,
+   "sold_by_n_merchants": 5
+  },
+  {
+   "dish": "Sốt H&S (1 hũ)",
+   "total_likes": 39,
+   "sold_by_n_merchants": 5
+  },
+  {
+   "dish": "Khoai Tây Chiên (M)",
+   "total_likes": 38,
+   "sold_by_n_merchants": 5
+  },
+  {
+   "dish": "Phô Mai Que",
+   "total_likes": 37,
+   "sold_by_n_merchants": 5
+  },
+  {
+   "dish": "Gà Sốt Phô Mai 1 Miếng",
+   "total_likes": 36,
+   "sold_by_n_merchants": 5
+  }
+ ],
+ "Đà Nẵng||Món Trung Hoa, Món Á": [
+  {
+   "dish": "Cơm thố bò",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cơm thố vịt quay",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cơm thố gà",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cơm gà xối mỡ",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Mì hoành thánh xá xíu",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cơm thố xá xíu",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cơm thố ếch",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cơm thố heo ba chỉ giòn da",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cơm thố gà quay",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cơm thêm",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "Đồng Nai||Món Bắc, Hà Nội": [
+  {
+   "dish": "Bún Đậu Đặc Biệt 1 Người",
+   "total_likes": 200,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Bún thêm",
+   "total_likes": 200,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Trà tắc",
+   "total_likes": 200,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Bún đậu thịt",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bún Chả Cốm Giòn",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bún đậu \" heo thỳ \"",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bún đậu đặc biệt 2 người ăn lận ( Bao No )",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bún Đậu 1 Người",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bún Là Lá La",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Chả cốm Giòn",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "Hà Nội||Quốc tế": [
+  {
+   "dish": "Trà Sữa Ba Anh Em",
+   "total_likes": 500,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Trà Sữa Trân Châu Hoàng Gia",
+   "total_likes": 500,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Tiger Sugar",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Trà Sữa Kim Cương Đen Okinawa",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Trà Xanh Sữa Vị Nhài",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Burger bò + phomai",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Mỳ spaghetti ( mỳ ý bò heo sốt cà chua )",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Đùi Gà Rán",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Đùi Gà Sốt Cay",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cánh Gà Rán",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "Khánh Hoà||Món Việt": [
+  {
+   "dish": "Cà Phê Phin Sữa Đá (Coffee)",
+   "total_likes": 1100,
+   "sold_by_n_merchants": 3
+  },
+  {
+   "dish": "Trà Thạch Đào-Trà Sữa Highlands",
+   "total_likes": 500,
+   "sold_by_n_merchants": 6
+  },
+  {
+   "dish": "Trà Thanh Đào",
+   "total_likes": 500,
+   "sold_by_n_merchants": 6
+  },
+  {
+   "dish": "Bạc Xỉu",
+   "total_likes": 424,
+   "sold_by_n_merchants": 7
+  },
+  {
+   "dish": "Bánh Mì Que Pate Highlands",
+   "total_likes": 320,
+   "sold_by_n_merchants": 6
+  },
+  {
+   "dish": "PhinĐI Hạnh Nhân - Cà phê (Coffee)",
+   "total_likes": 300,
+   "sold_by_n_merchants": 3
+  },
+  {
+   "dish": "Freeze Trà Xanh - Đá Xay",
+   "total_likes": 250,
+   "sold_by_n_merchants": 3
+  },
+  {
+   "dish": "Trà Thạch Vải",
+   "total_likes": 220,
+   "sold_by_n_merchants": 6
+  },
+  {
+   "dish": "Freeze Sô Cô La - Đá Xay",
+   "total_likes": 200,
+   "sold_by_n_merchants": 3
+  },
+  {
+   "dish": "Trà Sen Vàng (Củ Năng)",
+   "total_likes": 200,
+   "sold_by_n_merchants": 2
+  }
+ ],
+ "Hà Nội||Món Nhật, Món Á": [
+  {
+   "dish": "Combo Sushi Đặc Biệt",
+   "total_likes": 100,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Bánh Xèo Nhật",
+   "total_likes": 100,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Canh Miso",
+   "total_likes": 55,
+   "sold_by_n_merchants": 4
+  },
+  {
+   "dish": "Sashimi Cá Hồi",
+   "total_likes": 30,
+   "sold_by_n_merchants": 5
+  },
+  {
+   "dish": "Nigiri Trứng Tamako",
+   "total_likes": 20,
+   "sold_by_n_merchants": 4
+  },
+  {
+   "dish": "Say Cheese Roll",
+   "total_likes": 20,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Nigiri Thanh Cua",
+   "total_likes": 18,
+   "sold_by_n_merchants": 4
+  },
+  {
+   "dish": "Sashimi Bụng Cá Hồi",
+   "total_likes": 17,
+   "sold_by_n_merchants": 3
+  },
+  {
+   "dish": "Salad Tổng Hợp",
+   "total_likes": 15,
+   "sold_by_n_merchants": 5
+  },
+  {
+   "dish": "Bò Cuốn Nấm Kim",
+   "total_likes": 13,
+   "sold_by_n_merchants": 4
+  }
+ ],
+ "Huế||Ý, Món Âu": [
+  {
+   "dish": "Pizza Vị bò băm/2 Cây",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Pizza thập cẩm/2 Cây",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Pizza xúc xích/2 Cây",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Pizza hải sản Size 22cm",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Pizza Hải Sản Size 27cm",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Pizza bò băm Size 22cm",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Pizza Bò Băm Size 27cm",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Pizza Hải Sản Nhiệt Đới / Tropical Seafood",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Pizza Hải Sản Cao Cấp / Seafood Deluxe",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Pizza Hải Sản Cocktail / Seafood Cocktail",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "Hà Nội||Món Á, Đài Loan": [
+  {
+   "dish": "Trà Sữa Ba Anh Em",
+   "total_likes": 1899,
+   "sold_by_n_merchants": 6
+  },
+  {
+   "dish": "Trà Sữa Trân Châu Hoàng Gia",
+   "total_likes": 1800,
+   "sold_by_n_merchants": 6
+  },
+  {
+   "dish": "Trà Xanh Sữa Vị Nhài",
+   "total_likes": 600,
+   "sold_by_n_merchants": 6
+  },
+  {
+   "dish": "Trà Sữa Kim Cương Đen Okinawa",
+   "total_likes": 550,
+   "sold_by_n_merchants": 6
+  },
+  {
+   "dish": "Tiger Sugar",
+   "total_likes": 550,
+   "sold_by_n_merchants": 6
+  },
+  {
+   "dish": "Trà Dâu Tằm Pha Lê Tuyết",
+   "total_likes": 360,
+   "sold_by_n_merchants": 6
+  },
+  {
+   "dish": "Hồng Trà Kem Phô Mai",
+   "total_likes": 360,
+   "sold_by_n_merchants": 6
+  },
+  {
+   "dish": "ToCoToCo Khao Bạn Món Khổng Lồ",
+   "total_likes": 300,
+   "sold_by_n_merchants": 6
+  },
+  {
+   "dish": "Dâu Tằm Kem Phô Mai",
+   "total_likes": 280,
+   "sold_by_n_merchants": 6
+  },
+  {
+   "dish": "Trà Sữa Ô Long",
+   "total_likes": 190,
+   "sold_by_n_merchants": 6
+  }
+ ],
+ "Đồng Nai||Món Thái, Món Á": [
+  {
+   "dish": "Nước Soup Tom-Yum (Không kèm Set Lẩu)",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Mì xanh( lá dứa) 2 vắt",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Set lẩu KwangTung",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Set lẩu Tomyum",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Set Lẩu Neo Classic",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Set lẩu Neo",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Set lẩu tiết kiệm",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Hoành thánh Neo",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Heo ướp mè",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Rong biển cuộn thịt",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "Cần Thơ||Món Nhật, Món Á": [
+  {
+   "dish": "Sashimi cá hồi",
+   "total_likes": 60,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Cuốn cá hồi khè lửa",
+   "total_likes": 60,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Sushi trứng tôm",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Sushi tôm",
+   "total_likes": 29,
+   "sold_by_n_merchants": 4
+  },
+  {
+   "dish": "Sushi bạch tuộc",
+   "total_likes": 25,
+   "sold_by_n_merchants": 3
+  },
+  {
+   "dish": "Cơm sushi với cá hồi",
+   "total_likes": 24,
+   "sold_by_n_merchants": 4
+  },
+  {
+   "dish": "Cuốn cá hồi, trứng cá hồi",
+   "total_likes": 22,
+   "sold_by_n_merchants": 4
+  },
+  {
+   "dish": "Cuốn da cá hồi",
+   "total_likes": 20,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Sashimi bụng cá hồi",
+   "total_likes": 20,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Sushi cá hồi",
+   "total_likes": 20,
+   "sold_by_n_merchants": 2
+  }
+ ],
+ "Cần Thơ||Singapore, Món Á": [
+  {
+   "dish": "Cháo ếch - Phần 1 con vị singapore + cháo lá dứa + rau luộc ( đã bao gồm tiền hộp )",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Đặt biệt: cháo ếch singapore vị bơ ( phần 1 con + cháo lá dứa + dau luộc)",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cháo ếch - Phần 2 con vị singapore + cháo lá dứa + rau luộc ( đã bao gồm tiền hộp)",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cháo lá dứa",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Đặt biệt: cháo ếch singapore vị bơ + cháo lá dứa + rau luộc ( phần 2 con)( đã bao gồm cháoch",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cơm Ếch Singapore( phần 1con - kèm rau luộc + Cơm trắng+",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Ếch thêm không cháo + rau( cấp độ cay: không cay, cay ít, cay vừa, siêu cay)",
+   "total_likes": 8,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cơm thêm",
+   "total_likes": 4,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cơm Ếch Singapore ( Phần 2con + Cơm Trắng + Rau luộc )",
+   "total_likes": 2,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Nước suối",
+   "total_likes": 2,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "Hà Nội||Món Á": [
+  {
+   "dish": "Chè Thập Cẩm",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Chè Thái Bưởi",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Trà Sữa Ba Anh Em",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Trà Sữa Trân Châu Hoàng Gia",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Chè Thái Trân Châu",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Chè Thái Mít",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "ToCoToCo Khao Bạn Món Khổng Lồ",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Trà Dâu Tằm Pha Lê Tuyết",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Tiger Sugar",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Trà Sữa Kim Cương Đen Okinawa",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "Đà Nẵng||Quán ăn": [
+  {
+   "dish": "Bún đậu thập cẩm",
+   "total_likes": 400,
+   "sold_by_n_merchants": 4
+  },
+  {
+   "dish": "Bún đậu đặc biệt ⭐️",
+   "total_likes": 350,
+   "sold_by_n_merchants": 4
+  },
+  {
+   "dish": "Cơm gà cánh",
+   "total_likes": 300,
+   "sold_by_n_merchants": 4
+  },
+  {
+   "dish": "Combo 4 : Phất Lộc Rẻ Vô Địch",
+   "total_likes": 300,
+   "sold_by_n_merchants": 4
+  },
+  {
+   "dish": "Cơm Thố Xá Xíu (Char Siu Claypot Rice )叉烧煲仔饭",
+   "total_likes": 300,
+   "sold_by_n_merchants": 4
+  },
+  {
+   "dish": "Cơm gà đùi",
+   "total_likes": 300,
+   "sold_by_n_merchants": 3
+  },
+  {
+   "dish": "Cơm ba chỉ giòn da",
+   "total_likes": 300,
+   "sold_by_n_merchants": 3
+  },
+  {
+   "dish": "Bún",
+   "total_likes": 220,
+   "sold_by_n_merchants": 5
+  },
+  {
+   "dish": "Combo: Bún Đậu Thập Cẩm + Trà Tắc",
+   "total_likes": 216,
+   "sold_by_n_merchants": 16
+  },
+  {
+   "dish": "Cơm chiên giòn",
+   "total_likes": 193,
+   "sold_by_n_merchants": 8
+  }
+ ],
+ "Hải Phòng||Châu Mỹ, Mỹ": [
+  {
+   "dish": "Gà Tắm Nước Mắm",
+   "total_likes": 500,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Tenders BBQ Rice",
+   "total_likes": 100,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "POPEYES - Mua 1 Được 2 (MALA MALIME)",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Gà Không Xương - 3 Miếng",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Combo Gà Tắm Nước Mắm",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Khoai tây chiên (vừa)",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Khoai Tây Chiên (nhỏ)",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Snack Cá",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cơm trắng",
+   "total_likes": 50,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Combo TRÙM DEAL- Gà Giòn & Popcorn",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "Đà Nẵng||Món Miền Trung, Món Quảng": [
+  {
+   "dish": "Bún riêu chả",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bún chả cá",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bún riêu cua",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Mì quảng tôm thịt",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Mì quảng tôm thịt chả sứa",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Trứng cút",
+   "total_likes": 15,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Tô nhựa + đũa",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bún cá ngừ",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bún cá thu",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bún Trứng Cá",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "Đà Nẵng||Món Việt, Món Bắc": [
+  {
+   "dish": "Bún đậu thập cẩm",
+   "total_likes": 500,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bún đậu đặc biệt ⭐️",
+   "total_likes": 500,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Combo 4 : Phất Lộc Rẻ Vô Địch",
+   "total_likes": 500,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bún đậu đầy đủ ( phần 1 người )",
+   "total_likes": 200,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Cá viên chiên",
+   "total_likes": 116,
+   "sold_by_n_merchants": 3
+  },
+  {
+   "dish": "Bún",
+   "total_likes": 110,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Bún đậu mắm tôm - đặc biệt",
+   "total_likes": 101,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Phở tái",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Phở nạm",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bún đậu mắm tôm",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "Đà Nẵng||Món Miền Trung, Món Huế": [
+  {
+   "dish": "Bún bò huế",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Chả cua (viên)",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bún bò búp",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bún gân + chả cua",
+   "total_likes": 5,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bún tái",
+   "total_likes": 3,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bún xương",
+   "total_likes": 1,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bún gân",
+   "total_likes": 1,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Chả cua - 1 Kg",
+   "total_likes": 1,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "TP. HCM||Ý, Món Âu": [
+  {
+   "dish": "Pizza Hải Sản Nhiệt Đới Delica",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Pizza Gà Sốt Hàn Quốc Delica",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "[BEST SELLER] Gà Viên Sốt Phủ Phô Mai Delica- Spicy Fried Chicken With Cheese",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Khoai Tây Size Nhỏ",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "[Best Seller] Mì Ý Gà Cay Phô Mai - Hot Spicy Chicken Pasta With Mozzarella Cheese",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Mì Ý Bò Bằm Úc - Bolognese Pasta",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Mì Trộn Sốt Mắm Tỏi",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Xúc xích Đức",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Pizza Xúc Xích Xốt Phô Mai",
+   "total_likes": 10,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "COMBO 11: Combo Mì Ý + Pizza + Món Ăn Kèm + Nước Uống",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "Đà Nẵng||Ý, Món Âu": [
+  {
+   "dish": "Pizza Xúc Xích Đức Size L",
+   "total_likes": 200,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Gà Lắc Phô Mai Cay",
+   "total_likes": 200,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Pizza Thập Cẩm Size L",
+   "total_likes": 150,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Pizza Bò size S",
+   "total_likes": 150,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Mì Ý Sốt Bò Bằm",
+   "total_likes": 150,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Pizza Meat Lover's (Thịt 3 vị) Size L",
+   "total_likes": 110,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Pizza Gà Teriyaki Size S",
+   "total_likes": 110,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Khoai Tây Chiên",
+   "total_likes": 109,
+   "sold_by_n_merchants": 3
+  },
+  {
+   "dish": "Pizza Bò Size L",
+   "total_likes": 104,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Pizza Hải Sản Size L",
+   "total_likes": 100,
+   "sold_by_n_merchants": 2
+  }
+ ],
+ "Đà Nẵng||Món Á, Philippines": [
+  {
+   "dish": "Thêm 2 gói tương chua ngọt",
+   "total_likes": 33,
+   "sold_by_n_merchants": 5
+  },
+  {
+   "dish": "1 Miếng Gà Giòn Vui Vẻ",
+   "total_likes": 32,
+   "sold_by_n_merchants": 5
+  },
+  {
+   "dish": "2 Gà Giòn Vui Vẻ + 2 Mỳ Ý Jolly vừa + 1 Khoai Tây Chiên vừa + 2 Nước Ngọt vừa",
+   "total_likes": 31,
+   "sold_by_n_merchants": 5
+  },
+  {
+   "dish": "2 Gà sốt cay + 2 Mỳ ý  + 1 Khoai tây chiên + 2 Nước ngọt",
+   "total_likes": 27,
+   "sold_by_n_merchants": 5
+  },
+  {
+   "dish": "3 Gà Giòn Vui Vẻ + 1 Mỳ Ý Jolly + 1 Khoai tây chiên vừa + 2  Nước ngọt vừa",
+   "total_likes": 24,
+   "sold_by_n_merchants": 5
+  },
+  {
+   "dish": "1 Gà sốt cay + 1 Mỳ ý  + 1 Nước ngọt",
+   "total_likes": 24,
+   "sold_by_n_merchants": 5
+  },
+  {
+   "dish": "1 Mì ý Jolly vừa +  1 Miếng Gà Giòn Vui Vẻ +  1 Nước ngọt lớn",
+   "total_likes": 22,
+   "sold_by_n_merchants": 5
+  },
+  {
+   "dish": "1 Gà sốt cay",
+   "total_likes": 20,
+   "sold_by_n_merchants": 5
+  },
+  {
+   "dish": "1 Mì ý sốt cay vừa + 1 miếng Gà Giòn Vui Vẻ + 1 Pepsi vừa",
+   "total_likes": 14,
+   "sold_by_n_merchants": 5
+  },
+  {
+   "dish": "1 Mì ý Jolly vừa + 1 Miếng Gà Giòn Vui Vẻ + 1 Khoai tây chiên vừa + 1 Nước ngọt lớn",
+   "total_likes": 12,
+   "sold_by_n_merchants": 5
+  }
+ ],
+ "Đà Nẵng||Café/Dessert": [
+  {
+   "dish": "Trà Thạch Đào-Trà Sữa Highlands",
+   "total_likes": 349,
+   "sold_by_n_merchants": 12
+  },
+  {
+   "dish": "PhinĐI Hạnh Nhân - Cà phê (Coffee)",
+   "total_likes": 285,
+   "sold_by_n_merchants": 7
+  },
+  {
+   "dish": "Freeze Trà Xanh - Đá Xay",
+   "total_likes": 276,
+   "sold_by_n_merchants": 7
+  },
+  {
+   "dish": "Cà Phê Phin Sữa Đá (Coffee)",
+   "total_likes": 273,
+   "sold_by_n_merchants": 7
+  },
+  {
+   "dish": "Trà Sen Vàng (Củ Năng)",
+   "total_likes": 271,
+   "sold_by_n_merchants": 6
+  },
+  {
+   "dish": "Trà Thanh Đào",
+   "total_likes": 245,
+   "sold_by_n_merchants": 11
+  },
+  {
+   "dish": "Bạc Xỉu",
+   "total_likes": 196,
+   "sold_by_n_merchants": 14
+  },
+  {
+   "dish": "Bánh Mì Que Pate Highlands",
+   "total_likes": 140,
+   "sold_by_n_merchants": 11
+  },
+  {
+   "dish": "Trà sữa full thạch đặc biệt",
+   "total_likes": 140,
+   "sold_by_n_merchants": 8
+  },
+  {
+   "dish": "Freeze Sô Cô La - Đá Xay",
+   "total_likes": 138,
+   "sold_by_n_merchants": 7
+  }
+ ],
+ "Hải Phòng||Món Bắc": [
+  {
+   "dish": "Bánh Mì Thịt Nướng Pho Mai",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Sữa Chua Trân Châu",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Sữa Chua Sầu Riêng",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Sữa Chua Xoài",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Sữa Chua Cacao De Milo",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Sữa chua Unicorn",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bánh Mì Thập Cẩm Lớn",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bánh Mì Xúc Xích Phủ Pho Mai Lớn",
+   "total_likes": 6,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bánh mì nem khoai phô mai",
+   "total_likes": 5,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bánh Mì Lạp Xưởng Phomai Lớn",
+   "total_likes": 4,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "Huế||Món Việt": [
+  {
+   "dish": "Cơm chiên gà chiên xù sốt Hàn km",
+   "total_likes": 2099,
+   "sold_by_n_merchants": 4
+  },
+  {
+   "dish": "Set kimpap chiên, gà viên, khoai tây 69",
+   "total_likes": 500,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "PhinĐI Hạnh Nhân - Cà phê (Coffee)",
+   "total_likes": 300,
+   "sold_by_n_merchants": 4
+  },
+  {
+   "dish": "Cà Phê Phin Sữa Đá (Coffee)",
+   "total_likes": 300,
+   "sold_by_n_merchants": 4
+  },
+  {
+   "dish": "Trà Thạch Đào-Trà Sữa Highlands",
+   "total_likes": 270,
+   "sold_by_n_merchants": 5
+  },
+  {
+   "dish": "PhinĐI Kem Sữa - Cà phê (Coffee)",
+   "total_likes": 260,
+   "sold_by_n_merchants": 4
+  },
+  {
+   "dish": "Freeze Trà Xanh - Đá Xay",
+   "total_likes": 250,
+   "sold_by_n_merchants": 3
+  },
+  {
+   "dish": "Trà Sen Vàng (Củ Năng)",
+   "total_likes": 200,
+   "sold_by_n_merchants": 3
+  },
+  {
+   "dish": "Pizza KAT",
+   "total_likes": 200,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Pizza seafood",
+   "total_likes": 200,
+   "sold_by_n_merchants": 2
+  }
+ ],
+ "Khánh Hoà||Món Miền Trung, Nha Trang": [
+  {
+   "dish": "Trà sữa truyền thống",
+   "total_likes": 500,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Sữa tươi trân châu đường đen",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Trà đào",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Sữa Tươi Kem Trứng Trân Châu Đường Đen",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Trà Sữa Thái Xanh",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Trà sữa phủ socola",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Trà sữa olong",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Trà Sữa Trân Châu Đường Đen",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Trà Sữa Đậm Vị(Nguyên Lá)",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Sweetcup 3 tầng",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "Hải Phòng||Món Hàn, Món Á": [
+  {
+   "dish": "Mỳ Cay Bò",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Mỳ Cay Sườn Sụn",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Mỳ Cay Hải Sản",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Mỳ Cay Thập Cẩm",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Mỳ Cay Bò Mỹ Cuộn Nấm",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Mỳ Cay Kim Chi Bò",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bò Thêm",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Sườn Sụn Thêm",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Kim Chi Bát",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Nấm kim châm thêm",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "Hà Nội||Café/Dessert": [
+  {
+   "dish": "Trà Sữa Ba Anh Em",
+   "total_likes": 1300,
+   "sold_by_n_merchants": 14
+  },
+  {
+   "dish": "Trà Sữa Trân Châu Hoàng Gia",
+   "total_likes": 730,
+   "sold_by_n_merchants": 14
+  },
+  {
+   "dish": "ToCoToCo Khao Bạn Món Khổng Lồ",
+   "total_likes": 410,
+   "sold_by_n_merchants": 13
+  },
+  {
+   "dish": "Trà Sữa Kim Cương Đen Okinawa",
+   "total_likes": 310,
+   "sold_by_n_merchants": 14
+  },
+  {
+   "dish": "Deal Best Seller 1K",
+   "total_likes": 220,
+   "sold_by_n_merchants": 14
+  },
+  {
+   "dish": "Người Bạn Xanh Sữa Nhài Khổng Lồ - 1000ml",
+   "total_likes": 180,
+   "sold_by_n_merchants": 14
+  },
+  {
+   "dish": "Trà Xanh Sữa Vị Nhài",
+   "total_likes": 174,
+   "sold_by_n_merchants": 14
+  },
+  {
+   "dish": "Trà sữa ba anh em - size L",
+   "total_likes": 130,
+   "sold_by_n_merchants": 14
+  },
+  {
+   "dish": "Trà Sữa Trân Châu Đường Hổ",
+   "total_likes": 127,
+   "sold_by_n_merchants": 14
+  },
+  {
+   "dish": "Trùm Deal - Trà Sữa Ba Anh Em",
+   "total_likes": 127,
+   "sold_by_n_merchants": 14
+  }
+ ],
+ "Hà Nội||Món Thái, Món Á": [
+  {
+   "dish": "Mỳ trộn gà hầm mướp đắng nước đen kiểu Thái",
+   "total_likes": 0,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Mỳ gà hầm mướp đắng nước đen kiểu Thái - đắc biệt",
+   "total_likes": 0,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Mỳ gà hầm mướp đắng nước đen Tomyum kiểu Thái",
+   "total_likes": 0,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Canh gà hầm mướp đắng nước đen Tomyum kiểu Thái với cơm trắng",
+   "total_likes": 0,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cơm gà hầm mướp đắng kiểu Thái",
+   "total_likes": 0,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Mỳ gà Tomyum chuẩn Thái",
+   "total_likes": 0,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Mỳ heo Tomyum chuẩn Thái",
+   "total_likes": 0,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Mỳ tôm Tomyum chuẩn Thái",
+   "total_likes": 0,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Mỳ gà hầm mướp đắng nước đen kiểu Thái",
+   "total_likes": 0,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Chân gà hầm mướp đắng",
+   "total_likes": 0,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "Hà Nội||Món Á, Indonesia": [
+  {
+   "dish": "Mì Trộn Thập Cẩm Nhiều Mì",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Mì Trộn Thập Cẩm",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Mỳ Trộn Bò Viên",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Mì Trộn Xúc Xích",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Xúc xích rán",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Mì Trộn Thập Cẩm+ CôCa",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "5 nem chua rán",
+   "total_likes": 9,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Mỳ Trộn Đặc Biệt",
+   "total_likes": 7,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Mỳ Trộn Tôm",
+   "total_likes": 4,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Mỳ Ý",
+   "total_likes": 3,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "Vũng Tàu||Món Trung Hoa, Món Á": [
+  {
+   "dish": "Rau Thêm Không Sốt",
+   "total_likes": 0,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "Đồng Nai||Món Á, Đài Loan": [
+  {
+   "dish": "Trà sữa",
+   "total_likes": 100,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Trà sữa trân châu hoàng gia",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Trà sữa kim cương đen Okinawa",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Trà sữa Panda",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Trà sữa ba anh em",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Trà sữa ôlong",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Trà dâu tằm pha lê tuyết",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Trà dứa nhiệt đới",
+   "total_likes": 50,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Trà sữa hạnh phúc",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Sữa tươi trân châu đường hổ",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "Hà Nội||Món Bắc, Hà Nội": [
+  {
+   "dish": "Bún chả",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "CỐT DỪA CỐM XANH - Coconut  Green Rice",
+   "total_likes": 4,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "CỐT DỪA ĐẬU XANH - Coconut Mung Bean",
+   "total_likes": 3,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Nem Rán",
+   "total_likes": 2,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "CỐT DỪA CÀ PHÊ S - Coconut  Coffee Short",
+   "total_likes": 2,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "BẠC XỈU ĐÁ 12oz - Iced Coffee W.Condensed Milk, Coconut Milk 12oz",
+   "total_likes": 2,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Miến Xào Hải Sản",
+   "total_likes": 1,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Khoai Tây Lắc Bơ Đường",
+   "total_likes": 1,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Mực Nướng (3)",
+   "total_likes": 1,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Khoai Tây Lắc Phomai",
+   "total_likes": 1,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "Cần Thơ||Món Á, Đài Loan": [
+  {
+   "dish": "Trà sữa trân châu hoàng gia",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Trà sữa kim cương đen Okinawa",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Trà sữa",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Trà sữa hạnh phúc",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Sữa tươi trân châu đường hổ",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Trà sữa panda",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Hồng trà",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Trà sữa ô long",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Trà xanh sữa vị nhài",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Ô long thái cực",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "Đà Nẵng||Món Hàn, Món Á": [
+  {
+   "dish": "Mì cay bò",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Mì cay hải sản",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Mì cay bò Mỹ",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Mì cay thập cẩm",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Mì cay đùi gà",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Sashimi cá hồi",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cơm cuộn phủ cá hồi",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Phô Mai Que",
+   "total_likes": 23,
+   "sold_by_n_merchants": 3
+  },
+  {
+   "dish": "Soup Gà",
+   "total_likes": 21,
+   "sold_by_n_merchants": 3
+  },
+  {
+   "dish": "Mì Ý (vừa)",
+   "total_likes": 18,
+   "sold_by_n_merchants": 3
+  }
+ ],
+ "Đồng Nai||Món Nhật, Món Á": [
+  {
+   "dish": "Sushi thập cẩm",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Sushi trứng tôm",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Sushi set",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Combo Ume",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bánh bạch tuộc",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Sushi chiên xù",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Sushi truyền thống",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Sushi chiên giòn",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Sushi katsu xù",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Sushi phô mai",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "Đồng Nai||Món Việt, Ý": [
+  {
+   "dish": "A9 Pizza Hải Sản ( bán chạy )",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Khoai Tây",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Garlic butter french fries",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Gecko salad (salad with tuna fish)",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Traditional bolognaise - Mì Ý cà chua bò xay",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Carbonara - Mì Ý sốt kem dăm bông, nấm",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "A22 Super pizza ( thập cẩm )",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "A12 BBQ chicken pizza ( pizza Gà )",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "A15 Honey pizza( pizza phomai mật ong )",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "A8* Seafood pesto (pizza rau húng quế )",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "Đồng Nai||Shop Online": [
+  {
+   "dish": "Mì Spaghetti Gà Giòn",
+   "total_likes": 120,
+   "sold_by_n_merchants": 4
+  },
+  {
+   "dish": "Burger Gà Mayo",
+   "total_likes": 114,
+   "sold_by_n_merchants": 4
+  },
+  {
+   "dish": "Hotdog Hàn Quốc",
+   "total_likes": 17,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Burger Tôm Mayo",
+   "total_likes": 12,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Mì Spaghetti Trứng",
+   "total_likes": 12,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Burger Bò Mayo",
+   "total_likes": 11,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Burger Tôm Đặc Biệt",
+   "total_likes": 11,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Khoai Tây Lắc Phô Mai",
+   "total_likes": 11,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "COMBO BURGER TIẾT KIỆM",
+   "total_likes": 10,
+   "sold_by_n_merchants": 4
+  },
+  {
+   "dish": "Mì Spaghetti Bò",
+   "total_likes": 10,
+   "sold_by_n_merchants": 2
+  }
+ ],
+ "TP. HCM||Món Á, Philippines": [
+  {
+   "dish": "2 Gà Giòn Vui Vẻ + 2 Mỳ Ý Jolly vừa + 1 Khoai Tây Chiên vừa + 2 Nước Ngọt vừa",
+   "total_likes": 130,
+   "sold_by_n_merchants": 5
+  },
+  {
+   "dish": "Thêm 2 gói tương chua ngọt",
+   "total_likes": 85,
+   "sold_by_n_merchants": 5
+  },
+  {
+   "dish": "1 Mì ý Jolly vừa +  1 Miếng Gà Giòn Vui Vẻ +  1 Nước ngọt lớn",
+   "total_likes": 82,
+   "sold_by_n_merchants": 5
+  },
+  {
+   "dish": "1 Mì ý sốt cay vừa + 1 miếng Gà Giòn Vui Vẻ + 1 Pepsi vừa",
+   "total_likes": 47,
+   "sold_by_n_merchants": 5
+  },
+  {
+   "dish": "1 Miếng Gà Giòn Vui Vẻ",
+   "total_likes": 44,
+   "sold_by_n_merchants": 5
+  },
+  {
+   "dish": "1 Gà sốt cay",
+   "total_likes": 44,
+   "sold_by_n_merchants": 5
+  },
+  {
+   "dish": "1 Mì ý Jolly vừa + 1 Miếng Gà Giòn Vui Vẻ + 1 Khoai tây chiên vừa + 1 Nước ngọt lớn",
+   "total_likes": 42,
+   "sold_by_n_merchants": 5
+  },
+  {
+   "dish": "Mỳ Ý sốt cay vừa",
+   "total_likes": 42,
+   "sold_by_n_merchants": 5
+  },
+  {
+   "dish": "1 Tôm Burger",
+   "total_likes": 42,
+   "sold_by_n_merchants": 5
+  },
+  {
+   "dish": "Khoai tây lắc vị thịt nướng BBQ - lớn",
+   "total_likes": 42,
+   "sold_by_n_merchants": 5
+  }
+ ],
+ "Đồng Nai||Quốc tế": [
+  {
+   "dish": "Mua 1 Tặng 1 chỉ 127K - Bộ đôi Gà Giòn & Mì Ý Phô Mai",
+   "total_likes": 100,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Tenders BBQ Rice",
+   "total_likes": 100,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Combo Hè Sóng Vị",
+   "total_likes": 100,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Combo Hè Lướt Vị",
+   "total_likes": 100,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Burger Gà Mayo",
+   "total_likes": 100,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Mì Spaghetti Gà Giòn",
+   "total_likes": 100,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Căp đôi hoàn hảo - Gà & Burger 109K",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "POPEYES - Mua 1 Được 2 (MALA MALIME)",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Gà Tắm Nước Mắm",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Combo Gà Tắm Nước Mắm",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "Vũng Tàu||Món Việt, Đặc sản vùng": [
+  {
+   "dish": "Súp bí đỏ",
+   "total_likes": 6,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bánh bột lọc",
+   "total_likes": 5,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bún huế",
+   "total_likes": 4,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Món cuốn đặc biệt",
+   "total_likes": 4,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Hủ tiếu lứt",
+   "total_likes": 3,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Súp miso",
+   "total_likes": 3,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Chả giò rong biển",
+   "total_likes": 3,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Miến tay cầm",
+   "total_likes": 3,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cơm Trắng",
+   "total_likes": 3,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Mít non kho",
+   "total_likes": 3,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "Đà Nẵng||Món Miền Nam": [
+  {
+   "dish": "Nem - cây",
+   "total_likes": 1,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bún mắm nem chả",
+   "total_likes": 1,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bún mắm thập cẩm",
+   "total_likes": 0,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bún mắm thịt luộc",
+   "total_likes": 0,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Chả - cây",
+   "total_likes": 0,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bún Mắm Heo Quay",
+   "total_likes": 0,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bún mắm tai mui",
+   "total_likes": 0,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bánh lọc - cái",
+   "total_likes": 0,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bánh nậm - cái",
+   "total_likes": 0,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bánh gói - cái",
+   "total_likes": 0,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "TP. HCM||Món Nhật, Món Á": [
+  {
+   "dish": "Súp miso",
+   "total_likes": 106,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Gừng Hồng Mua Thêm",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Trứng Chiên Nhật Nigiri",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Tôm Nigiri",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cá Hồi Nigiri - 2 viên",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bạch Tuộc Nigiri",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cá Hồi Phô Mai Gunkan",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Trứng Cá Ốt Cam Gunkan",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Thanh Cua Trứng Mayo Gunkan",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cá Ngừ Phô Mai Gunkan",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "Đồng Nai||Ăn vặt/vỉa hè": [
+  {
+   "dish": "Bánh TACOS Bò - Size M",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "TACOS Gà NƯớng- Size M",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bánh tam Giác vàng",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bánh mì cuộn gà Mexico - số 4",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Tacos Gà giòn - size S",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "TACOS gà Giòn - Size M",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "TACOS Gà Nướng - Size L",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bánh TACOS Bò - Size L",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bánh TACOS - CHAY (Vegetarian food)",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "TACOS Gà giòn - xúc xích Mix",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "Hải Phòng||Món Á": [
+  {
+   "dish": "Combo 199K (Set 1)",
+   "total_likes": 0,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Combo 350K (Set 2)",
+   "total_likes": 0,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Combo 250K (Set 2)",
+   "total_likes": 0,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Combo 299K (Set 2)",
+   "total_likes": 0,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Combo 399K (Set 2)",
+   "total_likes": 0,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Combo 299K (Set 1)",
+   "total_likes": 0,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Combo 350K (Set 1)",
+   "total_likes": 0,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Combo 199K (Set 2)",
+   "total_likes": 0,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Combo 250K (Set 1)",
+   "total_likes": 0,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Combo 399K (Set 1)",
+   "total_likes": 0,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "Hải Phòng||Singapore, Món Á": [
+  {
+   "dish": "Cháo Ếch Suất 1 Con",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Quẩy",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bánh Mì",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cháo Ếch Suất 2 Con",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Súp Lươn",
+   "total_likes": 9,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Ếch Chấm Bánh Mì",
+   "total_likes": 9,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Ếch Chiên giòn tẩm bột 2 con",
+   "total_likes": 7,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cháo Trắng",
+   "total_likes": 6,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Ếch Chấm Bánh Mì Xuất 2 Con",
+   "total_likes": 5,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Tù Và Ếch Xào Bơ Tỏi",
+   "total_likes": 4,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "Hải Phòng||Ý, Món Âu": [
+  {
+   "dish": "Pizza Hải Sản Pesto Xanh / Secret Recipe Seafood Pesto",
+   "total_likes": 110,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Pizza Hải Sản Nhiệt Đới / Tropical Seafood",
+   "total_likes": 15,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Pizza 5 Loại Thịt Đặc Biệt / Meat Deluxe",
+   "total_likes": 12,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Pizza 5 Loại Thịt Đặc Biệt Và Rau Củ / Super Deluxe",
+   "total_likes": 11,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Mì Ý Giăm Bông Và Nấm xốt Kem / Pasta ham & mushroom in creamy sauce",
+   "total_likes": 10,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Salad gà giòn không xương / Chicken strip slad with 1000 island sauce",
+   "total_likes": 10,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Gà giòn không xương / Chicken Strip",
+   "total_likes": 10,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Pizza Hải Sản Cao Cấp / Seafood Deluxe",
+   "total_likes": 9,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Pizza Thịt Nguội Kiểu Canada / Canadian Bacon",
+   "total_likes": 8,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Mì Ý thịt bò bằm / Pasta Bolognese",
+   "total_likes": 8,
+   "sold_by_n_merchants": 2
+  }
+ ],
+ "Vũng Tàu||Món Nhật, Món Á": [
+  {
+   "dish": "Mì cay thập cẩm",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Mì cay bò",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Mì cay xúc xích cá viên",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Mì cay hải sản",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Set Cá Hồi",
+   "total_likes": 14,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Ebi Sushi",
+   "total_likes": 12,
+   "sold_by_n_merchants": 3
+  },
+  {
+   "dish": "Nishin Sushi",
+   "total_likes": 10,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "...Sake Sashimi",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Sake Sushi - Cơm Nắm Cá Hồi ( Cá Sống)",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Tobiko Gunkan -Cơm Nắm Trứng Cá Chuồn",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "Đồng Nai||Châu Mỹ, Mỹ": [
+  {
+   "dish": "Gà rán (1 miếng)",
+   "total_likes": 150,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "4 Bánh Trứng",
+   "total_likes": 150,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "1 Bánh Trứng (18)",
+   "total_likes": 120,
+   "sold_by_n_merchants": 4
+  },
+  {
+   "dish": "Sữa chua trân châu cốt dừa(topping chung kg bỏ riêng)",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Trà sữa đậm đà ly",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Gà rán (3 miếng)",
+   "total_likes": 60,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Cơm Phi-lê Gà Quay",
+   "total_likes": 52,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Burger Tôm",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "socola trân châu banh bo kem cheese",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Trà sữa hạt dẻ trân châu banh bo kem cheese",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "Huế||Món Nhật, Món Á": [
+  {
+   "dish": "Bánh Mì Que",
+   "total_likes": 500,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Takoyaki Sốt Truyền Thống",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Takoyaki Sốt Chua Cay",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Takoyaki Sốt Phomai",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Takoyaki Sốt Trứng Muối",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Takoyaki Phủ Cá Bào",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bánh Mì Phô Mai",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Matcha Latte",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Phin Muối",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Phin Sương Sáo",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "Huế||Món Miền Trung": [
+  {
+   "dish": "Bánh tráng cuốn heo quay",
+   "total_likes": 999,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Mỳ quảng thập cẩm",
+   "total_likes": 500,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Mỳ quảng gà",
+   "total_likes": 500,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Mỳ quảng Tôm thịt trứng",
+   "total_likes": 500,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bánh tráng cuốn heo luộc",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bánh ướt heo quay",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bánh tráng (1 cái)",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Mỳ quảng ếch lớn",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Mỳ  thêm",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Mỳ Quảng thịt trứng",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "Khánh Hoà||Món Hàn, Món Á": [
+  {
+   "dish": "Sốt H&S (1 hũ)",
+   "total_likes": 20,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Sốt Phô Mai(1 hũ)",
+   "total_likes": 19,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Cơm Gà Viên",
+   "total_likes": 17,
+   "sold_by_n_merchants": 3
+  },
+  {
+   "dish": "Mì Ý (vừa)",
+   "total_likes": 15,
+   "sold_by_n_merchants": 3
+  },
+  {
+   "dish": "Mực Rán (3 miếng)",
+   "total_likes": 14,
+   "sold_by_n_merchants": 3
+  },
+  {
+   "dish": "Phô Mai Que",
+   "total_likes": 13,
+   "sold_by_n_merchants": 3
+  },
+  {
+   "dish": "Khoai Tây Chiên (M)",
+   "total_likes": 13,
+   "sold_by_n_merchants": 3
+  },
+  {
+   "dish": "Soup Gà",
+   "total_likes": 13,
+   "sold_by_n_merchants": 3
+  },
+  {
+   "dish": "Gà Lắc (Vị Phô Mai)",
+   "total_likes": 12,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Gà Sốt HS 1 Miếng",
+   "total_likes": 11,
+   "sold_by_n_merchants": 3
+  }
+ ],
+ "TP. HCM||Quán ăn": [
+  {
+   "dish": "Bún bò thập cẩm không giò (tô nhỏ)",
+   "total_likes": 1000,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Bún Bò Chả",
+   "total_likes": 999,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Canh cải",
+   "total_likes": 900,
+   "sold_by_n_merchants": 10
+  },
+  {
+   "dish": "Thố Gà Áp Chảo",
+   "total_likes": 800,
+   "sold_by_n_merchants": 10
+  },
+  {
+   "dish": "Thố xá xíu",
+   "total_likes": 450,
+   "sold_by_n_merchants": 5
+  },
+  {
+   "dish": "Cơm Chiên Tỏi",
+   "total_likes": 350,
+   "sold_by_n_merchants": 5
+  },
+  {
+   "dish": "Thố Cơm Chay",
+   "total_likes": 266,
+   "sold_by_n_merchants": 6
+  },
+  {
+   "dish": "Canh Khổ Qua",
+   "total_likes": 260,
+   "sold_by_n_merchants": 10
+  },
+  {
+   "dish": "HOT: Pizza bò bằm ( tặng 1 chai coca )",
+   "total_likes": 232,
+   "sold_by_n_merchants": 11
+  },
+  {
+   "dish": "Thố dương châu",
+   "total_likes": 210,
+   "sold_by_n_merchants": 5
+  }
+ ],
+ "Cần Thơ||Quán ăn": [
+  {
+   "dish": "Cơm gà chiên xù",
+   "total_likes": 500,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Mì Trộn Tóp Mỡ Đặc Biệt",
+   "total_likes": 200,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Trà Tắc 1 Lít",
+   "total_likes": 150,
+   "sold_by_n_merchants": 3
+  },
+  {
+   "dish": "Mì Trộn Tóp Mỡ",
+   "total_likes": 150,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Mì Trộn Bò Viên",
+   "total_likes": 100,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Mua 1 Tặng 1 chỉ 127K - Bộ đôi Gà Giòn & Mì Ý Phô Mai",
+   "total_likes": 100,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Trà Thạch Đào-Trà Sữa Highlands",
+   "total_likes": 100,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Cơm gà sốt thái",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cơm gà chiên nước mắm",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cơm gà sốt tiêu xanh",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "TP. HCM||Món Việt, Món Hàn": [
+  {
+   "dish": "Mì kim chi bò",
+   "total_likes": 500,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Mì kim chi gà",
+   "total_likes": 207,
+   "sold_by_n_merchants": 3
+  },
+  {
+   "dish": "Mì kim chi hải sản",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Mì kim chi Larva",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Mì kim chi thịt xúc xích",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cơm trộn",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Miến trộn",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Topokki hải sản",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Mì ý đút lò",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Topokki lắc",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "Hà Nội||Quán ăn": [
+  {
+   "dish": "CƠM GÀ VIÊN SỐT ( best seller )",
+   "total_likes": 430,
+   "sold_by_n_merchants": 14
+  },
+  {
+   "dish": "Cơm rang dưa bò",
+   "total_likes": 406,
+   "sold_by_n_merchants": 6
+  },
+  {
+   "dish": "Cơm Sườn Sốt Muối Ớt Nướng",
+   "total_likes": 400,
+   "sold_by_n_merchants": 5
+  },
+  {
+   "dish": "Bún Thái Hải Sản",
+   "total_likes": 400,
+   "sold_by_n_merchants": 4
+  },
+  {
+   "dish": "Combo Kimbap Gà Sốt",
+   "total_likes": 400,
+   "sold_by_n_merchants": 4
+  },
+  {
+   "dish": "Cơm Thố Xá Xíu",
+   "total_likes": 300,
+   "sold_by_n_merchants": 4
+  },
+  {
+   "dish": "Cơm Thố Gà + Xá Xíu",
+   "total_likes": 300,
+   "sold_by_n_merchants": 4
+  },
+  {
+   "dish": "Bún Bò Huế Bát Truyền Thống",
+   "total_likes": 300,
+   "sold_by_n_merchants": 4
+  },
+  {
+   "dish": "Bún Trộn Nem Nướng",
+   "total_likes": 260,
+   "sold_by_n_merchants": 5
+  },
+  {
+   "dish": "HOT: Pizza bò bằm ( tặng 1 chai coca )",
+   "total_likes": 228,
+   "sold_by_n_merchants": 8
+  }
+ ],
+ "Đồng Nai||Ăn vặt/vỉa hè, Shop Online": [
+  {
+   "dish": "Cháo BỘT",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cháo HỘT",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cháo BỘT trứng bắc thảo",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cháo Bột Sườn",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cháo Hột Sườn",
+   "total_likes": 8,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cháo HỘT nhỏ",
+   "total_likes": 7,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cháo HỘT trứng bắc thảo",
+   "total_likes": 5,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cháo HỘT dinh dưỡng",
+   "total_likes": 4,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cháo Bột nhỏ",
+   "total_likes": 3,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cháo Hột Sườn phô mai đặc biệt",
+   "total_likes": 3,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "Đồng Nai||Quán ăn": [
+  {
+   "dish": "Cơm Thố Xá Xíu",
+   "total_likes": 200,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Cơm Thố Gà + Xá Xíu",
+   "total_likes": 200,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Thố Đặc Biệt Bò + Gà + Xíu + Trứng",
+   "total_likes": 200,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Cơm Thố Gà Nướng BBQ",
+   "total_likes": 112,
+   "sold_by_n_merchants": 3
+  },
+  {
+   "dish": "Cơm thố xá xíu",
+   "total_likes": 110,
+   "sold_by_n_merchants": 4
+  },
+  {
+   "dish": "Sushi thập cẩm Vip",
+   "total_likes": 100,
+   "sold_by_n_merchants": 3
+  },
+  {
+   "dish": "Cơm Thố Bò(BeeF)",
+   "total_likes": 100,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "1 Bánh Trứng (18)",
+   "total_likes": 100,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Cacao Dẻo Latte",
+   "total_likes": 100,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Cháo Hành Ếch Singapore",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "Vũng Tàu||Quán ăn": [
+  {
+   "dish": "Bún đậu Mẹt Tre",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bún đậu tá lả",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Chả cốm thêm",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bánh Takoyaki vị Truyền thống",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Combo Hè Sóng Vị",
+   "total_likes": 20,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Combo Hè Lướt Vị",
+   "total_likes": 20,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Chả hấp",
+   "total_likes": 20,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Canh rong biển thanh mát",
+   "total_likes": 20,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "1 Miếng Gà Giòn Vui Vẻ",
+   "total_likes": 15,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "2 Gà Giòn Vui Vẻ + 2 Mỳ Ý Jolly vừa + 1 Khoai Tây Chiên vừa + 2 Nước Ngọt vừa",
+   "total_likes": 14,
+   "sold_by_n_merchants": 2
+  }
+ ],
+ "Đà Nẵng||Ăn vặt/vỉa hè, Shop Online": [
+  {
+   "dish": "Cơm Gà Xối Mỡ",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cơm Gà Xối Mỡ - Lớn",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Nước Chanh Dây",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cơm Gà Xé",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cơm Cánh Gà Chiên Mắm",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cơm Chiên Trứng",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cơm Chiên Dương Châu",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cơm Sườn Sốt Chua Ngọt",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cơm Sườn Chiên Giòn",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cơm Xá Xíu",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "Cần Thơ||Món Hàn, Món Á": [
+  {
+   "dish": "Mì kim chi thập cẩm",
+   "total_likes": 999,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Mì kim chi bò",
+   "total_likes": 999,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Mì kim chi hải sản",
+   "total_likes": 500,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Kimbap",
+   "total_likes": 500,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Mì Kim Chi Bò Mỹ",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Mì kim chi bạch tuộc",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Miến trộn",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cơm trộn",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Gà cay phô mai",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bánh bạch tuộc",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "Đồng Nai||Café/Dessert, Quán ăn": [
+  {
+   "dish": "Viên hải sản phô mai",
+   "total_likes": 200,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Nem Chua Rán (4 Cái)",
+   "total_likes": 100,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Mì trộn thập cẩm nhiều mì (x2 mì)",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Mì trộn thập cẩm",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Mì trộn đặc biệt full topping 2 gói",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Combo Mì trộn thập cẩm + Xúc xích + Coca",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Mì gà nugget",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Mì trộn thập cẩm + Trứng ốp",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Mì trộn đặc biệt full toping 1 gói",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Mì trộn xúc xích",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "Đà Nẵng||Ăn vặt/vỉa hè": [
+  {
+   "dish": "Bánh mì chả cá Phan Rang",
+   "total_likes": 12,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Bánh mì truyền thống",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bánh mì ốp la 2 trứng khói",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bánh mì chả cá + ốp la",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bạc Xỉu Khói",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bánh mì Khói đặc biệt",
+   "total_likes": 9,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cà Phê Kem Muối Khói",
+   "total_likes": 9,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bánh Mì Thịt Xíu Ốp La",
+   "total_likes": 6,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Sữa Đậu Nành Nuti Nguyên chất",
+   "total_likes": 6,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cà Phê Sữa Khói",
+   "total_likes": 5,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "Hà Nội||Café/Dessert, Quán ăn": [
+  {
+   "dish": "1 Bánh Trứng (18)",
+   "total_likes": 20,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Combo Cơm Trưa Phi-lê Gà Quay",
+   "total_likes": 16,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Gà Rán (1 Miếng)",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Gà Rán (3 Miếng)",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Gà Rán (2 Miếng)",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "BURGER GÀ YO",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cơm Phi-lê Gà Quay",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Burger Tôm",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cơm Gà Viên Nanban",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "1 Gà Popcorn (Vừa)",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "Đà Nẵng||Quán ăn, Shop Online": [
+  {
+   "dish": "Bún đậu Nhỏ ( Xưa / 1ng )",
+   "total_likes": 200,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Bún Đậu Đặc Biệt ( Xưa)",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bún Chả Hà Nội",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bún đậu lớn thập cẩm Xưa ( 2 Ng Ăn )",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bún thêm",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Đậu thêm",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Nem chua rán",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Trà chanh Xưa",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bún đậu đặc biệt Xưa ( 2 ng ăn )",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Mắm Tôm Thêm",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "Đà Nẵng||Café/Dessert, Quán ăn": [
+  {
+   "dish": "CƠM CUỘN TRỨNG",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Sashimi cá hồi",
+   "total_likes": 9,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Sushi Trứng Tôm",
+   "total_likes": 6,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "CƠM CUỘN CÁ HỒI",
+   "total_likes": 6,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Sushi cá hồi",
+   "total_likes": 5,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Sushi Cá Hồi Sốt Cay",
+   "total_likes": 5,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Sushi Tôm",
+   "total_likes": 4,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "CƠM CUỘN CALIFORNIA",
+   "total_likes": 4,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "SALAD BƠ",
+   "total_likes": 4,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Sushi Lươn",
+   "total_likes": 3,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "Cần Thơ||Café/Dessert, Quán ăn": [
+  {
+   "dish": "Sashimi Cá Hồi",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Salad Da Cá Hồi",
+   "total_likes": 7,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Combo K5 mix 3 loại",
+   "total_likes": 3,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Sashimi Cá trích ép trứng",
+   "total_likes": 2,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Sashimi Cá Ngừ",
+   "total_likes": 1,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Sashimi Sò Đỏ",
+   "total_likes": 1,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Combo K2 mix 3 loại",
+   "total_likes": 1,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Combo K3 mix 3 loại",
+   "total_likes": 1,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Combo T1 mix 4 loại",
+   "total_likes": 1,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Salad Rong Nho",
+   "total_likes": 1,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "Hà Nội||Món Việt, Món Bắc": [
+  {
+   "dish": "Xôi Trắng",
+   "total_likes": 500,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "CƠM GÀ VIÊN SỐT ( best seller )",
+   "total_likes": 200,
+   "sold_by_n_merchants": 3
+  },
+  {
+   "dish": "Burger Gà",
+   "total_likes": 100,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Bánh gà",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "POP Gà Lắc Phô Mai",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Đùi Gà Rán Lớn",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cánh Gà Rán",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "POP Gà Chiên Giòn size M",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Khoai Tây Lắc phô mai cỡ vừa",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Khoai Tây Lắc Phô Mai Cỡ Đại",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "Huế||Món Hàn, Món Á": [
+  {
+   "dish": "Mực Rán (3 miếng)",
+   "total_likes": 17,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Mì Ý (vừa)",
+   "total_likes": 16,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Cơm Gà Viên",
+   "total_likes": 15,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Sốt Phô Mai(1 hũ)",
+   "total_likes": 15,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Gà Sốt Phô Mai 1 Miếng",
+   "total_likes": 10,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Sốt H&S (1 hũ)",
+   "total_likes": 10,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Khoai Tây Chiên (M)",
+   "total_likes": 9,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Cơm",
+   "total_likes": 9,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Sốt Đậu (1 hũ)",
+   "total_likes": 9,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Combo Gà-Mì",
+   "total_likes": 8,
+   "sold_by_n_merchants": 4
+  }
+ ],
+ "Cần Thơ||Châu Mỹ, Mỹ": [
+  {
+   "dish": "Combo Cơm Trưa Phi-lê Gà Quay",
+   "total_likes": 100,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Combo Trưa Mì Ý",
+   "total_likes": 20,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "COMBO 6 MÓN (119)",
+   "total_likes": 20,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "1 Bánh Trứng (18)",
+   "total_likes": 20,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Pizza Hải Sản Nhiệt Đới",
+   "total_likes": 20,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Combo Trưa Burger Tôm",
+   "total_likes": 10,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Gà rán (1 miếng)",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Gà rán (3 miếng)",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cơm Phi-lê Gà Quay",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Burger Tôm",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "Cần Thơ||Quốc tế": [
+  {
+   "dish": "Pizza Hải Sản Nhiệt Đới",
+   "total_likes": 10,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Pizza Phô Mai Cao Cấp",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Pizza Hải Sản Nhiệt Đới / Tropical Seafood",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Pizza Hải Sản Pesto Xanh / Secret Recipe Seafood Pesto",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Pizza Gà Phô Mai",
+   "total_likes": 8,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Pizza Hải Sản Cocktail / Seafood Cocktail",
+   "total_likes": 7,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Pizza Hải Sản Thập Cẩm Xốt Mayo",
+   "total_likes": 6,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Pizza Hải Sản Xốt Pesto Truyền Thống",
+   "total_likes": 6,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Pizza Hawaii / Hawaiian",
+   "total_likes": 5,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Pizza Gấp Đôi Nhân Phủ Cơn Lốc Hải Sản",
+   "total_likes": 4,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "Hà Nội||Châu Mỹ, Mỹ": [
+  {
+   "dish": "1 Bánh Trứng (18)",
+   "total_likes": 400,
+   "sold_by_n_merchants": 4
+  },
+  {
+   "dish": "Gà Rán (3 Miếng)",
+   "total_likes": 200,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Gà Rán (1 Miếng)",
+   "total_likes": 200,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Gà Rán (2 Miếng)",
+   "total_likes": 200,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Burger Tôm",
+   "total_likes": 200,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "4 Bánh Trứng",
+   "total_likes": 200,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "1 Gà Popcorn (Vừa)",
+   "total_likes": 150,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Cơm Phi-lê Gà Quay",
+   "total_likes": 100,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Phô Mai Viên (4 Viên)",
+   "total_likes": 100,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "1 Gà Popcorn (Lớn)",
+   "total_likes": 100,
+   "sold_by_n_merchants": 2
+  }
+ ],
+ "TP. HCM||Món Á": [
+  {
+   "dish": "Sushi mori B",
+   "total_likes": 2,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cá hồi sashimi S",
+   "total_likes": 1,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cá ngừ sashimi",
+   "total_likes": 1,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cali roll",
+   "total_likes": 1,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Crunch roll",
+   "total_likes": 1,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Tamago maki",
+   "total_likes": 1,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Sake cali roll",
+   "total_likes": 1,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Dragon roll",
+   "total_likes": 1,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Avocado maki",
+   "total_likes": 1,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Tekka maki",
+   "total_likes": 1,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "Cần Thơ||Món Hàn": [
+  {
+   "dish": "Mỳ kim chi hải sản (size lớn)",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Mỳ kim chi bò (size lớn)",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "LẨU BÒ MỸ",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "NƯỚC LẨU KIM CHI",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "NẤM THẬP CẨM",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "BA CHỈ BÒ MỸ",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Kimbap truyền thống",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "LẨU HẢI SẢN",
+   "total_likes": 8,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Tokbokki phô mai",
+   "total_likes": 7,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "NƯỚC LẨU TOMYUM",
+   "total_likes": 6,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "Huế||Nhà hàng": [
+  {
+   "dish": "Gà Rán Phần",
+   "total_likes": 51,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Pizza Hải Sản Nhiệt Đới",
+   "total_likes": 20,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Gà Rán Phần Livestream",
+   "total_likes": 13,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Gà Sốt HS 1 Miếng",
+   "total_likes": 13,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Cơm Gà Viên",
+   "total_likes": 12,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Gà Sốt Phô Mai 1 Miếng",
+   "total_likes": 11,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Burger Tôm",
+   "total_likes": 11,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Mì Ý (vừa)",
+   "total_likes": 11,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Mì Ý (lớn)",
+   "total_likes": 11,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Combo Gà-Mì",
+   "total_likes": 10,
+   "sold_by_n_merchants": 4
+  }
+ ],
+ "TP. HCM||Café/Dessert": [
+  {
+   "dish": "Trà Sữa Trân Châu",
+   "total_likes": 2610,
+   "sold_by_n_merchants": 19
+  },
+  {
+   "dish": "Trà Sữa Trân Châu Hoàng Kim",
+   "total_likes": 1420,
+   "sold_by_n_merchants": 19
+  },
+  {
+   "dish": "Trà Sữa Thái",
+   "total_likes": 1200,
+   "sold_by_n_merchants": 19
+  },
+  {
+   "dish": "TRÀ SỮA TUỲ CHỌN (Best Seller)",
+   "total_likes": 960,
+   "sold_by_n_merchants": 38
+  },
+  {
+   "dish": "Trà Sữa Mochi Triple Cheese",
+   "total_likes": 930,
+   "sold_by_n_merchants": 19
+  },
+  {
+   "dish": "Lựu Đỏ Thạch Dừa",
+   "total_likes": 760,
+   "sold_by_n_merchants": 19
+  },
+  {
+   "dish": "Trà Sữa Shan Tuyết Lài",
+   "total_likes": 620,
+   "sold_by_n_merchants": 19
+  },
+  {
+   "dish": "Trà Sữa Kem Trứng Khè",
+   "total_likes": 600,
+   "sold_by_n_merchants": 19
+  },
+  {
+   "dish": "Trà Sữa Trân Châu Phô Mai",
+   "total_likes": 510,
+   "sold_by_n_merchants": 19
+  },
+  {
+   "dish": "Trà Sữa Phô Mai Tươi",
+   "total_likes": 443,
+   "sold_by_n_merchants": 19
+  }
+ ],
+ "Khánh Hoà||Quán ăn": [
+  {
+   "dish": "Combo: 1 cơm gà + 1 ly sữa đậu nành",
+   "total_likes": 1998,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Cơm gà xé + Sữa đậu nành",
+   "total_likes": 200,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Cơm Gà",
+   "total_likes": 150,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Cơm Gà Chiên Sốt Bơ Tỏi",
+   "total_likes": 150,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Sushi Gà",
+   "total_likes": 110,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Gỏi Lòng Gà",
+   "total_likes": 110,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Cơm Thêm",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Sushi Tôm",
+   "total_likes": 60,
+   "sold_by_n_merchants": 3
+  },
+  {
+   "dish": "Gỏi Cánh Gà",
+   "total_likes": 60,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Miến gà",
+   "total_likes": 57,
+   "sold_by_n_merchants": 2
+  }
+ ],
+ "TP. HCM||Món Việt, Món Bắc": [
+  {
+   "dish": "Phở bò tái(nhỏ)",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Phở bò nạm(nhỏ)",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Phở tái nạm(nhỏ)",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Phở Thập Cẩm (đặc biệt)",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Phở gầu bò(nhỏ)",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Phở vè(nhỏ)",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Phở bò viên(nhỏ)",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bún bò đặc biệt",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bún Bò nạm + chả Lá+",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bún Bò tái + nạm",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "Huế||Café/Dessert": [
+  {
+   "dish": "Trà Thạch Đào-Trà Sữa Highlands",
+   "total_likes": 250,
+   "sold_by_n_merchants": 4
+  },
+  {
+   "dish": "Trà Sen Vàng (Củ Năng)",
+   "total_likes": 200,
+   "sold_by_n_merchants": 3
+  },
+  {
+   "dish": "PhinĐI Hạnh Nhân - Cà phê (Coffee)",
+   "total_likes": 200,
+   "sold_by_n_merchants": 3
+  },
+  {
+   "dish": "Freeze Trà Xanh - Đá Xay",
+   "total_likes": 150,
+   "sold_by_n_merchants": 3
+  },
+  {
+   "dish": "PhinĐI Kem Sữa - Cà phê (Coffee)",
+   "total_likes": 130,
+   "sold_by_n_merchants": 5
+  },
+  {
+   "dish": "Bánh Mì Que Pate Highlands",
+   "total_likes": 120,
+   "sold_by_n_merchants": 4
+  },
+  {
+   "dish": "Cà Phê Phin Sữa Đá (Coffee)",
+   "total_likes": 120,
+   "sold_by_n_merchants": 3
+  },
+  {
+   "dish": "Bạc Xỉu",
+   "total_likes": 62,
+   "sold_by_n_merchants": 7
+  },
+  {
+   "dish": "Trà Thanh Đào",
+   "total_likes": 60,
+   "sold_by_n_merchants": 6
+  },
+  {
+   "dish": "Combo Sáng Highlands (cỡ Nhỏ)",
+   "total_likes": 32,
+   "sold_by_n_merchants": 6
+  }
+ ],
+ "Hải Phòng||Quán ăn": [
+  {
+   "dish": "Cơm Thố Xá Xíu",
+   "total_likes": 600,
+   "sold_by_n_merchants": 6
+  },
+  {
+   "dish": "Cơm Thố Gà + Xá Xíu",
+   "total_likes": 500,
+   "sold_by_n_merchants": 6
+  },
+  {
+   "dish": "Cơm Thố Bò(BeeF)",
+   "total_likes": 400,
+   "sold_by_n_merchants": 6
+  },
+  {
+   "dish": "Thố Đặc Biệt Bò + Gà + Xíu + Trứng",
+   "total_likes": 320,
+   "sold_by_n_merchants": 6
+  },
+  {
+   "dish": "Trà Thạch Đào-Trà Sữa Highlands",
+   "total_likes": 100,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Cơm Thố Gà Nướng BBQ",
+   "total_likes": 100,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Bún bò Huế đầy đủ",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bún bò Huế đặc biệt",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Mì kim chi Bò",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Mì cay kim chi bò",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "TP. HCM||Sang trọng": [
+  {
+   "dish": "1 Bánh Trứng (18)",
+   "total_likes": 100,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "4 Bánh Trứng",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "COMBO 6 MÓN (119)",
+   "total_likes": 16,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Combo Cơm Trưa Phi-lê Gà Quay",
+   "total_likes": 10,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Combo Trưa Burger Tôm",
+   "total_likes": 10,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "BURGER GÀ YO",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Combo 2 Gà Rán",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Gà rán (1 miếng)",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Gà rán (3 miếng)",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Gà rán (2 miếng)",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "Đồng Nai||Nhà hàng, Quán ăn": [
+  {
+   "dish": "Combo 1",
+   "total_likes": 0,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Combo 3",
+   "total_likes": 0,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Combo 2",
+   "total_likes": 0,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Nước ép thơm dứa",
+   "total_likes": 0,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Nước ép chanh dây tươi",
+   "total_likes": 0,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Nước chanh tươi",
+   "total_likes": 0,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Nước cam tươi",
+   "total_likes": 0,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Nước ép dưa hấu",
+   "total_likes": 0,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Nước ép cà rốt tươi",
+   "total_likes": 0,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Sinh tố xoài",
+   "total_likes": 0,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "Khánh Hoà||Nhà hàng": [
+  {
+   "dish": "Gà Sốt Phô Mai 1 Miếng",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Mì Ý (vừa)",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Sốt Phô Mai(1 hũ)",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cơm Gà Viên",
+   "total_likes": 9,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Phô Mai Que",
+   "total_likes": 8,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Gà Lắc (Vị Phô Mai)",
+   "total_likes": 8,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Soup Gà",
+   "total_likes": 7,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Gà Sốt HS 1 Miếng",
+   "total_likes": 6,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cơm Gà Sốt HS",
+   "total_likes": 6,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cơm Gà Sốt Phô Mai",
+   "total_likes": 6,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "Khánh Hoà||Ý, Món Âu": [
+  {
+   "dish": "Pizza Hải Sản Nhiệt Đới",
+   "total_likes": 20,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Mỳ Ý sốt bò bằm",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bánh mì bơ tỏi",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Pizza hải sản",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Pizza bò phomai",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Pizza xúc xích chà bông",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Pizza cá ngừ sốt Teriyaki",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Pizza Hải Sản Nhiệt Đới / Tropical Seafood",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Pizza Hải Sản Pesto Xanh / Secret Recipe Seafood Pesto",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Pizza Phô Mai Cao Cấp",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "Hà Nội||Ăn vặt/vỉa hè": [
+  {
+   "dish": "Bánh mì dân tổ",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bánh mì bốc đầu",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bánh mì thịt nướng",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bánh Mì Dân Tổ",
+   "total_likes": 10,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Bánh mì gà đồi sốt tiêu",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bánh mì dân bay",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Nước mía khổng lồ",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Nước mía 700ml",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Trà dân tổ",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Trà Dâu Dân Tổ",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "Khánh Hoà||Café/Dessert": [
+  {
+   "dish": "PhinĐI Hạnh Nhân - Cà phê (Coffee)",
+   "total_likes": 110,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Trà Thạch Đào-Trà Sữa Highlands",
+   "total_likes": 108,
+   "sold_by_n_merchants": 4
+  },
+  {
+   "dish": "Trà Sen Vàng (Củ Năng)",
+   "total_likes": 60,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Cà Phê Phin Sữa Đá (Coffee)",
+   "total_likes": 54,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "PhinĐI Kem Sữa - Cà phê (Coffee)",
+   "total_likes": 34,
+   "sold_by_n_merchants": 4
+  },
+  {
+   "dish": "Trà Thạch Vải",
+   "total_likes": 32,
+   "sold_by_n_merchants": 4
+  },
+  {
+   "dish": "Trà Thanh Đào",
+   "total_likes": 26,
+   "sold_by_n_merchants": 4
+  },
+  {
+   "dish": "Bánh Mì Que Pate Highlands",
+   "total_likes": 26,
+   "sold_by_n_merchants": 4
+  },
+  {
+   "dish": "Bạc Xỉu",
+   "total_likes": 22,
+   "sold_by_n_merchants": 4
+  },
+  {
+   "dish": "Freeze Sô Cô La - Đá Xay",
+   "total_likes": 20,
+   "sold_by_n_merchants": 2
+  }
+ ],
+ "TP. HCM||Nhà hàng": [
+  {
+   "dish": "1 Bánh Trứng (18)",
+   "total_likes": 100,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Gà rán (1 miếng)",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Gà rán (3 miếng)",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "4 Bánh Trứng",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "COMBO 6 MÓN (119)",
+   "total_likes": 20,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Combo Cơm Trưa Phi-lê Gà Quay",
+   "total_likes": 12,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Combo Trưa Burger Tôm",
+   "total_likes": 10,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "BURGER GÀ YO",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Gà rán (2 miếng)",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cơm Phi-lê Gà Quay",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "Huế||Món Nhật, Món Hàn": [
+  {
+   "dish": "Combo sushi",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bento sushi",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cơm tam giác cá hồi",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Big2 Combo",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Kimbap truyền thống",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Mỳ Ý",
+   "total_likes": 14,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "cơm tam giác bò",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "cơm tam giác cá ngừ",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cơm Tam Giác Bò",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Combo cơm nắm",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "Huế||Quán ăn": [
+  {
+   "dish": "Cơm Thố Bò(BeeF)",
+   "total_likes": 100,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Thố Đặc Biệt Bò + Gà + Xíu + Trứng",
+   "total_likes": 100,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Mỳ Kim Chi Hải Sản",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Mì Kim Chi Bò Mỹ",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Mỳ Lẩu Thái Hải Sản",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "POPEYES - Mua 1 Được 2 (MALA MALIME)",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Sốt truyền thống",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Sushi Bake - Cá",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Salad",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Mỳ Kim Chi Thập Cẩm",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "Đà Nẵng||Quán ăn, Bar/Pub": [
+  {
+   "dish": "Bánh mì nướng muối ớt truyền thống",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bánh Mì Nướng Muối Ớt Thập Cẩm Viên Chiên",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bánh Mì Nướng Muối Ớt Full Bơ",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bánh Mì Nướng Muối Ớt Cá Tôm Bò Viên",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bánh mì nướng muối ớt đặc biệt",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bánh Mì NM Ớt Kèm Xúc Xích Đức",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bánh Mì Nướng Muối Ớt Hồ Lô",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bánh mì Nướng Muối ớt Kèm thịt xiên nướng",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Que Pate Ngũ Vị",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Xúc Xích Đức",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "Đà Nẵng||Ý, Châu Mỹ": [
+  {
+   "dish": "Burger Gà Nướng mật ong (vỏ bánh burger)",
+   "total_likes": 200,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Burger bò phô mai",
+   "total_likes": 200,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Mỳ ý sốt bò bằm",
+   "total_likes": 100,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Gà rán chiên giòn lắc phô mai",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Khoai tây chiên",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Burger ba chỉ bò Mỹ sốt BBQ",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Ăn vặt Xúc xích chiên giòn",
+   "total_likes": 12,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Pizza phô mai",
+   "total_likes": 12,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Mì ý gà rán",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Combo Khoai Tây Chiên + coca",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "Hải Phòng||Quốc tế": [
+  {
+   "dish": "P7-American Style (S)(Gà sườn thập cẩm)",
+   "total_likes": 200,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "P10 - Beefy (S) ( bò xúc xích-ngô)",
+   "total_likes": 100,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Pizza Hải Sản Pesto Xanh / Secret Recipe Seafood Pesto",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Iced Pure Matcha Latte",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Iced Black Tea with Ruby Grapefruit",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "P17-CHICAGO Nhân Nhồi Thập Cẩm (18cm)",
+   "total_likes": 20,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Pizza Hải Sản Nhiệt Đới",
+   "total_likes": 16,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Trà Đào",
+   "total_likes": 14,
+   "sold_by_n_merchants": 3
+  },
+  {
+   "dish": "P17-CHICAGO Nhân nhồi thập cẩm (25cm)",
+   "total_likes": 12,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Salted Caramel Cold Foam Dolce Espresso",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "TP. HCM||Quán ăn, Tiệm bánh": [
+  {
+   "dish": "Bánh Mì Thập Cẩm-thịt nướng",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bánh Mì Thịt Nướng",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bánh Giò",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Xôi Thập Cẩm",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cà phê sữa đá",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Trà sữa truyền thống",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Trà sữa Thái Xanh size L",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Trà Tắc xí muội-1 lít",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Rau má đậu xanh sữa dừa(Ly 700ml)",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Mì không Dài 1 ổ",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "Hà Nội||Món Nhật, Món Hàn": [
+  {
+   "dish": "Lá rong biển cuộn cá 6 lá nhỏ (Nori)",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Sashimi cá hồi 10m",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Sashimi  cá hồi 6m",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Gunkan sushi trứng cá chuồn 2 viên )",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Sushi cá trích 2 viên",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Sushi D: tổng hợp 16 viên (1 người )",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Sushi cá hồi 5 viên",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Sushi G : (tổng hợp 27 viên )",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Sushi cá hồi nướng tái 8 viên",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cơm cuộn Cá Hồi với bơ quả 6 viên ( sake avocado maki)",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "Hải Phòng||Nhà hàng": [
+  {
+   "dish": "Gà Rán 1 Miếng",
+   "total_likes": 6,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Gà Sốt Phô Mai 1 Miếng",
+   "total_likes": 5,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "TIỆN LỢI 3",
+   "total_likes": 4,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Gà Rán Phần",
+   "total_likes": 4,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Gà Sốt HS 1 Miếng",
+   "total_likes": 4,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Mì Ý (vừa)",
+   "total_likes": 4,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Rộn Ràng 1",
+   "total_likes": 3,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cơm Gà Viên",
+   "total_likes": 3,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "PEPSI (M)",
+   "total_likes": 3,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Gà Sốt Phô Mai Phần",
+   "total_likes": 2,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "TP. HCM||Ăn vặt/vỉa hè": [
+  {
+   "dish": "Bánh Canh Cá Lóc",
+   "total_likes": 60,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Đặc Biệt ( Tái - Nạm - Giò - Chả )",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Đầy Đủ ( Nạm - Giò - Chả )",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Tái - Nạm",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Mì Quảng Đầy Đủ",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Mì Quảng Gà",
+   "total_likes": 20,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Bún Bò: Tái",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Nạm - Chả",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Tái - Nạm - chả",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Nạm",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "TP. HCM||Món Việt, Món Miền Nam": [
+  {
+   "dish": "Cơm sườn ốp la",
+   "total_likes": 500,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cơm sườn nướng",
+   "total_likes": 500,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cơm Thêm",
+   "total_likes": 500,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bún Bò Tái",
+   "total_likes": 100,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Bún Bò Nạm",
+   "total_likes": 100,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Bún Bò Thập Cẩm Không Giò",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cơm sườn non nướng",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cơm sườn bì",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cơm Ba rọi lốp la",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cơm Ba rọi nướng",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "Đà Nẵng||Nhà hàng": [
+  {
+   "dish": "Pizza Hải Sản Nhiệt Đới",
+   "total_likes": 14,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Cơm Thịt Bò",
+   "total_likes": 13,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Cơm Gà Sốt Đậu",
+   "total_likes": 13,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Gà Rán Phần",
+   "total_likes": 11,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Cơm Gà Sốt Phô Mai",
+   "total_likes": 11,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Gà Sốt HS 1 Miếng",
+   "total_likes": 10,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Pizza Phô Mai Cao Cấp",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Pizza Hải Sản Xốt Pesto Truyền Thống",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Sốt Phô Mai(1 hũ)",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Phô Mai Que",
+   "total_likes": 9,
+   "sold_by_n_merchants": 2
+  }
+ ],
+ "Đồng Nai||Đông Âu, Thổ Nhĩ Kỳ": [
+  {
+   "dish": "Kebab Tam Giác",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Kebab Bánh Mì Truyền Thống",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Kebab Tam Giác (nhiều thịt)",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Kebab Bánh Mì Truyền Thống (nhiều thịt)",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Que phô mai đường",
+   "total_likes": 13,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Kebab Rau Salad Sốt Mayo",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bánh cua phô mai mini Gói (5 cái)",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Pizza  vuông",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bông lan phô mai trứng muối chữ nhật",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bông lan chà bông",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "Đà Nẵng||Quốc tế": [
+  {
+   "dish": "Pizza Hải sản",
+   "total_likes": 999,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Pizza Thập cẩm",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Pizza Xúc xích",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Pizza Gà",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Pizza Ba rọi",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Pizza Trứng dăm bông",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Xúc xích chiên",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Khoai tây chiên",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Trà sữa",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Trà Sữa",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "Khánh Hoà||Châu Mỹ, Mỹ": [
+  {
+   "dish": "COMBO 6 MÓN (119)",
+   "total_likes": 20,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "1 Bánh Trứng (18)",
+   "total_likes": 20,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Gà rán (2 mieng)",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Gà rán (1 miếng)",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cơm Phi-lê Gà Quay",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Burger Tôm",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Phô mai viên (4 viên)",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "1 Gà Popcorn (Vừa)",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "1 Gà Popcorn (Lớn)",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "4 Bánh Trứng",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "Đồng Nai||Món Hàn, Món Á": [
+  {
+   "dish": "Mì hải sản",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Mì bò kim chi",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Mì đặc biệt",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Mì Kim Chi Hải Sản",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Mì Kim Chi Thập Cẩm",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Mì xúc xích + chả cá",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Mì Kim Chi Bò",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Sốt Phô Mai(1 hũ)",
+   "total_likes": 20,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Gà Sốt HS 1 Miếng",
+   "total_likes": 16,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Khoai Tây Lắc (Vị Phô Mai)",
+   "total_likes": 15,
+   "sold_by_n_merchants": 2
+  }
+ ],
+ "Cần Thơ||Nhà hàng": [
+  {
+   "dish": "PIZZA CỠ 7'' GIÁ 1.000Đ KHI MUA 1 PIZZA CỠ 9''/ GET 1 PIZZA SIZE 7'' 1.000Đ WHEN PURCHASING 1 PIZZA SIZE 9''",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Pizza Hải Sản Nhiệt Đới",
+   "total_likes": 20,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Combo Hè Sóng Vị",
+   "total_likes": 20,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Combo Hè Lướt Vị",
+   "total_likes": 20,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Pizza Phô Mai Cao Cấp",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "PIZZA CỠ 7'' GIÁ 1.000Đ KHI MUA 1 PIZZA CỠ 12''/ GET 1 PIZZA SIZE 7'' 1.000Đ WHEN PURCHASING 1 PIZZA SIZE 12''",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Mỳ Ý Thịt Heo Xông Khói Xốt Kem/ Bacon Carbonara Pasta",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Xà Lách Trộn Cá Ngừ Và Thịt Xông Khói",
+   "total_likes": 6,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Pizza Gà Phô Mai",
+   "total_likes": 5,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Xúc Xích Xông Khói Đút Lò/ Baked Pork Sausages",
+   "total_likes": 5,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "Đà Nẵng||Món Việt, Món Miền Trung": [
+  {
+   "dish": "Bún chả cá",
+   "total_likes": 500,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bún riêu chả",
+   "total_likes": 500,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bún đậu mắm tôm - đặc biệt",
+   "total_likes": 304,
+   "sold_by_n_merchants": 6
+  },
+  {
+   "dish": "Bún đậu mắm tôm - thập cẩm ( đầy đủ tooping)",
+   "total_likes": 300,
+   "sold_by_n_merchants": 3
+  },
+  {
+   "dish": "Bún đậu mắm tôm - nhỏ",
+   "total_likes": 250,
+   "sold_by_n_merchants": 3
+  },
+  {
+   "dish": "Bún",
+   "total_likes": 200,
+   "sold_by_n_merchants": 3
+  },
+  {
+   "dish": "Bánh Mì Bà Lan",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bún riêu cua",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bún thập cẩm",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bún cá ngừ",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "TP. HCM||Món Việt, Ý": [
+  {
+   "dish": "Pizza hải sản (16cm)",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Pizza phô mai (16cm)",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Pizza Half 1/2 (25cm)",
+   "total_likes": 5,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Pizza bò (16cm)",
+   "total_likes": 5,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Pizza gà nướng (16cm)",
+   "total_likes": 4,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Pizza thập cẩm (30cm) Tặng Pepsi",
+   "total_likes": 2,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Khoai tây lắc phô mai",
+   "total_likes": 2,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Pizza Phô mai (25cm)",
+   "total_likes": 1,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Pizza Gà nướng (25cm)",
+   "total_likes": 1,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Pizza rau củ (16cm)",
+   "total_likes": 1,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "Đà Nẵng||Món Việt, Món Âu": [
+  {
+   "dish": "Nước sen mix nước dừa (Must-try) M (n) - Chỉ có 1 mức ngọt",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Nước dừa trân châu dừa Size L (n)",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Spring Matcha Latte nguyên bản (Matcha Nhật) L (g)",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Spring Matcha Latte bơ (Matcha Nhật) M (mc)",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Nước dừa topping hạt sen thạch nếp Size L (n)",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Sinh tố dừa M (n)",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Hồng trà sữa nguyên lá M (g)",
+   "total_likes": 16,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Bạc xỉu muối M (mc)",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bạc xỉu sữa tươi M (mc)",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cafe sữa Sài Gòn M (mc)",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "TP. HCM||Món Việt, Món Miền Trung": [
+  {
+   "dish": "Trứng cút thêm",
+   "total_likes": 0,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Sữa đậu xanh",
+   "total_likes": 0,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Sữa hạt sen",
+   "total_likes": 0,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Sữa đậu nành",
+   "total_likes": 0,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bún bò chả lớn",
+   "total_likes": 0,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bún bò tái nạm chả",
+   "total_likes": 0,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bún bò giò heo",
+   "total_likes": 0,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bún bò tái chả",
+   "total_likes": 0,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bún bò đặc biệt lớn",
+   "total_likes": 0,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bún bò đặc biệt nhỏ",
+   "total_likes": 0,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "Hải Phòng||Món Việt, Món Bắc": [
+  {
+   "dish": "Lục Trà Nhài Sữa",
+   "total_likes": 1000,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Hồng trà sữa",
+   "total_likes": 500,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Trà đào 2 tầng",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Matcha Cheese Cake",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Trà Xoài Kem Cheese",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Socola  Cheese Cake",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Hồng Trà Sữa Kem Cheese",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Trà Sữa OoLong",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Trà Sữa Socola",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Matcha Nhật Bản Sữa Tươi",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "Vũng Tàu||Món Việt, Món Á": [
+  {
+   "dish": "salad gà nướng phô mai - Khoai lang",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cơm lứt/ cơm trắng - fillet cá hồi nướng",
+   "total_likes": 8,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Miến khoai lang trộn gà giòn & rau",
+   "total_likes": 8,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cơm lứt cuộn ức gà giòn",
+   "total_likes": 7,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Brownie choco chuối",
+   "total_likes": 6,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Khoai tây nghiền - salad fillet cá hồi",
+   "total_likes": 5,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cake chuối yến mạch socola mật ong",
+   "total_likes": 5,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "sữa hạt óc chó & hạt hạnh nhân, táo đỏ",
+   "total_likes": 4,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cơm lứt/ Cơm trắng/ Bún lứt - ức gà xá xíu",
+   "total_likes": 3,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Phở lứt/ bún lứt - ức gà áp chảo sốt chua ngọt",
+   "total_likes": 3,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "Cần Thơ||Ý, Món Âu": [
+  {
+   "dish": "5. Pizza Black Pepper Seafood",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "7. Pizza Black Per",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "11. Pizza Shrimp Carb",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "1. Pizza Cheese Lover",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "8. Pizza Thousand Island",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "10. Pizza Hawiian Paradise",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "6. Pizza Sausage Lover",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "9. Pizza Salmon Curry",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "4. Pizza Cheese Lover",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "3. Pizza Family Lover",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "Vũng Tàu||Nhà hàng": [
+  {
+   "dish": "S6-Sake sashimi",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "SU2 Sushi C",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "M4-Sake aburi maki",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "M8-Unagi abokado chizu maki",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "M31-Sake abokado maki",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "C6-Miso shiru",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "C22-Katsu karei",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "M1-sake aburi ebiten maki",
+   "total_likes": 9,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "M5-Ebiten unagi maki",
+   "total_likes": 8,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "SA4-Kani abokado Salad",
+   "total_likes": 8,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "TP. HCM||Quốc tế": [
+  {
+   "dish": "9 Miếng Gà Viên",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "3 Miếng Gà Rán Giòn Da Thấm Thịt.",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Phần Ăn 6 Miếng Gà Viên",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Phần Ăn 2 Miếng Gà Rán",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Phần Ăn Burger 2 Lớp Bò Phô Mai",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Burger 2 Lớp Bò Phô Mai",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Burger Bò Phô Mai Đặc Biệt",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Thêm 2 Gói Tương Ớt Ngọt",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Sushi Combo1",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Sushi Combo2",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "Cần Thơ||Ý, Châu Mỹ": [
+  {
+   "dish": "Pizza Hải Sản (Seafood Pizza) 19cm",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Pizza Bò bằm (Beef Pizza) 19cm",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Pizza Xúc xích xông khói (Smoked Sausage Pizza) 19cm",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Pizza Ba Rọi Xông Khói (Bacon Pizza) 19cm",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Mì Ý ba rọi xông khói sốt kem (Bacon Spaghetti carbonara)",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Mì Ý Bò Bằm (Spaghetti Bolognese)",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Mì Ý Jambon sốt kem (Ham carbonara)",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Mì Ý Hải Sản (Seafood spaghetti)",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Mì Ý gà rán",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Khoai tây chiên (French Fries)",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "Khánh Hoà||Món Bắc, Hà Nội": [
+  {
+   "dish": "Bún chả Góc Hà Nội",
+   "total_likes": 6,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Côm-bô Bún chả + Nước mơ",
+   "total_likes": 2,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Dưa cải xào tóp mỡ",
+   "total_likes": 1,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Ngô chiên Hà Nội",
+   "total_likes": 1,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Rau (thêm)",
+   "total_likes": 1,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Đậu tẩm hành",
+   "total_likes": 0,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Đậu rán giòn tan",
+   "total_likes": 0,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cá cơm mờm rang chua cay",
+   "total_likes": 0,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bún (thêm)",
+   "total_likes": 0,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Thịt nướng bún chả (thêm)",
+   "total_likes": 0,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "Cần Thơ||Món Việt, Món Miền Nam": [
+  {
+   "dish": "Cháo lá dứa",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Trứng muối",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cháo trắng",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cá cơm",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cháo Thịt Heo Bằm",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cháo Cá Lóc Phi Lê",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cháo Thịt Bò Bằm",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cháo đậu đỏ chan nước cốt dừa",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cháo đậu đỏ không chan nước cốt dừa",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Nước cốt dừa thêm",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "TP. HCM||Món Hàn, Món Á": [
+  {
+   "dish": "MÌ CAY HẢI SẢN",
+   "total_likes": 500,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Mì kim chi hải sản",
+   "total_likes": 150,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Mì kim chi bò",
+   "total_likes": 110,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Mì kim chi bò mỹ",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "MÌ CAY BÒ",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "MÌ CAY GOCHU",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Nấm kim châm thêm",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bò thêm",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Mì cay đặc biệt",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Mì cay Tito",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "Hải Phòng||Café/Dessert": [
+  {
+   "dish": "Freeze Trà Xanh - Đá Xay",
+   "total_likes": 250,
+   "sold_by_n_merchants": 3
+  },
+  {
+   "dish": "Trà Thanh Đào",
+   "total_likes": 240,
+   "sold_by_n_merchants": 6
+  },
+  {
+   "dish": "Trà Sen Vàng (Củ Năng)",
+   "total_likes": 210,
+   "sold_by_n_merchants": 3
+  },
+  {
+   "dish": "Trà Thạch Đào-Trà Sữa Highlands",
+   "total_likes": 170,
+   "sold_by_n_merchants": 4
+  },
+  {
+   "dish": "PhinĐI Hạnh Nhân - Cà phê (Coffee)",
+   "total_likes": 160,
+   "sold_by_n_merchants": 3
+  },
+  {
+   "dish": "Cà Phê Phin Sữa Đá (Coffee)",
+   "total_likes": 120,
+   "sold_by_n_merchants": 3
+  },
+  {
+   "dish": "Freeze Sô Cô La - Đá Xay",
+   "total_likes": 110,
+   "sold_by_n_merchants": 3
+  },
+  {
+   "dish": "Trà Xanh Đậu Đỏ",
+   "total_likes": 65,
+   "sold_by_n_merchants": 3
+  },
+  {
+   "dish": "PhinĐI Kem Sữa - Cà phê (Coffee)",
+   "total_likes": 60,
+   "sold_by_n_merchants": 6
+  },
+  {
+   "dish": "Bạc Xỉu",
+   "total_likes": 60,
+   "sold_by_n_merchants": 6
+  }
+ ],
+ "Vũng Tàu||Món Việt, Món Bắc": [
+  {
+   "dish": "Pizza Hải Sản Nhiệt Đới",
+   "total_likes": 20,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "MUA VỪA TẶNG NHỎ",
+   "total_likes": 10,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Bún đậu mắm tôm chả cốm (Phần lớn)",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bún đậu mắm tôm chả cốm (Phần nhỏ)",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Pizza Phô Mai Cao Cấp",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Pizza Gà Phô Mai",
+   "total_likes": 6,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Pizza Hải Sản Xốt Tiêu Đen",
+   "total_likes": 5,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "MUA LỚN TẶNG VỪA",
+   "total_likes": 4,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Pizza Hải Sản Xốt Pesto Truyền Thống",
+   "total_likes": 4,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bánh Cuộn Phô Mai",
+   "total_likes": 4,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "TP. HCM||Món Việt, Món Trung Hoa": [
+  {
+   "dish": "Gunkan cá hồi sốt cay",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Rong biển trộn mè",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Ss cá hồi",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Ss trứng",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Ss thanh cua",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Salmon Tataki",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cheese Roll",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cali maki",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Katsu maki",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Ssm Cá Hồi 10 miếng",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "Cần Thơ||Café/Dessert": [
+  {
+   "dish": "Trà Sữa Trân Châu",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Trà Sữa Mochi Triple Cheese",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Trà Sữa Trân Châu Hoàng Kim",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Trà Sữa Trân Châu Phô Mai",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Trà Sữa Thái",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Lựu Đỏ Thạch Dừa",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "COMBO 4 LY",
+   "total_likes": 16,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Súp gà rau củ",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Trà Sữa Truyền Thống",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Trà Sữa Shan Tuyết Lài",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "Hải Phòng||Ăn vặt/vỉa hè": [
+  {
+   "dish": "Kebap Dài",
+   "total_likes": 200,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Sữa Đậu Nành(chai)",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bánh Mì Xúc Xích Đức Việt",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bánh Mì Tam Giác",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bánh Mì Trứng Đánh Kem (1 Quả)",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bánh Mỳ",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bánh Mì Pate Trứng",
+   "total_likes": 20,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Bánh Đa Cua Thập Cẩm",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bánh bao thẩm cẩm trứng",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bánh Mì Bò Sốt Vang",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "Vũng Tàu||Café/Dessert": [
+  {
+   "dish": "PhinĐI Hạnh Nhân - Cà phê (Coffee)",
+   "total_likes": 200,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Trà Sen Vàng (Củ Năng)",
+   "total_likes": 150,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Trà Thạch Đào-Trà Sữa Highlands",
+   "total_likes": 150,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Bánh Mì Que Pate Highlands",
+   "total_likes": 120,
+   "sold_by_n_merchants": 4
+  },
+  {
+   "dish": "Trà Thanh Đào",
+   "total_likes": 110,
+   "sold_by_n_merchants": 3
+  },
+  {
+   "dish": "Cà Phê Phin Sữa Đá (Coffee)",
+   "total_likes": 110,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Freeze Trà Xanh - Đá Xay",
+   "total_likes": 100,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Trà Sữa Phô Mai Trân Châu",
+   "total_likes": 100,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Bánh Mì Que Gà Phô Mai Highlands",
+   "total_likes": 60,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Trà Sữa Nọng",
+   "total_likes": 51,
+   "sold_by_n_merchants": 2
+  }
+ ],
+ "Hải Phòng||Sang trọng": [
+  {
+   "dish": "Pizza Hải Sản Nhiệt Đới",
+   "total_likes": 20,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Pizza Phô Mai Cao Cấp",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Pizza Gà Phô Mai",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "MUA VỪA TẶNG NHỎ",
+   "total_likes": 6,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Pizza Bò BBQ Xốt Cay Hàn Quốc",
+   "total_likes": 6,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "MUA LỚN TẶNG VỪA",
+   "total_likes": 4,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Pizza Hải Sản Xốt Pesto",
+   "total_likes": 4,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bánh Cuộn Phô Mai",
+   "total_likes": 4,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Pizza Hawaiian",
+   "total_likes": 3,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Pizza Bò & Hải Sản Xốt Bơ Tỏi",
+   "total_likes": 2,
+   "sold_by_n_merchants": 2
+  }
+ ],
+ "Hải Phòng||Món Việt, Đặc biệt": [
+  {
+   "dish": "Kimpap keto",
+   "total_likes": 3,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cần Táo Dứa",
+   "total_likes": 2,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Salat Tôm",
+   "total_likes": 1,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Salat cá hồi",
+   "total_likes": 1,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Xôi gà quay healthy",
+   "total_likes": 1,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bún gà xì dầu",
+   "total_likes": 1,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Tía tô chanh vàng",
+   "total_likes": 1,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Xúc xích gà nướng sẵn",
+   "total_likes": 0,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Salat   Xúc xích gà  nướng",
+   "total_likes": 0,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Yến mạch mix  hoa quả",
+   "total_likes": 0,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "Đồng Nai||Café/Dessert": [
+  {
+   "dish": "Trà Sen Vàng (Củ Năng)",
+   "total_likes": 260,
+   "sold_by_n_merchants": 4
+  },
+  {
+   "dish": "Trà Thạch Đào-Trà Sữa Highlands",
+   "total_likes": 240,
+   "sold_by_n_merchants": 6
+  },
+  {
+   "dish": "PhinĐI Kem Sữa - Cà phê (Coffee)",
+   "total_likes": 238,
+   "sold_by_n_merchants": 6
+  },
+  {
+   "dish": "Trà Sữa Trân Châu",
+   "total_likes": 200,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Trà Sữa Trân Châu Hoàng Kim",
+   "total_likes": 200,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Freeze Trà Xanh - Đá Xay",
+   "total_likes": 170,
+   "sold_by_n_merchants": 4
+  },
+  {
+   "dish": "PhinĐI Hạnh Nhân - Cà phê (Coffee)",
+   "total_likes": 170,
+   "sold_by_n_merchants": 4
+  },
+  {
+   "dish": "Trà Thanh Đào",
+   "total_likes": 150,
+   "sold_by_n_merchants": 7
+  },
+  {
+   "dish": "Trà Sữa Kem Trứng Khè",
+   "total_likes": 150,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Trà Sữa Mochi Triple Cheese",
+   "total_likes": 150,
+   "sold_by_n_merchants": 2
+  }
+ ],
+ "Hà Nội||Món Âu, Quốc tế": [
+  {
+   "dish": "Mac N Cheese",
+   "total_likes": 4,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cheese Burger Size M",
+   "total_likes": 1,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cheese Burger Size S",
+   "total_likes": 1,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Big Mac Burger",
+   "total_likes": 1,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Sea Bass Fish And Chips - Size L 200gr",
+   "total_likes": 1,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Fried Chicken Cheese Burger( Gà Chiên Phô Mai)",
+   "total_likes": 0,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Beef & Bacon Burger Size(Burger Bò Vs Thịt Lợn Xông Khói) M",
+   "total_likes": 0,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Beef Classic Burger Size L",
+   "total_likes": 0,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Blue Burger ( Burger Bò S +Phô Mai Xanh+ bacon)",
+   "total_likes": 0,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Avocado Beef Burger ( Burger Bò Và Bơ Tươi)",
+   "total_likes": 0,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "Đà Nẵng||Ăn chay": [
+  {
+   "dish": "Bún lứt trộn",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Gói cuốn chấm tương bơ đậu",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Ram chiên cuốn cải",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Rong sụn sả tắc",
+   "total_likes": 8,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Salad Healthy",
+   "total_likes": 5,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bánh Bao Chay",
+   "total_likes": 4,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bún lứt  ram tương bơ đậu",
+   "total_likes": 3,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Muối ớt nhà làm",
+   "total_likes": 2,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Gỏi khô nấm chua cay",
+   "total_likes": 2,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Chuối sấy mộc",
+   "total_likes": 1,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "Hà Nội||Nhà hàng": [
+  {
+   "dish": "Gà Sốt HS 1 Miếng",
+   "total_likes": 20,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Gà Sốt Phô Mai 1 Miếng",
+   "total_likes": 20,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Mì Ý (vừa)",
+   "total_likes": 20,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Sốt Phô Mai(1 hũ)",
+   "total_likes": 20,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Sốt H&S (1 hũ)",
+   "total_likes": 19,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Khoai Tây Chiên (M)",
+   "total_likes": 18,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Phô Mai Que",
+   "total_likes": 18,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Khoai Tây Lắc (Vị Phô Mai)",
+   "total_likes": 17,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Cơm Gà Sốt HS",
+   "total_likes": 15,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Mì Ý (lớn)",
+   "total_likes": 14,
+   "sold_by_n_merchants": 2
+  }
+ ],
+ "Đồng Nai||Món Việt, Món Miền Nam": [
+  {
+   "dish": "LẨU CÁ BỚP MĂNG CHUA 299K",
+   "total_likes": 2,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "LẨU THẬP CẨM LỚN",
+   "total_likes": 2,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Lẩu Cá Tầm Măng Chua Lớn",
+   "total_likes": 1,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cá Tầm Thêm",
+   "total_likes": 1,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "LẨU THẬP CẨM VỪA",
+   "total_likes": 1,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "LẨU THỊT VỪA",
+   "total_likes": 1,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "0917.848.851",
+   "total_likes": 0,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "LẨU CÁ ĐUỐI MĂNG CHUA 299K",
+   "total_likes": 0,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "LẨU THÁI HẢI SẢN LỚN",
+   "total_likes": 0,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Lẩu Cá Tầm Măng Chua Nhỏ",
+   "total_likes": 0,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "Khánh Hoà||Món Việt, Quốc tế": [
+  {
+   "dish": "Cam cà rốt",
+   "total_likes": 4,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Ức gà sốt teriyaki",
+   "total_likes": 3,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cơm cuộn healthy",
+   "total_likes": 1,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Má đùi gà sốt teriyaki",
+   "total_likes": 1,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cần tây",
+   "total_likes": 0,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Cải kale",
+   "total_likes": 0,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Cải bó xôi",
+   "total_likes": 0,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Củ dền",
+   "total_likes": 0,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Salad Tôm healthy",
+   "total_likes": 0,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Thăn heo nướng tỏi",
+   "total_likes": 0,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "Khánh Hoà||Món Việt, Món Miền Trung": [
+  {
+   "dish": "Bạc Xỉu Sài Gòn",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cà Phê Sữa Tươi Sương Sáo Full Topping",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cà Phê Muối",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bạc Xỉu Bé Bự",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cà Phê Sữa Tươi Bạc Hà",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bạc Xỉu Kem Muối",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Matcha Latte",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Sao Bí Đâm (độ ngọt cố định)",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Trà Đào Siêu Đào",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Trà Sữa Đậm Vị Flan Full Topping",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "Đồng Nai||Món Việt, Món Á": [
+  {
+   "dish": "Kimbap cá ngừ trứng phô mai",
+   "total_likes": 0,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Trứng ngâm tương",
+   "total_likes": 0,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bún riêu chả cua healthy",
+   "total_likes": 0,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cơm lứt tôm giòn áp chảo măng tây",
+   "total_likes": 0,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "O03-Matcha  muối",
+   "total_likes": 0,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "C03-Cà phê muối",
+   "total_likes": 0,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "C02-Cà phê sữa",
+   "total_likes": 0,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "C01-Americano",
+   "total_likes": 0,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "K02-Dâu tây",
+   "total_likes": 0,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "K04-Chanh dây",
+   "total_likes": 0,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "Khánh Hoà||Món Âu, Món Á": [
+  {
+   "dish": "Cơm lứt + Bò bulgogi + Trứng mềm ngon không ngán",
+   "total_likes": 4,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cơm lứt + Gà teriyaki healthy food ngon",
+   "total_likes": 4,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Khoai lang + Bò bulgogi ăn khôn ngán đủ dưỡng chất",
+   "total_likes": 2,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Khoai + Gà teriyaki + Trứng đầy đủ năng lượng",
+   "total_likes": 1,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Mì cải xoăn Kale  ăn kèm thịt bò trứng",
+   "total_likes": 0,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cơm lứt + Cá hồi Nauy + Trứng healthy foods cơm văn phòng",
+   "total_likes": 0,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cơm lứt Bò Steak 50gr mềm ngon healthy foods",
+   "total_likes": 0,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cơm lứt + Rau thập cẩm + Đồ ăn tự chọn thêm",
+   "total_likes": 0,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Mì kale cải xoăn",
+   "total_likes": 0,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cơm lứt + Gà teriyaki  ăn kèm trứng món cơm văn phòng",
+   "total_likes": 0,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "Đồng Nai||Ý, Món Âu": [
+  {
+   "dish": "Pizza hải sản size S",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Pizza Hải Sản Nhiệt Đới",
+   "total_likes": 18,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Pizza Phô Mai Cao Cấp",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Pizza Hải Sản Xốt Pesto Truyền Thống",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Pizza Hải Sản Nhiệt Đới / Tropical Seafood",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Pizza Hải Sản Pesto Xanh / Secret Recipe Seafood Pesto",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Pizza hải sản size M",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Pizza phô mai không size S",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Pizza xúc xích size S",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Pizza thanh cua size S",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "Khánh Hoà||Món Việt, Món Á": [
+  {
+   "dish": "Trà Sữa Đài Loan Truyền Thống",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Trà Sữa Khoai Môn",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Trà Sữa Thái Xanh",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Trà Sữa Ô Long Đậm Vị",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Trà Sữa Socola",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Sữa Tươi Trân Châu Đường Đen",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Trà Sữa Ô Long Nhài",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Trà Đào",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Matcha Latte Trân Châu Đường Đen",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Trà Xoài Chanh Dây",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "Hà Nội||Món Bắc": [
+  {
+   "dish": "Bánh Mỳ Như Ý (Size lớn)",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bánh Mì Thập cẩm",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bánh Mì Như Ý (Size vừa)",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bánh Mì Pate Trứng",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bánh Mì Pate sốt bơ",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bánh Mì Gà Ngô Sốt Bơ",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bánh Mì Pate Gà Ngô",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Sốt Bơ",
+   "total_likes": 9,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Dasani",
+   "total_likes": 4,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Combo Bánh Mì Như Ý Size Lớn + Coca",
+   "total_likes": 3,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "Vũng Tàu||Món Việt, Món Thái": [
+  {
+   "dish": "Kebab Sạch LE-A",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Olong Lài Sữa Hạt Grachiato",
+   "total_likes": 6,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Kebab + Trà Sữa Truyền Thống",
+   "total_likes": 5,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cơm Sườn Healthy",
+   "total_likes": 5,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Trà Sữa Truyền Thống Đậm Vị",
+   "total_likes": 4,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Má đùi (Cơm Trắng/ Cơm Lứt)",
+   "total_likes": 3,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cá Hồi (Salmon Bowl)",
+   "total_likes": 2,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Matcha Grachiato",
+   "total_likes": 1,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bánh canh Hải Vị Viễn Đông",
+   "total_likes": 1,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cơm Ba Chỉ Heo",
+   "total_likes": 1,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "Vũng Tàu||Châu Mỹ, Mỹ": [
+  {
+   "dish": "Gà rán (1 miếng)",
+   "total_likes": 60,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Cơm Phi-lê Gà Quay",
+   "total_likes": 60,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Burger Tôm",
+   "total_likes": 60,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Combo Cơm Trưa Phi-lê Gà Quay",
+   "total_likes": 40,
+   "sold_by_n_merchants": 4
+  },
+  {
+   "dish": "1 Bánh Trứng (18)",
+   "total_likes": 40,
+   "sold_by_n_merchants": 4
+  },
+  {
+   "dish": "Gà rán (3 miếng)",
+   "total_likes": 20,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Gà rán (2 miếng)",
+   "total_likes": 20,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Cơm Gà Rán",
+   "total_likes": 20,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "1 Gà Popcorn (Vừa)",
+   "total_likes": 20,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Phô mai viên (4 viên)",
+   "total_likes": 20,
+   "sold_by_n_merchants": 2
+  }
+ ],
+ "Vũng Tàu||Món Việt, Châu Mỹ": [
+  {
+   "dish": "1 Bánh Trứng (18)",
+   "total_likes": 100,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Gà rán (1 miếng)",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Combo Cơm Trưa Phi-lê Gà Quay",
+   "total_likes": 20,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "COMBO 6 MÓN (119)",
+   "total_likes": 20,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "BURGER GÀ YO",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Thêm 3 Tương Ớt",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Gà rán (3 miếng)",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Gà rán (2 miếng)",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cơm Phi-lê Gà Quay",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Burger Tôm",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "Đà Nẵng||Món Việt, Món Nhật": [
+  {
+   "dish": "Bánh xèo Nhật (Okonomiyaki)",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bánh bạch tuộc sốt Việt Nam (6 viên)",
+   "total_likes": 7,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bánh bạch tuộc sốt Nhật Bản (6Viên)",
+   "total_likes": 7,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bánh bạch tuộc đặc biệt (6 viên)",
+   "total_likes": 5,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bánh bạch tuộc phô mai Cay (6 viên)",
+   "total_likes": 3,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bánh bạch tuộc muối tiêu (6viên)",
+   "total_likes": 3,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bánh Bạch Tuộc Sốt Nhật _Việt  _ Muối Tiêu_ Hành Lá( 12 Viên)",
+   "total_likes": 3,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Takoyaki 1 Viên",
+   "total_likes": 2,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bánh Bạch Tuộc Sốt Nhật Or Sốt Việt Nam( 10 Viên)",
+   "total_likes": 1,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bánh Bạch Tuộc Đặt Biệt _ Bạch Tuộc Đặc Biệt Hành Lá_ Phô Mai( 10 Viên)",
+   "total_likes": 1,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "Vũng Tàu||Món Việt, Món Miền Nam": [
+  {
+   "dish": "Bánh mì thập cẩm",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Sữa đậu nành nhà làm",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Xôi Thập Cẩm",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bánh  Mì Đặc Biệt",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bánh phu thê",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Trà thảo mộc",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bánh bao Long Thành",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bánh Bao Long Thành",
+   "total_likes": 9,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Khô gà",
+   "total_likes": 5,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Chả lụa",
+   "total_likes": 2,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "TP. HCM||Món Việt, Úc": [
+  {
+   "dish": "Miếng Gà Rán Không Xương Xối Bơ",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Gà Viên Popcorn",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Set 1: 2 Mini Burger Bò / Gà / Tôm",
+   "total_likes": 8,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Set 6: Mini Burger mix Miếng Gà Rán mix Khoai Phô Mai Thịt Xông Khói",
+   "total_likes": 7,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Burger Bò Phô Mai",
+   "total_likes": 5,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Khoai Tây Chiên Cọng Dài Kiểu Úc (S) - 100gr",
+   "total_likes": 5,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Set 5: 2 Mini Burger mix Khoai Phô Mai Thịt Xông Khói",
+   "total_likes": 4,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Burger Bò Phô Mai Thịt Xông Khói",
+   "total_likes": 4,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Trà Chanh",
+   "total_likes": 4,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Set 2: Mì Ý Bò Bằm mix Miếng Gà mix Salad",
+   "total_likes": 3,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "Khánh Hoà||Món Á, Philippines": [
+  {
+   "dish": "2 Gà sốt cay + 2 Mỳ ý  + 1 Khoai tây chiên + 2 Nước ngọt",
+   "total_likes": 15,
+   "sold_by_n_merchants": 3
+  },
+  {
+   "dish": "1 Gà sốt cay + 1 Mỳ ý  + 1 Nước ngọt",
+   "total_likes": 8,
+   "sold_by_n_merchants": 3
+  },
+  {
+   "dish": "1 Gà sốt cay",
+   "total_likes": 8,
+   "sold_by_n_merchants": 3
+  },
+  {
+   "dish": "2 Gà Giòn Vui Vẻ + 2 Mỳ Ý Jolly vừa + 1 Khoai Tây Chiên vừa + 2 Nước Ngọt vừa",
+   "total_likes": 7,
+   "sold_by_n_merchants": 3
+  },
+  {
+   "dish": "Thêm 2 gói tương chua ngọt",
+   "total_likes": 7,
+   "sold_by_n_merchants": 3
+  },
+  {
+   "dish": "1 Mì ý Jolly vừa +  1 Miếng Gà Giòn Vui Vẻ +  1 Nước ngọt lớn",
+   "total_likes": 6,
+   "sold_by_n_merchants": 3
+  },
+  {
+   "dish": "Khoai tây lắc vị thịt nướng BBQ - lớn",
+   "total_likes": 6,
+   "sold_by_n_merchants": 3
+  },
+  {
+   "dish": "1 Gà sốt cay + 1 Mỳ ý sốt cay + 1 Nước ngọt",
+   "total_likes": 5,
+   "sold_by_n_merchants": 3
+  },
+  {
+   "dish": "1 Miếng Gà Giòn Vui Vẻ",
+   "total_likes": 5,
+   "sold_by_n_merchants": 3
+  },
+  {
+   "dish": "1 Mì ý Jolly vừa + 1 Miếng Gà Giòn Vui Vẻ + 1 Khoai tây chiên vừa + 1 Nước ngọt lớn",
+   "total_likes": 5,
+   "sold_by_n_merchants": 3
+  }
+ ],
+ "Đồng Nai||Món Việt, Món Âu": [
+  {
+   "dish": "Cơm Đùi Gà Fillet Nướng",
+   "total_likes": 8,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cơm Tôm Nướng Bơ Tỏi",
+   "total_likes": 7,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cơm Cá Hồi Fillet Áp Chảo",
+   "total_likes": 3,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cơm Chiên Phủ Trứng Rau Củ",
+   "total_likes": 2,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "TANGEGY- Salad Quýt Sốt Giấm Chua Ng...",
+   "total_likes": 2,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cơm Gọn Nhẹ Gà Nướng",
+   "total_likes": 1,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cơm Gọn Nhẹ Sườn Nướng",
+   "total_likes": 1,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Set 3 Bánh Bao Gạo Lứt Gà Nướng",
+   "total_likes": 1,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cơm Cá Basa Nướng Miso",
+   "total_likes": 1,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cơm Sườn Cốt Lết Nướng",
+   "total_likes": 1,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "TP. HCM||Món Việt, Đặc biệt": [
+  {
+   "dish": "Tặng Pepsi/7up 390ml + Burger gà + 1 Khoai size L",
+   "total_likes": 3,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "BURGER BÒ - BEEF BURGER",
+   "total_likes": 3,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "BURGER GÀ GIÒN- CRISPY CHICKEN BURGER",
+   "total_likes": 3,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "BURGER BÒ DẸT- SMASH BURGER",
+   "total_likes": 1,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "KHOAI + BÒ SỐT BM -LOADED BEEF FRIES",
+   "total_likes": 1,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Tặng Pepsi/7up 390ml + Burger bò + 1 Khoai size L - Pepsi/7up 390ml + 1 Beef burger + French Fries",
+   "total_likes": 0,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "TẶNG khoai tây size L và 2 pepsi/7up 390ml khi mua 3 burger bò",
+   "total_likes": 0,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Tặng khoai tây size L và 2 pepsi/7up 390ml khi mua 3 burger gà",
+   "total_likes": 0,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "HOTLINE : 0969496594",
+   "total_likes": 0,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "BURGER BÒ SIÊU CẤP VIP PRO - SPECIAL BURGER",
+   "total_likes": 0,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "Hải Phòng||Món Nhật": [
+  {
+   "dish": "Takoyaki",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cuộn Cá Hồi Nướng",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cuộn Phủ Cá Hồi Tươi",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Đậu Phụ Salad Thanh Cua",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Đậu Phụ Salad Rong Biển",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Đậu Phụ Trứng Tôm",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Canh Miso",
+   "total_likes": 9,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Sashimi Cá Hồi",
+   "total_likes": 9,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cuộn California",
+   "total_likes": 9,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Hoso Rong Biển",
+   "total_likes": 7,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "Khánh Hoà||Món Nhật, Món Á": [
+  {
+   "dish": "Maki thanh cua",
+   "total_likes": 2,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Sup miso",
+   "total_likes": 2,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Sashimi cá hồi",
+   "total_likes": 1,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Sashimi cá trích",
+   "total_likes": 1,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cơm cuộn 7 sắc cầu vồng",
+   "total_likes": 1,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Ba chỉ bò cuộn nấm kim châm áp chảo sốt teeeriyaki + Pepsi",
+   "total_likes": 0,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Súp kim chi đầu cá hồi + Pepsi",
+   "total_likes": 0,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Salad cá trích ép trứng",
+   "total_likes": 0,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Salad cá hồi và bơ",
+   "total_likes": 0,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Salad gà rong nho",
+   "total_likes": 0,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "Cần Thơ||Món Á, Philippines": [
+  {
+   "dish": "2 Gà Giòn Vui Vẻ + 2 Mỳ Ý Jolly vừa + 1 Khoai Tây Chiên vừa + 2 Nước Ngọt vừa",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "1 Cơm Gà Giòn Vui Vẻ + 1 Súp bí đỏ +  1 Nước ngọt lớn",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "1 Gà sốt cay",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "1 Mì ý Jolly vừa +  1 Miếng Gà Giòn Vui Vẻ +  1 Nước ngọt lớn",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "1 Mì ý sốt cay vừa + 1 miếng Gà Giòn Vui Vẻ + 1 Pepsi vừa",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Thêm 2 gói tương chua ngọt",
+   "total_likes": 9,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "3 Gà Giòn Vui Vẻ + 1 Mỳ Ý Jolly + 1 Khoai tây chiên vừa + 2  Nước ngọt vừa",
+   "total_likes": 8,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "1 Miếng Gà Giòn Vui Vẻ",
+   "total_likes": 7,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Khoai tây lắc vị thịt nướng BBQ - lớn",
+   "total_likes": 5,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "2 Miếng gà sốt cay + 1 Khoai tây chiên vừa + 1 Nước ngọt lớn",
+   "total_likes": 4,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "Vũng Tàu||Ý, Món Âu": [
+  {
+   "dish": "Pizza Hải Sản Nhiệt Đới / Tropical Seafood",
+   "total_likes": 20,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Pizza Hải Sản Pesto Xanh / Secret Recipe Seafood Pesto",
+   "total_likes": 20,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Pizza 5 Loại Thịt Đặc Biệt Và Rau Củ / Super Deluxe",
+   "total_likes": 14,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Pizza 5 Loại Thịt Đặc Biệt / Meat Deluxe",
+   "total_likes": 11,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Giỏ Khoai Tây Chiên / Potato basket",
+   "total_likes": 8,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Pizza Xúc Xích Ý / Double Pepperoni",
+   "total_likes": 7,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Pizza Hawaii / Hawaiian",
+   "total_likes": 7,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Salad gà giòn không xương / Chicken strip slad with 1000 island sauce",
+   "total_likes": 7,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Salad Trộn Dầu Giấm / Garden salad with Balsamic vinegar dressing",
+   "total_likes": 7,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Nui Bỏ Lò Phô Mai Thịt Nguội & Nấm Xốt Kem",
+   "total_likes": 6,
+   "sold_by_n_merchants": 2
+  }
+ ],
+ "Khánh Hoà||Món Nhật": [
+  {
+   "dish": "Sushi thập cẩm B",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Sushi cá hồi(Sake Sushi)",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Sushi thanh cua, trứng tôm, mayone(Kani Tobi Mayonaise Sushi)",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cơm cuộn cá hồi đặc biệt",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Sashimi cá hồi(Sake Sashimi)",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Súp miso",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cơm cá hồi nướng sốt teri + súp miso",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cơm niêu cá lóc kho tộ",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cơm chiên cá hồi",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cá hồi nướng muối",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "Đà Nẵng||Tiệm bánh": [
+  {
+   "dish": "Bánh mì thịt chả",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bánh mì thịt nướng",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bánh Mì Nướng Muối Ớt Truyền Thống",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bánh mì thịt nướng + ốp la",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bánh mì thịt chả + ốp la",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bánh mì pate + sốt + chà bông",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bánh mì ốp la",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bánh Mì Gà ( Lớn)",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Hộp nhân nhỏ  + 2 bánh mì",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bánh mì đậu đường (ăn chay)",
+   "total_likes": 8,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "Đà Nẵng||Món Thái, Món Á": [
+  {
+   "dish": "Chè Thái Sầu Riêng",
+   "total_likes": 500,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Chè bưởi (nên ăn thử trước khi cho đá)",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Chè dừa dầm",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Chè Thái không sầu riêng",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Chè dừa thốt nốt",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Sầu riêng thốt nốt",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Kem Flan (hai cái)",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Chè thập cẩm",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Chè đậu đỏ hạt sen",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Sương Sáo Đài Loan",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "Huế||Món Á, Philippines": [
+  {
+   "dish": "2 Gà Giòn Vui Vẻ + 2 Mỳ Ý Jolly vừa + 1 Khoai Tây Chiên vừa + 2 Nước Ngọt vừa",
+   "total_likes": 3,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "3 Miếng gà giòn vui vẻ + 2 Mỳ ý Jolly + 1 Khoai tây chiên vừa + 3 Nước ngọt vừa",
+   "total_likes": 2,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "1 Mì ý Jolly vừa +  1 Miếng Gà Giòn Vui Vẻ +  1 Nước ngọt lớn",
+   "total_likes": 2,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Thêm 2 gói tương chua ngọt",
+   "total_likes": 2,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Combo Burger Gà Giòn 1",
+   "total_likes": 1,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "3 Gà Giòn Vui Vẻ + 1 Mỳ Ý Jolly + 1 Khoai tây chiên vừa + 2  Nước ngọt vừa",
+   "total_likes": 1,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "1 Gà sốt cay + 1 Mỳ ý sốt cay + 1 Nước ngọt",
+   "total_likes": 1,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "2 Miếng Gà Giòn Vui Vẻ + 1 Khoai tây chiên vừa + 1 Nước ngọt lớn",
+   "total_likes": 1,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "1 Cơm Gà Giòn Vui Vẻ + 1 Súp bí đỏ +  1 Nước ngọt lớn",
+   "total_likes": 1,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "1 Miếng Gà Giòn Vui Vẻ",
+   "total_likes": 1,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "Hà Nội||Món Trung Hoa, Món Á": [
+  {
+   "dish": "Trà Xanh Nhài Sữa L",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Trà Xanh Nhài Sữa M",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Trà Hồng Sữa M",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Trà Hồng Sữa L",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bánh Trứng Ngô",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Trà Sữa Cookie L",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Trà Sữa Cookie M",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Trà Sữa Creamy L",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bánh Trứng Thịt Muối",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Trà Sữa Hoàng Gia L",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "TP. HCM||Món Âu": [
+  {
+   "dish": "Spaghetti carbonara",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Spaghetti cheese oven",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Chicken parmesan",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Nachos",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Spaghetti Boom B52",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cordon bleu",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Tuna salad",
+   "total_likes": 9,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Spaghetti bolonese",
+   "total_likes": 8,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "French fries",
+   "total_likes": 7,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Grilled chicken salad",
+   "total_likes": 6,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "Cần Thơ||Món Việt, Món Hàn": [
+  {
+   "dish": "Gà Sốt Phô Mai 1 Miếng",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cơm Gà Sốt HS",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cơm Thịt Bò",
+   "total_likes": 8,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Mực Rán (3 miếng)",
+   "total_likes": 8,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Phô Mai Que",
+   "total_likes": 7,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cơm Gà Viên",
+   "total_likes": 6,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Khoai Tây Lắc (Vị Phô Mai)",
+   "total_likes": 6,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cơm",
+   "total_likes": 6,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Sốt Phô Mai(1 hũ)",
+   "total_likes": 6,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Mì Ý (lớn)",
+   "total_likes": 5,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "Huế||Món Huế": [
+  {
+   "dish": "Bánh mì nem nướng",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bánh mì thịt nướng",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bún đặc biệt giò",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bánh mì heo quay",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bún bò tái",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bún bò nạm cua",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bánh mì thịt nguội",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bánh mì ốp la",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bánh mì chả da",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bánh mì thịt xíu",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "TP. HCM||Món Việt, Món Á": [
+  {
+   "dish": "Trà Sữa Thập Cẩm Đặc Biệt",
+   "total_likes": 0,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "Huế||Món Việt, Món Bắc": [
+  {
+   "dish": "Phở tái",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Tô giấy + đũa muỗng",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "1 bánh quẩy",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Phở nạm",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Phở gà",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Phở đặc biệt",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Trứng chần",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Phở khô",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Miến gà",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Miến bò",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "Đồng Nai||Món Miền Trung": [
+  {
+   "dish": "Bún Bắp Bò + Chả Huế + Chả Cua",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bún đặc biệt đầy đủ",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bún Giò Heo + Chả Huế + Chả Cua",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bún bò -giò đặc biệt",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Lẩu Bò Thập Cẩm 400",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bún chả Huế + chả cua",
+   "total_likes": 7,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Lẩu Bò Thập Cẩm 4 Người ăn",
+   "total_likes": 4,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Lẩu Bò Thập Cẩm 3 Người ăn",
+   "total_likes": 3,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bún Bò Tái + Chả Huế + Chả Cua",
+   "total_likes": 2,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bún hến",
+   "total_likes": 2,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "Vũng Tàu||Món Miền Nam": [
+  {
+   "dish": "Gà Rán Phần",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Gà Sốt Phô Mai 1 Miếng",
+   "total_likes": 5,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Gà Rán 1 Miếng",
+   "total_likes": 4,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Sốt H&S (1 hủ)",
+   "total_likes": 4,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Gà Sốt HS 1 Miếng",
+   "total_likes": 3,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Phô Mai Que",
+   "total_likes": 3,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Mực Rán (3 miếng)",
+   "total_likes": 3,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Sốt Phô Mai (1 hủ)",
+   "total_likes": 3,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "TIỆN LỢI 4",
+   "total_likes": 2,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Burger Tôm",
+   "total_likes": 2,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "TP. HCM||Món Ấn Độ, Món Á": [
+  {
+   "dish": "Shish kebab beef",
+   "total_likes": 0,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "TP. HCM||Món Miền Trung, Nha Trang": [
+  {
+   "dish": "Bún Đầy Đủ",
+   "total_likes": 500,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bún bình thường ( Chả, cá dầm ,sứa ,sườn)",
+   "total_likes": 500,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bún nhỏ ( Chả , Cá )",
+   "total_likes": 500,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bún chả",
+   "total_likes": 200,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Bún sứa",
+   "total_likes": 150,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Bún Bình Thường",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bún cá dầm",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bún chả + Cá + 1 Sprite",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Sứa",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Chả",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "Cần Thơ||Món Nhật": [
+  {
+   "dish": "Xúc xích cuộn sandwich chiên xù",
+   "total_likes": 1,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Xúc xích nướng",
+   "total_likes": 0,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bánh mì xúc xích",
+   "total_likes": 0,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Shushi chiên",
+   "total_likes": 0,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bánh rán đôrêmon",
+   "total_likes": 0,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Shushi",
+   "total_likes": 0,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "Đồng Nai||Món Âu, Bánh Pizza": [
+  {
+   "dish": "Combo 1",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Pizza bò bằm size 24",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Pizza Hải sản size 28",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Pizza bò bằm size 28",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Gà sốt cay",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Gà Sốt Cay Phủ Phô Mai",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Spaghetti bò bằm",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Spaghetti thập cẩm",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Combo 3",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Tokbokki truyền thống",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "Đồng Nai||Món Miền Nam, Miền Tây": [
+  {
+   "dish": "Burger Gà Mayo",
+   "total_likes": 20,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Mì Spaghetti Gà Giòn",
+   "total_likes": 20,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "COMBO TACOS TIẾT KIỆM",
+   "total_likes": 16,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Tacos Bò Bằm",
+   "total_likes": 10,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Burger Bò 2 Lớp",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Hotdog Hàn Quốc",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "COMBO MỲ TIẾT KIỆM",
+   "total_likes": 8,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Mì Spaghetti Xúc Xích - Bò Bằm",
+   "total_likes": 8,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Burger Bò Mayo",
+   "total_likes": 7,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Burger Tôm Mayo",
+   "total_likes": 6,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "Hà Nội||Shop Online": [
+  {
+   "dish": "Bánh Bông Lan Trứng Muối 15cm",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "BÁNH TRÀ SỮA TRÂN CHÂU ĐƯỜNG ĐEN",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bánh Milo Kem Mặn",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bông Lan Trứng Muối Phomai To",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bánh Bông Lan Trứng Muối Mix Bò Khô",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bánh Bông Lan Gà Cay Hàn Quốc 15cm",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "CỐT BÁNH CHIFFON",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Tiramisu",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bông Lan Sốt Ruốc",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Gói sốt",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "Đà Nẵng||Món Á": [
+  {
+   "dish": "Gà Sốt HS 1 Miếng",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Mì Ý (vừa)",
+   "total_likes": 7,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cơm Gà Sốt HS",
+   "total_likes": 5,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Sốt Phô Mai(1 hũ)",
+   "total_likes": 5,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Combo Gà-Mì",
+   "total_likes": 4,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Gà Sốt Phô Mai 1 Miếng",
+   "total_likes": 4,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Gà Lắc (Vị Phô Mai)",
+   "total_likes": 4,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Pepsi (M)",
+   "total_likes": 4,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Burger Tôm",
+   "total_likes": 3,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Mì Ý Thịt Bò (lớn)",
+   "total_likes": 3,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "TP. HCM||Món Miền Trung, Món Huế": [
+  {
+   "dish": "Mỳ Quảng Tôm Thịt",
+   "total_likes": 20,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Bún Bò Rất Huế (Best Seller)",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bún Mắm Nêm",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bánh Thập Cẩm (Ram Ít,Nậm,Lọc,Bèo,Ướt)",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bánh Bèo Tôm Chấy",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bánh Ram Ít",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bánh Lọc",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Hến Xào",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Chè Huế Theo Ngày",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bánh Ướt Tôm Chấy",
+   "total_likes": 9,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "Hà Nội||Châu Mỹ, Mexico": [
+  {
+   "dish": "Taco Bò Mexico",
+   "total_likes": 20,
+   "sold_by_n_merchants": 3
+  },
+  {
+   "dish": "Burrito Gà Mexico",
+   "total_likes": 16,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Taco Gà Mexico",
+   "total_likes": 11,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Burrito Bò Mexico",
+   "total_likes": 11,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Pizza Bò Bolognese 22cm",
+   "total_likes": 5,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Khoai tây chiên (hộp 120gr)",
+   "total_likes": 4,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Burrito Bò + Trà hoa Atiso",
+   "total_likes": 4,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "2 Pizza Mini 5cm vị Bò băm",
+   "total_likes": 3,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Pizza Bò băm 22cm + Trà hoa Atiso",
+   "total_likes": 2,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Pizza Gà sốt cà chua 13cm",
+   "total_likes": 2,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "Khánh Hoà||Tây Nguyên": [
+  {
+   "dish": "Bạc Xỉu",
+   "total_likes": 200,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Trà Thanh Đào",
+   "total_likes": 100,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Trà Thạch Vải",
+   "total_likes": 100,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "PhinĐI Kem Sữa - Cà phê (Coffee)",
+   "total_likes": 100,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Bánh Mì Que Pate Highlands",
+   "total_likes": 100,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Trà Sen Vàng (Củ Năng)",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Trà Thạch Đào-Trà Sữa Highlands",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Freeze Sô Cô La - Đá Xay",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "PhinĐI Hạnh Nhân - Cà phê (Coffee)",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cà Phê Phin Sữa Đá (Coffee)",
+   "total_likes": 100,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "Hà Nội||Châu Mỹ": [
+  {
+   "dish": "Mr Burger Bò BBQ",
+   "total_likes": 7,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Pizza Bò Băm 13cm + Coke",
+   "total_likes": 1,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Mỳ Ý Spaghetti Bò băm Bolognese",
+   "total_likes": 1,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Mỳ Ý Spaghetti Bò băm Bỏ lò",
+   "total_likes": 1,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Mỳ Ý Spaghetti Rau chay",
+   "total_likes": 1,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "1 Pizza Mini 5cm Bò băm",
+   "total_likes": 1,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "2 Pizza Mini 5cm Bò băm",
+   "total_likes": 1,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Mỳ Ý Spaghetti Bò băm + Coke",
+   "total_likes": 0,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Pizza Bò Băm 22cm + Coke",
+   "total_likes": 0,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Mr Burger Gà BBQ",
+   "total_likes": 0,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "Hà Nội||Món Âu": [
+  {
+   "dish": "3 Miếng Gà Rán Giòn Da Thấm Thịt.",
+   "total_likes": 50,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Combo 1 Người",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Phần Ăn 2 Miếng Gà Rán",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Phần Ăn 1 Miếng Gà Rán",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Phần Ăn Burger 2 Lớp Bò Phô Mai",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Burger 2 Lớp Bò Phô Mai",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Burger Bò Phô Mai",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Khoai Tây Chiên",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Thêm 2 Gói Tương Ớt Ngọt",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Thêm 2 Gói Tương Cà",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "Hà Nội||Ý, Món Âu": [
+  {
+   "dish": "Cơm thịt chưng mắm tép + Canh + Trứng ốp + Trà hoa",
+   "total_likes": 3,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cơm thịt chiên xù sốt Nhật + Canh + Trứng ốp + Trà hoa",
+   "total_likes": 2,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Pizza Bò băm Bolognese 22cm",
+   "total_likes": 2,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Mỳ Ý Spaghetti Giăm bông Carbonara",
+   "total_likes": 2,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cơm gà viên chiên + Canh + Trứng ốp + Trà hoa",
+   "total_likes": 1,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cơm gà viên chiên + Trứng ốp + Trà hoa",
+   "total_likes": 1,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Cơm thịt chiên xù sốt Nhật + Trứng ốp + Trà hoa",
+   "total_likes": 1,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Mỳ Ý Spaghetti Bò băm",
+   "total_likes": 1,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Phô mai chiên 4 thanh",
+   "total_likes": 1,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Canh rau thịt băm",
+   "total_likes": 0,
+   "sold_by_n_merchants": 2
+  }
+ ],
+ "Vũng Tàu||Món Âu, Bánh Pizza": [
+  {
+   "dish": "Pizza Hải Sản Nhiệt Đới",
+   "total_likes": 10,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Pizza Phô Mai Cao Cấp",
+   "total_likes": 5,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "MUA LỚN TẶNG VỪA",
+   "total_likes": 2,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "MUA VỪA TẶNG NHỎ",
+   "total_likes": 2,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Pizza Gà Phô Mai",
+   "total_likes": 2,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Pizza Bò BBQ Xốt Cay Hàn Quốc",
+   "total_likes": 2,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Pizza Hải Sản Xốt Pesto",
+   "total_likes": 2,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bánh Mì Bơ Tỏi",
+   "total_likes": 2,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Melts Bò Xốt Cay Hàn Quốc (1 miếng)",
+   "total_likes": 1,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Melts Gà Giòn Phô Mai (1 miếng)",
+   "total_likes": 1,
+   "sold_by_n_merchants": 1
+  }
+ ],
+ "Đồng Nai||Ý, Châu Mỹ": [
+  {
+   "dish": "MUA LỚN TẶNG VỪA",
+   "total_likes": 20,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Pizza Hải Sản Nhiệt Đới",
+   "total_likes": 20,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "MUA VỪA TẶNG NHỎ",
+   "total_likes": 18,
+   "sold_by_n_merchants": 2
+  },
+  {
+   "dish": "Pizza Phô Mai Cao Cấp",
+   "total_likes": 10,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Pizza Hải Sản Xốt Tiêu Đen",
+   "total_likes": 7,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Pizza Gà Phô Mai",
+   "total_likes": 6,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bánh Cuộn Phô Mai",
+   "total_likes": 5,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Xà Lách Trộn Cá Ngừ Và Thịt Xông Khói",
+   "total_likes": 5,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Bánh Mì Bơ Tỏi",
+   "total_likes": 5,
+   "sold_by_n_merchants": 1
+  },
+  {
+   "dish": "Pizza “Điệp” Ngọt Nắng",
+   "total_likes": 4,
+   "sold_by_n_merchants": 2
+  }
+ ]
+}

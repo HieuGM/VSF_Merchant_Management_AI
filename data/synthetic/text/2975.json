@@ -1,0 +1,77 @@
+{
+ "merchant_id": "2975",
+ "model": "DeepSeek-V4-Flash",
+ "generated_at": "2026-07-20T14:23:50",
+ "complaints": [
+  {
+   "category": "giao_hàng_trễ",
+   "text": "Đặt combo Bánh tráng trộn FULL TOPPING + Bánh tráng trộn Sate tỏi Mini, chờ gần 40 phút mới nhận được, dù quán báo 20 phút. Giao hàng trễ quá!",
+   "severity": "medium",
+   "date": "2026-03-15"
+  },
+  {
+   "category": "đóng_gói_kém",
+   "text": "Nhận được Trà sữa Đài loan bị đổ ra túi, ướt hết cả giấy tờ. Đóng gói cẩu thả quá.",
+   "severity": "high",
+   "date": "2026-03-12"
+  },
+  {
+   "category": "sai_hoặc_thiếu_món",
+   "text": "Đặt Combo 1 Người Bánh Tráng Trộn Sate Tỏi + Lục Trà Sủi Bọt nhưng nhận được thiếu Lục Trà, chỉ có bánh tráng. Gọi lại thì bảo quên.",
+   "severity": "high",
+   "date": "2026-03-10"
+  },
+  {
+   "category": "chất_lượng_món",
+   "text": "Yogurt đào lần này uống bị chua quá, không ngon như mọi khi. Có vẻ để lâu hay sao ấy.",
+   "severity": "low",
+   "date": "2026-03-08"
+  },
+  {
+   "category": "giá_cao",
+   "text": "Combo Bánh Tráng Satế Tỏi Mini+Bánh Tráng Rong Biển Cháy Tỏi Mini+Tóp Mỡ 100Gr giá hơi cao so với size mini, chỉ được ít.",
+   "severity": "low",
+   "date": "2026-03-05"
+  },
+  {
+   "category": "món_nguội",
+   "text": "Cà phê sữa đá giao đến thì đá tan hết, cà phê nguội ngắt. Chắc do giao lâu quá.",
+   "severity": "medium",
+   "date": "2026-02-28"
+  },
+  {
+   "category": "thái_độ_phục_vụ",
+   "text": "Gọi điện hỏi về đơn hàng bị thiếu, nhân viên nói cộc lốc, không hỗ trợ nhiệt tình. Không hài lòng.",
+   "severity": "medium",
+   "date": "2026-02-25"
+  }
+ ],
+ "delivery_feedback": [
+  {
+   "text": "Giao đúng giờ, quán đóng gói cẩn thận.",
+   "on_time": true,
+   "issue": null
+  },
+  {
+   "text": "Khách chờ hơi lâu vì quán làm chậm, giao trễ 10 phút.",
+   "on_time": false,
+   "issue": "quán làm chậm"
+  },
+  {
+   "text": "Đường đông nhưng vẫn giao kịp giờ.",
+   "on_time": true,
+   "issue": null
+  },
+  {
+   "text": "Khách ở chung cư khó tìm, nhưng giao đúng giờ.",
+   "on_time": true,
+   "issue": null
+  },
+  {
+   "text": "Giao trễ vì nhầm địa chỉ, do app báo sai.",
+   "on_time": false,
+   "issue": "nhầm địa chỉ"
+  }
+ ],
+ "filled_reviews": []
+}

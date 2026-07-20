@@ -1,0 +1,86 @@
+{
+ "merchant_id": "68814",
+ "model": "DeepSeek-V4-Flash",
+ "generated_at": "2026-07-20T14:23:19",
+ "complaints": [
+  {
+   "category": "chất_lượng_món",
+   "text": "Đặt bún mắm tô nhỏ mà đồ ăn chỉ lèo tèo vài miếng chả, tôm cũng teo, bún thì ít, toàn rau giá rẻ. 55k mà thất vọng quá.",
+   "severity": "high",
+   "date": "2026-03-15"
+  },
+  {
+   "category": "giao_hàng_trễ",
+   "text": "Đặt lúc 11h30, đến 12h20 mới nhận được, trong khi quán báo 32 phút. Bún bò Huế nguội ngắt.",
+   "severity": "medium",
+   "date": "2026-03-18"
+  },
+  {
+   "category": "sai_hoặc_thiếu_món",
+   "text": "Gọi bún mắm + nước ngọt ngẫu nhiên, nhận được bún bò Huế và không có nước. Sai món hoàn toàn.",
+   "severity": "high",
+   "date": "2026-03-20"
+  },
+  {
+   "category": "đóng_gói_kém",
+   "text": "Nước súp bún bò sườn sụn bị đổ ra túi vì nắp hộp không kín. Rau sống dập nát hết.",
+   "severity": "medium",
+   "date": "2026-03-22"
+  },
+  {
+   "category": "giá_cao",
+   "text": "Bún bò Huế tô nhỏ 45k mà chỉ có vài lát thịt, bún cũng ít. So với các quán khác thì đắt hơn mà chất lượng không tương xứng.",
+   "severity": "low",
+   "date": "2026-03-25"
+  },
+  {
+   "category": "vệ_sinh",
+   "text": "Trong tô bún mắm thấy có sợi tóc, mất vệ sinh quá. Không dám ăn tiếp.",
+   "severity": "high",
+   "date": "2026-03-27"
+  },
+  {
+   "category": "chất_lượng_món",
+   "text": "Gọi 3 Gỏi cuốn + Coca, gỏi cuốn bị khô, tôm không tươi, nước chấm nhạt. Chất lượng kém hơn lần trước.",
+   "severity": "medium",
+   "date": "2026-03-29"
+  }
+ ],
+ "delivery_feedback": [
+  {
+   "text": "Giao đúng giờ, quán đóng gói cẩn thận.",
+   "on_time": true,
+   "issue": null
+  },
+  {
+   "text": "Khách ở chung cư, gửi bảo vệ, giao nhanh.",
+   "on_time": true,
+   "issue": null
+  },
+  {
+   "text": "Bị kẹt xe nên trễ 10 phút, khách không vui.",
+   "on_time": false,
+   "issue": "Kẹt xe giờ cao điểm"
+  },
+  {
+   "text": "Quán giao thiếu món, phải quay lại lấy thêm, giao trễ 15 phút.",
+   "on_time": false,
+   "issue": "Thiếu món từ quán"
+  },
+  {
+   "text": "Giao đúng giờ, đồ ăn còn nóng.",
+   "on_time": true,
+   "issue": null
+  }
+ ],
+ "filled_reviews": [
+  {
+   "text": "Mình đặt bún mắm đặc biệt qua app, giao nhanh, đồ ăn nóng hổi, tôm và chả ngon. Rau tươi, nước súp đậm đà. Sẽ ủng hộ tiếp.",
+   "score": 9
+  },
+  {
+   "text": "Bún bò Huế thường ăn cũng ổn, thịt bò mềm, nước dùng thơm. Hơi ít rau nhưng vị vừa miệng. Giá hợp lý.",
+   "score": 8
+  }
+ ]
+}

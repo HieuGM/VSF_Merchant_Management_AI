@@ -1,0 +1,83 @@
+{
+ "merchant_id": "3752",
+ "model": "DeepSeek-V4-Flash",
+ "generated_at": "2026-07-20T14:24:09",
+ "complaints": [
+  {
+   "category": "giao_hàng_trễ",
+   "text": "Đặt lúc 12h20, hẹn 12h50 mà 13h15 mới tới. Bánh mì thịt nướng nguội hết cả.",
+   "severity": "medium",
+   "date": "2026-03-15"
+  },
+  {
+   "category": "sai_hoặc_thiếu_món",
+   "text": "Gọi combo Bánh Mì Gà Rim Xé + Nước Sâm Giải Nhiệt, nhưng chỉ có bánh mì, thiếu nước sâm.",
+   "severity": "high",
+   "date": "2026-03-20"
+  },
+  {
+   "category": "chất_lượng_món",
+   "text": "Bánh mì gà rim xé lần này thịt gà bở, sốt nhiều dầu, ăn ngán quá.",
+   "severity": "medium",
+   "date": "2026-04-02"
+  },
+  {
+   "category": "thái_độ_phục_vụ",
+   "text": "Nhân viên nghe điện thoại cộc lốc, hỏi thêm về món thì bảo 'tự xem menu đi' rồi cúp máy.",
+   "severity": "high",
+   "date": "2026-03-28"
+  },
+  {
+   "category": "giá_cao",
+   "text": "Ổ bánh mì giờ 26k, bằng dĩa cơm, thấy đắt hơn trước nhiều mà chất lượng không cải thiện.",
+   "severity": "low",
+   "date": "2026-04-05"
+  },
+  {
+   "category": "đóng_gói_kém",
+   "text": "Bánh mì thịt nướng than hoa signature bị dập, sốt chảy ra ngoài hộp giấy làm bẩn túi.",
+   "severity": "medium",
+   "date": "2026-03-10"
+  },
+  {
+   "category": "món_nguội",
+   "text": "Đặt combo Bánh Mì Thịt Nướng + Red Bull, bánh mì giao tới nguội tanh, không còn giòn.",
+   "severity": "medium",
+   "date": "2026-04-08"
+  },
+  {
+   "category": "vệ_sinh",
+   "text": "Trong hũ tóp mỡ rim mắm tỏi 100g có sợi tóc đen, mất vệ sinh.",
+   "severity": "high",
+   "date": "2026-03-18"
+  }
+ ],
+ "delivery_feedback": [
+  {
+   "text": "Giao đúng giờ, khách vui vẻ nhận hàng.",
+   "on_time": true,
+   "issue": null
+  },
+  {
+   "text": "Khách không nghe máy, phải gọi 3 lần mới bắt máy, giao trễ 7 phút.",
+   "on_time": false,
+   "issue": "khách không nghe máy"
+  },
+  {
+   "text": "Địa chỉ hẻm nhỏ khó tìm, mất thêm 5 phút nhưng vẫn giao kịp giờ.",
+   "on_time": true,
+   "issue": "địa chỉ khó tìm"
+  },
+  {
+   "text": "Giao nhanh, không vấn đề gì.",
+   "on_time": true,
+   "issue": null
+  },
+  {
+   "text": "Khách yêu cầu để trước cửa, giao đúng giờ.",
+   "on_time": true,
+   "issue": null
+  }
+ ],
+ "filled_reviews": []
+}

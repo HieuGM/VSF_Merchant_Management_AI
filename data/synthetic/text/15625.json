@@ -1,0 +1,83 @@
+{
+ "merchant_id": "15625",
+ "model": "DeepSeek-V4-Flash",
+ "generated_at": "2026-07-20T14:26:33",
+ "complaints": [
+  {
+   "category": "giao_hàng_trễ",
+   "text": "Đặt đơn lúc 12h30, đến 13h15 mới giao tới, takoyaki nguội ngắt.",
+   "severity": "medium",
+   "date": "2026-03-15"
+  },
+  {
+   "category": "giao_hàng_trễ",
+   "text": "Giao hàng trễ 20 phút so với dự kiến, món kem cheese bánh mì phô mai bị chảy.",
+   "severity": "low",
+   "date": "2026-03-20"
+  },
+  {
+   "category": "đóng_gói_kém",
+   "text": "Hộp takoyaki bị nghiêng, sốt chảy ra túi, bẩn hết.",
+   "severity": "medium",
+   "date": "2026-03-18"
+  },
+  {
+   "category": "sai_hoặc_thiếu_món",
+   "text": "Thiếu matcha latte, chỉ có takoyaki.",
+   "severity": "high",
+   "date": "2026-03-22"
+  },
+  {
+   "category": "sai_hoặc_thiếu_món",
+   "text": "Giao nhầm takoyaki sốt chua cay thay vì sốt truyền thống.",
+   "severity": "low",
+   "date": "2026-03-25"
+  },
+  {
+   "category": "thái_độ_phục_vụ",
+   "text": "Nhân viên giữ xe không cẩn thận, làm mất xe của tôi.",
+   "severity": "high",
+   "date": "2026-03-10"
+  },
+  {
+   "category": "chất_lượng_món",
+   "text": "Takoyaki Natsu hôm nay bị nhão, không ngon như mọi khi.",
+   "severity": "medium",
+   "date": "2026-03-28"
+  },
+  {
+   "category": "giá_cao",
+   "text": "Matcha latte 55k mà chỉ được ly nhỏ, quá đắt so với chất lượng.",
+   "severity": "low",
+   "date": "2026-03-30"
+  }
+ ],
+ "delivery_feedback": [
+  {
+   "text": "Giao đúng giờ, khách vui vẻ.",
+   "on_time": true,
+   "issue": null
+  },
+  {
+   "text": "Đường kẹt xe nên trễ 10 phút.",
+   "on_time": false,
+   "issue": "kẹt xe"
+  },
+  {
+   "text": "Giao trễ do khách không nghe máy, phải đợi.",
+   "on_time": false,
+   "issue": "khách không nghe máy"
+  },
+  {
+   "text": "Giao đúng giờ, địa chỉ dễ tìm.",
+   "on_time": true,
+   "issue": null
+  },
+  {
+   "text": "Giao trễ 5 phút do tìm nhà lâu.",
+   "on_time": false,
+   "issue": "tìm nhà khó"
+  }
+ ],
+ "filled_reviews": []
+}
