@@ -9,6 +9,8 @@ import json
 import re
 from pathlib import Path
 
+from scenarios import SCENARIO_ASSIGN, prompt_directive
+
 CRAWLED = Path("data/crawled")
 OPS = Path("data/synthetic/operational.jsonl")
 _ops_cache = None
@@ -73,6 +75,8 @@ def build_messages(mid):
     ctx = build_context(mid)
     # /no_think: giam thinking cho cac model reasoning (Qwen3), model khac bo qua vo hai
     content = "/no_think\n" + PROMPT.format(context=json.dumps(ctx, ensure_ascii=False, indent=1))
+    # nhoi chi thi kich ban yeu (neu merchant duoc gan) -> tin hieu yeu tat dinh theo dimension
+    content += prompt_directive(SCENARIO_ASSIGN.get(mid))
     return [{"role": "user", "content": content}], ctx
 
 

@@ -9,6 +9,8 @@ import json
 import glob
 from pathlib import Path
 
+from scenarios import SCENARIO_ASSIGN
+
 CRAWLED = Path("data/crawled")
 OUT = Path("data/synthetic/hero_set.json")
 
@@ -74,7 +76,8 @@ def main():
     cands = load()
     chosen, reasons = pick(cands)
     out = {"count": len(chosen), "merchants": [
-        {**cands[mid], "why": reasons[mid]} for mid in chosen]}
+        {**cands[mid], "why": reasons[mid], "scenario": SCENARIO_ASSIGN.get(mid)}
+        for mid in chosen]}
     OUT.write_text(json.dumps(out, ensure_ascii=False, indent=1), encoding="utf-8")
     print(f"selected {len(chosen)} hero merchants -> {OUT}\n")
     for mid in chosen:

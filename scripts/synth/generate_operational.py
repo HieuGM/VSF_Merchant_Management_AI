@@ -10,6 +10,8 @@ import random
 import statistics
 from pathlib import Path
 
+from scenarios import SCENARIO_ASSIGN, apply_ops_override
+
 UNIQUE = Path("data/merchants_unique.jsonl")
 CRAWLED = Path("data/crawled")
 OUT = Path("data/synthetic/operational.jsonl")
@@ -120,17 +122,21 @@ def main():
     median_price = statistics.median(prices)
     OUT.parent.mkdir(parents=True, exist_ok=True)
 
-    n = with_rating = 0
+    n = with_rating = scen = 0
     with OUT.open("w", encoding="utf-8") as f:
         for mid, m in catalog.items():
             rating, menu_size = real_rating(mid)
             if rating is not None:
                 with_rating += 1
             rec = gen_one(m, rating, menu_size, median_price)
+            # ep so lieu ops xau cho quan co kich ban yeu (dimension ops-driven)
+            if mid in SCENARIO_ASSIGN:
+                rec = apply_ops_override(rec, SCENARIO_ASSIGN[mid])
+                scen += 1
             f.write(json.dumps(rec, ensure_ascii=False) + "\n")
             n += 1
     print(f"generated operational synthetic for {n} merchants "
-          f"({with_rating} keyed to real rating) -> {OUT}")
+          f"({with_rating} keyed to real rating, {scen} scenario-overridden) -> {OUT}")
 
 
 if __name__ == "__main__":
