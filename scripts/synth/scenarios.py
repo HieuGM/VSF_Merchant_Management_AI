@@ -16,36 +16,55 @@ SCENARIO_ASSIGN = {
     "233150": "slow_prep",       # Sushi Lounge (Vũng Tàu)
 }
 
+# Moi persona = 1 CAU CHUYEN 2 VE (tuong phan) de demo dam net:
+#   - Diem YEU chu dich: qua ops xau + complaints/reviews (rating-anchored, can LLM).
+#   - Diem MANH chu dich: pin cao 1-2 dimension KHAC qua ops (packaging/delivery/waiting).
+#     Thuan numeric -> KHONG can LLM re-gen; chi nang dimension khac nen diem yeu VAN thap nhat.
+# apply_ops_override xu ly chung ca field yeu lan manh trong "ops".
 SCENARIOS = {
     "weak_delivery": {
         "label": "giao hàng chậm và thường xuyên trễ giờ",
-        # override ops (dimension delivery_quality + waiting_time se giam)
+        "strength": "bù lại: đóng gói rất kỹ, bếp ra món nhanh",
+        # yeu: delivery_quality (+waiting qua late-complaint) | manh: packaging + waiting_time
         "ops": {"on_time_rate": 0.58, "driver_rating": 3.4,
-                "avg_delivery_add": 28, "cancel_rate": 0.16},
+                "avg_delivery_add": 28, "cancel_rate": 0.16,
+                "packaging_ok_rate": 0.96, "avg_prep_minutes": 9},
         "complaint_focus": "ÍT NHẤT 5 khiếu nại loại 'giao_hàng_trễ', kèm vài 'món_nguội' (đồ tới nguội do giao lâu)",
         "neg_reviews": 1,
     },
     "weak_service": {
         "label": "thái độ phục vụ kém, nhân viên cáu gắt",
-        "ops": {},  # rating-anchored -> giam qua complaints
+        "strength": "bù lại: giao nhanh đúng giờ, đóng gói chỉn chu",
+        # yeu: service (rating-anchored) | manh: delivery_quality + packaging
+        "ops": {"on_time_rate": 0.95, "driver_rating": 4.8,
+                "packaging_ok_rate": 0.95},
         "complaint_focus": "ÍT NHẤT 5 khiếu nại loại 'thái_độ_phục_vụ', kèm vài 'vệ_sinh'",
         "neg_reviews": 2,
     },
     "weak_packaging": {
         "label": "đóng gói ẩu, hộp bẹp/đổ, rò rỉ nước sốt",
-        "ops": {"packaging_ok_rate": 0.55},
+        "strength": "bù lại: giao đúng giờ, ra món nhanh",
+        # yeu: packaging | manh: delivery_quality + waiting_time
+        "ops": {"packaging_ok_rate": 0.55, "on_time_rate": 0.95,
+                "driver_rating": 4.7, "avg_prep_minutes": 9},
         "complaint_focus": "ÍT NHẤT 5 khiếu nại loại 'đóng_gói_kém'",
         "neg_reviews": 1,
     },
     "weak_food": {
         "label": "chất lượng món giảm sút rõ rệt gần đây",
-        "ops": {},  # rating-anchored -> giam qua complaints + review diem thap
+        "strength": "bù lại: dịch vụ giao & đóng gói tốt, ra món nhanh",
+        # yeu: food_quality (rating-anchored) | manh: packaging + delivery + waiting_time
+        "ops": {"packaging_ok_rate": 0.96, "on_time_rate": 0.94,
+                "driver_rating": 4.6, "avg_prep_minutes": 10},
         "complaint_focus": "ÍT NHẤT 5 khiếu nại loại 'chất_lượng_món' và 'món_nguội'",
         "neg_reviews": 3,
     },
     "slow_prep": {
         "label": "thời gian chuẩn bị/chờ món quá lâu",
-        "ops": {"avg_prep_minutes": 34, "avg_delivery_add": 15},
+        "strength": "bù lại: đóng gói đẹp, tài xế giao đúng giờ",
+        # yeu: waiting_time | manh: packaging + delivery_quality (KHONG pin waiting)
+        "ops": {"avg_prep_minutes": 34, "avg_delivery_add": 15,
+                "packaging_ok_rate": 0.96, "on_time_rate": 0.95, "driver_rating": 4.7},
         "complaint_focus": "ÍT NHẤT 4 khiếu nại về CHỜ LÂU (loại 'giao_hàng_trễ', nhấn mạnh bếp làm chậm)",
         "neg_reviews": 1,
     },
