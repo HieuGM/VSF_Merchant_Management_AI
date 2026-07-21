@@ -161,16 +161,20 @@ def menu_diversity(crawled):
     return round(score, 3), ev, "menu size + categories"
 
 
-def price_level(ops, catalog, median_price):
+def price_level(ops, catalog, peer_median):
+    """Diem = do canh tranh gia so voi PEERS CUNG CUISINE (PRD 4.1: gia vs phan khuc/khu vuc).
+    KHONG phai 'gia tuyet doi cao = xau': gia ngang/re hon median cung cuisine -> khong phai
+    diem yeu (score cao du gia tuyet doi cao). Chi khi DAT hon han peers moi giam diem theo
+    muc vuot median."""
     price = catalog.get("price")
     label = ops.get("price_level", "trung bình")
-    ratio = round(price / median_price, 2) if (price and median_price) else 1.0
-    # score = do "phu hop tui tien" (re -> cao); mang tinh positioning
-    score = clamp(1.2 - ratio * 0.5)
+    ratio = round(price / peer_median, 2) if (price and peer_median) else 1.0
+    over = max(0.0, ratio - 1.0)  # chi phan VUOT median cung cuisine moi bi tru
+    score = clamp(1.0 - over * 1.5)
     ev = [
         {"type": "price", "value": price},
-        {"type": "cluster_median_price", "value": median_price},
-        {"type": "price_ratio", "value": ratio},
+        {"type": "peer_median_price", "value": round(peer_median) if peer_median else None},
+        {"type": "price_ratio_vs_peers", "value": ratio},
         {"type": "price_level_label", "value": label},
     ]
-    return round(score, 3), ev, "price vs cluster median (score=affordability)"
+    return round(score, 3), ev, "price vs same-cuisine median (score=peer competitiveness)"

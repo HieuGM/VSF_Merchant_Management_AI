@@ -72,7 +72,7 @@ def build_metadata(cat, crawled):
     }
 
 
-def build_dimensions(crawled, ops, text, vision, cat, median_price):
+def build_dimensions(crawled, ops, text, vision, cat, peer_median):
     specs = {
         "food_quality": ds.food_quality(crawled, ops, text),
         "image_quality": ds.image_quality(crawled, vision),
@@ -81,7 +81,7 @@ def build_dimensions(crawled, ops, text, vision, cat, median_price):
         "service": ds.service(crawled, text),
         "waiting_time": ds.waiting_time(ops, cat, text),
         "menu_diversity": ds.menu_diversity(crawled),
-        "price_level": ds.price_level(ops, cat, median_price),
+        "price_level": ds.price_level(ops, cat, peer_median),
     }
     dims = {}
     for name, (score, ev, note) in specs.items():
@@ -100,6 +100,13 @@ def main():
     vision_map = load_jsonl_map(CACHE / "vision.jsonl") if (CACHE / "vision.jsonl").exists() else {}
     prices = [m["price"] for m in cat.values() if m.get("price")]
     median_price = statistics.median(prices)
+    # median gia THEO cuisine (peer group / phan khuc) -> so gia voi quan cung loai (PRD 4.1).
+    # cuisine mau nho (<5 quan co gia) khong dang tin -> fallback median toan cuc.
+    by_cuisine = {}
+    for m in cat.values():
+        if m.get("price") and m.get("cuisine"):
+            by_cuisine.setdefault(m["cuisine"], []).append(m["price"])
+    cuisine_median = {cu: statistics.median(ps) for cu, ps in by_cuisine.items() if len(ps) >= 5}
 
     n = hero_n = 0
     all_profiles = []
@@ -115,7 +122,8 @@ def main():
             text = hero_text_map.get(mid, {})
             vision = vision_map.get(mid)
 
-        dims = build_dimensions(crawled, ops, text, vision, c, median_price)
+        peer_median = cuisine_median.get(c.get("cuisine"), median_price)
+        dims = build_dimensions(crawled, ops, text, vision, c, peer_median)
         overall = round(sum(d["score"] for d in dims.values()) / len(dims), 3)
         cluster_key = f"{c.get('city')}||{c.get('cuisine')}"
 
