@@ -30,6 +30,7 @@ AGENT_TOOL_ALLOW_LIST: dict[str, tuple[str, ...]] = {
     ),
     "competitor": ("nearby_merchant_search", "compare_competitors"),
     "evidence_verifier": ("get_profile_evidence",),
+    "synthesis_advisor": (),
 }
 
 # Tools consumed by BOTH domains — shipped frozen in Phase 0 (C1) so neither vertical

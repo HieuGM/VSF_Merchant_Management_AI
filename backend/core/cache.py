@@ -41,6 +41,10 @@ class CacheKeys:
         return f"agent:user:{user_id}:profile_snapshot:v1"
 
     @staticmethod
+    def merchant_profile(merchant_id: str) -> str:
+        return f"agent:merchant:{merchant_id}:profile_snapshot:v1"
+
+    @staticmethod
     def weather(lat: float, lng: float) -> str:
         return f"agent:weather:{lat}:{lng}"
 
@@ -51,6 +55,31 @@ class CacheKeys:
     @staticmethod
     def run(trace_id: str) -> str:
         return f"agent:run:{trace_id}"
+
+    @staticmethod
+    def merchant_search(
+        query: str = "",
+        cuisine: str = "",
+        city: str = "",
+        budget: str = "",
+        lat: float = 0.0,
+        lng: float = 0.0,
+        radius_km: float = 0.0,
+        limit: int = 20,
+    ) -> str:
+        raw = f"{query}:{cuisine}:{city}:{budget}:{lat}:{lng}:{radius_km}:{limit}"
+        return f"agent:merchant_search:{_hash(raw)}"
+
+    @staticmethod
+    def nearby_search(
+        lat: float,
+        lng: float,
+        radius_km: float = 5.0,
+        cuisine: str = "",
+        limit: int = 20,
+    ) -> str:
+        raw = f"{lat}:{lng}:{radius_km}:{cuisine}:{limit}"
+        return f"agent:nearby_search:{_hash(raw)}"
 
 
 class CachePort(ABC):

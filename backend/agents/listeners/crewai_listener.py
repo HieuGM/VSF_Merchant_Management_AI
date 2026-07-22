@@ -1,13 +1,9 @@
 """Reference CrewAI event listener + emission helper — FROZEN SEAM (Feature J, H8).
 
 The listener contract is `models.agent.AgentEventRecord`. Both flows emit events via
-`build_event_record(...)`; Dev B's real listener persists them to `agent_events`. Shipping
-a reference here means each vertical verifies emission (trace_id, input_hash, duration…)
-on its OWN branch — the H8 contract test asserts no required field is missing, so a
-missing field is caught pre-merge, not at Phase 3 integration.
+`build_event_record(...)`; Dev B's listener persists them to `agent_events`.
 
-No hard CrewAI import: the persistence side (Dev B) can subclass CrewAI's BaseEventListener
-and delegate to `RecordingListener.handle`.
+No hard CrewAI import: the persistence side (Dev B) delegates to `DatabaseRecordingListener.handle`.
 """
 from __future__ import annotations
 
@@ -15,9 +11,12 @@ import hashlib
 import json
 from datetime import datetime, timezone
 from typing import Any
+from sqlalchemy.orm import Session
 
 from core.tracing import new_id
+from database.connection import SessionLocal
 from models.agent import AGENT_EVENT_TYPES, REQUIRED_EMIT_FIELDS, AgentEventRecord
+from services.agent_run_service import AgentRunService
 
 
 def _utc_now_iso() -> str:
@@ -81,3 +80,32 @@ class RecordingListener:
     def handle(self, record: AgentEventRecord) -> None:
         assert_emittable(record)
         self.events.append(record)
+
+
+class DatabaseRecordingListener:
+    """Dev B DB persistence listener — records events into PostgreSQL agent_events table."""
+
+    def __init__(self, db: Session | None = None) -> None:
+        self._db = db
+
+    def handle(self, record: AgentEventRecord) -> None:
+        assert_emittable(record)
+        session = self._db or SessionLocal()
+        try:
+            svc = AgentRunService(session)
+            svc.record_event(
+                trace_id=record.trace_id,
+                event_type=record.event_type,
+                agent_name=record.agent_name,
+                task_name=record.task_name,
+                tool_name=record.tool_name,
+                input_hash=record.input_hash,
+                output_summary_json=record.output_summary,
+                duration_ms=record.duration_ms,
+                status=record.status,
+                error_code=record.error_code,
+                parent_event_id=record.parent_event_id,
+            )
+        finally:
+            if self._db is None:
+                session.close()

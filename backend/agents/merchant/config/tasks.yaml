@@ -1,2 +1,38 @@
-# Merchant Advisor Crew — task definitions (Dev B owns this file).
-# Phase 0 stub: fill in Feature H. Every task returns a Pydantic-compatible object (§5.5).
+---
+intent_planning_task:
+  description: >
+    Analyze the user prompt: "{query}" for merchant {merchant_id}.
+    Determine the primary intent (diagnosis, recommendation, competitor_analysis, profile_inquiry, general_chat)
+    and formulate an execution plan for specialist agents.
+  expected_output: >
+    JSON object containing 'intent', 'query_summary', and 'execution_plan'.
+
+analyze_profile_task:
+  description: Retrieve and analyze 8-dimension profile breakdown for merchant {merchant_id}.
+  expected_output: Structured 8-dimension score profile stripped of overall score.
+
+diagnose_merchant_task:
+  description: Analyze weaknesses (< 6.0/10) for merchant {merchant_id} and output max 5 root causes backed by evidence_refs.
+  expected_output: JSON object containing 'causes' list, where each cause has 'dimension', 'score', and 'evidence_refs'.
+
+recommend_improvements_task:
+  description: Formulate actionable improvement steps corresponding to diagnostic causes for merchant {merchant_id}.
+  expected_output: JSON object containing 'actions' list, where each action maps to evidence_refs.
+
+compare_competitors_task:
+  description: Compare merchant {merchant_id} 8 dimensions with nearby competitors within radius.
+  expected_output: JSON object containing target merchant comparison vs top competitor profiles.
+
+verify_evidence_task:
+  description: Perform Layer 2 semantic verification on evidence references to ensure non-hallucination.
+  expected_output: Verified evidence audit result confirming all references exist and match diagnosis context.
+
+synthesis_chat_task:
+  description: >
+    You are the AI Merchant Operations Advisor chatting with the owner of merchant {merchant_id}.
+    User query: "{query}".
+    Session Context History: "{chat_history}".
+    Review all task outputs (profile, diagnosis, recommendations, competitor comparison, evidence verification)
+    and construct a comprehensive, warm, conversational, and direct answer in Vietnamese to the merchant owner.
+  expected_output: >
+    A clear, natural language conversational response in Vietnamese directly answering the user query with real evidence and facts.

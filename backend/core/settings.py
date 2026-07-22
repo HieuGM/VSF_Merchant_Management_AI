@@ -5,8 +5,11 @@ config from here. Add new fields, do not rename/remove existing ones without goi
 through the contract-change protocol (plan.md §[C2]).
 """
 from functools import lru_cache
-
+from dotenv import find_dotenv, load_dotenv
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+# Automatically find and load .env from project root or parent directories
+load_dotenv(find_dotenv(usecwd=True), override=False)
 
 
 class Settings(BaseSettings):
@@ -29,6 +32,7 @@ class Settings(BaseSettings):
     llm_provider: str = "openai"
     llm_api_key: str | None = None
     llm_model: str = "gpt-4o-mini"
+    llm_base_url: str | None = None
 
     # --- Cache ---
     cache_backend: str = "memory"  # "memory" | "redis"

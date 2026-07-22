@@ -1,3 +1,10 @@
-"""Merchant Advisor tools (Dev B). Each module exposes `register(registry)`.
-Discovered via registry.auto_discover("tools.merchant"). Do not import tools.customer.
-"""
+"""Merchant tools package (Dev B)."""
+from tools.merchant import profile_tool, diagnosis_tool, competitor_tool
+from tools.registry import registry
+
+# Auto discover merchant tools into the global registry
+profile_tool.register(registry)
+diagnosis_tool.register(registry)
+competitor_tool.register(registry)
+
+__all__ = ["profile_tool", "diagnosis_tool", "competitor_tool"]
