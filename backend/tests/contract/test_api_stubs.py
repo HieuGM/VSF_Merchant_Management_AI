@@ -13,7 +13,6 @@ def test_health_ok(client):
 
 def test_stub_routes_return_501(client):
     for method, path in [
-        ("get", "/api/v1/merchants/search"),
         ("get", "/api/v1/merchants/68814/profile"),
         ("post", "/api/v1/agent/customer/chat"),
         ("post", "/api/v1/agent/merchant/chat"),
@@ -25,6 +24,16 @@ def test_stub_routes_return_501(client):
         resp = getattr(client, method)(path)
         assert resp.status_code == 501, f"{method} {path}"
         assert resp.json()["error"]["details"]["phase0_stub"] is True
+
+
+def test_merchant_search_endpoint_implemented(client):
+    """Test that /api/v1/merchants/search returns 200 (implemented, not a stub)."""
+    resp = client.get("/api/v1/merchants/search")
+    assert resp.status_code == 200, "Search endpoint should return 200"
+    body = resp.json()
+    assert "trace_id" in body
+    assert "merchants" in body
+    assert "cache_status" in body
 
 
 def test_request_id_header_present(client):
