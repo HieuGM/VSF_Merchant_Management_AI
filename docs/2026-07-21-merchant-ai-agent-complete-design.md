@@ -27,7 +27,7 @@ and evidence contracts below.
 | Area | Decision |
 |---|---|
 | Backend | Python FastAPI |
-| Database | PostgreSQL 15 in Docker |
+| Database | PostgreSQL 18 in Docker |
 | ORM/migrations | SQLAlchemy and Alembic |
 | Agent framework | Native CrewAI |
 | LangChain | No LangChain services, tools, or orchestration |

@@ -29,7 +29,7 @@ This repository is structured for collaborative team development with a clear se
 
 ## Database Architecture
 
-The system uses **PostgreSQL 15** with structured schemas mapped using **SQLAlchemy 2.0** ORM patterns:
+The system uses **PostgreSQL 18** with structured schemas mapped using **SQLAlchemy 2.0** ORM patterns:
 
 1. **`merchants`**: Store basic metadata, location (lat, lng), and working hours.
 2. **`menu_items`**: Menu catalog entries for each merchant with price, description, and cuisine/diet tags (stored as JSONB).
