@@ -1,0 +1,40 @@
+# Merchant Advisor Crew — agent definitions (Dev B owns this file).
+# Split per-domain from the doc's shared agents.yaml (deliberate deviation, plan §M10).
+# Phase 0 stub: fill role/goal/backstory/tools/max_iter/timeout in Feature H.
+# Allowed tools per agent are enforced by tools/allow_list.py (§5.4) — keep in sync.
+
+merchant_coordinator:
+  role: ""
+  goal: ""
+  backstory: ""
+  allowed_tools: [get_merchant_profile]
+
+merchant_profile_analyst:
+  role: ""
+  goal: ""
+  backstory: ""
+  allowed_tools: [get_merchant_profile, get_profile_evidence]
+
+diagnosis:
+  role: ""
+  goal: ""
+  backstory: ""
+  allowed_tools: [get_merchant_profile, get_profile_evidence, diagnose_merchant]
+
+recommendation:
+  role: ""
+  goal: ""
+  backstory: ""
+  allowed_tools: [get_merchant_profile, get_profile_evidence, get_trending_dishes, recommend_improvements]
+
+competitor:
+  role: ""
+  goal: ""
+  backstory: ""
+  allowed_tools: [nearby_merchant_search, compare_competitors]
+
+evidence_verifier:
+  role: ""
+  goal: ""
+  backstory: ""
+  allowed_tools: [get_profile_evidence]

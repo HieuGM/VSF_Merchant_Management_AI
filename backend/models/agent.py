@@ -1,0 +1,123 @@
+"""Agent chat + CrewAI observability contracts (design §11.4, §11.5, §6.2, §11.4 SSE).
+
+FROZEN SEAM (Feature J interface): the event schema below is the listener contract.
+Both flows (customer_flow, merchant_flow) emit `AgentEventRecord`; Dev B's listener
+persists them. The contract test in tests/contract asserts "emit đủ field" (red-team H8).
+"""
+from __future__ import annotations
+
+from typing import Any
+
+from pydantic import BaseModel, Field
+
+from models.api import Location
+
+# --- CrewAI SSE stream event types (design §11.4) ---
+STREAM_EVENT_TYPES: tuple[str, ...] = (
+    "run_started",
+    "agent_started",
+    "tool_started",
+    "tool_finished",
+    "preference_suggestion",
+    "answer_delta",
+    "run_finished",
+    "error",
+)
+
+# --- Persisted agent_events record types (design §6.2) ---
+AGENT_EVENT_TYPES: tuple[str, ...] = (
+    "run_started",
+    "agent_started",
+    "task_started",
+    "task_finished",
+    "tool_started",
+    "tool_finished",
+    "delegation",
+    "run_finished",
+    "error",
+)
+
+
+class AgentRunRecord(BaseModel):
+    """One row per Flow run — design §6.2 agent_runs."""
+
+    trace_id: str
+    session_id: str | None = None
+    user_id: str | None = None
+    crew_name: str
+    intent: str | None = None
+    status: str = "running"  # running | ok | error
+    started_at: str
+    finished_at: str | None = None
+    error_code: str | None = None
+    token_usage: dict[str, Any] = Field(default_factory=dict)
+
+
+class AgentEventRecord(BaseModel):
+    """Task/tool/delegation trace — design §6.2 agent_events. Listener contract.
+
+    The REQUIRED_EMIT_FIELDS below are what every flow MUST populate; the H8 contract
+    test verifies none are missing before merge."""
+
+    event_id: str
+    trace_id: str
+    parent_event_id: str | None = None
+    event_type: str
+    agent_name: str | None = None
+    task_name: str | None = None
+    tool_name: str | None = None
+    input_hash: str | None = None
+    output_summary: dict[str, Any] = Field(default_factory=dict)
+    duration_ms: int | None = None
+    status: str = "ok"
+    error_code: str | None = None
+    created_at: str
+
+
+# Fields a flow MUST provide when emitting (verified by contract test — H8).
+REQUIRED_EMIT_FIELDS: tuple[str, ...] = (
+    "event_id",
+    "trace_id",
+    "event_type",
+    "created_at",
+)
+
+
+# --- Customer chat (§11.4) ---
+class CustomerChatRequest(BaseModel):
+    user_id: str
+    session_id: str | None = None
+    message: str
+    location: Location | None = None
+    weather_override: dict[str, Any] | None = None
+
+
+class CustomerChatResponse(BaseModel):
+    trace_id: str
+    session_id: str | None = None
+    intent: str | None = None
+    answer: str
+    results: list[dict[str, Any]] = Field(default_factory=list)
+    preference_suggestions: list[dict[str, Any]] = Field(default_factory=list)
+    evidence: list[dict[str, Any]] = Field(default_factory=list)
+    warnings: list[str] = Field(default_factory=list)
+
+
+# --- Merchant chat (§11.5) ---
+class MerchantChatRequest(BaseModel):
+    user_id: str
+    session_id: str | None = None
+    merchant_id: str
+    message: str
+    intent: str | None = None  # diagnosis | recommendation | competitor_analysis | None
+    competitor_radius_km: float = 8.0
+
+
+class MerchantChatResponse(BaseModel):
+    trace_id: str
+    intent: str | None = None
+    answer: str
+    diagnosis: list[dict[str, Any]] = Field(default_factory=list)
+    recommendations: list[dict[str, Any]] = Field(default_factory=list)
+    competitor_comparison: list[dict[str, Any]] = Field(default_factory=list)
+    warnings: list[str] = Field(default_factory=list)

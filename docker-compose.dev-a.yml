@@ -1,0 +1,31 @@
+# Dev A (Customer Discovery) isolated stack — plan §[H6].
+# Own Postgres + Redis, own ports/volumes → no data clobber, no §8.2 key collision.
+# Usage: docker compose -f docker-compose.dev-a.yml up -d
+version: '3.8'
+
+services:
+  db-dev-a:
+    image: postgres:15-alpine
+    container_name: vsf_dev_a_postgres
+    restart: always
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-merchant_platform}
+    volumes:
+      - postgres_data_dev_a:/var/lib/postgresql/data
+
+  redis-dev-a:
+    image: redis:7-alpine
+    container_name: vsf_dev_a_redis
+    restart: always
+    ports:
+      - "6380:6379"
+    volumes:
+      - redis_data_dev_a:/data
+
+volumes:
+  postgres_data_dev_a:
+  redis_data_dev_a:

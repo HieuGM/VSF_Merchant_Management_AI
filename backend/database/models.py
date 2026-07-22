@@ -101,9 +101,13 @@ class OperationalMetric(Base):
 
 class MerchantProfile(Base):
     __tablename__ = "merchant_profiles"
-    
+
     merchant_id = Column(String, ForeignKey("merchants.merchant_id", ondelete="CASCADE"), primary_key=True)
-    dimensions_json = Column(JSONB, nullable=False)
+    dimensions_json = Column(JSONB, nullable=False)  # legacy fallback (§6.2) — no new writes
+    # §6.2 extension: current runtime profile (Merchant Profile contract §6.4)
+    profile_json = Column(JSONB)
+    schema_version = Column(String)
+    source_kind = Column(String)  # real | synthetic | heuristic | development_fixture
     updated_at = Column(TIMESTAMP(timezone=False), server_default=sa_text("CURRENT_TIMESTAMP"))
 
 class UserProfile(Base):
@@ -131,6 +135,9 @@ class ChatSession(Base):
     session_id = Column(String, primary_key=True)
     user_id = Column(String, ForeignKey("user_profiles.user_id", ondelete="SET NULL"))
     title = Column(String)
+    # §6.2 extension: durable recovery snapshot (Redis stays hot copy)
+    context_snapshot_json = Column(JSONB)
+    last_trace_id = Column(String)
     created_at = Column(TIMESTAMP(timezone=False), server_default=sa_text("CURRENT_TIMESTAMP"))
     updated_at = Column(TIMESTAMP(timezone=False), server_default=sa_text("CURRENT_TIMESTAMP"))
     
@@ -144,6 +151,81 @@ class ChatMessage(Base):
     session_id = Column(String, ForeignKey("chat_sessions.session_id", ondelete="CASCADE"), nullable=False)
     sender = Column(String, CheckConstraint("sender IN ('user', 'agent')"))
     text = Column(String, nullable=False)
+    # §6.2 extension: connect visible messages to results and traces
+    trace_id = Column(String)
+    structured_payload_json = Column(JSONB)
     timestamp = Column(TIMESTAMP(timezone=False), server_default=sa_text("CURRENT_TIMESTAMP"))
-    
+
     session = relationship("ChatSession", back_populates="chat_messages")
+
+
+# ---------------------------------------------------------------------------
+# §6.2 runtime records added before agent integration (Phase 0 — FROZEN)
+# ---------------------------------------------------------------------------
+class PreferenceEvent(Base):
+    """Append-only preference audit (§6.6). Never replaces user_profiles."""
+    __tablename__ = "preference_events"
+
+    event_id = Column(String, primary_key=True)
+    user_id = Column(String, ForeignKey("user_profiles.user_id", ondelete="CASCADE"), nullable=False)
+    session_id = Column(String)
+    field = Column(String, nullable=False)
+    operation = Column(String, nullable=False)
+    value_json = Column(JSONB)
+    scope = Column(String, nullable=False)
+    source = Column(String, nullable=False)
+    confidence = Column(Float, default=1.0)
+    status = Column(String, default="candidate")
+    evidence_refs_json = Column(JSONB)
+    expires_at = Column(TIMESTAMP(timezone=False))
+    created_at = Column(TIMESTAMP(timezone=False), server_default=sa_text("CURRENT_TIMESTAMP"))
+    resolved_at = Column(TIMESTAMP(timezone=False))
+
+
+class InteractionEvent(Base):
+    """Append-only UI/chat signal (§11.7). Evidence only — cannot mutate profiles."""
+    __tablename__ = "interaction_events"
+
+    event_id = Column(String, primary_key=True)
+    user_id = Column(String, ForeignKey("user_profiles.user_id", ondelete="CASCADE"), nullable=False)
+    session_id = Column(String)
+    event_type = Column(String, nullable=False)
+    merchant_id = Column(String)
+    menu_item_id = Column(String)
+    metadata_json = Column(JSONB)
+    created_at = Column(TIMESTAMP(timezone=False), server_default=sa_text("CURRENT_TIMESTAMP"))
+
+
+class AgentRun(Base):
+    """One record per CrewAI Flow run (§6.2 agent_runs)."""
+    __tablename__ = "agent_runs"
+
+    trace_id = Column(String, primary_key=True)
+    session_id = Column(String)
+    user_id = Column(String)
+    crew_name = Column(String, nullable=False)
+    intent = Column(String)
+    status = Column(String, default="running")
+    started_at = Column(TIMESTAMP(timezone=False), server_default=sa_text("CURRENT_TIMESTAMP"))
+    finished_at = Column(TIMESTAMP(timezone=False))
+    error_code = Column(String)
+    token_usage_json = Column(JSONB)
+
+
+class AgentEvent(Base):
+    """Task/tool/delegation trace (§6.2 agent_events). Listener contract."""
+    __tablename__ = "agent_events"
+
+    event_id = Column(String, primary_key=True)
+    trace_id = Column(String, ForeignKey("agent_runs.trace_id", ondelete="CASCADE"), nullable=False)
+    parent_event_id = Column(String)
+    event_type = Column(String, nullable=False)
+    agent_name = Column(String)
+    task_name = Column(String)
+    tool_name = Column(String)
+    input_hash = Column(String)
+    output_summary_json = Column(JSONB)
+    duration_ms = Column(Integer)
+    status = Column(String, default="ok")
+    error_code = Column(String)
+    created_at = Column(TIMESTAMP(timezone=False), server_default=sa_text("CURRENT_TIMESTAMP"))

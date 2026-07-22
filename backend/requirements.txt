@@ -1,6 +1,22 @@
+# Core web + DB
 SQLAlchemy>=2.0.0
 psycopg2-binary>=2.9.0
 alembic>=1.11.0
 fastapi>=0.111.0
 uvicorn[standard]>=0.29.0
 requests>=2.25.0
+
+# Config + models
+pydantic>=2.7.0
+pydantic-settings>=2.2.0
+PyYAML>=6.0
+
+# Cache (Feature D-02; memory adapter is the Phase 0 default so this stays optional at runtime)
+redis>=5.0.0
+
+# Agents — pinned per plan decision (verify `pip show crewai` does NOT pull LangChain, doc §2)
+crewai==1.15.5
+
+# Test harness (A-04 — runs without Docker via in-memory cache + SQLite)
+pytest>=8.0.0
+httpx>=0.27.0

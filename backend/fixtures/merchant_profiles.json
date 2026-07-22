@@ -1,0 +1,39 @@
+{
+  "68814": {
+    "merchant_id": "68814",
+    "tier": "hero",
+    "overall_score": 0.64,
+    "metadata": {
+      "name": "Dì Bảy",
+      "cuisine": "Món Việt",
+      "category": "Món Việt",
+      "location": {"address": "Q1, TP. HCM", "city": "TP. HCM", "lat": 10.79, "lng": 106.66},
+      "open_hours": {"open": "09:00", "close": "22:00"},
+      "taste_tags": ["đậm đà"],
+      "diet_tags": []
+    },
+    "price_level": "trung bình",
+    "dimensions": {
+      "food_quality": {"score": 0.55, "evidence": [{"evidence_id": "ev_001", "type": "negative_review_count", "value": 4, "ref_type": "review", "ref_ids": ["68814_rv_1"], "source_kind": "real"}], "basis": "reviews+complaints"},
+      "image_quality": {"score": 0.71, "evidence": [{"evidence_id": "ev_002", "type": "dishes_with_hd_photo", "value": 0.75, "ref_type": "food_image", "ref_ids": ["img_001"], "source_kind": "heuristic"}], "basis": "vision_or_image_coverage"},
+      "delivery_quality": {"score": 0.68, "evidence": [{"evidence_id": "ev_003", "type": "on_time_rate", "value": 0.82, "ref_type": "operational_metric", "ref_ids": ["68814"], "source_kind": "synthetic"}], "basis": "delivery_stats+complaints"},
+      "packaging": {"score": 0.61, "evidence": [{"evidence_id": "ev_004", "type": "packaging_ok_rate", "value": 0.78, "ref_type": "delivery_feedback", "ref_ids": ["fb_001"], "source_kind": "synthetic"}], "basis": "delivery_stats+packaging_complaints"},
+      "service": {"score": 0.63, "evidence": [{"evidence_id": "ev_005", "type": "service_complaint_count", "value": 2, "ref_type": "complaint", "ref_ids": ["cp_001"], "source_kind": "synthetic"}], "basis": "rating+service_complaints"},
+      "waiting_time": {"score": 0.52, "evidence": [{"evidence_id": "ev_006", "type": "avg_prep_minutes", "value": 18, "ref_type": "operational_metric", "ref_ids": ["68814"], "source_kind": "synthetic"}], "basis": "preparation_time"},
+      "menu_diversity": {"score": 0.76, "evidence": [{"evidence_id": "ev_007", "type": "dish_count", "value": 24, "ref_type": "menu_item", "ref_ids": [], "source_kind": "real"}], "basis": "dish_count+dish_type_count"},
+      "price_level": {"score": 0.66, "evidence": [{"evidence_id": "ev_008", "type": "price_ratio", "value": 0.91, "ref_type": "menu_item", "ref_ids": ["68814::item_01"], "source_kind": "real"}], "basis": "merchant_median_vs_city_cuisine_median"}
+    },
+    "attributes": {
+      "customer_segments": ["sinh viên"],
+      "peak_time": ["11:00-13:00"],
+      "competitors": [{"merchant_id": "3752", "name": "Bánh Mì Chim Chạy", "distance_km": 2.1}],
+      "trending_dishes": ["bún bò Huế"],
+      "operation_kpis": {"avg_prep_minutes": 18, "cancel_rate": 0.04},
+      "delivery_stats": {"on_time_rate": 0.82, "driver_rating": 4.1, "packaging_ok_rate": 0.78}
+    },
+    "ratings": {"shopeefood_avg": 4.4, "shopeefood_total_review": 1000, "foody_rating": 8.1, "foody_review_count": 10},
+    "schema_version": "1.0",
+    "source_kind": "development_fixture",
+    "updated_at": "2026-07-21T00:00:00Z"
+  }
+}

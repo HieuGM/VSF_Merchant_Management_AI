@@ -1,7 +1,10 @@
 import os
 import sys
 from pathlib import Path
+
+import pytest
 from sqlalchemy import inspect, text
+from sqlalchemy.exc import OperationalError
 
 # Add backend to path to allow direct execution
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
@@ -9,24 +12,29 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from database.connection import engine, SessionLocal
 from database.models import Base
 
+
+def _require_db():
+    """Skip integration tests when Postgres is unreachable (A-04: suite runs w/o Docker)."""
+    try:
+        with engine.connect() as conn:
+            conn.execute(text("SELECT 1;"))
+    except OperationalError as exc:  # noqa: F841
+        pytest.skip("Postgres not reachable — integration test skipped (no Docker).")
+
+
 def test_db_connection():
     """Verify that we can establish a connection to the PostgreSQL database."""
-    print("Testing connection to PostgreSQL...")
+    _require_db()
+    session = SessionLocal()
     try:
-        session = SessionLocal()
-        # Execute simple query to test connection
         result = session.execute(text("SELECT 1;")).scalar()
         assert result == 1
-        print("Successfully connected to the database!")
-    except Exception as e:
-        print(f"Database connection failed: {e}")
-        raise e
     finally:
         session.close()
 
 def test_schema_tables():
     """Verify that all required schema tables exist in the database."""
-    print("Verifying schema tables...")
+    _require_db()
     inspector = inspect(engine)
     existing_tables = inspector.get_table_names()
     
@@ -40,7 +48,12 @@ def test_schema_tables():
         "merchant_profiles",
         "user_profiles",
         "chat_sessions",
-        "chat_messages"
+        "chat_messages",
+        # §6.2 runtime records
+        "preference_events",
+        "interaction_events",
+        "agent_runs",
+        "agent_events",
     }
     
     print(f"Existing tables in database: {existing_tables}")
