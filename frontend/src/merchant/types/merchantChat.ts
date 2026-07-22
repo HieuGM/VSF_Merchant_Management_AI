@@ -7,13 +7,23 @@ export interface AgentStepLog {
   timestamp: string;
 }
 
+export interface DimensionHighlight {
+  dimension: string;
+  score: number;
+  comparisonNote: string;
+}
+
 export interface CompetitorItem {
   merchant_id: string;
   name: string;
   distance_km: number;
   cuisine: string;
   score?: number;
+  rating?: number;
   address?: string;
+  category?: string;
+  review_quotes?: string[];
+  dimensions?: DimensionHighlight[];
 }
 
 export interface ChatMessage {
