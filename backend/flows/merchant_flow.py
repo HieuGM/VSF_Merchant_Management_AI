@@ -421,8 +421,8 @@ class MerchantFlowDispatcher:
             trace_id=trace_id,
         )
 
-        # 3. Retrieve Recent Conversation History
-        history = session_svc.get_recent_history(session_id=sid, limit=6)
+        # 3. Retrieve Compact Conversation History (max 3 turns)
+        history = session_svc.get_compact_history(session_id=sid, max_turns=3)
         history_str = json.dumps(history, ensure_ascii=False)
 
         intent = classify_intent(message)

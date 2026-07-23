@@ -12,6 +12,7 @@ from crewai.tools import BaseTool
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
+from core.cache import CacheKeys, TTL_PROFILE_SNAPSHOT, CachePort
 from database.connection import SessionLocal
 from database.models import Merchant, MerchantProfile, MerchantRating
 
@@ -34,6 +35,7 @@ def get_merchant_profile_summary(
     merchant_id: str,
     dimensions: list[str] | None = None,
     db: Session | None = None,
+    cache: CachePort | None = None,
 ) -> dict[str, Any]:
     """Return compact profile summary for a merchant.
 
@@ -42,11 +44,20 @@ def get_merchant_profile_summary(
         dimensions: Optional list of dimension keys to include (e.g. ["food_quality", "service"]).
                     If None, returns all 8 dimensions.
         db: Optional injected DB session (for testing).
+        cache: Optional CachePort for read-through caching (TTL 15 min).
 
     Returns:
         dict with status, merchant_id, name, tier, price_level, ratings, dimensions.
         overall_score_internal is NEVER included (Security Rule C2).
     """
+    # Cache only for full-profile requests (no dimension filter) to keep keys simple
+    cache_key = CacheKeys.merchant_profile(merchant_id) if (cache and not dimensions) else None
+
+    if cache_key and cache:
+        cached = cache.get(cache_key)
+        if cached is not None:
+            return cached
+
     session = db or SessionLocal()
     try:
         row = (
@@ -84,7 +95,7 @@ def get_merchant_profile_summary(
                     "review_count": r.foody_review_count,
                 }
 
-        return {
+        result = {
             "status": "ok",
             "merchant_id": m.merchant_id,
             "name": m.name,
@@ -95,6 +106,11 @@ def get_merchant_profile_summary(
             "dimensions": dim_data,
             "ratings": ratings,
         }
+
+        if cache_key and cache:
+            cache.set(cache_key, result, ttl_seconds=TTL_PROFILE_SNAPSHOT)
+
+        return result
     finally:
         if db is None:
             session.close()
@@ -130,5 +146,10 @@ class GetMerchantProfileSummaryTool(BaseTool):
         merchant_id: str,
         dimensions: list[str] | None = None,
     ) -> str:
-        res = get_merchant_profile_summary(merchant_id=merchant_id, dimensions=dimensions)
+        from core.dependencies import get_cache
+        res = get_merchant_profile_summary(
+            merchant_id=merchant_id,
+            dimensions=dimensions,
+            cache=get_cache(),
+        )
         return json.dumps(res, ensure_ascii=False)

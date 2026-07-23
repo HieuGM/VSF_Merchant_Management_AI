@@ -57,6 +57,24 @@ class CacheKeys:
         return f"agent:run:{trace_id}"
 
     @staticmethod
+    def merchant_metrics(merchant_id: str) -> str:
+        return f"agent:merchant:{merchant_id}:metrics:v1"
+
+    @staticmethod
+    def merchant_benchmark(merchant_id: str, radius_km: float, dims_key: str) -> str:
+        raw = f"{merchant_id}:{radius_km}:{dims_key}"
+        return f"agent:merchant:benchmark:{_hash(raw)}:v1"
+
+    @staticmethod
+    def merchant_catalog() -> str:
+        return "agent:merchant_catalog:v1"
+
+    @staticmethod
+    def trending_dishes(city_slug: str, cuisine: str) -> str:
+        raw = f"{city_slug}:{cuisine}"
+        return f"agent:trending:{_hash(raw)}:v1"
+
+    @staticmethod
     def merchant_search(
         query: str = "",
         cuisine: str = "",
@@ -80,6 +98,7 @@ class CacheKeys:
     ) -> str:
         raw = f"{lat}:{lng}:{radius_km}:{cuisine}:{limit}"
         return f"agent:nearby_search:{_hash(raw)}"
+
 
 
 class CachePort(ABC):

@@ -1,9 +1,11 @@
 """Chat Session Service (Design §6.2, §8.1) — Session State & Message History Management.
 
 Manages durable session state in PostgreSQL and hot copy in Redis.
+Includes compact session memory formatting for token-efficient LLM context injection.
 """
 from __future__ import annotations
 
+import json
 import uuid
 from datetime import datetime
 from typing import Any
@@ -16,7 +18,7 @@ from core.dependencies import get_cache
 
 
 class ChatSessionService:
-    """Service layer for chat sessions and message history."""
+    """Service layer for chat sessions, compact memory, and message history."""
 
     def __init__(self, db: Session) -> None:
         self._db = db
@@ -36,9 +38,13 @@ class ChatSessionService:
 
         if session_obj:
             if context_snapshot:
-                session_obj.context_snapshot_json = context_snapshot
+                merged = {**(session_obj.context_snapshot_json or {}), **context_snapshot}
+                session_obj.context_snapshot_json = merged
                 session_obj.updated_at = datetime.utcnow()
                 self._db.commit()
+                # Update Redis
+                redis_key = CacheKeys.session_context(sid)
+                self._cache.set(redis_key, merged, ttl_seconds=TTL_SESSION_CONTEXT)
             return session_obj
 
         session_obj = ChatSession(
@@ -113,6 +119,46 @@ class ChatSessionService:
             for m in messages
         ]
 
+    def get_compact_history(self, session_id: str, max_turns: int = 3) -> list[dict[str, Any]]:
+        """Fetch compact history (last max_turns turns = 2 * max_turns messages).
+
+        Agent responses are truncated to 200 characters to conserve prompt tokens.
+        """
+        limit = max_turns * 2
+        stmt = (
+            select(ChatMessage)
+            .where(ChatMessage.session_id == session_id)
+            .order_by(ChatMessage.timestamp.asc())
+        )
+        messages = list(self._db.execute(stmt).scalars().all())
+        messages = messages[-limit:]
+
+        compact_list = []
+        for m in messages:
+            text = m.text
+            if m.sender == "agent" and len(text) > 200:
+                text = text[:200] + "..."
+            compact_list.append({
+                "role": m.sender,
+                "text": text,
+            })
+        return compact_list
+
+    def get_session_snapshot(self, session_id: str) -> dict[str, Any]:
+        """Fetch hot snapshot from Redis if present, falling back to DB."""
+        redis_key = CacheKeys.session_context(session_id)
+        cached = self._cache.get(redis_key)
+        if cached is not None:
+            return cached
+
+        stmt = select(ChatSession).where(ChatSession.session_id == session_id)
+        session_obj = self._db.execute(stmt).scalar_one_or_none()
+        if session_obj and session_obj.context_snapshot_json:
+            snapshot = session_obj.context_snapshot_json
+            self._cache.set(redis_key, snapshot, ttl_seconds=TTL_SESSION_CONTEXT)
+            return snapshot
+        return {}
+
     def update_session_snapshot(
         self, session_id: str, snapshot: dict[str, Any], last_trace_id: str | None = None
     ) -> None:
@@ -121,11 +167,13 @@ class ChatSessionService:
         session_obj = self._db.execute(stmt).scalar_one_or_none()
 
         if session_obj:
-            session_obj.context_snapshot_json = snapshot
+            merged = {**(session_obj.context_snapshot_json or {}), **snapshot}
+            session_obj.context_snapshot_json = merged
             if last_trace_id:
                 session_obj.last_trace_id = last_trace_id
             session_obj.updated_at = datetime.utcnow()
             self._db.commit()
+            snapshot = merged
 
         redis_key = CacheKeys.session_context(session_id)
         self._cache.set(redis_key, snapshot, ttl_seconds=TTL_SESSION_CONTEXT)

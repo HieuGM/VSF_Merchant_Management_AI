@@ -11,23 +11,35 @@ from crewai.tools import BaseTool
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
+from core.cache import CacheKeys, CachePort
 from database.connection import SessionLocal
 from database.models import OperationalMetric
+
+# TTL 15 minutes — metrics data is updated daily at most
+_TTL_METRICS = 15 * 60
 
 
 def get_merchant_operational_metrics(
     merchant_id: str,
     db: Session | None = None,
+    cache: CachePort | None = None,
 ) -> dict[str, Any]:
     """Return operational performance metrics for a merchant.
 
     Args:
         merchant_id: Target merchant ID.
         db: Optional injected DB session (for testing).
+        cache: Optional CachePort for read-through caching (TTL 15 min).
 
     Returns:
         dict with status, merchant_id, metrics dict (None values excluded).
     """
+    cache_key = CacheKeys.merchant_metrics(merchant_id)
+    if cache:
+        cached = cache.get(cache_key)
+        if cached is not None:
+            return cached
+
     session = db or SessionLocal()
     try:
         om: OperationalMetric | None = (
@@ -61,11 +73,16 @@ def get_merchant_operational_metrics(
         if om.peak_hours:
             metrics["peak_hours"] = list(om.peak_hours)
 
-        return {
+        result = {
             "status": "ok",
             "merchant_id": merchant_id,
             "metrics": metrics,
         }
+
+        if cache:
+            cache.set(cache_key, result, ttl_seconds=_TTL_METRICS)
+
+        return result
     finally:
         if db is None:
             session.close()
@@ -88,5 +105,9 @@ class GetMerchantOperationalMetricsTool(BaseTool):
     args_schema: Type[BaseModel] = GetMerchantOperationalMetricsInput
 
     def _run(self, merchant_id: str) -> str:
-        res = get_merchant_operational_metrics(merchant_id=merchant_id)
+        from core.dependencies import get_cache
+        res = get_merchant_operational_metrics(
+            merchant_id=merchant_id,
+            cache=get_cache(),
+        )
         return json.dumps(res, ensure_ascii=False)

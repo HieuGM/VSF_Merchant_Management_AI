@@ -10,8 +10,12 @@ from typing import Any, Type
 from pydantic import BaseModel, Field
 from crewai.tools import BaseTool
 from sqlalchemy.orm import Session
+
+from core.cache import CacheKeys, TTL_CANDIDATES, CachePort
 from database.connection import SessionLocal
 from database.models import Merchant, MerchantProfile, MarketTrendingDish
+
+_TTL_TRENDING = 10 * 60
 
 
 def search_merchants(
@@ -23,8 +27,26 @@ def search_merchants(
     limit: int = 10,
     offset: int = 0,
     db: Session | None = None,
+    cache: CachePort | None = None,
 ) -> dict[str, Any]:
     """Search merchants with intuitive filtering parameters."""
+    cache_key = (
+        CacheKeys.merchant_search(
+            query="",
+            cuisine=cuisine or "",
+            city=city or "",
+            budget=price_level or "",
+            limit=limit,
+        )
+        if cache
+        else None
+    )
+
+    if cache_key and cache:
+        cached = cache.get(cache_key)
+        if cached is not None:
+            return cached
+
     session = db or SessionLocal()
     try:
         query = (
@@ -60,11 +82,16 @@ def search_merchants(
             }
             results.append(item)
 
-        return {
+        result = {
             "status": "ok",
             "count": len(results),
             "merchants": results,
         }
+
+        if cache_key and cache:
+            cache.set(cache_key, result, ttl_seconds=TTL_CANDIDATES)
+
+        return result
     finally:
         if db is None:
             session.close()
@@ -75,8 +102,16 @@ def search_trending_dishes(
     city_slug: str | None = "ha-noi",
     limit: int = 5,
     db: Session | None = None,
+    cache: CachePort | None = None,
 ) -> dict[str, Any]:
     """Query top trending food items from market_trending_dishes."""
+    cache_key = CacheKeys.trending_dishes(city_slug or "", cuisine or "") if cache else None
+
+    if cache_key and cache:
+        cached = cache.get(cache_key)
+        if cached is not None:
+            return cached
+
     session = db or SessionLocal()
     try:
         query = session.query(MarketTrendingDish)
@@ -96,11 +131,16 @@ def search_trending_dishes(
             }
             for d in dishes
         ]
-        return {
+        result = {
             "status": "ok",
             "count": len(results),
             "trending_dishes": results,
         }
+
+        if cache_key and cache:
+            cache.set(cache_key, result, ttl_seconds=_TTL_TRENDING)
+
+        return result
     finally:
         if db is None:
             session.close()
@@ -132,12 +172,14 @@ class SearchMerchantsTool(BaseTool):
         price_level: str | None = None,
         limit: int = 10,
     ) -> str:
+        from core.dependencies import get_cache
         res = search_merchants(
             cuisine=cuisine,
             city=city,
             district=district,
             price_level=price_level,
             limit=limit,
+            cache=get_cache(),
         )
         return json.dumps(res, ensure_ascii=False)
 
@@ -154,5 +196,11 @@ class SearchTrendingDishesTool(BaseTool):
     args_schema: Type[BaseModel] = SearchTrendingDishesInput
 
     def _run(self, cuisine: str | None = None, city_slug: str | None = "ha-noi", limit: int = 5) -> str:
-        res = search_trending_dishes(cuisine=cuisine, city_slug=city_slug, limit=limit)
+        from core.dependencies import get_cache
+        res = search_trending_dishes(
+            cuisine=cuisine,
+            city_slug=city_slug,
+            limit=limit,
+            cache=get_cache(),
+        )
         return json.dumps(res, ensure_ascii=False)

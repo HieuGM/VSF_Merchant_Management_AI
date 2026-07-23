@@ -13,6 +13,7 @@ from crewai.tools import BaseTool
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
+from core.cache import CacheKeys, CachePort
 from database.connection import SessionLocal
 from database.models import Merchant, MerchantProfile
 
@@ -28,6 +29,7 @@ _DIMENSION_COLUMNS = {
 }
 
 _ALL_DIMENSIONS = list(_DIMENSION_COLUMNS.keys())
+_TTL_BENCHMARK = 5 * 60
 
 
 def _haversine_km(lat1: float, lng1: float, lat2: float, lng2: float) -> float:
@@ -52,6 +54,7 @@ def compare_merchant_benchmark(
     limit: int = 5,
     dimensions: list[str] | None = None,
     db: Session | None = None,
+    cache: CachePort | None = None,
 ) -> dict[str, Any]:
     """Compare a merchant's dimension scores against same-cuisine competitors nearby.
 
@@ -61,11 +64,20 @@ def compare_merchant_benchmark(
         limit: Max competitors to return (1..10).
         dimensions: Subset of dimension keys to compare. Defaults to all 8.
         db: Optional injected DB session.
+        cache: Optional CachePort for read-through caching (TTL 5 min).
 
     Returns:
         dict with target scores, competitor benchmarks, and per-dimension delta.
         overall_score_internal is NEVER included (Security Rule C2).
     """
+    dims_key = ",".join(sorted(dimensions)) if dimensions else "all"
+    cache_key = CacheKeys.merchant_benchmark(merchant_id, radius_km, dims_key) if cache else None
+
+    if cache_key and cache:
+        cached = cache.get(cache_key)
+        if cached is not None:
+            return cached
+
     session = db or SessionLocal()
     try:
         target_dims = [d for d in (dimensions or _ALL_DIMENSIONS) if d in _DIMENSION_COLUMNS]
@@ -134,7 +146,7 @@ def compare_merchant_benchmark(
                 "delta_vs_target": delta,
             })
 
-        return {
+        result = {
             "status": "ok",
             "target_merchant_id": merchant_id,
             "target_name": target_m.name,
@@ -144,6 +156,11 @@ def compare_merchant_benchmark(
             "target_scores": target_scores,
             "competitors": competitors,
         }
+
+        if cache_key and cache:
+            cache.set(cache_key, result, ttl_seconds=_TTL_BENCHMARK)
+
+        return result
     finally:
         if db is None:
             session.close()
@@ -155,6 +172,7 @@ def compare_competitors(
     radius_km: float = 5.0,
     limit: int = 5,
     db: Session | None = None,
+    cache: CachePort | None = None,
 ) -> dict[str, Any]:
     """Backward-compatible wrapper around compare_merchant_benchmark."""
     return compare_merchant_benchmark(
@@ -162,6 +180,7 @@ def compare_competitors(
         radius_km=radius_km,
         limit=limit,
         db=db,
+        cache=cache,
     )
 
 
@@ -203,10 +222,12 @@ class CompareMerchantBenchmarkTool(BaseTool):
         limit: int = 5,
         dimensions: list[str] | None = None,
     ) -> str:
+        from core.dependencies import get_cache
         res = compare_merchant_benchmark(
             merchant_id=merchant_id,
             radius_km=min(max(0.5, radius_km), 20.0),
             limit=min(max(1, limit), 10),
             dimensions=dimensions,
+            cache=get_cache(),
         )
         return json.dumps(res, ensure_ascii=False)
