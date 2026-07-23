@@ -16,7 +16,7 @@ from tools.registry import ToolRegistry, ToolSpec
 def diagnose_merchant(
     merchant_id: str, db: Session | None = None
 ) -> dict[str, Any]:
-    """Analyze merchant 8-dimension scores to identify root causes of underperformance (< 6.0/10).
+    """Analyze merchant 8-dimension scores to identify root causes of underperformance (< 0.6).
 
     Returns:
         Structured diagnosis with max 5 root causes, each backed by evidence_refs.
@@ -37,18 +37,18 @@ def diagnose_merchant(
             if not isinstance(dim_data, dict):
                 continue
 
-            score = dim_data.get("score", 10.0)
-            if score < 6.0:
+            score = dim_data.get("score", 1.0)
+            if score < 0.6:
                 refs = dim_data.get("evidence_refs", [])
                 if not refs:
-                    refs = [f"METRIC-{merchant_id}"]
+                    continue
 
                 evidences = evidence_repo.get_evidence_by_refs(refs)
 
                 causes.append({
                     "dimension": dim_name,
                     "score": score,
-                    "issue": f"Điểm {dim_name} thấp ({score}/10) — {dim_data.get('basis', '')}",
+                    "issue": f"Điểm {dim_name} thấp ({score:.3f}) — {dim_data.get('basis', '')}",
                     "evidence_refs": refs,
                     "evidences": evidences,
                 })
@@ -84,7 +84,7 @@ def recommend_improvements(
 
         action_title = f"Cải thiện chỉ số {dim.replace('_', ' ').capitalize()}"
         description = (
-            f"Điểm hiện tại: {score}/10. Khuyến nghị tối ưu quy trình và giải quyết các "
+            f"Điểm hiện tại: {score:.3f}. Khuyến nghị tối ưu quy trình và giải quyết các "
             f"phản hồi từ chứng cứ {cause['evidence_refs']}."
         )
 

@@ -21,7 +21,7 @@
       "service": {"score": 0.63, "evidence": [{"evidence_id": "ev_005", "type": "service_complaint_count", "value": 2, "ref_type": "complaint", "ref_ids": ["cp_001"], "source_kind": "synthetic"}], "basis": "rating+service_complaints"},
       "waiting_time": {"score": 0.52, "evidence": [{"evidence_id": "ev_006", "type": "avg_prep_minutes", "value": 18, "ref_type": "operational_metric", "ref_ids": ["68814"], "source_kind": "synthetic"}], "basis": "preparation_time"},
       "menu_diversity": {"score": 0.76, "evidence": [{"evidence_id": "ev_007", "type": "dish_count", "value": 24, "ref_type": "menu_item", "ref_ids": [], "source_kind": "real"}], "basis": "dish_count+dish_type_count"},
-      "price_level": {"score": 0.66, "evidence": [{"evidence_id": "ev_008", "type": "price_ratio", "value": 0.91, "ref_type": "menu_item", "ref_ids": ["68814::item_01"], "source_kind": "real"}], "basis": "merchant_median_vs_city_cuisine_median"}
+      "price_competitiveness": {"score": 0.66, "evidence": [{"evidence_id": "ev_008", "type": "price_ratio", "value": 0.91, "ref_type": "menu_item", "ref_ids": ["68814::item_01"], "source_kind": "real"}], "basis": "merchant_median_vs_city_cuisine_median"}
     },
     "attributes": {
       "customer_segments": ["sinh viên"],

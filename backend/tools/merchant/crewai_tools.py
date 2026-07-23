@@ -11,10 +11,10 @@ from crewai.tools import BaseTool
 
 from database.connection import SessionLocal
 from repositories.merchant_profile_repository import MerchantProfileRepository
-from repositories.evidence_repository import EvidenceRepository
 from services.merchant_profile_service import MerchantProfileService
 from services.recommendation_service import RecommendationService
 from services.competitor_service import CompetitorService
+from tools.merchant.diagnosis_tool import diagnose_merchant
 
 
 # --- Tool 1: GetMerchantProfileTool ---
@@ -59,28 +59,15 @@ class GetProfileEvidenceTool(BaseTool):
         db = SessionLocal()
         try:
             profile_repo = MerchantProfileRepository(db)
-            evidence_repo = EvidenceRepository(db)
-
             profile = profile_repo.get_profile(merchant_id)
             if not profile:
                 return json.dumps({"merchant_id": merchant_id, "status": "not_found"}, ensure_ascii=False)
-
-            dims = profile.get("dimensions", {})
-            if dimension and dimension in dims:
-                dim_data = dims[dimension]
-                refs = dim_data.get("evidence_refs", [])
-                evidences = evidence_repo.get_evidence_by_refs(refs)
-                return json.dumps({
-                    "merchant_id": merchant_id,
-                    "dimension": dimension,
-                    "details": dim_data,
-                    "evidences": evidences,
-                }, ensure_ascii=False)
-
-            return json.dumps({
-                "merchant_id": merchant_id,
-                "dimensions": dims,
-            }, ensure_ascii=False)
+            if dimension:
+                return json.dumps(
+                    profile_repo.get_dimension_evidence(merchant_id, dimension),
+                    ensure_ascii=False,
+                )
+            return json.dumps({"merchant_id": merchant_id, "dimensions": profile["dimensions"]}, ensure_ascii=False)
         except Exception as e:
             return json.dumps({"merchant_id": merchant_id, "error": str(e)}, ensure_ascii=False)
         finally:
@@ -95,7 +82,7 @@ class DiagnoseMerchantInput(BaseModel):
 class DiagnoseMerchantTool(BaseTool):
     name: str = "diagnose_merchant"
     description: str = (
-        "Analyze merchant 8-dimension scores to identify root causes of underperformance (< 6.0/10). "
+        "Analyze merchant 8-dimension scores to identify root causes of underperformance (< 0.6). "
         "Returns max 5 root causes, each backed by evidence_refs."
     )
     args_schema: Type[BaseModel] = DiagnoseMerchantInput
@@ -103,8 +90,7 @@ class DiagnoseMerchantTool(BaseTool):
     def _run(self, merchant_id: str) -> str:
         db = SessionLocal()
         try:
-            rec_svc = RecommendationService(db)
-            result = rec_svc.generate_recommendations(merchant_id)
+            result = diagnose_merchant(merchant_id, db=db)
             return json.dumps(result, ensure_ascii=False)
         except Exception as e:
             return json.dumps({"merchant_id": merchant_id, "error": str(e)}, ensure_ascii=False)

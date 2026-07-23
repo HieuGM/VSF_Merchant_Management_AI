@@ -9,8 +9,14 @@ Ensures:
 """
 from __future__ import annotations
 
+import json
+from types import SimpleNamespace
+
 import pytest
-from database.models import Merchant, MerchantProfile, OperationalMetric
+from crewai.tasks.task_output import TaskOutput
+from database.models import Merchant
+from relational_test_fixtures import seed_relational_profile
+import flows.merchant_flow as merchant_flow_module
 from flows.merchant_flow import merchant_flow, validate_evidence_guardrail
 from core.dependencies import get_db_session
 from app.main import app
@@ -31,59 +37,65 @@ def sample_merchant_for_flow(db_session):
     )
     db_session.add(merchant)
 
-    profile_data = {
-        "merchant_id": "m_flow_test_01",
-        "tier": "gold",
-        "overall_score": 0.61,  # Must be stripped per C2
-        "dimensions": {
-            "food_quality": {"score": 8.5, "basis": "Ngon chuẩn vị", "evidence_refs": ["REV-401"]},
-            "waiting_time": {
-                "score": 4.2,  # Weak dimension < 6.0
-                "basis": "Quá tải giờ trưa (20 phút)",
-                "evidence_refs": ["METRIC-m_flow_test_01"],
-            },
-            "packaging": {
-                "score": 5.1,  # Weak dimension < 6.0
-                "basis": "Túi bọc chưa khép kín",
-                "evidence_refs": ["REV-402"],
-            },
-            "image_quality": {"score": 7.0, "basis": "Ảnh chụp nét", "evidence_refs": []},
-            "delivery_quality": {"score": 7.5, "basis": "Giao đúng hẹn", "evidence_refs": []},
-            "service": {"score": 8.0, "basis": "Nhiệt tình", "evidence_refs": []},
-            "menu_diversity": {"score": 7.0, "basis": "12 món", "evidence_refs": []},
-            "price_level": {"score": 8.0, "basis": "Bình dân", "evidence_refs": []},
-        },
-    }
-
-    profile = MerchantProfile(
-        merchant_id="m_flow_test_01",
-        dimensions_json=profile_data["dimensions"],
-        profile_json=profile_data,
-        schema_version="1.0",
-        source_kind="development_fixture",
+    seed_relational_profile(
+        db_session,
+        "m_flow_test_01",
+        scores={"food_quality": 0.85, "waiting_time": 0.42, "packaging": 0.51},
+        bases={"waiting_time": "Quá tải giờ trưa (20 phút)", "packaging": "Túi bọc chưa khép kín"},
+        prep_minutes=20.0,
     )
-    db_session.add(profile)
-
-    metric = OperationalMetric(
-        merchant_id="m_flow_test_01",
-        avg_prep_time_min=20.0,
-    )
-    db_session.add(metric)
-
-    db_session.flush()
     return merchant
 
 
 def test_validate_evidence_guardrail_pass():
-    valid_output = '{"causes": [{"dimension": "waiting_time", "score": 4.2, "evidence_refs": ["METRIC-01"]}]}'
+    valid_output = '{"causes": [{"dimension": "waiting_time", "score": 0.42, "evidence_refs": ["METRIC-01"]}]}'
     is_valid, parsed = validate_evidence_guardrail(valid_output)
     assert is_valid is True
     assert isinstance(parsed, dict)
     assert len(parsed["causes"]) == 1
 
 
+def test_validate_evidence_guardrail_accepts_crewai_task_output():
+    output = TaskOutput(
+        description="diagnose merchant",
+        raw=json.dumps(
+            {
+                "causes": [
+                    {
+                        "dimension": "waiting_time",
+                        "score": 0.42,
+                        "evidence_refs": ["ev:m1:waiting_time:avg_prep_minutes"],
+                    }
+                ]
+            }
+        ),
+        agent="diagnosis",
+    )
+
+    is_valid, validated = validate_evidence_guardrail(output)
+
+    assert is_valid is True
+    assert validated is output
+
+
+def test_validate_evidence_guardrail_rejects_wrong_payload_shape():
+    is_valid, err_msg = validate_evidence_guardrail('{"actions": []}')
+
+    assert is_valid is False
+    assert "causes" in err_msg
+
+
+def test_validate_evidence_guardrail_rejects_legacy_ten_point_score():
+    invalid_output = '{"causes": [{"dimension": "waiting_time", "score": 4.2, "evidence_refs": ["METRIC-01"]}]}'
+
+    is_valid, err_msg = validate_evidence_guardrail(invalid_output)
+
+    assert is_valid is False
+    assert "0..1" in err_msg
+
+
 def test_validate_evidence_guardrail_fail_missing_refs():
-    invalid_output = '{"causes": [{"dimension": "waiting_time", "score": 4.2, "evidence_refs": []}]}'
+    invalid_output = '{"causes": [{"dimension": "waiting_time", "score": 0.42, "evidence_refs": []}]}'
     is_valid, err_msg = validate_evidence_guardrail(invalid_output)
     assert is_valid is False
     assert "evidence_refs" in err_msg.lower() or "bằng chứng" in err_msg.lower()
@@ -114,7 +126,14 @@ def test_merchant_profile_route(client, db_session, sample_merchant_for_flow):
         app.dependency_overrides.clear()
 
 
-def test_merchant_agent_chat_route(client, db_session, sample_merchant_for_flow):
+def test_merchant_agent_chat_route(
+    client, db_session, sample_merchant_for_flow, monkeypatch
+):
+    monkeypatch.setattr(
+        merchant_flow_module,
+        "get_settings",
+        lambda: SimpleNamespace(llm_configured=False),
+    )
     app.dependency_overrides[get_db_session] = lambda: db_session
     try:
         payload = {

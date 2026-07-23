@@ -29,11 +29,11 @@ class RecommendationService:
             if not isinstance(dim_data, dict):
                 continue
 
-            score = dim_data.get("score", 10.0)
-            if score < 6.0:
+            score = dim_data.get("score", 1.0)
+            if score < 0.6:
                 refs = dim_data.get("evidence_refs", [])
                 if not refs:
-                    refs = [f"METRIC-{merchant_id}"]
+                    continue
 
                 evidences = self._evidence_repo.get_evidence_by_refs(refs)
 
@@ -41,9 +41,9 @@ class RecommendationService:
                     "dimension": dim_name,
                     "action_title": f"Tối ưu chỉ số {dim_name.replace('_', ' ').capitalize()}",
                     "current_score": score,
-                    "target_score": min(10.0, score + 2.5),
+                    "target_score": min(1.0, round(score + 0.15, 3)),
                     "description": (
-                        f"Điểm hiện tại ({score}/10) thấp hơn ngưỡng kỳ vọng. "
+                        f"Điểm hiện tại ({score:.3f}) thấp hơn ngưỡng kỳ vọng 0.600. "
                         f"Khuyến nghị xử lý dựa trên {len(evidences)} chứng cứ phản hồi."
                     ),
                     "expected_impact": "Tăng 15-20% đánh giá tích cực từ khách hàng",

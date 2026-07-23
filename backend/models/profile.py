@@ -18,24 +18,26 @@ SCORED_DIMENSIONS: tuple[str, ...] = (
     "service",
     "waiting_time",
     "menu_diversity",
-    "price_level",
+    "price_competitiveness",
 )
 
-PROFILE_SCHEMA_VERSION = "1.0"
+PROFILE_SCHEMA_VERSION = "2.0"
 
 
 class Evidence(BaseModel):
     evidence_id: str
     type: str
     value: Any
-    ref_type: str
+    unit: str | None = None
+    ref_type: str | None = None
     ref_ids: list[str] = Field(default_factory=list)
     source_kind: str  # real | synthetic | heuristic
 
 
 class DimensionScore(BaseModel):
-    score: float
+    score: float = Field(ge=0.0, le=1.0)
     evidence: list[Evidence] = Field(default_factory=list)
+    evidence_refs: list[str] = Field(default_factory=list)
     basis: str
 
 

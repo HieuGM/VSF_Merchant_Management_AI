@@ -7,9 +7,17 @@ Ensures:
 """
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timezone
 import pytest
-from database.models import Merchant, MerchantProfile, Review, OperationalMetric
+from database.models import (
+    Merchant,
+    MerchantDimensionCalculation,
+    MerchantDimensionEvidence,
+    MerchantProfile,
+    MerchantRating,
+    OperationalMetric,
+    Review,
+)
 from repositories.merchant_profile_repository import MerchantProfileRepository
 from repositories.evidence_repository import EvidenceRepository
 
@@ -29,44 +37,71 @@ def sample_merchant_data(db_session):
     )
     db_session.add(merchant)
 
-    profile_json = {
-        "merchant_id": "test_merchant_001",
-        "tier": "gold",
-        "overall_score": 0.85,  # Internal only — MUST be stripped
-        "dimensions": {
-            "food_quality": {
-                "score": 8.5,
-                "basis": "Đánh giá vị ngon từ 20 khách hàng",
-                "evidence": [
-                    {
-                        "evidence_id": "ev_001",
-                        "type": "positive_review",
-                        "value": 4.5,
-                        "ref_type": "review",
-                        "ref_ids": ["REV-101"],
-                        "source_kind": "real",
-                    }
-                ],
-            },
-            "image_quality": {"score": 7.0, "basis": "Ảnh HD nét", "evidence": []},
-            "delivery_quality": {"score": 9.0, "basis": "Giao nhanh", "evidence": []},
-            "packaging": {"score": 8.0, "basis": "Hộp đẹp", "evidence": []},
-            "service": {"score": 8.5, "basis": "Phục vụ chu đáo", "evidence": []},
-            "waiting_time": {"score": 7.5, "basis": "Chờ 12 phút", "evidence": []},
-            "menu_diversity": {"score": 8.0, "basis": "30 món", "evidence": []},
-            "price_level": {"score": 7.0, "basis": "Giá bình dân", "evidence": []},
-        },
-        "attributes": {"trending_dishes": ["Cơm tấm sườn bì chả"]},
-    }
-
     profile = MerchantProfile(
         merchant_id="test_merchant_001",
-        dimensions_json=profile_json["dimensions"],
-        profile_json=profile_json,
-        schema_version="1.0",
-        source_kind="development_fixture",
+        tier="hero",
+        price_level="trung bình",
+        food_quality_score=0.85,
+        image_quality_score=0.70,
+        delivery_quality_score=0.90,
+        packaging_score=0.80,
+        service_score=0.85,
+        waiting_time_score=0.75,
+        menu_diversity_score=0.80,
+        price_competitiveness_score=0.70,
+        scoring_version="2.0",
+        scored_at=datetime.now(timezone.utc),
     )
     db_session.add(profile)
+    db_session.add(
+        MerchantRating(
+            merchant_id="test_merchant_001",
+            shopeefood_rating=4.8,
+            shopeefood_review_count=1000,
+            foody_rating=8.5,
+            foody_review_count=20,
+        )
+    )
+
+    dimensions = (
+        "food_quality",
+        "image_quality",
+        "delivery_quality",
+        "packaging",
+        "service",
+        "waiting_time",
+        "menu_diversity",
+        "price_competitiveness",
+    )
+    for dimension in dimensions:
+        db_session.add(
+            MerchantDimensionCalculation(
+                merchant_id="test_merchant_001",
+                dimension=dimension,
+                basis=(
+                    "preparation_time"
+                    if dimension == "waiting_time"
+                    else f"{dimension} basis"
+                ),
+                source_kind="development_fixture",
+                scoring_version="2.0",
+                calculated_at=datetime.now(timezone.utc),
+            )
+        )
+
+    db_session.add(
+        MerchantDimensionEvidence(
+            evidence_id="ev:test:waiting",
+            merchant_id="test_merchant_001",
+            dimension="waiting_time",
+            evidence_type="avg_prep_minutes",
+            value_numeric=12.5,
+            unit="minutes",
+            reference_type="operational_metric",
+            reference_ids=["test_merchant_001"],
+            source_kind="development_fixture",
+        )
+    )
 
     review = Review(
         review_id="REV-101",
@@ -74,13 +109,16 @@ def sample_merchant_data(db_session):
         rating=4.5,
         text="Cơm tấm rất ngon, sườn mềm đậm đà!",
         sentiment="positive",
-        created_at=datetime.utcnow(),
+        source_kind="real",
+        created_at=datetime.now(timezone.utc),
     )
     db_session.add(review)
 
     metric = OperationalMetric(
         merchant_id="test_merchant_001",
         avg_prep_time_min=12.5,
+        peak_hours=["11:00-13:00"],
+        source_kind="development_fixture",
     )
     db_session.add(metric)
 
@@ -106,6 +144,52 @@ def test_get_profile_strips_overall_score_security_c2(db_session, sample_merchan
     # C2 Rule: overall_score must NOT be in top-level or dimensions
     assert "overall_score" not in profile
     assert "overall_score" not in profile["dimensions"]
+    assert "overall_score_internal" not in profile
+
+
+def test_get_dimension_evidence_is_bounded(db_session, sample_merchant_data):
+    repo = MerchantProfileRepository(db_session)
+
+    result = repo.get_dimension_evidence("test_merchant_001", "waiting_time")
+
+    assert result["dimension"] == "waiting_time"
+    assert result["score"] == 0.75
+    assert result["basis"] == "preparation_time"
+    assert result["evidence"] == [
+        {
+            "evidence_id": "ev:test:waiting",
+            "type": "avg_prep_minutes",
+            "value": 12.5,
+            "unit": "minutes",
+            "ref_type": "operational_metric",
+            "ref_ids": ["test_merchant_001"],
+            "source_kind": "development_fixture",
+        }
+    ]
+
+
+def test_unknown_dimension_does_not_fall_back_to_full_profile(
+    db_session, sample_merchant_data
+):
+    repo = MerchantProfileRepository(db_session)
+
+    result = repo.get_dimension_evidence("test_merchant_001", "unknown")
+
+    assert result == {
+        "merchant_id": "test_merchant_001",
+        "dimension": "unknown",
+        "status": "dimension_not_found",
+        "available_dimensions": [
+            "food_quality",
+            "image_quality",
+            "delivery_quality",
+            "packaging",
+            "service",
+            "waiting_time",
+            "menu_diversity",
+            "price_competitiveness",
+        ],
+    }
 
 
 def test_get_profile_not_found(db_session):

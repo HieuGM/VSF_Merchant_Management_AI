@@ -23,7 +23,7 @@ def test_get_merchant_profile_strips_overall_score(registry):
     tool = registry.get("get_merchant_profile")
     result = tool.fn("68814")
     assert "overall_score" not in result
-    assert set(result["dimensions"].keys()) >= {"food_quality", "price_level"}
+    assert set(result["dimensions"].keys()) >= {"food_quality", "price_competitiveness"}
 
 
 def test_allow_list_enforced(registry):

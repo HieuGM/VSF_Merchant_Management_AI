@@ -12,7 +12,7 @@ analyze_profile_task:
   expected_output: Structured 8-dimension score profile stripped of overall score.
 
 diagnose_merchant_task:
-  description: Analyze weaknesses (< 6.0/10) for merchant {merchant_id} and output max 5 root causes backed by evidence_refs.
+  description: Analyze weaknesses (score < 0.6 on the normalized 0..1 scale) for merchant {merchant_id} and output max 5 root causes backed by evidence_refs.
   expected_output: JSON object containing 'causes' list, where each cause has 'dimension', 'score', and 'evidence_refs'.
 
 recommend_improvements_task:

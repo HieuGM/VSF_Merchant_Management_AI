@@ -2,7 +2,6 @@
 """
 from __future__ import annotations
 
-import math
 from typing import Any
 from sqlalchemy.orm import Session
 from database.connection import SessionLocal
@@ -10,20 +9,6 @@ from repositories.merchant_repository import MerchantRepository
 from repositories.merchant_profile_repository import MerchantProfileRepository
 from tools.allow_list import agents_allowed_for
 from tools.registry import ToolRegistry, ToolSpec
-
-
-def _haversine(lat1: float, lng1: float, lat2: float, lng2: float) -> float:
-    R = 6371.0
-    dlat = math.radians(lat2 - lat1)
-    dlng = math.radians(lng2 - lng1)
-    a = (
-        math.sin(dlat / 2) ** 2
-        + math.cos(math.radians(lat1))
-        * math.cos(math.radians(lat2))
-        * math.sin(dlng / 2) ** 2
-    )
-    return R * 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
-
 
 def compare_competitors(
     merchant_id: str,
@@ -51,28 +36,26 @@ def compare_competitors(
 
         target_profile = profile_repo.get_profile(merchant_id) or {}
 
-        candidates = merchant_repo.search_merchants(
-            cuisine=target.cuisine, city=target.city, limit=50
+        candidates = merchant_repo.find_nearby_competitors(
+            merchant_id=merchant_id,
+            lat=target.lat,
+            lng=target.lng,
+            radius_km=radius_km,
+            cuisine=target.cuisine,
+            city=target.city,
+            limit=limit,
         )
 
         competitors = []
-        for c in candidates:
-            if c.merchant_id == merchant_id or c.lat is None or c.lng is None:
-                continue
-
-            dist = _haversine(target.lat, target.lng, c.lat, c.lng)
-            if dist <= radius_km:
-                comp_profile = profile_repo.get_profile(c.merchant_id) or {}
-                competitors.append({
-                    "merchant_id": c.merchant_id,
-                    "name": c.name,
-                    "cuisine": c.cuisine,
-                    "distance_km": round(dist, 2),
-                    "dimensions": comp_profile.get("dimensions", {}),
-                })
-
-        competitors.sort(key=lambda x: x["distance_km"])
-        competitors = competitors[:limit]
+        for c, distance_km in candidates:
+            comp_profile = profile_repo.get_profile(c.merchant_id) or {}
+            competitors.append({
+                "merchant_id": c.merchant_id,
+                "name": c.name,
+                "cuisine": c.cuisine,
+                "distance_km": round(distance_km, 2),
+                "dimensions": comp_profile.get("dimensions", {}),
+            })
 
         return {
             "target_merchant_id": merchant_id,

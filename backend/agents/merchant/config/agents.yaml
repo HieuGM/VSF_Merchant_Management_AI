@@ -20,7 +20,7 @@ merchant_profile_analyst:
 
 diagnosis:
   role: Merchant Diagnosis Specialist Agent
-  goal: Identify root causes of underperformance (< 6.0/10) with mandatory evidence references.
+  goal: Identify root causes of underperformance (normalized score < 0.6) with mandatory evidence references.
   backstory: You are an operational auditor who identifies restaurant bottlenecks backed by real review and metric evidence.
   allowed_tools:
     - get_merchant_profile

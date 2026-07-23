@@ -6,9 +6,10 @@ Phase 0b: basic query + geo search foundation for UC-04 slice.
 from __future__ import annotations
 
 from datetime import datetime
+from math import cos, radians
 from typing import Any
 
-from sqlalchemy import select, and_, or_
+from sqlalchemy import select, and_, or_, func, literal
 from sqlalchemy.orm import Session
 
 from database.models import Merchant, MenuItem, Review
@@ -105,6 +106,62 @@ class MerchantRepository:
         result = self._db.execute(stmt).scalars().all()
         return list(result)
 
+    def find_nearby_competitors(
+        self,
+        *,
+        merchant_id: str,
+        lat: float,
+        lng: float,
+        radius_km: float,
+        cuisine: str | None = None,
+        city: str | None = None,
+        limit: int = 20,
+    ) -> list[tuple[Merchant, float]]:
+        """Return nearby merchants with distance calculated at query time.
+
+        Distance is deliberately not persisted.  The bounding box keeps the
+        candidate set small, while the Haversine expression provides the exact
+        radius filter in PostgreSQL.
+        """
+        if radius_km <= 0:
+            return []
+        lat_delta = radius_km / 111.32
+        lng_delta = radius_km / (111.32 * max(abs(cos(radians(lat))), 0.01))
+        distance = (
+            literal(6371.0)
+            * 2
+            * func.asin(
+                func.sqrt(
+                    func.pow(func.sin(func.radians(Merchant.lat - lat) / 2), 2)
+                    + func.cos(func.radians(lat))
+                    * func.cos(func.radians(Merchant.lat))
+                    * func.pow(func.sin(func.radians(Merchant.lng - lng) / 2), 2)
+                )
+            )
+        ).label("distance_km")
+
+        conditions = [
+            Merchant.merchant_id != merchant_id,
+            Merchant.is_active.is_(True),
+            Merchant.lat.is_not(None),
+            Merchant.lng.is_not(None),
+            Merchant.lat.between(lat - lat_delta, lat + lat_delta),
+            Merchant.lng.between(lng - lng_delta, lng + lng_delta),
+        ]
+        if cuisine:
+            conditions.append(Merchant.cuisine == cuisine)
+        if city:
+            conditions.append(Merchant.city == city)
+
+        stmt = (
+            select(Merchant, distance)
+            .where(and_(*conditions))
+            .where(distance <= radius_km)
+            .order_by(distance, Merchant.name)
+            .limit(max(1, limit))
+        )
+        return [(row[0], float(row[1])) for row in self._db.execute(stmt).all()]
+
     def get_menu_items(self, merchant_id: str) -> list[MenuItem]:
         """Fetch all menu items for a merchant."""
         stmt = select(MenuItem).where(MenuItem.merchant_id == merchant_id)
@@ -139,7 +196,8 @@ class MerchantRepository:
         address: str | None = None,
         lat: float | None = None,
         lng: float | None = None,
-        open_hours: dict[str, Any] | None = None,
+        opens_at: Any | None = None,
+        closes_at: Any | None = None,
     ) -> Merchant:
         """Create a new merchant."""
         merchant = Merchant(
@@ -151,7 +209,8 @@ class MerchantRepository:
             address=address,
             lat=lat,
             lng=lng,
-            open_hours=open_hours,
+            opens_at=opens_at,
+            closes_at=closes_at,
         )
         self._db.add(merchant)
         self._db.commit()

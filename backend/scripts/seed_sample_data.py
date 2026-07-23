@@ -68,7 +68,8 @@ def seed_merchants(db: Session, merchants_data: list[dict]) -> None:
             address=m.get("merchant_address"),
             lat=m.get("merchant_lat"),
             lng=m.get("merchant_lng"),
-            open_hours=m.get("merchant_open_hours"),
+            source="development_fixture",
+            is_active=True,
         )
         db.add(merchant)
     db.commit()
@@ -86,10 +87,8 @@ def seed_menu_items(db: Session, merchants_data: list[dict]) -> None:
             category=m.get("category", "Món Việt"),
             price=m.get("price", 50000),
             description=m.get("description"),
-            diet_tags=m.get("diet_tags", []),
-            ingredient_tags=m.get("ingredient_tags", []),
-            taste_tags=m.get("taste_tags", []),
             image_url=m.get("image_url"),
+            has_photo=bool(m.get("image_url")),
         )
         db.add(item)
     db.commit()
@@ -107,12 +106,11 @@ def seed_reviews(db: Session, merchants_data: list[dict]) -> None:
             review = Review(
                 merchant_id=merchant_id_str,
                 review_id=f"{merchant_id_str}_review_{i}",
-                author_id=f"user_{i}",
-                author_name=f"User {i}",
-                rating=4.0 + (i % 2),  # 4.0 or 5.0
+                rating=8.0 + (i % 2),  # normalized source rating is 0..10
                 text=f"Good food! Order #{i}",
                 sentiment="positive",
-                created_at=datetime.now(),
+                source_kind="development_fixture",
+                created_at=datetime.now().astimezone(),
             )
             db.add(review)
             review_count += 1

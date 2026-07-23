@@ -7,16 +7,18 @@ Pipeline Flow:
 Query -> Load Session History -> Intent Extraction by LLM -> Planning Agent -> Specialist Agents Execution via BaseTools -> 2-Layer Evidence Verification -> Synthesis LLM Agent -> Update Session State & Token Usage -> Final Response.
 """
 import json
-import os
 import uuid
-from typing import Any, Tuple, Generator
+from typing import Any, Generator
 from sqlalchemy.orm import Session
 
 from crewai import Agent, Crew, Process, Task, LLM
+from crewai.lite_agent_output import LiteAgentOutput
 from crewai.project import CrewBase, agent, crew, task
+from crewai.tasks.task_output import TaskOutput
 
 from core.settings import get_settings
 from database.connection import SessionLocal
+from models.profile import SCORED_DIMENSIONS
 from services.merchant_profile_service import MerchantProfileService
 from services.recommendation_service import RecommendationService
 from services.competitor_service import CompetitorService
@@ -31,6 +33,7 @@ from tools.merchant.crewai_tools import (
     RecommendImprovementsTool,
     CompareCompetitorsTool,
 )
+from tools.merchant.diagnosis_tool import diagnose_merchant
 
 
 def get_configured_llm() -> LLM | None:
@@ -49,28 +52,62 @@ def get_configured_llm() -> LLM | None:
     return LLM(**kwargs)
 
 
-def validate_evidence_guardrail(output: str) -> Tuple[bool, Any]:
-    """Task Guardrail (Layer 1): Validate that diagnosis output contains evidence_refs for every cause."""
+def validate_evidence_guardrail(
+    output: TaskOutput | LiteAgentOutput | str | dict[str, Any],
+) -> tuple[bool, Any]:
+    """Validate the normalized diagnosis payload passed by CrewAI."""
     try:
-        if isinstance(output, dict):
-            data = output
+        payload = getattr(output, "raw", output)
+        if isinstance(payload, str):
+            data = json.loads(payload)
+        elif isinstance(payload, dict):
+            data = payload
         else:
-            data = json.loads(output)
+            return False, "Output chẩn đoán phải là một JSON object hoặc JSON string."
 
-        causes = data.get("causes", [])
+        if not isinstance(data, dict):
+            return False, "Output chẩn đoán phải là một JSON object."
+        if "causes" not in data:
+            return False, "Output chẩn đoán thiếu trường bắt buộc 'causes'."
+
+        causes = data["causes"]
         if not isinstance(causes, list):
             return False, "Trường 'causes' phải là một danh sách các nguyên nhân."
+        if len(causes) > 5:
+            return False, "Trường 'causes' chỉ được chứa tối đa 5 nguyên nhân."
 
         for cause in causes:
             if not isinstance(cause, dict):
-                continue
+                return False, "Mỗi phần tử trong 'causes' phải là một JSON object."
+            dimension = cause.get("dimension")
+            if dimension not in SCORED_DIMENSIONS:
+                return False, f"Chiều chẩn đoán không hợp lệ: {dimension!r}."
+            score = cause.get("score")
+            if (
+                isinstance(score, bool)
+                or not isinstance(score, (int, float))
+                or not 0 <= score <= 1
+            ):
+                return False, (
+                    f"Điểm của chiều '{dimension}' phải nằm trên thang 0..1."
+                )
             refs = cause.get("evidence_refs", [])
-            if not refs or len(refs) == 0:
-                return False, f"Nguyên nhân cho chiều '{cause.get('dimension')}' thiếu danh sách bằng chứng 'evidence_refs'."
+            if (
+                not isinstance(refs, list)
+                or not refs
+                or not all(isinstance(ref, str) and ref.strip() for ref in refs)
+            ):
+                return False, (
+                    f"Nguyên nhân cho chiều '{dimension}' thiếu danh sách "
+                    "bằng chứng 'evidence_refs'."
+                )
 
-        return True, data
+        validated_output = (
+            output if hasattr(output, "raw") or isinstance(output, (TaskOutput, LiteAgentOutput)) else data
+        )
+        return True, validated_output
     except Exception as e:
-        return True, {"raw": str(output)}
+        return False, f"Không thể phân tích output chẩn đoán: {e}"
 
 
 @CrewBase
@@ -314,6 +351,7 @@ class MerchantFlowDispatcher:
             comp_svc = CompetitorService(session)
 
             profile = profile_svc.get_profile_view(merchant_id)
+            diag = diagnose_merchant(merchant_id, db=session)
             recommendations = rec_svc.generate_recommendations(merchant_id)
             competitors = comp_svc.analyze_competitors(merchant_id)
 
@@ -326,7 +364,7 @@ class MerchantFlowDispatcher:
                 task_name="diagnose_and_recommend",
                 output_summary={
                     "merchant_id": merchant_id,
-                    "causes_count": len(recommendations.get("actions", [])),
+                    "causes_count": len(diag.get("causes", [])),
                 },
                 duration_ms=150,
                 status="ok",
@@ -340,7 +378,7 @@ class MerchantFlowDispatcher:
                 "merchant_id": merchant_id,
                 "status": recommendations.get("status", "ok"),
                 "profile": profile,
-                "diagnosis": recommendations,
+                "diagnosis": diag,
                 "recommendations": recommendations.get("actions", []),
                 "competitors": competitors.get("competitors", []),
             }
@@ -398,6 +436,9 @@ class MerchantFlowDispatcher:
         )
 
         try:
+            reply: str = ""
+            recommendations: list[Any] = []
+
             # 4. If LLM configured, execute Native CrewAI Agentic Chatbot Engine
             if settings.llm_configured:
                 try:
@@ -438,7 +479,7 @@ class MerchantFlowDispatcher:
                     print(f"[LLM Agent Error, falling back to smart offline handler]: {llm_err}")
 
             # 5. Smart Offline Fallback with Real Data Resolution
-            if is_greeting:
+            if intent == "general_chat":
                 reply = (
                     f"Xin chào! Tôi là Merchant Advisor AI đại diện cho quán '{merchant_id}'. "
                     f"Tôi có thể hỗ trợ bạn:\n"
@@ -448,7 +489,7 @@ class MerchantFlowDispatcher:
                     f"Bạn cần hỗ trợ phân tích thông tin gì?"
                 )
                 recommendations = []
-            elif is_competitor_query:
+            elif intent == "competitor_analysis":
                 comp_svc = CompetitorService(session)
                 comp_res = comp_svc.analyze_competitors(merchant_id, radius_km=5.0)
                 comps = comp_res.get("competitors", [])
@@ -475,7 +516,7 @@ class MerchantFlowDispatcher:
                         f"và khuyến nghị giải pháp như sau:\n{action_summary}"
                     )
                 else:
-                    reply = f"Hồ sơ quán '{merchant_id}' hoạt động rất tốt, không có chiều chỉ số bị suy giảm (< 6.0/10)."
+                    reply = f"Hồ sơ quán '{merchant_id}' hoạt động ổn định, không có chiều chỉ số dưới ngưỡng 0.600."
 
             run_svc.finish_run(trace_id=trace_id, status="completed")
 
@@ -526,4 +567,3 @@ class MerchantFlowDispatcher:
 
 # Process-wide singleton instance
 merchant_flow = MerchantFlowDispatcher()
-

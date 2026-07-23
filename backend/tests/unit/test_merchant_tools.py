@@ -9,11 +9,16 @@ Ensures:
 """
 from __future__ import annotations
 
+import json
+
 import pytest
-from database.models import Merchant, MerchantProfile, Review, OperationalMetric
+from database.models import Merchant
+from relational_test_fixtures import seed_relational_profile
 from tools.merchant.profile_tool import get_profile_evidence
 from tools.merchant.competitor_tool import compare_competitors
 from tools.merchant.diagnosis_tool import diagnose_merchant, recommend_improvements
+import tools.merchant.crewai_tools as crewai_tools_module
+from tools.merchant.crewai_tools import DiagnoseMerchantTool
 from tools.registry import registry
 
 
@@ -44,46 +49,13 @@ def sample_merchant_for_tools(db_session):
     )
     db_session.add(competitor)
 
-    profile_data = {
-        "merchant_id": "m_tool_test_01",
-        "tier": "gold",
-        "overall_score": 0.58,  # Must be stripped per C2
-        "dimensions": {
-            "food_quality": {"score": 8.0, "basis": "Vị ngon", "evidence_refs": ["REV-201"]},
-            "waiting_time": {
-                "score": 4.5,  # Weak dimension < 6.0
-                "basis": "Chuẩn bị lâu (18.5 phút)",
-                "evidence_refs": ["METRIC-m_tool_test_01"],
-            },
-            "packaging": {
-                "score": 5.0,  # Weak dimension < 6.0
-                "basis": "Đóng gói chưa chắc chắn",
-                "evidence_refs": ["REV-202"],
-            },
-            "image_quality": {"score": 7.0, "basis": "Ảnh ổn", "evidence_refs": []},
-            "delivery_quality": {"score": 7.5, "basis": "Giao khá tốt", "evidence_refs": []},
-            "service": {"score": 8.0, "basis": "Thái độ tốt", "evidence_refs": []},
-            "menu_diversity": {"score": 7.0, "basis": "15 món", "evidence_refs": []},
-            "price_level": {"score": 7.5, "basis": "Hợp lý", "evidence_refs": []},
-        },
-    }
-
-    profile = MerchantProfile(
-        merchant_id="m_tool_test_01",
-        dimensions_json=profile_data["dimensions"],
-        profile_json=profile_data,
-        schema_version="1.0",
-        source_kind="development_fixture",
+    seed_relational_profile(
+        db_session,
+        "m_tool_test_01",
+        scores={"food_quality": 0.8, "waiting_time": 0.45, "packaging": 0.5},
+        bases={"waiting_time": "Chuẩn bị lâu (18.5 phút)", "packaging": "Đóng gói chưa chắc chắn"},
+        prep_minutes=18.5,
     )
-    db_session.add(profile)
-
-    metric = OperationalMetric(
-        merchant_id="m_tool_test_01",
-        avg_prep_time_min=18.5,
-    )
-    db_session.add(metric)
-
-    db_session.flush()
     return merchant
 
 
@@ -101,7 +73,7 @@ def test_get_profile_evidence_tool_specific_dimension(db_session, sample_merchan
 
     assert res["merchant_id"] == "m_tool_test_01"
     assert res["dimension"] == "waiting_time"
-    assert res["details"]["score"] == 4.5
+    assert res["score"] == 0.45
 
 
 def test_diagnose_merchant_tool(db_session, sample_merchant_for_tools):
@@ -114,8 +86,33 @@ def test_diagnose_merchant_tool(db_session, sample_merchant_for_tools):
     for cause in res["causes"]:
         assert "dimension" in cause
         assert "score" in cause
-        assert cause["score"] < 6.0
+        assert cause["score"] < 0.6
         assert len(cause["evidence_refs"]) >= 1
+
+
+def test_crewai_diagnose_tool_returns_causes_contract(
+    db_session, sample_merchant_for_tools, monkeypatch
+):
+    class SessionProxy:
+        def __getattr__(self, name):
+            return getattr(db_session, name)
+
+        def close(self):
+            pass
+
+    monkeypatch.setattr(
+        crewai_tools_module,
+        "SessionLocal",
+        lambda: SessionProxy(),
+    )
+
+    result = json.loads(
+        DiagnoseMerchantTool()._run(merchant_id="m_tool_test_01")
+    )
+
+    assert result["status"] == "ok"
+    assert len(result["causes"]) == 2
+    assert "actions" not in result
 
 
 def test_recommend_improvements_tool(db_session, sample_merchant_for_tools):

@@ -8,7 +8,12 @@ from typing import Any
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from database.models import Review, OperationalMetric, DeliveryFeedback
+from database.models import (
+    DeliveryFeedback,
+    MerchantDimensionEvidence,
+    OperationalMetric,
+    Review,
+)
 
 
 class EvidenceRepository:
@@ -25,7 +30,26 @@ class EvidenceRepository:
             if not ref:
                 continue
 
-            if ref.startswith("REV-"):
+            typed = self._db.get(MerchantDimensionEvidence, ref)
+            if typed is not None:
+                if typed.value_numeric is not None:
+                    value = float(typed.value_numeric)
+                elif typed.value_text is not None:
+                    value = typed.value_text
+                else:
+                    value = typed.value_boolean
+                results.append(
+                    {
+                        "ref": ref,
+                        "type": typed.evidence_type,
+                        "dimension": typed.dimension,
+                        "value": value,
+                        "unit": typed.unit,
+                        "ref_ids": list(typed.reference_ids or []),
+                        "source_kind": typed.source_kind,
+                    }
+                )
+            elif ref.startswith("REV-"):
                 rev_id = ref.replace("REV-", "", 1)
                 review = self._db.get(Review, ref) or self._db.get(Review, rev_id)
                 if review:
@@ -44,8 +68,12 @@ class EvidenceRepository:
                     results.append({
                         "ref": ref,
                         "type": "operational_metric",
-                        "avg_prep_time_min": metric.avg_prep_time_min,
-                        "peak_hours": metric.peak_hours,
+                        "avg_prep_time_min": (
+                            float(metric.avg_prep_time_min)
+                            if metric.avg_prep_time_min is not None
+                            else None
+                        ),
+                        "peak_hours": list(metric.peak_hours or []),
                     })
 
             elif ref.startswith("FB-"):
@@ -60,3 +88,33 @@ class EvidenceRepository:
                     })
 
         return results
+
+    def get_dimension_evidence(
+        self, merchant_id: str, dimension: str
+    ) -> list[dict[str, Any]]:
+        rows = self._db.execute(
+            select(MerchantDimensionEvidence)
+            .where(
+                MerchantDimensionEvidence.merchant_id == merchant_id,
+                MerchantDimensionEvidence.dimension == dimension,
+            )
+            .order_by(MerchantDimensionEvidence.evidence_id)
+        ).scalars()
+        return [
+            {
+                "evidence_id": row.evidence_id,
+                "type": row.evidence_type,
+                "value": (
+                    float(row.value_numeric)
+                    if row.value_numeric is not None
+                    else row.value_text
+                    if row.value_text is not None
+                    else row.value_boolean
+                ),
+                "unit": row.unit,
+                "ref_type": row.reference_type,
+                "ref_ids": list(row.reference_ids or []),
+                "source_kind": row.source_kind,
+            }
+            for row in rows
+        ]

@@ -31,7 +31,6 @@ def get_profile_evidence(
     try:
         repo = MerchantProfileRepository(session)
         profile = repo.get_profile(merchant_id)
-
         if not profile:
             return {
                 "merchant_id": merchant_id,
@@ -39,26 +38,13 @@ def get_profile_evidence(
                 "dimensions": {},
             }
 
-        dims = profile.get("dimensions", {})
-
         if dimension:
-            if dimension in dims:
-                return {
-                    "merchant_id": merchant_id,
-                    "dimension": dimension,
-                    "details": dims[dimension],
-                }
-            return {
-                "merchant_id": merchant_id,
-                "dimension": dimension,
-                "status": "dimension_not_found",
-                "available_dimensions": list(dims.keys()),
-            }
+            return repo.get_dimension_evidence(merchant_id, dimension)
 
         return {
             "merchant_id": merchant_id,
             "tier": profile.get("tier", "standard"),
-            "dimensions": dims,
+            "dimensions": profile.get("dimensions", {}),
             "attributes": profile.get("attributes", {}),
         }
     finally:
