@@ -101,6 +101,7 @@ def test_validate_evidence_guardrail_fail_missing_refs():
     assert "evidence_refs" in err_msg.lower() or "bằng chứng" in err_msg.lower()
 
 
+@pytest.mark.llm_required
 def test_merchant_flow_run_diagnosis(db_session, sample_merchant_for_flow):
     res = merchant_flow.run_diagnosis("m_flow_test_01", db=db_session)
 

@@ -5,6 +5,7 @@ from app.main import app
 client = TestClient(app)
 
 
+@pytest.mark.llm_required
 def test_merchant_chat_stream_endpoint():
     payload = {
         "merchant_id": "94",

@@ -14,7 +14,7 @@ import json
 import pytest
 from database.models import Merchant
 from relational_test_fixtures import seed_relational_profile
-from tools.merchant.profile_tool import get_profile_evidence
+from tools.merchant.profile_tool import get_merchant_profile_summary
 from tools.merchant.competitor_tool import compare_competitors
 from tools.merchant.diagnosis_tool import diagnose_merchant, recommend_improvements
 import tools.merchant.crewai_tools as crewai_tools_module
@@ -60,20 +60,22 @@ def sample_merchant_for_tools(db_session):
 
 
 def test_get_profile_evidence_tool(db_session, sample_merchant_for_tools):
-    res = get_profile_evidence("m_tool_test_01", db=db_session)
+    res = get_merchant_profile_summary("m_tool_test_01", db=db_session)
 
     assert res["merchant_id"] == "m_tool_test_01"
     assert "dimensions" in res
     assert "overall_score" not in res  # C2 compliance check
-    assert "overall_score" not in res["dimensions"]
+    assert "overall_score_internal" not in res
 
 
 def test_get_profile_evidence_tool_specific_dimension(db_session, sample_merchant_for_tools):
-    res = get_profile_evidence("m_tool_test_01", dimension="waiting_time", db=db_session)
+    res = get_merchant_profile_summary("m_tool_test_01", dimensions=["waiting_time"], db=db_session)
 
     assert res["merchant_id"] == "m_tool_test_01"
-    assert res["dimension"] == "waiting_time"
-    assert res["score"] == 0.45
+    assert "waiting_time" in res["dimensions"]
+    assert res["dimensions"]["waiting_time"] == pytest.approx(0.45, abs=0.001)
+    # Only requested dimension should be present
+    assert "food_quality" not in res["dimensions"]
 
 
 def test_diagnose_merchant_tool(db_session, sample_merchant_for_tools):
@@ -142,7 +144,7 @@ def test_compare_competitors_tool(db_session, sample_merchant_for_tools):
 def test_merchant_tools_registered_in_registry():
     registered_names = set(registry.names())
 
-    assert "get_profile_evidence" in registered_names
     assert "diagnose_merchant" in registered_names
     assert "recommend_improvements" in registered_names
-    assert "compare_competitors" in registered_names
+    # Note: compare_competitors / profile tools now use CrewAI BaseTool
+    # and are NOT registered in the legacy ToolRegistry.

@@ -1,80 +1,28 @@
-"""Native CrewAI BaseTool Wrappers (Design §4.1, §5.1, §9.1) — Merchant Vertical Tools.
+"""CrewAI Tool Registry — Merchant Vertical (Task 5 wiring).
 
-Adheres strictly to CrewAI BaseTool class convention matching custom_tool.py reference.
+Exports all tool instances that agents can use.
+All tools are thin wrappers that delegate to pure functions in their respective modules.
 """
 from __future__ import annotations
 
+from tools.merchant.helper_tool import GetMerchantMetadataCatalogTool
+from tools.merchant.search_tool import SearchMerchantsTool, SearchTrendingDishesTool
+from tools.merchant.profile_tool import GetMerchantProfileSummaryTool
+from tools.merchant.metrics_tool import GetMerchantOperationalMetricsTool
+from tools.merchant.complaints_tool import GetMerchantComplaintsTool
+from tools.merchant.menu_image_tool import GetMenuAndFoodImagesTool
+from tools.merchant.competitor_tool import CompareMerchantBenchmarkTool
+
+# Legacy diagnosis / recommendation tools (kept from original)
+from tools.merchant.diagnosis_tool import diagnose_merchant, recommend_improvements
 import json
 from typing import Type, Any
 from pydantic import BaseModel, Field
 from crewai.tools import BaseTool
-
 from database.connection import SessionLocal
-from repositories.merchant_profile_repository import MerchantProfileRepository
-from services.merchant_profile_service import MerchantProfileService
-from services.recommendation_service import RecommendationService
-from services.competitor_service import CompetitorService
-from tools.merchant.diagnosis_tool import diagnose_merchant
 
 
-# --- Tool 1: GetMerchantProfileTool ---
-class GetMerchantProfileInput(BaseModel):
-    merchant_id: str = Field(..., description="Target merchant ID to retrieve 8-dimension profile.")
-
-
-class GetMerchantProfileTool(BaseTool):
-    name: str = "get_merchant_profile"
-    description: str = (
-        "Retrieve 8-dimension performance profile for a merchant. "
-        "Strictly obeys Security Rule C2: overall_score is stripped."
-    )
-    args_schema: Type[BaseModel] = GetMerchantProfileInput
-
-    def _run(self, merchant_id: str) -> str:
-        db = SessionLocal()
-        try:
-            svc = MerchantProfileService(db)
-            profile = svc.get_profile_view(merchant_id)
-            return json.dumps(profile, ensure_ascii=False)
-        except Exception as e:
-            return json.dumps({"merchant_id": merchant_id, "error": str(e)}, ensure_ascii=False)
-        finally:
-            db.close()
-
-
-# --- Tool 2: GetProfileEvidenceTool ---
-class GetProfileEvidenceInput(BaseModel):
-    merchant_id: str = Field(..., description="Target merchant ID")
-    dimension: str | None = Field(None, description="Optional specific dimension name (e.g. 'waiting_time', 'food_quality')")
-
-
-class GetProfileEvidenceTool(BaseTool):
-    name: str = "get_profile_evidence"
-    description: str = (
-        "Retrieve evidence breakdown and supporting records (reviews, metrics, feedbacks) for a merchant profile."
-    )
-    args_schema: Type[BaseModel] = GetProfileEvidenceInput
-
-    def _run(self, merchant_id: str, dimension: str | None = None) -> str:
-        db = SessionLocal()
-        try:
-            profile_repo = MerchantProfileRepository(db)
-            profile = profile_repo.get_profile(merchant_id)
-            if not profile:
-                return json.dumps({"merchant_id": merchant_id, "status": "not_found"}, ensure_ascii=False)
-            if dimension:
-                return json.dumps(
-                    profile_repo.get_dimension_evidence(merchant_id, dimension),
-                    ensure_ascii=False,
-                )
-            return json.dumps({"merchant_id": merchant_id, "dimensions": profile["dimensions"]}, ensure_ascii=False)
-        except Exception as e:
-            return json.dumps({"merchant_id": merchant_id, "error": str(e)}, ensure_ascii=False)
-        finally:
-            db.close()
-
-
-# --- Tool 3: DiagnoseMerchantTool ---
+# --- DiagnoseMerchantTool (kept for backward compat) ---
 class DiagnoseMerchantInput(BaseModel):
     merchant_id: str = Field(..., description="Target merchant ID to diagnose operational weaknesses.")
 
@@ -98,23 +46,20 @@ class DiagnoseMerchantTool(BaseTool):
             db.close()
 
 
-# --- Tool 4: RecommendImprovementsTool ---
+# --- RecommendImprovementsTool (kept for backward compat) ---
 class RecommendImprovementsInput(BaseModel):
     merchant_id: str = Field(..., description="Target merchant ID to generate improvement actions.")
 
 
 class RecommendImprovementsTool(BaseTool):
     name: str = "recommend_improvements"
-    description: str = (
-        "Generate evidence-backed actionable improvement steps for a merchant."
-    )
+    description: str = "Generate evidence-backed actionable improvement steps for a merchant."
     args_schema: Type[BaseModel] = RecommendImprovementsInput
 
     def _run(self, merchant_id: str) -> str:
         db = SessionLocal()
         try:
-            rec_svc = RecommendationService(db)
-            result = rec_svc.generate_recommendations(merchant_id)
+            result = recommend_improvements(merchant_id, db=db)
             return json.dumps(result, ensure_ascii=False)
         except Exception as e:
             return json.dumps({"merchant_id": merchant_id, "error": str(e)}, ensure_ascii=False)
@@ -122,48 +67,32 @@ class RecommendImprovementsTool(BaseTool):
             db.close()
 
 
-# --- Tool 5: CompareCompetitorsTool ---
-class CompareCompetitorsInput(BaseModel):
-    merchant_id: str = Field(..., description="Target merchant ID")
-    radius_km: float = Field(5.0, description="Search radius in kilometers")
-    limit: int = Field(5, description="Maximum number of competitors to return")
+# ── Tool Catalog ─────────────────────────────────────────────────────────────
+# Instantiated singletons — agents should import from here.
 
+merchant_tools = [
+    GetMerchantMetadataCatalogTool(),
+    SearchMerchantsTool(),
+    SearchTrendingDishesTool(),
+    GetMerchantProfileSummaryTool(),
+    GetMerchantOperationalMetricsTool(),
+    GetMerchantComplaintsTool(),
+    GetMenuAndFoodImagesTool(),
+    CompareMerchantBenchmarkTool(),
+    DiagnoseMerchantTool(),
+    RecommendImprovementsTool(),
+]
 
-class CompareCompetitorsTool(BaseTool):
-    name: str = "compare_competitors"
-    description: str = (
-        "Compare a merchant's 8 dimensions with nearby competitor merchants in the same cuisine segment. "
-        "Strictly limits output to top 5 competitors to keep prompt size token-efficient."
-    )
-    args_schema: Type[BaseModel] = CompareCompetitorsInput
-
-    def _run(self, merchant_id: str, radius_km: float = 5.0, limit: int = 5) -> str:
-        db = SessionLocal()
-        try:
-            safe_limit = min(max(1, limit), 5)
-            comp_svc = CompetitorService(db)
-            result = comp_svc.analyze_competitors(merchant_id, radius_km=radius_km, limit=safe_limit)
-
-            light_competitors = []
-            for c in result.get("competitors", []):
-                dims_summary = {k: v.get("score") for k, v in c.get("dimensions", {}).items() if isinstance(v, dict)}
-                light_competitors.append({
-                    "merchant_id": c.get("merchant_id"),
-                    "name": c.get("name"),
-                    "cuisine": c.get("cuisine"),
-                    "distance_km": c.get("distance_km"),
-                    "dimension_scores": dims_summary,
-                })
-
-            return json.dumps({
-                "target_merchant_id": result.get("target_merchant_id"),
-                "target_name": result.get("target_name"),
-                "cuisine": result.get("cuisine"),
-                "radius_km": result.get("radius_km"),
-                "competitor_count": len(light_competitors),
-                "top_competitors": light_competitors,
-            }, ensure_ascii=False)
-        except Exception as e:
-            return json.dumps({"merchant_id": merchant_id, "error": str(e)}, ensure_ascii=False)
-        finally:
-            db.close()
+__all__ = [
+    "merchant_tools",
+    "GetMerchantMetadataCatalogTool",
+    "SearchMerchantsTool",
+    "SearchTrendingDishesTool",
+    "GetMerchantProfileSummaryTool",
+    "GetMerchantOperationalMetricsTool",
+    "GetMerchantComplaintsTool",
+    "GetMenuAndFoodImagesTool",
+    "CompareMerchantBenchmarkTool",
+    "DiagnoseMerchantTool",
+    "RecommendImprovementsTool",
+]

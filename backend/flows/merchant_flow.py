@@ -27,11 +27,11 @@ from services.chat_session_service import ChatSessionService
 from agents.listeners.crewai_listener import DatabaseRecordingListener, build_event_record
 
 from tools.merchant.crewai_tools import (
-    GetMerchantProfileTool,
-    GetProfileEvidenceTool,
+    GetMerchantProfileSummaryTool as GetMerchantProfileTool,
+    GetMerchantProfileSummaryTool as GetProfileEvidenceTool,
     DiagnoseMerchantTool,
     RecommendImprovementsTool,
-    CompareCompetitorsTool,
+    CompareMerchantBenchmarkTool as CompareCompetitorsTool,
 )
 from tools.merchant.diagnosis_tool import diagnose_merchant
 
