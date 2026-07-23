@@ -1,68 +1,134 @@
-"""Merchant profile tool (F-02 Merchant) — Retrieves 8-dimension profile details and evidence breakdown.
+"""Merchant Profile Summary Tool (Task 2).
 
-Strictly obeys Security Rule C2: `overall_score` is stripped.
+Retrieves the 8-dimension quality profile for a merchant.
+Security Rule C2: `overall_score` / `overall_score_internal` MUST be stripped.
 """
 from __future__ import annotations
 
-from typing import Any
+import json
+from typing import Any, List, Optional, Type
+
+from crewai.tools import BaseTool
+from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
+
 from database.connection import SessionLocal
-from repositories.merchant_profile_repository import MerchantProfileRepository
-from tools.allow_list import agents_allowed_for
-from tools.registry import ToolRegistry, ToolSpec
+from database.models import Merchant, MerchantProfile, MerchantRating
+
+# Official 8 dimension column map: short_key -> column attribute name
+_DIMENSION_COLUMNS: dict[str, str] = {
+    "food_quality": "food_quality_score",
+    "image_quality": "image_quality_score",
+    "delivery_quality": "delivery_quality_score",
+    "packaging": "packaging_score",
+    "service": "service_score",
+    "waiting_time": "waiting_time_score",
+    "menu_diversity": "menu_diversity_score",
+    "price_competitiveness": "price_competitiveness_score",
+}
+
+_ALL_DIMENSIONS = list(_DIMENSION_COLUMNS.keys())
 
 
-def get_profile_evidence(
+def get_merchant_profile_summary(
     merchant_id: str,
-    dimension: str | None = None,
+    dimensions: list[str] | None = None,
     db: Session | None = None,
 ) -> dict[str, Any]:
-    """Retrieve 8-dimension profile details and evidence breakdown for a merchant.
+    """Return compact profile summary for a merchant.
 
     Args:
         merchant_id: Target merchant ID.
-        dimension: Optional specific dimension name (e.g. 'waiting_time', 'food_quality').
-        db: Optional database session for test injection.
+        dimensions: Optional list of dimension keys to include (e.g. ["food_quality", "service"]).
+                    If None, returns all 8 dimensions.
+        db: Optional injected DB session (for testing).
 
     Returns:
-        Dictionary containing profile dimensions and evidence list (overall_score stripped).
+        dict with status, merchant_id, name, tier, price_level, ratings, dimensions.
+        overall_score_internal is NEVER included (Security Rule C2).
     """
     session = db or SessionLocal()
     try:
-        repo = MerchantProfileRepository(session)
-        profile = repo.get_profile(merchant_id)
-        if not profile:
-            return {
-                "merchant_id": merchant_id,
-                "status": "not_found",
-                "dimensions": {},
-            }
+        row = (
+            session.query(Merchant, MerchantProfile, MerchantRating)
+            .outerjoin(MerchantProfile, Merchant.merchant_id == MerchantProfile.merchant_id)
+            .outerjoin(MerchantRating, Merchant.merchant_id == MerchantRating.merchant_id)
+            .filter(Merchant.merchant_id == merchant_id)
+            .first()
+        )
+        if not row:
+            return {"status": "not_found", "merchant_id": merchant_id}
 
-        if dimension:
-            return repo.get_dimension_evidence(merchant_id, dimension)
+        m, p, r = row
+        target_dims = [d for d in (dimensions or _ALL_DIMENSIONS) if d in _DIMENSION_COLUMNS]
+
+        dim_data: dict[str, float | None] = {}
+        if p:
+            for dim in target_dims:
+                col = _DIMENSION_COLUMNS[dim]
+                val = getattr(p, col, None)
+                dim_data[dim] = float(val) if val is not None else None
+        else:
+            dim_data = {d: None for d in target_dims}
+
+        ratings: dict[str, Any] = {}
+        if r:
+            if r.shopeefood_rating is not None:
+                ratings["shopeefood"] = {
+                    "rating": float(r.shopeefood_rating),
+                    "review_count": r.shopeefood_review_count,
+                }
+            if r.foody_rating is not None:
+                ratings["foody"] = {
+                    "rating": float(r.foody_rating),
+                    "review_count": r.foody_review_count,
+                }
 
         return {
-            "merchant_id": merchant_id,
-            "tier": profile.get("tier", "standard"),
-            "dimensions": profile.get("dimensions", {}),
-            "attributes": profile.get("attributes", {}),
+            "status": "ok",
+            "merchant_id": m.merchant_id,
+            "name": m.name,
+            "cuisine": m.cuisine,
+            "city": m.city,
+            "tier": p.tier if p else None,
+            "price_level": p.price_level if p else None,
+            "dimensions": dim_data,
+            "ratings": ratings,
         }
     finally:
         if db is None:
             session.close()
 
 
-def register(reg: ToolRegistry) -> None:
-    """Auto-discovery entry point for profile tools."""
-    reg.register(
-        ToolSpec(
-            name="get_profile_evidence",
-            description="Retrieve a merchant's 8-dimension profile and evidence breakdown.",
-            input_schema={"merchant_id": "str", "dimension": "str?"},
-            output_schema={"merchant_id": "str", "dimensions": "dict"},
-            allowed_agents=agents_allowed_for("get_profile_evidence"),
-            cache_policy="profile_snapshot",
-            source_kind="real",
+# --- CrewAI Tool Class ---
+
+class GetMerchantProfileSummaryInput(BaseModel):
+    merchant_id: str = Field(..., description="Merchant ID to look up.")
+    dimensions: Optional[List[str]] = Field(
+        None,
+        description=(
+            "Subset of dimension keys to retrieve. "
+            "Valid values: food_quality, image_quality, delivery_quality, packaging, "
+            "service, waiting_time, menu_diversity, price_competitiveness. "
+            "Leave empty to return all 8."
         ),
-        get_profile_evidence,
     )
+
+
+class GetMerchantProfileSummaryTool(BaseTool):
+    name: str = "get_merchant_profile_summary"
+    description: str = (
+        "Retrieve a merchant's quality profile: 8-dimension scores (food_quality, "
+        "image_quality, delivery_quality, packaging, service, waiting_time, "
+        "menu_diversity, price_competitiveness), tier, price_level, and platform ratings. "
+        "Does NOT return overall_score. Use `dimensions` to request only what you need."
+    )
+    args_schema: Type[BaseModel] = GetMerchantProfileSummaryInput
+
+    def _run(
+        self,
+        merchant_id: str,
+        dimensions: list[str] | None = None,
+    ) -> str:
+        res = get_merchant_profile_summary(merchant_id=merchant_id, dimensions=dimensions)
+        return json.dumps(res, ensure_ascii=False)
