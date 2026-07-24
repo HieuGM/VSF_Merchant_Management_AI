@@ -1,0 +1,53 @@
+.cust-ambient {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  background: var(--grad-canvas);
+}
+
+.cust-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(48px);
+  opacity: 0.55;
+  animation: cust-float 14s ease-in-out infinite;
+}
+.cust-orb--coral {
+  width: 260px;
+  height: 260px;
+  top: -60px;
+  left: -70px;
+  background: radial-gradient(circle at 30% 30%, #ff8a5b, #e4572e);
+}
+.cust-orb--amber {
+  width: 220px;
+  height: 220px;
+  top: 34%;
+  right: -80px;
+  background: radial-gradient(circle at 30% 30%, #ffd07a, #f59e0b);
+  animation-delay: -4s;
+  animation-duration: 18s;
+}
+.cust-orb--rose {
+  width: 240px;
+  height: 240px;
+  bottom: -90px;
+  left: 20%;
+  background: radial-gradient(circle at 30% 30%, #ffb4c6, #fb7185);
+  animation-delay: -8s;
+  animation-duration: 20s;
+}
+
+/* Hero variant leans brighter/bolder for the landing screen. */
+.cust-ambient--hero .cust-orb { opacity: 0.7; }
+
+/* Subtle noise so large gradients don't band. */
+.cust-ambient__grain {
+  position: absolute;
+  inset: 0;
+  opacity: 0.05;
+  background-image: radial-gradient(rgba(124, 45, 18, 0.6) 0.5px, transparent 0.5px);
+  background-size: 4px 4px;
+}

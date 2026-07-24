@@ -1,0 +1,271 @@
+/* UC-04 Search Page Styles - Phase 0b */
+.search-page {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #fff7ed 0%, #fef2f2 100%);
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.header h1 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 0.5rem;
+}
+
+.header p {
+  color: #6b7280;
+  font-size: 0.875rem;
+}
+
+.card {
+  background: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 0.25rem;
+}
+
+.form-group input,
+.form-group select {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+  outline: none;
+  border-color: #ea580c;
+  box-shadow: 0 0 0 2px rgba(234, 88, 12, 0.2);
+}
+
+.checkbox-group {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.checkbox-group input {
+  margin-right: 0.5rem;
+}
+
+.checkbox-group label {
+  font-size: 0.875rem;
+  color: #374151;
+}
+
+.btn-search {
+  width: 100%;
+  background-color: #ea580c;
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.375rem;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.btn-search:hover:not(:disabled) {
+  background-color: #c2410c;
+}
+
+.btn-search:disabled {
+  background-color: #9ca3af;
+  cursor: not-allowed;
+}
+
+.error {
+  background-color: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #b91c1c;
+  padding: 0.75rem 1rem;
+  border-radius: 0.375rem;
+  margin-bottom: 1.5rem;
+}
+
+.results-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.results-header h2 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+.results-header p {
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.trace-info {
+  text-align: right;
+}
+
+.trace-info p:first-child {
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+.trace-info p:last-child {
+  font-size: 0.75rem;
+  font-family: monospace;
+  color: #374151;
+}
+
+.merchant-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.merchant-card {
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  transition: box-shadow 0.2s;
+}
+
+.merchant-card:hover {
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.merchant-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+}
+
+.merchant-info {
+  flex: 1;
+}
+
+.merchant-info h3 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 0.25rem;
+}
+
+.merchant-info > p {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin-bottom: 0.5rem;
+}
+
+.merchant-info .address {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin-bottom: 0.5rem;
+}
+
+.merchant-meta {
+  text-align: right;
+}
+
+.rating {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  margin-bottom: 0.25rem;
+}
+
+.rating span:first-child {
+  margin-right: 0.25rem;
+}
+
+.rating span:last-child {
+  font-weight: 500;
+}
+
+.distance,
+.match-score {
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.match-score {
+  margin-top: 0.25rem;
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 3rem;
+}
+
+.empty-state .icon {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+}
+
+.empty-state h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 0.5rem;
+}
+
+.empty-state p {
+  color: #6b7280;
+}
+
+.badge {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.badge-hit {
+  background-color: #d1fae5;
+  color: #047857;
+}
+
+.badge-miss {
+  background-color: #dbeafe;
+  color: #1d4ed8;
+}
+
+.badge-disabled {
+  background-color: #f3f4f6;
+  color: #6b7280;
+}

@@ -1,0 +1,59 @@
+.cpref {
+  position: relative;
+  z-index: 1;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 1.1rem 1rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.cpref__head { display: flex; flex-direction: column; gap: 0.15rem; }
+.cpref__title { font-size: 1.4rem; font-weight: 800; color: var(--c-ink); margin: 0; }
+.cpref__sub { font-size: 0.84rem; color: var(--c-ink-muted); margin: 0; }
+
+.cpref__card { padding: 0.95rem 1rem; }
+.cpref__chips { display: flex; flex-wrap: wrap; gap: 0.45rem; }
+
+.cpref__toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  cursor: pointer;
+}
+.cpref__toggle span { display: flex; flex-direction: column; }
+.cpref__toggle b { font-size: 0.92rem; color: var(--c-ink); }
+.cpref__toggle small { font-size: 0.76rem; color: var(--c-ink-muted); }
+.cpref__toggle input { width: 20px; height: 20px; accent-color: var(--c-coral); }
+
+.cpref__coords {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.6rem;
+  margin-top: 0.75rem;
+}
+.cpref__coords label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: var(--c-ink-soft);
+}
+
+.cpref__note {
+  font-size: 0.76rem;
+  color: var(--c-ink-muted);
+  text-align: center;
+  margin: 0.3rem 0 0;
+  line-height: 1.5;
+}
+.cpref__note code {
+  background: rgba(228, 87, 46, 0.1);
+  border-radius: 6px;
+  padding: 0.05rem 0.35rem;
+  font-size: 0.72rem;
+}

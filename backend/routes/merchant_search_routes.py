@@ -9,7 +9,7 @@ from pydantic import BaseModel, Field
 
 from core.cache import CacheKeys, CachePort
 from core.dependencies import get_cache
-from flows.customer_flow import customer_flow
+from core.tracing import new_id
 
 
 router = APIRouter(prefix="/api/v1/merchants", tags=["merchant-search"])
@@ -85,33 +85,47 @@ def search_merchants(
             cache_status="hit",
         )
 
-    # Execute search
-    result = customer_flow.search_restaurants(
+    # Execute search directly via the tool (deterministic, no LLM). The CrewAI crew is
+    # reserved for the agent-chat endpoint (routes/customer_agent_routes.py).
+    from tools.customer.merchant_tools import merchant_search
+
+    budget_ranges = {
+        "student": (15000, 50000),
+        "standard": (50000, 150000),
+        "premium": (150000, None),
+    }
+    min_price, max_price = budget_ranges.get((budget or "").lower(), (None, None))
+
+    trace_id = new_id("trace")
+    result = merchant_search(
         query=query,
         cuisine=cuisine,
         city=city,
-        budget=budget,
+        min_price=min_price,
+        max_price=max_price,
         lat=lat,
         lng=lng,
+        radius_km=radius_km,
+        limit=limit,
     )
 
     # Cache result (TTL: 5 minutes)
     cache.set(
         cache_key,
         {
-            "trace_id": result["trace_id"],
-            "merchants": result["results"]["merchants"],
-            "total": result["results"]["total"],
-            "filters_applied": result["results"]["filters_applied"],
+            "trace_id": trace_id,
+            "merchants": result["merchants"],
+            "total": result["total"],
+            "filters_applied": result["filters_applied"],
         },
         ttl_seconds=300,
     )
 
     return MerchantSearchResponse(
-        trace_id=result["trace_id"],
-        merchants=result["results"]["merchants"],
-        total=result["results"]["total"],
-        filters_applied=result["results"]["filters_applied"],
+        trace_id=trace_id,
+        merchants=result["merchants"],
+        total=result["total"],
+        filters_applied=result["filters_applied"],
         cache_status="miss",
     )
 

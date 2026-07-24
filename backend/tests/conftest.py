@@ -11,6 +11,33 @@ from fastapi.testclient import TestClient
 from app.main import app
 from core.dependencies import get_db_session
 
+from crewai import LLM
+
+
+class FakeLLM(LLM):
+    """A CrewAI LLM stand-in that never builds a network client (bypasses __new__).
+
+    Lets crew/agent tests run with no NVIDIA NIM key and no network. Carries a `model`
+    so per-agent tier assertions still work."""
+
+    def __new__(cls, *args, **kwargs):  # skip crewai.LLM native-provider init
+        return object.__new__(cls)
+
+    def __init__(self, model: str = "openai/fake-model") -> None:
+        self.model = model
+        self.stop = []
+        self.temperature = None
+
+
+@pytest.fixture
+def fake_llm_large() -> "FakeLLM":
+    return FakeLLM("openai/meta/llama-3.3-70b-instruct")
+
+
+@pytest.fixture
+def fake_llm_small() -> "FakeLLM":
+    return FakeLLM("openai/meta/llama-3.1-8b-instruct")
+
 
 class _StubSession:
     """Minimal stand-in that satisfies health's `db.execute(text("SELECT 1"))`."""

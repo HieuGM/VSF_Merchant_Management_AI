@@ -16,12 +16,14 @@ export interface ApiError {
 }
 
 export class ApiRequestError extends Error {
-  constructor(
-    public readonly status: number,
-    public readonly body: ApiError
-  ) {
+  status: number;
+  body: ApiError;
+
+  constructor(status: number, body: ApiError) {
     super(body.message);
     this.name = "ApiRequestError";
+    this.status = status;
+    this.body = body;
   }
 }
 

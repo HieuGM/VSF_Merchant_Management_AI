@@ -18,6 +18,7 @@ ERROR_HTTP_STATUS: dict[str, int] = {
     "provider_error": 502,
     "timeout": 504,
     "conflict": 409,
+    "config_error": 500,
     "internal_error": 500,
 }
 
@@ -85,3 +86,9 @@ class UnauthorizedError(AppError):
 
 class ForbiddenError(AppError):
     code = "forbidden"
+
+
+class ConfigError(AppError):
+    """Misconfiguration (e.g. missing LLM API key) — surfaced clearly, not a vague 500."""
+
+    code = "config_error"

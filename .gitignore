@@ -26,6 +26,11 @@ __pycache__/
 .venv/*
 .pytest_cache
 
+# Coverage artifacts (regenerable test byproducts)
+.coverage
+coverage.json
+htmlcov/
+
 # Logs
 *.log
 
@@ -38,3 +43,5 @@ __pycache__/
 # OS / editor
 .DS_Store
 Thumbs.db
+
+test.py

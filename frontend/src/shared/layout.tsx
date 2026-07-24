@@ -1,5 +1,6 @@
 import { NavLink } from "react-router-dom";
 import type { ReactNode } from "react";
+import "./layout.css";
 
 /**
  * Mobile-first app shell (design §4). Shared chrome both verticals render inside.
@@ -7,23 +8,19 @@ import type { ReactNode } from "react";
  */
 export function AppLayout({ children }: { children: ReactNode }) {
   return (
-    <div className="mx-auto flex min-h-screen max-w-md flex-col bg-white shadow-sm">
-      <header className="sticky top-0 z-10 bg-brand px-4 py-3 text-white">
-        <h1 className="text-lg font-semibold">VSF Merchant AI</h1>
+    <div className="app-shell">
+      <header className="app-header">
+        <h1>VSF Merchant AI</h1>
       </header>
-      <main className="flex-1">{children}</main>
-      <nav className="sticky bottom-0 grid grid-cols-2 border-t bg-white text-center text-sm">
-        <NavLink to="/customer" className={tabClass}>
+      <main className="app-main">{children}</main>
+      <nav className="app-nav">
+        <NavLink to="/customer" className="nav-link">
           Khám phá
         </NavLink>
-        <NavLink to="/merchant" className={tabClass}>
+        <NavLink to="/merchant" className="nav-link">
           Cửa hàng
         </NavLink>
       </nav>
     </div>
   );
-}
-
-function tabClass({ isActive }: { isActive: boolean }) {
-  return `py-3 ${isActive ? "font-semibold text-brand" : "text-gray-500"}`;
 }

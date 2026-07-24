@@ -3,10 +3,14 @@ import sys
 from logging.config import fileConfig
 from pathlib import Path
 
+from dotenv import load_dotenv
 from sqlalchemy import engine_from_config, create_engine
 from sqlalchemy import pool
 
 from alembic import context
+
+# Load .env file to get database credentials
+load_dotenv()
 
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))

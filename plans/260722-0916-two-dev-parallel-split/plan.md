@@ -17,7 +17,7 @@ Xung đột chỉ xảy ra ở **file dùng chung**. Ta gom hết file dùng chu
 | Phase | Tên | Owner | Song song? | Status |
 |---|---|---|---|---|
 | 0 | Shared Foundation & Seams | **Owner (bạn) solo** → handoff | Không — làm TRƯỚC | ✅ skeleton done (freeze chờ 0.5) |
-| 0.5 | **Walking Skeleton** (UC-04 search end-to-end) | **Owner (bạn) solo** → handoff | Không — TRƯỚC khi fork | ☐ |
+| 0.5 | **Walking Skeleton** (UC-04 search end-to-end) | **Owner (bạn) solo** → handoff | Không — TRƯỚC khi fork | 🔄 IN PROGRESS — route endpoint verified & secured |
 | 1 | Track A — Customer Vertical | Dev A | Song song với Phase 2 | ☐ |
 | 2 | Track B — Merchant Vertical | Dev B | Song song với Phase 1 | ☐ |
 | 3 | Integration & Evaluation | 2 dev pair | Sau khi 1+2 xong (+ CI liên tục) | ☐ |
@@ -89,6 +89,14 @@ Built shared foundation + all frozen seams. Tests: 15 pass / 2 skip (Postgres in
 - **Infra:** docker-compose per-dev A/B (isolated PG+Redis ports/volumes, H6) · pinned `crewai==1.15.5`.
 - **Post code-review fixes:** PREFERENCE_SCOPES aligned to §7.1 · CORS no longer wildcard+credentials · tools split into per-domain packages (real isolation) · YAML↔allow-list sync contract test · new tables added to integration test assertion.
 - **⚠️ Carry to Phase 0.5:** verify `pip install crewai==1.15.5` does NOT pull LangChain (§2, clean-env dep-tree check) BEFORE tagging `phase0-freeze`.
+
+### Bug Fix Session — 2026-07-22 (Critical security & correctness fixes)
+Validated 3 critical bug fixes affecting merchant search UC-04. All 28 tests passing (10 new validation tests added).
+- **Fix 1:** Test expectation mismatch in `backend/tests/contract/test_api_stubs.py` — removed `/api/v1/merchants/search` from stub routes, added `test_merchant_search_endpoint_implemented()` to verify 200 response (not 501 stub).
+- **Fix 2:** Input validation in `backend/routes/merchant_search_routes.py` — added Pydantic validators for `lat` (ge=-90, le=90), `lng` (ge=-180, le=180), `radius_km` (gt=0, le=500), `limit` (ge=1, le=100). Applied to both `MerchantSearchRequest` model and query parameters in both route functions.
+- **Fix 3:** SQL injection protection in `backend/repositories/merchant_repository.py` — escaped LIKE special characters (`\`, `%`, `_`) in `query_pattern` using `escape="\\"` parameter in `ilike()` calls.
+- **Test coverage:** 78% (routes), 59% (repositories) — SQL injection protection confirmed via 10 validation tests covering special chars, wildcards, injection attempts.
+- **Reports:** `plans/reports/tester-260722-1132-bug-fix-validation.md` · `plans/reports/code-reviewer-260722-1135-bug-fixes-review.md`.
 
 ## Validation Log
 

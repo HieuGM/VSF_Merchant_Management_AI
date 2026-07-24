@@ -5,14 +5,24 @@ Phase 0b: basic query + geo search foundation for UC-04 slice.
 """
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, time
 from typing import Any
 
-from sqlalchemy import select, and_, or_
+from sqlalchemy import select, and_, or_, exists
 from sqlalchemy.orm import Session
 
 from database.models import Merchant, MenuItem, Review
 from core.errors import NotFoundError
+
+
+def _parse_time(value: Any) -> time | None:
+    """Parse a 'HH:MM[:SS]' string (or time) into datetime.time, else None."""
+    if value is None or isinstance(value, time):
+        return value
+    try:
+        return time.fromisoformat(str(value))
+    except ValueError:
+        return None
 
 
 class MerchantRepository:
@@ -65,14 +75,26 @@ class MerchantRepository:
         conditions = []
 
         if query:
-            # Search in name and cuisine (escape LIKE special chars to prevent injection)
-            # Escape backslash first, then % and _ to prevent SQL injection
+            # Free-text search across merchant name, cuisine, AND menu-item names, so a
+            # DISH keyword ("phở", "cơm tấm", "trà sữa") finds merchants that sell it even
+            # when their cuisine column is a broad category ("Món Việt"). The menu match
+            # is a correlated EXISTS to avoid row duplication.
+            # Escape LIKE special chars (backslash first) to prevent injection.
             escaped_query = query.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
             query_pattern = f"%{escaped_query}%"
+            menu_match = (
+                select(MenuItem.item_id)
+                .where(
+                    MenuItem.merchant_id == Merchant.merchant_id,
+                    MenuItem.name.ilike(query_pattern, escape="\\"),
+                )
+                .exists()
+            )
             conditions.append(
                 or_(
                     Merchant.name.ilike(query_pattern, escape="\\"),
                     Merchant.cuisine.ilike(query_pattern, escape="\\"),
+                    menu_match,
                 )
             )
 
@@ -141,7 +163,15 @@ class MerchantRepository:
         lng: float | None = None,
         open_hours: dict[str, Any] | None = None,
     ) -> Merchant:
-        """Create a new merchant."""
+        """Create a new merchant.
+
+        `open_hours` ({"open", "close"}) is accepted for backward compatibility and
+        decomposed into the typed `opens_at` / `closes_at` columns (the legacy JSON
+        `open_hours` column was dropped in migration c2d3e4f5a6b7)."""
+        opens_at = closes_at = None
+        if open_hours:
+            opens_at = _parse_time(open_hours.get("open"))
+            closes_at = _parse_time(open_hours.get("close"))
         merchant = Merchant(
             merchant_id=merchant_id,
             name=name,
@@ -151,7 +181,8 @@ class MerchantRepository:
             address=address,
             lat=lat,
             lng=lng,
-            open_hours=open_hours,
+            opens_at=opens_at,
+            closes_at=closes_at,
         )
         self._db.add(merchant)
         self._db.commit()

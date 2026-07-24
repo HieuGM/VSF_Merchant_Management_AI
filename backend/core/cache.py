@@ -52,6 +52,27 @@ class CacheKeys:
     def run(trace_id: str) -> str:
         return f"agent:run:{trace_id}"
 
+    @staticmethod
+    def merchant_search(
+        query: str,
+        cuisine: str,
+        city: str,
+        budget: str,
+        lat: float,
+        lng: float,
+        radius_km: float,
+        limit: int,
+    ) -> str:
+        """Cache key for merchant search results."""
+        params = f"{query}|{cuisine}|{city}|{budget}|{lat}|{lng}|{radius_km}|{limit}"
+        return f"agent:search:merchant:{_hash(params)}"
+
+    @staticmethod
+    def nearby_search(lat: float, lng: float, radius_km: float, cuisine: str, limit: int) -> str:
+        """Cache key for nearby merchant search."""
+        params = f"{lat}|{lng}|{radius_km}|{cuisine}|{limit}"
+        return f"agent:search:nearby:{_hash(params)}"
+
 
 class CachePort(ABC):
     """Replaceable cache backend. Implementations: memory (Phase 0), redis (D-02)."""

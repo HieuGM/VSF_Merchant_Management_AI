@@ -1,2 +1,85 @@
 # Customer Discovery Crew — task definitions (Dev A owns this file).
-# Phase 0 stub: fill in Feature G. Every task returns a Pydantic-compatible object (§5.5).
+# Every task returns a Pydantic-compatible object (§5.5); `output_pydantic` is bound in
+# customer_crew.py (P05), not here. `{var}` interpolation is filled by crew.kickoff inputs
+# in customer_flow.py (P06): query, cuisine, city, budget, lat, lng, radius_km, user_id, session_id.
+
+search_task:
+  description: >
+    Tìm các quán ăn phù hợp với yêu cầu: "{query}".
+    Ràng buộc đã biết — cuisine: {cuisine}, thành phố: {city}, ngân sách: {budget},
+    vị trí: (lat={lat}, lng={lng}), bán kính tối đa: {radius_km} km.
+
+    Cách làm:
+    1. Chuẩn hoá ràng buộc thành tham số tìm kiếm.
+    2. CHỌN ĐÚNG MỘT công cụ: nếu người dùng ưu tiên "gần đây" hoặc có toạ độ + bán kính →
+       nearby_merchant_search; ngược lại → merchant_search. Gọi công cụ đó ĐÚNG MỘT LẦN.
+    3. Từ kết quả trả về, trả tối đa 10 quán, ưu tiên match_score cao rồi tới khoảng cách gần.
+
+    Phân biệt MÓN vs LOẠI ẨM THỰC (RẤT QUAN TRỌNG):
+    - Tên MÓN ("phở", "cơm tấm", "bún bò", "trà sữa", "pizza"...) → truyền vào tham số `query`.
+    - Chỉ dùng `cuisine` cho LOẠI ẨM THỰC rộng ("Món Việt", "Nhật", "Hàn", "Ý").
+    - TUYỆT ĐỐI KHÔNG đặt tên món vào `cuisine` (dữ liệu cuisine không chứa tên món → 0 kết quả).
+
+    Ràng buộc QUAN TRỌNG:
+    - CHỈ gọi công cụ tìm kiếm tối đa 1 lần. TUYỆT ĐỐI KHÔNG gọi lặp lại cùng một công cụ,
+      KHÔNG xen kẽ merchant_search và nearby_merchant_search. Sau khi có kết quả, DỪNG gọi
+      công cụ và tổng hợp câu trả lời cuối cùng ngay.
+    - CHỈ dùng dữ liệu trả về từ công cụ, KHÔNG bịa quán/địa chỉ/đánh giá.
+    - Nếu không có kết quả, trả danh sách rỗng và nêu rõ (không thử lại công cụ khác).
+  expected_output: >
+    Danh sách quán ứng viên (tối đa 10). Mỗi quán gồm: merchant_id, name, cuisine, address,
+    distance_km (nếu có toạ độ), avg_rating, match_score. Kèm applied_filters (các bộ lọc đã
+    dùng) và count (số quán). Không thêm quán ngoài kết quả công cụ.
+  agent: restaurant_search
+
+preference_task:
+  description: >
+    Suy luận và ĐỀ XUẤT tinh chỉnh hồ sơ sở thích cho người dùng {user_id} (phiên {session_id}),
+    dựa trên yêu cầu "{query}".
+
+    Cách làm:
+    1. Gọi get_user_profile để đọc sở thích đã xác nhận.
+    2. Gọi get_session_candidates để biết ứng viên đã có trong phiên (nếu có).
+    3. Nếu có toạ độ, gọi get_weather_context({lat},{lng}) lấy thời tiết; trời mưa → cân nhắc
+       ưu tiên quán gần / giao tận nơi.
+    4. Gọi propose_profile_delta với constraints rút ra từ hội thoại + weather để sinh đề xuất.
+
+    Ràng buộc HỘI TỤ (RẤT QUAN TRỌNG): gọi MỖI công cụ TỐI ĐA 1 LẦN theo đúng thứ tự trên.
+    TUYỆT ĐỐI KHÔNG gọi lặp lại cùng một công cụ. Sau khi có kết quả từ propose_profile_delta,
+    DỪNG gọi công cụ và tổng hợp câu trả lời cuối cùng ngay.
+
+    Ràng buộc: TUYỆT ĐỐI KHÔNG lưu thay đổi vào hồ sơ — chỉ đề xuất (candidate). Mỗi đề xuất
+    phải kèm lý do (rationale). Nếu không có tín hiệu đủ mạnh, trả danh sách đề xuất rỗng.
+  expected_output: >
+    Danh sách đề xuất thay đổi hồ sơ (có thể rỗng). Mỗi đề xuất: field, operation (add/remove/set),
+    value, confidence (0-1), rationale (lý do bằng tiếng Việt). Kèm weather_summary (tóm tắt thời
+    tiết nếu có) và reasoning (giải thích tổng thể). KHÔNG chứa dấu hiệu đã ghi vào DB.
+  agent: preference_reasoning
+  context:
+    - search_task
+
+explanation_task:
+  description: >
+    Giải thích vì sao các quán trong danh sách ứng viên khớp với nhu cầu "{query}" của người dùng.
+
+    Cách làm:
+    1. Với vài quán tiêu biểu ở đầu danh sách, gọi get_merchant_profile(merchant_id) để lấy
+       hồ sơ 8 chiều (chất lượng món, phục vụ, hình ảnh...).
+    2. Đối chiếu điểm mạnh của quán với tín hiệu sở thích (cuisine thích, ngân sách, khoảng cách)
+       và các đề xuất từ bước suy luận sở thích.
+    3. Viết câu trả lời thân thiện, ngắn gọn cho người dùng.
+
+    Ràng buộc HỘI TỤ (RẤT QUAN TRỌNG): chỉ gọi get_merchant_profile cho TỐI ĐA 3 quán đầu danh
+    sách, MỖI merchant_id gọi ĐÚNG 1 LẦN. TUYỆT ĐỐI KHÔNG gọi lại cùng merchant_id. Sau khi lấy
+    đủ hồ sơ, DỪNG gọi công cụ và viết câu trả lời cuối cùng ngay.
+
+    Ràng buộc: CHỈ dùng dữ kiện có thật từ get_merchant_profile và hồ sơ; không thổi phồng.
+    Nêu tối đa 3 lý do/quán.
+  expected_output: >
+    Một câu trả lời tiếng Việt (2-5 câu) giải thích lựa chọn, kèm: reasons (danh sách lý do ngắn
+    gọn, mỗi lý do gắn với dữ kiện quán hoặc tín hiệu hồ sơ) và referenced_signals (các tín hiệu
+    hồ sơ/chiều dữ liệu đã tham chiếu). Không bịa điểm mạnh không có trong dữ liệu.
+  agent: customer_explanation
+  context:
+    - search_task
+    - preference_task

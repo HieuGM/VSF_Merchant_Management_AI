@@ -37,6 +37,11 @@ class ToolSpec(BaseModel):
     cache_policy: str = "none"
     has_side_effect: bool = False
     source_kind: str = "real"
+    # Optional explicit CrewAI args schema. When set, the CrewAI adapter (agents/
+    # tool_adapter.py) uses it directly so the LLM gets rich field descriptions;
+    # otherwise the adapter derives a loose model from `input_schema`. Additive
+    # optional field — does not change existing registration behaviour.
+    args_schema: type[BaseModel] | None = None
 
 
 class RegisteredTool(BaseModel):

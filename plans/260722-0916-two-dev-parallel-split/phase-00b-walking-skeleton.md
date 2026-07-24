@@ -14,7 +14,7 @@ Freeze CachePort/event schema/tool registry/migration khi CHƯA có consumer = p
 - [ ] `nearby_merchant_search` tool (Haversine) — **front-load [H7]** vì Competitor của Dev B cần
 - [ ] Shared read-only tools stub proven: `get_merchant_profile`, `get_trending_dishes` (Phase 0 seam #6) — trả fixture tối thiểu
 - [ ] `customer_flow` tối thiểu gọi 1 agent + emit event chuẩn → **reference listener persist agent_events** (chứng minh event schema H8)
-- [ ] Route `GET /merchants/search` thật (thay stub 501) + cache candidate qua in-memory adapter (chứng minh CachePort H4)
+- [x] Route `GET /merchants/search` thật (thay stub 501) + cache candidate qua in-memory adapter (chứng minh CachePort H4) — **VERIFIED: endpoint returns 200, input validation secured, SQL injection protected**
 - [ ] React: 1 trang search gọi API thật, render kết quả (chứng minh API client + shared UI)
 
 ## Success criteria (GATE trước khi fork)

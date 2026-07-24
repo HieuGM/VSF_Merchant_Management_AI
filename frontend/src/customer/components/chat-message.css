@@ -1,0 +1,86 @@
+.cmsg { display: flex; gap: 0.5rem; }
+.cmsg--user { justify-content: flex-end; }
+.cmsg--agent { justify-content: flex-start; }
+
+.cmsg__avatar {
+  flex: 0 0 auto;
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  font-size: 1.1rem;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #fff, #ffe9de);
+  box-shadow: var(--shadow-sm);
+}
+
+.cmsg__bubble {
+  max-width: 85%;
+  padding: 0.8rem 0.95rem;
+  border-radius: var(--r-md);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+.cmsg--user .cmsg__bubble {
+  color: #fff;
+  background: var(--grad-brand);
+  border-bottom-right-radius: 6px;
+  box-shadow: var(--shadow-brand);
+}
+.cmsg--agent .cmsg__bubble {
+  color: var(--c-ink);
+  background: var(--glass-bg-strong);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border-bottom-left-radius: 6px;
+  box-shadow: var(--shadow-sm);
+}
+.cmsg__bubble.is-error {
+  color: var(--c-coral-strong);
+  background: rgba(254, 226, 226, 0.9);
+  border-color: rgba(228, 87, 46, 0.3);
+}
+.cmsg__text { margin: 0; white-space: pre-wrap; }
+
+.cmsg__results {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  margin-top: 0.75rem;
+}
+
+.cmsg__suggests {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-top: 0.8rem;
+  padding-top: 0.7rem;
+  border-top: 1px dashed rgba(228, 87, 46, 0.25);
+}
+.cmsg__suggest {
+  background: rgba(255, 247, 237, 0.8);
+  border: 1px solid rgba(245, 158, 11, 0.2);
+  border-radius: var(--r-sm);
+  padding: 0.5rem 0.65rem;
+}
+.cmsg__suggest-main { display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; font-size: 0.82rem; }
+.cmsg__suggest-val { color: var(--c-ink-soft); }
+.cmsg__suggest-pct {
+  margin-left: auto;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--c-amber);
+  background: rgba(245, 158, 11, 0.14);
+  border-radius: var(--r-pill);
+  padding: 0.1rem 0.45rem;
+}
+.cmsg__suggest-why { margin: 0.3rem 0 0; font-size: 0.76rem; color: var(--c-ink-muted); }
+
+.cmsg__warn {
+  list-style: none;
+  margin: 0.7rem 0 0;
+  padding: 0;
+  font-size: 0.78rem;
+  color: var(--c-ink-soft);
+}

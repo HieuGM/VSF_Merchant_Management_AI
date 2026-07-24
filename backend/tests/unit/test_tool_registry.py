@@ -33,5 +33,8 @@ def test_allow_list_enforced(registry):
 
 
 def test_trending_dishes(registry):
+    # DB-first now: 68814 resolves from the real profile (dev fixture is the fallback).
+    # Assert shape, not exact content (content varies by data source).
     result = registry.get("get_trending_dishes").fn("68814")
-    assert result["trending_dishes"] == ["bún bò Huế"]
+    assert result["merchant_id"] == "68814"
+    assert isinstance(result["trending_dishes"], list)

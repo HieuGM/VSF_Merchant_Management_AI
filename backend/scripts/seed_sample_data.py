@@ -15,8 +15,9 @@ from pathlib import Path
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from datetime import datetime
+from datetime import datetime, time
 from json import loads as json_loads
+from typing import Any
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker, Session
 
@@ -26,6 +27,16 @@ from database.models import Merchant, MenuItem, Review
 
 # Sample subset: first 10 merchants from catalog
 SAMPLE_SIZE = 10
+
+
+def _parse_time(value: Any) -> time | None:
+    """Parse 'HH:MM[:SS]' into datetime.time, else None."""
+    if value is None or isinstance(value, time):
+        return value
+    try:
+        return time.fromisoformat(str(value))
+    except (ValueError, TypeError):
+        return None
 
 
 def reset_tables(db: Session) -> None:
@@ -59,6 +70,7 @@ def seed_merchants(db: Session, merchants_data: list[dict]) -> None:
     """Seed merchants table."""
     print("Seeding merchants...")
     for m in merchants_data:
+        open_hours = m.get("merchant_open_hours") or {}
         merchant = Merchant(
             merchant_id=str(m["merchant_id"]),
             name=m.get("merchant_name", m["merchant_id"]),
@@ -68,7 +80,12 @@ def seed_merchants(db: Session, merchants_data: list[dict]) -> None:
             address=m.get("merchant_address"),
             lat=m.get("merchant_lat"),
             lng=m.get("merchant_lng"),
-            open_hours=m.get("merchant_open_hours"),
+            opens_at=_parse_time(open_hours.get("open")),
+            closes_at=_parse_time(open_hours.get("close")),
+            # merchant-level tags are the canonical owner (moved off menu_items)
+            diet_tags=m.get("diet_tags", []),
+            ingredient_tags=m.get("ingredient_tags", []),
+            taste_tags=m.get("taste_tags", []),
         )
         db.add(merchant)
     db.commit()
@@ -79,6 +96,7 @@ def seed_menu_items(db: Session, merchants_data: list[dict]) -> None:
     """Seed menu_items table (each merchant record = 1 menu item)."""
     print("Seeding menu items...")
     for m in merchants_data:
+        image_url = m.get("image_url")
         item = MenuItem(
             merchant_id=str(m["merchant_id"]),
             item_id=m.get("item_id", f"{m['merchant_id']}_item_1"),
@@ -86,10 +104,8 @@ def seed_menu_items(db: Session, merchants_data: list[dict]) -> None:
             category=m.get("category", "Món Việt"),
             price=m.get("price", 50000),
             description=m.get("description"),
-            diet_tags=m.get("diet_tags", []),
-            ingredient_tags=m.get("ingredient_tags", []),
-            taste_tags=m.get("taste_tags", []),
-            image_url=m.get("image_url"),
+            image_url=image_url,
+            has_photo=bool(image_url),
         )
         db.add(item)
     db.commit()

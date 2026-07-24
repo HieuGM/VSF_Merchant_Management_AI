@@ -138,15 +138,13 @@ def service(crawled, text):
 
 def waiting_time(ops, catalog, text):
     prep = ops.get("operation_kpis", {}).get("avg_prep_minutes") or catalog.get("avg_prep_minutes") or 15
-    cc = _complaints_by_cat(text)
-    late = cc.get("giao_hàng_trễ", 0)
     # prep thap -> score cao (5 phut ~1.0, 45 phut ~0.0)
-    score = clamp(1 - (prep - 5) / 40.0 - 0.03 * late)
+    # chi dua tren prep thuan: giao_hang_tre thuoc delivery, khong phai toc do bep
+    score = clamp(1 - (prep - 5) / 40.0)
     ev = [
         {"type": "avg_prep_minutes", "value": prep},
-        {"type": "late_complaint_count", "value": late},
     ]
-    return round(score, 3), ev, "prep time + complaints"
+    return round(score, 3), ev, "prep time"
 
 
 def menu_diversity(crawled):

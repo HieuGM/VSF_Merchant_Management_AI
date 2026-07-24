@@ -1,0 +1,36 @@
+.qprompts {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+.qprompts--col { flex-direction: column; flex-wrap: nowrap; }
+
+.qprompt {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  text-align: left;
+  font: inherit;
+  font-size: 0.83rem;
+  font-weight: 600;
+  color: var(--c-ink-soft);
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--r-pill);
+  padding: 0.55rem 0.85rem;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+.qprompts--col .qprompt {
+  border-radius: var(--r-md);
+  padding: 0.75rem 0.9rem;
+}
+.qprompt:hover {
+  transform: translateY(-2px);
+  background: #fff;
+  box-shadow: var(--shadow-sm);
+}
+.qprompt__icon {
+  flex: 0 0 auto;
+  font-size: 1.05rem;
+}
