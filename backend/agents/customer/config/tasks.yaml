@@ -29,7 +29,7 @@ search_task:
     - Nếu công cụ trả rỗng → trả candidates=[] (rỗng). Ít kết quả thật tốt hơn nhiều kết quả giả.
     - KHÔNG gọi lặp công cụ, KHÔNG xen kẽ nearby/merchant_search để "lấy thêm".
   expected_output: >
-    Danh sách quán ứng viên (tối đa 10) LẤY TỪ kết quả công cụ — mỗi quán: merchant_id, name,
+    Danh sách quán ứng viên (tối đa 3) LẤY TỪ kết quả công cụ — mỗi quán: merchant_id, name,
     cuisine, address, distance_km (nếu có toạ độ), avg_rating, match_score. Kèm applied_filters
     (các bộ lọc đã dùng) và count. candidates CÓ THỂ RỖNG khi khu vực không có dữ liệu hoặc
     constraint quá khắt khe — đó là kết quả ĐÚNG, không phải lỗi.
@@ -58,8 +58,8 @@ preference_task:
     confidence (0-1), rationale (lý do tiếng Việt, truy nguồn tín hiệu). Kèm weather_summary
     (nếu có) và reasoning (giải thích tổng thể). KHÔNG chứa dấu hiệu đã ghi DB.
   agent: preference_reasoning
-  context:
-    - search_task
+  # Không context: [search_task] — preference đọc user_profile/weather/session riêng, độc lập
+  # runtime với search → chạy song song (xem async_execution trong customer_crew.py).
 
 explanation_task:
   description: >

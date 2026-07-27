@@ -92,16 +92,22 @@ class CustomerDiscoveryCrew:
     # (map_all_task_variables), so no explicit `agent=` kwarg is needed here.
     @task
     def search_task(self) -> Task:
+        # async_execution=True: runs in parallel with preference_task (no runtime dep — preference
+        # reads profile/weather/session, not search output). explanation_task waits for both via its
+        # context. Saves ~10s (the search duration) off the critical path.
         return Task(
             config=self.tasks_config["search_task"],
             output_pydantic=SearchTaskOutput,
+            async_execution=True,
         )
 
     @task
     def preference_task(self) -> Task:
+        # async_execution=True: runs in parallel with search_task.
         return Task(
             config=self.tasks_config["preference_task"],
             output_pydantic=PreferenceTaskOutput,
+            async_execution=True,
         )
 
     @task
