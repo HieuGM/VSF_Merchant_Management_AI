@@ -87,6 +87,14 @@ class CustomerFlow:
             )
         )
 
+        # Geo: when the user supplied coords, default radius to 5km so the search_task
+        # prompt has a concrete radius (and the search agent is locked to nearby_merchant_search
+        # — see build_customer_crew(has_location=...)). Without this, radius_km="" leaks through
+        # and the agent can return country-wide results.
+        has_location = lat is not None and lng is not None
+        if has_location and radius_km is None:
+            radius_km = 5.0
+
         inputs = _build_inputs(
             query=query, cuisine=cuisine, city=city, budget=budget,
             lat=lat, lng=lng, radius_km=radius_km,
@@ -97,7 +105,7 @@ class CustomerFlow:
             if crew is None:
                 from agents.customer.customer_crew import build_customer_crew
 
-                crew = build_customer_crew()
+                crew = build_customer_crew(has_location=has_location)
 
             with run_scope(trace_id, self._repo), tool_call_scope():
                 crew_output = crew.kickoff(inputs=inputs)

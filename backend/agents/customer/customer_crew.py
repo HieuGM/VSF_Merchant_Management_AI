@@ -70,19 +70,34 @@ class CustomerDiscoveryCrew:
     agents_config = "config/agents.yaml"
     tasks_config = "config/tasks.yaml"
 
-    def __init__(self, llm_fast: LLM | None = None, llm_strong: LLM | None = None) -> None:
+    def __init__(
+        self,
+        llm_fast: LLM | None = None,
+        llm_strong: LLM | None = None,
+        has_location: bool = False,
+    ) -> None:
         # Defer live LLM construction so tests can inject fakes without a key.
         self._llm_fast = llm_fast or _build_fast_llm()
         self._llm_strong = llm_strong or _build_strong_llm()
+        # When the user supplied coords, lock the search agent to nearby_merchant_search
+        # (haversine hard-filter → correct city). Otherwise it only gets merchant_search
+        # (text/cuisine, all-VN). This removes the LLM's freedom to pick the non-geo tool
+        # and leak far-away results (the HCM-instead-of-HN bug).
+        self._has_location = has_location
 
     # --- agents (method name MUST equal the YAML key) ---
     @agent
     def restaurant_search(self) -> Agent:
         # Fast model (gpt-oss-20b): tool selection is trivial, runs on the parallel/hidden path.
+        # Tool set is LOCKED by location (see __init__): nearby_merchant_search only when coords
+        # are known (haversine hard-filter → correct city), merchant_search only otherwise.
+        tools = tools_for_crew_agent("restaurant_search")
+        wanted = "nearby_merchant_search" if self._has_location else "merchant_search"
+        tools = [t for t in tools if t.name == wanted]
         return Agent(
             config=self.agents_config["restaurant_search"],
             llm=self._llm_fast,
-            tools=tools_for_crew_agent("restaurant_search"),
+            tools=tools,
         )
 
     @agent
@@ -162,6 +177,10 @@ class CustomerDiscoveryCrew:
 def build_customer_crew(
     llm_fast: LLM | None = None,
     llm_strong: LLM | None = None,
+    has_location: bool = False,
 ) -> Crew:
-    """Factory — returns a ready Crew. Pass fake LLMs in tests to avoid network/key."""
-    return CustomerDiscoveryCrew(llm_fast=llm_fast, llm_strong=llm_strong).crew()
+    """Factory — returns a ready Crew. Pass fake LLMs in tests to avoid network/key.
+    `has_location` locks the search agent to nearby_merchant_search (geo hard-filter)."""
+    return CustomerDiscoveryCrew(
+        llm_fast=llm_fast, llm_strong=llm_strong, has_location=has_location
+    ).crew()

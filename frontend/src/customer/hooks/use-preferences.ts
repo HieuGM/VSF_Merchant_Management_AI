@@ -15,6 +15,10 @@ export interface Preferences {
   likedCuisines: string[];
   dislikedCuisines: string[];
   useLocation: boolean;
+  /** True only after the user fetched live geolocation OR manually entered coords.
+   *  Gates whether coords are sent — prevents the HCM placeholder default from leaking
+   *  when `useLocation` is on but no real location was ever captured. */
+  locationReady: boolean;
   lat: number;
   lng: number;
 }
@@ -27,6 +31,8 @@ const DEFAULTS: Preferences = {
   likedCuisines: [],
   dislikedCuisines: [],
   useLocation: false,
+  locationReady: false,
+  // Placeholder only (HCM). Never sent unless `locationReady` is true.
   lat: 10.79,
   lng: 106.66,
 };

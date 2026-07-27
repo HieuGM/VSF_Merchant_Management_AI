@@ -25,9 +25,22 @@ export default function PreferenceCenter() {
   const { prefs, update, toggleIn } = usePreferences();
   const geo = useGeolocation();
 
+  const toggleUseLocation = async (checked: boolean) => {
+    if (!checked) {
+      update({ useLocation: false });
+      return;
+    }
+    // Reveal manual coord inputs and attempt to prefill via live geolocation.
+    // locationReady only flips on success — a denied/failed geo leaves chat
+    // location-sending OFF until the user enters coords manually.
+    update({ useLocation: true });
+    const coords = await geo.request();
+    if (coords) update({ locationReady: true, lat: coords.lat, lng: coords.lng });
+  };
+
   const useMyLocation = async () => {
     const coords = await geo.request();
-    if (coords) update({ lat: coords.lat, lng: coords.lng, useLocation: true });
+    if (coords) update({ lat: coords.lat, lng: coords.lng, locationReady: true });
   };
 
   return (
@@ -114,7 +127,8 @@ export default function PreferenceCenter() {
             <input
               type="checkbox"
               checked={prefs.useLocation}
-              onChange={(e) => update({ useLocation: e.target.checked })}
+              onChange={(e) => toggleUseLocation(e.target.checked)}
+              disabled={geo.status === "loading"}
             />
           </label>
 
@@ -138,7 +152,7 @@ export default function PreferenceCenter() {
                   type="number"
                   value={prefs.lat}
                   step="0.001"
-                  onChange={(e) => update({ lat: Number(e.target.value) })}
+                  onChange={(e) => update({ lat: Number(e.target.value), locationReady: true })}
                 />
               </label>
               <label>
@@ -148,7 +162,7 @@ export default function PreferenceCenter() {
                   type="number"
                   value={prefs.lng}
                   step="0.001"
-                  onChange={(e) => update({ lng: Number(e.target.value) })}
+                  onChange={(e) => update({ lng: Number(e.target.value), locationReady: true })}
                 />
               </label>
             </div>

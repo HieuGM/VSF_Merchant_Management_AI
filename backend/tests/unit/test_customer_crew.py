@@ -52,3 +52,16 @@ def test_agents_only_have_allowlisted_tools(fake_llm_fast, fake_llm_strong):
     reasoning = next(a for a in crew.agents if "Suy luận" in a.role)
     names = {t.name for t in reasoning.tools}
     assert "merchant_search" not in names  # not allow-listed for this agent
+
+
+def test_search_agent_tools_lock_by_location(fake_llm_fast, fake_llm_strong):
+    """Location locks the search agent's tool: nearby-only with coords (geo hard-filter →
+    correct city), merchant_search-only without. Prevents the HCM-instead-of-HN leak."""
+    _ensure_tools()
+    with_loc = build_customer_crew(llm_fast=fake_llm_fast, llm_strong=fake_llm_strong, has_location=True)
+    search_with = next(a for a in with_loc.agents if "Tìm kiếm" in a.role)
+    assert {t.name for t in search_with.tools} == {"nearby_merchant_search"}
+
+    no_loc = build_customer_crew(llm_fast=fake_llm_fast, llm_strong=fake_llm_strong, has_location=False)
+    search_without = next(a for a in no_loc.agents if "Tìm kiếm" in a.role)
+    assert {t.name for t in search_without.tools} == {"merchant_search"}

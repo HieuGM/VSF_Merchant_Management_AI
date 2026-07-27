@@ -30,9 +30,12 @@ export default function CustomerChat() {
     const text = raw.trim();
     if (!text || sending) return;
     setDraft("");
+    // Only send location when the user both opted in AND captured real coords
+    // (live geolocation or manual entry) — never the HCM placeholder default.
+    const hasCoords = prefs.useLocation && prefs.locationReady;
     send({
       message: text + preferencesToContext(prefs),
-      location: prefs.useLocation ? { lat: prefs.lat, lng: prefs.lng } : null,
+      location: hasCoords ? { lat: prefs.lat, lng: prefs.lng } : null,
     });
   };
 
