@@ -5,13 +5,14 @@ assigns a per-agent LLM, and wires the fixed discovery workflow directly. The th
 tasks already declare their dependencies (`context:`) and agent assignment (`agent:`),
 so a manager LLM only adds latency without adding information to the final response.
 
-LLM: FPT Cloud DeepSeek-V4-Flash for ALL three specialists. An earlier hybrid design
-(NIM llama-3.1-8b for search) was reverted: the 8B model skipped the search tool on
-queries matching its parametric knowledge (e.g. "sushi ở Mộc Châu") and fabricated
-plausible merchants instead of calling merchant_search — a hallucination failure mode
-the prompt could not fix. DeepSeek follows the tool-calling contract reliably.
+Hybrid LLM (FPT, OpenAI-compatible):
+  - restaurant_search + preference_reasoning → gpt-oss-20b (fastest tool-caller ~0.69s;
+    tool selection + multi-tool reasoning are well within 20B capability, and these run
+    on the parallel/hidden part of the graph).
+  - customer_explanation → DeepSeek-V4-Flash (stronger Vietnamese NLG + reasoning for the
+    final user-facing answer). This is the visible quality lever.
 
-Tests inject a fake `llm_fpt` so no network/key is required.
+Tests inject fake `llm_fast` / `llm_strong` so no network/key is required.
 """
 from __future__ import annotations
 
@@ -28,20 +29,31 @@ from models.customer_tasks import (
 )
 
 
-def _build_fpt_llm() -> LLM:
-    """Build FPT Cloud DeepSeek LLM for all specialists (tool-calling + reasoning + NLG).
+def _build_fast_llm() -> LLM:
+    """gpt-oss-20b for search + preference — fastest tool-caller on FPT (~0.69s/call)."""
+    s = get_settings()
+    if not s.fpt_configured:
+        raise ConfigError(
+            "FPT Cloud AI chưa được cấu hình — cần FPT_API_KEY, FPT_BASE_URL, FPT_MODEL_FAST"
+        )
+    return LLM(
+        model=f"openai/{s.fpt_model_fast}",
+        api_key=s.fpt_api_key,
+        base_url=s.fpt_base_url,
+    )
 
-    Raises ConfigError if FPT not configured."""
+
+def _build_strong_llm() -> LLM:
+    """DeepSeek-V4-Flash for explanation — stronger Vietnamese NLG + reasoning for the
+    final user-facing answer."""
     s = get_settings()
     if not s.fpt_configured:
         raise ConfigError(
             "FPT Cloud AI chưa được cấu hình — cần FPT_API_KEY, FPT_BASE_URL, FPT_MODEL_DEEPSEEK"
         )
+    model = s.fpt_model_deepseek or "DeepSeek-V4-Flash"
     return LLM(
-        # gpt-oss-20b: fastest tool-caller on FPT (~0.69s vs DeepSeek-V4-Flash 1.25s per call),
-        # agentic-optimized, holds Vietnamese NLG + anti-hallucination quality. Crew runs ~2x
-        # faster end-to-end. Override via FPT_MODEL_FAST in .env if a different model is wanted.
-        model=f"openai/{s.fpt_model_fast}",
+        model=f"openai/{model}",
         api_key=s.fpt_api_key,
         base_url=s.fpt_base_url,
     )
@@ -53,40 +65,41 @@ class CustomerDiscoveryCrew:
 
     No manager/coordinator: the task graph (search → preference → explanation) is fixed via
     `context:` deps + per-task `agent:` in YAML, so each task runs its assigned specialist
-    directly. This removes a manager LLM hop per task (latency) and the hierarchical timeout
-    failure mode."""
+    directly. Hybrid LLM: fast model for search/preference, strong model for explanation."""
 
     agents_config = "config/agents.yaml"
     tasks_config = "config/tasks.yaml"
 
-    def __init__(self, llm_fpt: LLM | None = None) -> None:
-        # Defer live LLM construction so tests can inject a fake without a key.
-        self._llm_fpt = llm_fpt or _build_fpt_llm()
+    def __init__(self, llm_fast: LLM | None = None, llm_strong: LLM | None = None) -> None:
+        # Defer live LLM construction so tests can inject fakes without a key.
+        self._llm_fast = llm_fast or _build_fast_llm()
+        self._llm_strong = llm_strong or _build_strong_llm()
 
     # --- agents (method name MUST equal the YAML key) ---
     @agent
     def restaurant_search(self) -> Agent:
-        # DeepSeek (was NIM-8b): the 8B model skipped the search tool on parametric-knowledge
-        # queries and fabricated merchants. DeepSeek calls the tool reliably → no hallucination.
+        # Fast model (gpt-oss-20b): tool selection is trivial, runs on the parallel/hidden path.
         return Agent(
             config=self.agents_config["restaurant_search"],
-            llm=self._llm_fpt,
+            llm=self._llm_fast,
             tools=tools_for_crew_agent("restaurant_search"),
         )
 
     @agent
     def preference_reasoning(self) -> Agent:
+        # Fast model: 4 tool calls + structured delta — within 20B capability.
         return Agent(
             config=self.agents_config["preference_reasoning"],
-            llm=self._llm_fpt,
+            llm=self._llm_fast,
             tools=tools_for_crew_agent("preference_reasoning"),
         )
 
     @agent
     def customer_explanation(self) -> Agent:
+        # Strong model (DeepSeek): user-facing Vietnamese NLG + tone — the quality lever.
         return Agent(
             config=self.agents_config["customer_explanation"],
-            llm=self._llm_fpt,
+            llm=self._llm_strong,
             tools=tools_for_crew_agent("customer_explanation"),
         )
 
@@ -121,7 +134,7 @@ class CustomerDiscoveryCrew:
         )
 
     # Task graph: fixed sequential execution.
-    # search_task → preference_task (context: search) → explanation_task (context: both).
+    # search_task → preference_task (parallel) → explanation_task (context: both).
     @crew
     def crew(self) -> Crew:
         return Crew(
@@ -146,6 +159,9 @@ class CustomerDiscoveryCrew:
         )
 
 
-def build_customer_crew(llm_fpt: LLM | None = None) -> Crew:
-    """Factory — returns a ready Crew. Pass a fake LLM in tests to avoid network/key."""
-    return CustomerDiscoveryCrew(llm_fpt=llm_fpt).crew()
+def build_customer_crew(
+    llm_fast: LLM | None = None,
+    llm_strong: LLM | None = None,
+) -> Crew:
+    """Factory — returns a ready Crew. Pass fake LLMs in tests to avoid network/key."""
+    return CustomerDiscoveryCrew(llm_fast=llm_fast, llm_strong=llm_strong).crew()

@@ -30,8 +30,14 @@ class FakeLLM(LLM):
 
 
 @pytest.fixture
-def fake_llm_fpt() -> "FakeLLM":
-    """Fake FPT DeepSeek LLM for all customer specialists (no network/key needed)."""
+def fake_llm_fast() -> "FakeLLM":
+    """Fake fast LLM (gpt-oss-20b) for restaurant_search + preference_reasoning."""
+    return FakeLLM("openai/gpt-oss-20b")
+
+
+@pytest.fixture
+def fake_llm_strong() -> "FakeLLM":
+    """Fake strong LLM (DeepSeek-V4-Flash) for customer_explanation."""
     return FakeLLM("openai/DeepSeek-V4-Flash")
 
 
