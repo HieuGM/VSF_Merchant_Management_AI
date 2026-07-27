@@ -5,12 +5,13 @@ assigns a per-agent LLM, and wires the fixed discovery workflow directly. The th
 tasks already declare their dependencies (`context:`) and agent assignment (`agent:`),
 so a manager LLM only adds latency without adding information to the final response.
 
-Hybrid LLM (OpenAI-compatible, vendor via settings):
-  - restaurant_search      → NVIDIA NIM llama-3.1-8b-instruct  (fast tool-calling)
-  - preference_reasoning   → FPT Cloud DeepSeek-V4-Flash      (multi-tool reasoning)
-  - customer_explanation   → FPT Cloud DeepSeek-V4-Flash      (natural language)
+LLM: FPT Cloud DeepSeek-V4-Flash for ALL three specialists. An earlier hybrid design
+(NIM llama-3.1-8b for search) was reverted: the 8B model skipped the search tool on
+queries matching its parametric knowledge (e.g. "sushi ở Mộc Châu") and fabricated
+plausible merchants instead of calling merchant_search — a hallucination failure mode
+the prompt could not fix. DeepSeek follows the tool-calling contract reliably.
 
-Tests inject fake `llm_nim` / `llm_fpt` so no network/key is required.
+Tests inject a fake `llm_fpt` so no network/key is required.
 """
 from __future__ import annotations
 
@@ -27,26 +28,10 @@ from models.customer_tasks import (
 )
 
 
-def _build_nim_llm() -> LLM:
-    """Build NVIDIA NIM 8B LLM for the restaurant_search agent (fast tool-calling).
-
-    8B is sufficient for deterministic nearby/merchant tool selection and avoids spending
-    DeepSeek budget on a trivial retrieval step. Raises ConfigError if unkeyed."""
-    s = get_settings()
-    if not s.nvidia_nim_api_key:
-        raise ConfigError("NVIDIA_NIM_API_KEY required for NIM LLM")
-    return LLM(
-        model=f"{s.llm_provider}/{s.llm_model_small}",
-        api_key=s.nvidia_nim_api_key,
-        base_url=s.llm_base_url,
-    )
-
-
 def _build_fpt_llm() -> LLM:
-    """Build FPT Cloud DeepSeek LLM for reasoning/explanation agents.
+    """Build FPT Cloud DeepSeek LLM for all specialists (tool-calling + reasoning + NLG).
 
-    DeepSeek-V4-Flash provides strong multi-tool reasoning + natural Vietnamese generation
-    with fast inference. Raises ConfigError if FPT not configured."""
+    Raises ConfigError if FPT not configured."""
     s = get_settings()
     if not s.fpt_configured:
         raise ConfigError(
@@ -71,24 +56,23 @@ class CustomerDiscoveryCrew:
     agents_config = "config/agents.yaml"
     tasks_config = "config/tasks.yaml"
 
-    def __init__(self, llm_nim: LLM | None = None, llm_fpt: LLM | None = None) -> None:
-        # Defer live LLM construction so tests can inject fakes without a key.
-        self._llm_nim = llm_nim or _build_nim_llm()
+    def __init__(self, llm_fpt: LLM | None = None) -> None:
+        # Defer live LLM construction so tests can inject a fake without a key.
         self._llm_fpt = llm_fpt or _build_fpt_llm()
 
     # --- agents (method name MUST equal the YAML key) ---
     @agent
     def restaurant_search(self) -> Agent:
-        # NIM 8B for search — fast, doesn't need complex reasoning (tool selection only).
+        # DeepSeek (was NIM-8b): the 8B model skipped the search tool on parametric-knowledge
+        # queries and fabricated merchants. DeepSeek calls the tool reliably → no hallucination.
         return Agent(
             config=self.agents_config["restaurant_search"],
-            llm=self._llm_nim,
+            llm=self._llm_fpt,
             tools=tools_for_crew_agent("restaurant_search"),
         )
 
     @agent
     def preference_reasoning(self) -> Agent:
-        # FPT DeepSeek for complex multi-tool reasoning (profile + weather + delta).
         return Agent(
             config=self.agents_config["preference_reasoning"],
             llm=self._llm_fpt,
@@ -97,7 +81,6 @@ class CustomerDiscoveryCrew:
 
     @agent
     def customer_explanation(self) -> Agent:
-        # FPT DeepSeek for natural Vietnamese explanation generation.
         return Agent(
             config=self.agents_config["customer_explanation"],
             llm=self._llm_fpt,
@@ -154,9 +137,6 @@ class CustomerDiscoveryCrew:
         )
 
 
-def build_customer_crew(
-    llm_nim: LLM | None = None,
-    llm_fpt: LLM | None = None,
-) -> Crew:
-    """Factory — returns a ready Crew. Pass fake LLMs in tests to avoid network/key."""
-    return CustomerDiscoveryCrew(llm_nim=llm_nim, llm_fpt=llm_fpt).crew()
+def build_customer_crew(llm_fpt: LLM | None = None) -> Crew:
+    """Factory — returns a ready Crew. Pass a fake LLM in tests to avoid network/key."""
+    return CustomerDiscoveryCrew(llm_fpt=llm_fpt).crew()

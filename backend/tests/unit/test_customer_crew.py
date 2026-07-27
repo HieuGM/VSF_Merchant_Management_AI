@@ -1,6 +1,8 @@
 """Customer crew assembly with fake LLM — no network/key (Phase 07 tests 8, 8b).
 
-Sequential process: 3 specialists, no coordinator/manager.
+Sequential process: 3 specialists, no coordinator/manager. All agents use one LLM
+(DeepSeek); the earlier NIM-8b hybrid for search was reverted (8B skipped the tool
+and fabricated merchants on parametric-knowledge queries).
 """
 from __future__ import annotations
 
@@ -16,9 +18,9 @@ def _ensure_tools():
         registry.auto_discover("tools.customer")
 
 
-def test_crew_builds_without_network(fake_llm_nim, fake_llm_fpt):
+def test_crew_builds_without_network(fake_llm_fpt):
     _ensure_tools()
-    crew = build_customer_crew(llm_nim=fake_llm_nim, llm_fpt=fake_llm_fpt)
+    crew = build_customer_crew(llm_fpt=fake_llm_fpt)
     # Sequential process — no manager agent.
     assert crew.process == Process.sequential
     assert crew.manager_agent is None
@@ -26,28 +28,27 @@ def test_crew_builds_without_network(fake_llm_nim, fake_llm_fpt):
     assert len(crew.tasks) == 3
 
 
-def test_per_agent_llm_tier(fake_llm_nim, fake_llm_fpt):
+def test_all_agents_use_same_llm(fake_llm_fpt):
+    """All three specialists share the single injected LLM (DeepSeek)."""
     _ensure_tools()
-    crew = build_customer_crew(llm_nim=fake_llm_nim, llm_fpt=fake_llm_fpt)
-    # restaurant_search uses NIM 8B (fast for search).
-    search = next(a for a in crew.agents if "Tìm kiếm" in a.role)
-    assert "8b" in search.llm.model
-    # preference_reasoning + customer_explanation use FPT DeepSeek (strong reasoning).
-    reasoning = next(a for a in crew.agents if "Suy luận" in a.role)
-    explanation = next(a for a in crew.agents if "Giải thích" in a.role)
-    assert "DeepSeek" in reasoning.llm.model and "DeepSeek" in explanation.llm.model
+    crew = build_customer_crew(llm_fpt=fake_llm_fpt)
+    models = {a.llm.model for a in crew.agents}
+    assert models == {"openai/DeepSeek-V4-Flash"}
+    # Sanity: the three specialist roles are present.
+    roles = "\n".join(a.role for a in crew.agents)
+    assert "Tìm kiếm" in roles and "Suy luận" in roles and "Giải thích" in roles
 
 
-def test_specialists_do_not_delegate(fake_llm_nim, fake_llm_fpt):
+def test_specialists_do_not_delegate(fake_llm_fpt):
     """Sequential specialists never delegate (no coordinator to hand off to)."""
     _ensure_tools()
-    crew = build_customer_crew(llm_nim=fake_llm_nim, llm_fpt=fake_llm_fpt)
+    crew = build_customer_crew(llm_fpt=fake_llm_fpt)
     assert all(a.allow_delegation is False for a in crew.agents)
 
 
-def test_agents_only_have_allowlisted_tools(fake_llm_nim, fake_llm_fpt):
+def test_agents_only_have_allowlisted_tools(fake_llm_fpt):
     _ensure_tools()
-    crew = build_customer_crew(llm_nim=fake_llm_nim, llm_fpt=fake_llm_fpt)
+    crew = build_customer_crew(llm_fpt=fake_llm_fpt)
     reasoning = next(a for a in crew.agents if "Suy luận" in a.role)
     names = {t.name for t in reasoning.tools}
     assert "merchant_search" not in names  # not allow-listed for this agent

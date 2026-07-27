@@ -30,14 +30,8 @@ class FakeLLM(LLM):
 
 
 @pytest.fixture
-def fake_llm_nim() -> "FakeLLM":
-    """Fake NIM LLM for restaurant_search agent (8B model for speed)."""
-    return FakeLLM("openai/meta/llama-3.1-8b-instruct")
-
-
-@pytest.fixture
 def fake_llm_fpt() -> "FakeLLM":
-    """Fake FPT DeepSeek LLM for reasoning/explanation agents (fast + strong reasoning)."""
+    """Fake FPT DeepSeek LLM for all customer specialists (no network/key needed)."""
     return FakeLLM("openai/DeepSeek-V4-Flash")
 
 

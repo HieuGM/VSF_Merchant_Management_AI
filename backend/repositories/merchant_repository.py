@@ -1,17 +1,17 @@
 """Merchant repository (C-01) — data access layer for UC-04 search.
 
 Provides CRUD and search operations for merchants, menu items, and reviews.
-Phase 0b: basic query + geo search foundation for UC-04 slice.
+Optimized: eager-loads ratings + profile to eliminate N+1 query patterns.
 """
 from __future__ import annotations
 
-from datetime import datetime, time
+from datetime import time
 from typing import Any
 
-from sqlalchemy import select, and_, or_, exists
-from sqlalchemy.orm import Session
+from sqlalchemy import select, and_, or_, func
+from sqlalchemy.orm import Session, joinedload
 
-from database.models import Merchant, MenuItem, Review
+from database.models import Merchant, MenuItem, Review, MerchantProfile, MerchantRating
 from core.errors import NotFoundError
 
 
@@ -62,24 +62,25 @@ class MerchantRepository:
     ) -> list[Merchant]:
         """Search merchants with filters (§11.2 UC-04).
 
+        Eager-loads `ratings` and `profile` so callers can access them without
+        extra DB round-trips (eliminates N+1).
+
         Supports:
-        - Full-text search (name + description)
+        - Full-text search (name + cuisine + menu items)
         - Cuisine, city filters
         - Price range (from menu items)
-        - Rating filter (from reviews)
-        - Geo-spatial search (lat/lng + radius)
+        - Rating filter (from platform ratings)
+        - Geo-spatial search (lat/lng + radius via service layer)
         """
-        stmt = select(Merchant)
+        stmt = select(Merchant).options(
+            joinedload(Merchant.ratings),
+            joinedload(Merchant.profile),
+        )
 
-        # Build filters
         conditions = []
 
         if query:
-            # Free-text search across merchant name, cuisine, AND menu-item names, so a
-            # DISH keyword ("phở", "cơm tấm", "trà sữa") finds merchants that sell it even
-            # when their cuisine column is a broad category ("Món Việt"). The menu match
-            # is a correlated EXISTS to avoid row duplication.
-            # Escape LIKE special chars (backslash first) to prevent injection.
+            # Free-text search across merchant name, cuisine, AND menu-item names.
             escaped_query = query.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
             query_pattern = f"%{escaped_query}%"
             menu_match = (
@@ -99,38 +100,87 @@ class MerchantRepository:
             )
 
         if cuisine:
-            conditions.append(Merchant.cuisine == cuisine)
+            conditions.append(Merchant.cuisine.ilike(f"%{cuisine}%"))
 
         if city:
-            conditions.append(Merchant.city == city)
+            # Match either the city field (case-insensitive exact) OR the address containing
+            # the term — users often say a district ("Cầu Giấy", "Tây Hồ", "Quận 1") which
+            # lives in `address`, not the city field (which holds province/city like "Hà Nội").
+            escaped_city = city.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+            city_pattern = f"%{escaped_city}%"
+            conditions.append(
+                or_(
+                    Merchant.city.ilike(city, escape="\\"),
+                    Merchant.address.ilike(city_pattern, escape="\\"),
+                )
+            )
 
         if min_price is not None or max_price is not None:
-            # Join with menu items for price filtering
-            stmt = stmt.outerjoin(MenuItem)
+            price_conditions = [MenuItem.merchant_id == Merchant.merchant_id]
             if min_price is not None:
-                conditions.append(MenuItem.price >= min_price)
+                price_conditions.append(MenuItem.price >= min_price)
             if max_price is not None:
-                conditions.append(MenuItem.price <= max_price)
+                price_conditions.append(MenuItem.price <= max_price)
+            price_match = select(MenuItem.item_id).where(and_(*price_conditions)).exists()
+            conditions.append(price_match)
 
         if min_rating is not None:
-            # Join with reviews for rating filtering
-            stmt = stmt.outerjoin(Review)
-            conditions.append(Review.rating >= min_rating)
+            # Filter by platform rating (ShopeeFood 0..5 scale) — NOT review average.
+            conditions.append(
+                select(MerchantRating.merchant_id)
+                .where(
+                    MerchantRating.merchant_id == Merchant.merchant_id,
+                    MerchantRating.shopeefood_rating >= min_rating,
+                )
+                .exists()
+            )
 
         if conditions:
             stmt = stmt.where(and_(*conditions))
 
-        # Geo-spatial filtering (Haversine applied in service layer for now)
-        # TODO: Add native Haversine function to PostgreSQL in Phase 1
-
         stmt = stmt.distinct().order_by(Merchant.name).limit(limit).offset(offset)
-        result = self._db.execute(stmt).scalars().all()
+        result = self._db.execute(stmt).unique().scalars().all()
         return list(result)
 
     def get_menu_items(self, merchant_id: str) -> list[MenuItem]:
         """Fetch all menu items for a merchant."""
         stmt = select(MenuItem).where(MenuItem.merchant_id == merchant_id)
         return list(self._db.execute(stmt).scalars().all())
+
+    def get_top_menu_items(self, merchant_id: str, limit: int = 3) -> list[MenuItem]:
+        """Fetch top menu items by popularity (total_like) for a merchant."""
+        stmt = (
+            select(MenuItem)
+            .where(MenuItem.merchant_id == merchant_id)
+            .order_by(MenuItem.total_like.desc())
+            .limit(limit)
+        )
+        return list(self._db.execute(stmt).scalars().all())
+
+    def get_top_menu_items_batch(
+        self, merchant_ids: list[str], per_merchant: int = 3
+    ) -> dict[str, list[MenuItem]]:
+        """Batch-fetch top menu items for multiple merchants in one query.
+
+        Uses a window function to rank items per merchant, then filters.
+        Returns {merchant_id: [items]}."""
+        if not merchant_ids:
+            return {}
+        rank_col = func.row_number().over(
+            partition_by=MenuItem.merchant_id,
+            order_by=MenuItem.total_like.desc(),
+        ).label("rn")
+        sub = (
+            select(MenuItem, rank_col)
+            .where(MenuItem.merchant_id.in_(merchant_ids))
+            .subquery()
+        )
+        stmt = select(MenuItem).join(sub, MenuItem.item_id == sub.c.item_id).where(sub.c.rn <= per_merchant)
+        items = list(self._db.execute(stmt).scalars().all())
+        result: dict[str, list[MenuItem]] = {mid: [] for mid in merchant_ids}
+        for item in items:
+            result.setdefault(item.merchant_id, []).append(item)
+        return result
 
     def get_reviews(self, merchant_id: str, limit: int = 10) -> list[Review]:
         """Fetch recent reviews for a merchant."""
@@ -142,15 +192,19 @@ class MerchantRepository:
         )
         return list(self._db.execute(stmt).scalars().all())
 
-    def get_avg_rating(self, merchant_id: str) -> float | None:
-        """Calculate average rating for a merchant."""
-        stmt = select(Review.rating).where(
-            Review.merchant_id == merchant_id, Review.rating.is_not(None)
-        )
-        ratings = list(self._db.execute(stmt).scalars().all())
-        if not ratings:
-            return None
-        return sum(ratings) / len(ratings)
+    def get_platform_rating(self, merchant_id: str) -> float | None:
+        """Get authoritative platform rating (ShopeeFood or Foody).
+
+        Prefers ShopeeFood (0..5); falls back to Foody (0..10, scaled to 0..5).
+        Uses the eagerly-loaded relationship when available."""
+        merchant = self._db.get(Merchant, merchant_id)
+        if merchant and merchant.ratings:
+            r = merchant.ratings
+            if r.shopeefood_rating is not None:
+                return float(r.shopeefood_rating)
+            if r.foody_rating is not None:
+                return round(float(r.foody_rating) / 2, 2)  # normalize 10→5
+        return None
 
     def create_merchant(
         self,

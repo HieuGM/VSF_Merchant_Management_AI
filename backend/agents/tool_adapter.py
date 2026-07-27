@@ -54,15 +54,83 @@ class RegistryTool(BaseTool):
 
     model_config = {"arbitrary_types_allowed": True}
 
+    # Essential fields per tool — must match actual output schemas.
+    # For wrapper dicts (merchant_search returns {merchants: [...], total, filters_applied}),
+    # list items are filtered by _ESSENTIAL_LIST_ITEM_FIELDS.
+    _ESSENTIAL_TOP_LEVEL: dict[str, list[str]] = {
+        "merchant_search": ["merchants", "total", "filters_applied"],
+        "nearby_merchant_search": ["merchants", "total", "radius_km"],
+        "get_merchant_profile": [
+            "merchant_id", "tier", "price_level", "dimensions", "ratings", "attributes",
+        ],
+        "get_user_profile": [
+            "user_id", "liked_cuisines", "disliked_cuisines", "spice_tolerance",
+            "dietary", "budget_level", "distance_preference_km",
+        ],
+        "get_session_candidates": ["session_id", "candidates", "total"],
+        "get_weather_context": ["weather", "source", "cached"],
+    }
+    # Per-item fields for list values inside the top-level dict.
+    _ESSENTIAL_LIST_ITEM_FIELDS: dict[str, list[str]] = {
+        "merchant_search": [
+            "merchant_id", "name", "cuisine", "address", "city",
+            "distance_km", "avg_rating", "match_score",
+        ],
+        "nearby_merchant_search": [
+            "merchant_id", "name", "cuisine", "distance_km", "avg_rating",
+        ],
+    }
+
+    def _filter_essential_fields(self, data: dict) -> dict:
+        """Keep only essential fields for agent decision-making.
+
+        Handles two patterns:
+        - Flat dicts (get_merchant_profile): filter top-level keys.
+        - Wrapper dicts with lists (merchant_search): filter top-level keys AND
+          filter each item in list values.
+        """
+        tool_name = self.reg_tool.spec.name
+        top_keys = self._ESSENTIAL_TOP_LEVEL.get(tool_name)
+
+        if not top_keys:
+            return data  # unknown tool: pass through unfiltered
+
+        filtered: dict = {}
+        item_keys = self._ESSENTIAL_LIST_ITEM_FIELDS.get(tool_name)
+
+        for k in top_keys:
+            if k not in data:
+                continue
+            val = data[k]
+            # If this is a list of dicts AND we have per-item field rules, trim each item.
+            if item_keys and isinstance(val, list) and val and isinstance(val[0], dict):
+                filtered[k] = [
+                    {ik: item[ik] for ik in item_keys if ik in item}
+                    for item in val
+                ]
+            else:
+                filtered[k] = val
+        return filtered
+
     def _run(self, **kwargs: Any) -> str:
-        # Drop None kwargs so tool defaults apply (LLM often passes explicit nulls).
-        call_kwargs = {k: v for k, v in kwargs.items() if v is not None}
+        # Drop None AND empty-string kwargs so tool defaults apply. LLMs often pass explicit
+        # nulls or "" for optional fields they skipped (e.g. min_rating=""), and "" would fail
+        # pydantic float parsing inside the tool (validation error). Treat "" as "not provided".
+        call_kwargs = {k: v for k, v in kwargs.items() if v is not None and v != ""}
         try:
             result = self.reg_tool.fn(**call_kwargs)
         except AppError as exc:
             return f"[tool_error:{type(exc).__name__}] {exc}"
         except Exception as exc:  # noqa: BLE001 - never crash the agent loop
             return f"[tool_error:{type(exc).__name__}] {exc}"
+
+        # Filter large outputs to reduce token usage (threshold raised from 2k to 4k;
+        # 2k was too aggressive for search results with 10+ merchants).
+        if isinstance(result, dict):
+            result_str = json.dumps(result, ensure_ascii=False, default=str)
+            if len(result_str) > 4000:
+                result = self._filter_essential_fields(result)
+
         return json.dumps(result, ensure_ascii=False, default=str)
 
 
