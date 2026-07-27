@@ -38,7 +38,10 @@ def _build_fpt_llm() -> LLM:
             "FPT Cloud AI chưa được cấu hình — cần FPT_API_KEY, FPT_BASE_URL, FPT_MODEL_DEEPSEEK"
         )
     return LLM(
-        model=f"openai/{s.fpt_model_deepseek}",
+        # gpt-oss-20b: fastest tool-caller on FPT (~0.69s vs DeepSeek-V4-Flash 1.25s per call),
+        # agentic-optimized, holds Vietnamese NLG + anti-hallucination quality. Crew runs ~2x
+        # faster end-to-end. Override via FPT_MODEL_FAST in .env if a different model is wanted.
+        model=f"openai/{s.fpt_model_fast}",
         api_key=s.fpt_api_key,
         base_url=s.fpt_base_url,
     )

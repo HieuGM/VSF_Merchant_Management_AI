@@ -53,6 +53,10 @@ class Settings(BaseSettings):
     fpt_base_url: str | None = None           # FPT_BASE_URL
     fpt_model_deepseek: str | None = None     # FPT_MODEL_DEEPSEEK
     fpt_model_qwen: str | None = None         # FPT_MODEL_QWEN
+    # Primary model for customer agents. gpt-oss-20b is the fastest tool-caller on FPT
+    # (~0.69s/call vs DeepSeek-V4-Flash 1.25s) and holds Vietnamese NLG + anti-hallucination
+    # quality, so the crew runs ~2x faster end-to-end. Override via FPT_MODEL_FAST if needed.
+    fpt_model_fast: str = "gpt-oss-20b"       # FPT_MODEL_FAST
     # Explicit vendor override: "fpt" | "nvidia_nim". Empty = auto-detect.
     llm_vendor: str = ""
 
