@@ -5,6 +5,7 @@ Optimized: eager-loads ratings + profile to eliminate N+1 query patterns.
 """
 from __future__ import annotations
 
+import unicodedata
 from datetime import time
 from typing import Any
 
@@ -13,6 +14,35 @@ from sqlalchemy.orm import Session, joinedload
 
 from database.models import Merchant, MenuItem, Review, MerchantProfile, MerchantRating
 from core.errors import NotFoundError
+
+# Vietnamese diacritic chars → ASCII base (paired char-by-char for SQL translate()).
+# Lets ilike match across diacritics: "pho" ≡ "phở", "com" ≡ "cơm", "ha noi" ≡ "Hà Nội".
+_VN_DIACRITICS = (
+    "àáảãạăắằẳẵặâấầẩẫậ"      # 17 → a
+    "èéẻẽẹêếềểễệ"            # 11 → e
+    "ìíỉĩị"                  # 5  → i
+    "òóỏõọôốồổỗộơớờởỡợ"      # 17 → o
+    "ùúủũụưứừửữự"            # 11 → u
+    "ỳýỷỹỵ"                  # 5  → y
+    "đ"                      # 1  → d
+)
+_VN_ASCII = "a" * 17 + "e" * 11 + "i" * 5 + "o" * 17 + "u" * 11 + "y" * 5 + "d"
+
+
+def _norm_text(value: str) -> str:
+    """Normalize a Python string to lowercase ASCII (strip Vietnamese diacritics).
+
+    Must agree with `_norm_col` (SQL translate) so a no-diacritic query ("pho") matches
+    diacritic data ("phở"). NFD decomposes combining marks away; đ/Đ are handled explicitly
+    (they don't decompose)."""
+    nfd = unicodedata.normalize("NFD", value)
+    no_mark = "".join(ch for ch in nfd if not unicodedata.combining(ch))
+    return no_mark.replace("đ", "d").replace("Đ", "d").lower()
+
+
+def _norm_col(column: Any) -> Any:
+    """SQL expression: lowercase the column and strip Vietnamese diacritics via translate()."""
+    return func.translate(func.lower(column), _VN_DIACRITICS, _VN_ASCII)
 
 
 def _parse_time(value: Any) -> time | None:
@@ -81,37 +111,37 @@ class MerchantRepository:
 
         if query:
             # Free-text search across merchant name, cuisine, AND menu-item names.
-            escaped_query = query.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+            # Diacritics-insensitive: normalize both sides so "pho" matches "phở".
+            escaped_query = _norm_text(query).replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
             query_pattern = f"%{escaped_query}%"
             menu_match = (
                 select(MenuItem.item_id)
                 .where(
                     MenuItem.merchant_id == Merchant.merchant_id,
-                    MenuItem.name.ilike(query_pattern, escape="\\"),
+                    _norm_col(MenuItem.name).ilike(query_pattern, escape="\\"),
                 )
                 .exists()
             )
             conditions.append(
                 or_(
-                    Merchant.name.ilike(query_pattern, escape="\\"),
-                    Merchant.cuisine.ilike(query_pattern, escape="\\"),
+                    _norm_col(Merchant.name).ilike(query_pattern, escape="\\"),
+                    _norm_col(Merchant.cuisine).ilike(query_pattern, escape="\\"),
                     menu_match,
                 )
             )
 
         if cuisine:
-            conditions.append(Merchant.cuisine.ilike(f"%{cuisine}%"))
+            conditions.append(_norm_col(Merchant.cuisine).ilike(f"%{_norm_text(cuisine)}%"))
 
         if city:
-            # Match either the city field (case-insensitive exact) OR the address containing
-            # the term — users often say a district ("Cầu Giấy", "Tây Hồ", "Quận 1") which
-            # lives in `address`, not the city field (which holds province/city like "Hà Nội").
-            escaped_city = city.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+            # Match either the city field OR the address containing the term (districts like
+            # "Cầu Giấy" live in address). Diacritics-insensitive ("ha noi" ≡ "Hà Nội").
+            escaped_city = _norm_text(city).replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
             city_pattern = f"%{escaped_city}%"
             conditions.append(
                 or_(
-                    Merchant.city.ilike(city, escape="\\"),
-                    Merchant.address.ilike(city_pattern, escape="\\"),
+                    _norm_col(Merchant.city).ilike(city_pattern, escape="\\"),
+                    _norm_col(Merchant.address).ilike(city_pattern, escape="\\"),
                 )
             )
 
