@@ -19,17 +19,37 @@ AGENT_TOOL_ALLOW_LIST: dict[str, tuple[str, ...]] = {
     ),
     "customer_explanation": ("get_merchant_profile",),
     # --- Merchant Advisor Crew (Dev B) ---
-    "merchant_coordinator": ("get_merchant_profile",),
-    "merchant_profile_analyst": ("get_merchant_profile", "get_profile_evidence"),
-    "diagnosis": ("get_merchant_profile", "get_profile_evidence", "diagnose_merchant"),
+    "merchant_coordinator": (
+        "get_merchant_profile_summary",
+        "get_merchant_metadata_catalog",
+    ),
+    "merchant_profile_analyst": (
+        "get_merchant_profile_summary",
+        "get_merchant_operational_metrics",
+        "get_merchant_complaints",
+        "get_menu_and_food_images",
+    ),
+    "diagnosis": (
+        "get_merchant_profile_summary",
+        "get_merchant_operational_metrics",
+        "get_merchant_complaints",
+        "diagnose_merchant",
+    ),
     "recommendation": (
-        "get_merchant_profile",
-        "get_profile_evidence",
-        "get_trending_dishes",
+        "get_merchant_profile_summary",
+        "get_merchant_operational_metrics",
+        "search_trending_dishes",
         "recommend_improvements",
     ),
-    "competitor": ("nearby_merchant_search", "compare_competitors"),
-    "evidence_verifier": ("get_profile_evidence",),
+    "competitor": (
+        "search_merchants",
+        "search_trending_dishes",
+        "compare_merchant_benchmark",
+    ),
+    "evidence_verifier": (
+        "get_merchant_profile_summary",
+        "get_merchant_complaints",
+    ),
     "synthesis_advisor": (),
 }
 

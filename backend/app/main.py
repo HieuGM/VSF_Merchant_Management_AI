@@ -6,6 +6,10 @@ Each vertical implements its OWN router file; cross-cutting extensions attach vi
 """
 from __future__ import annotations
 
+import os
+os.environ.setdefault("OTEL_SDK_DISABLED", "true")
+os.environ.setdefault("OTEL_TRACES_EXPORTER", "none")
+
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI

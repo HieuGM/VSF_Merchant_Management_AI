@@ -118,15 +118,27 @@ def get_merchant_profile_summary(
 
 # --- CrewAI Tool Class ---
 
+from typing import Literal
+
+DimensionKey = Literal[
+    "food_quality",
+    "image_quality",
+    "delivery_quality",
+    "packaging",
+    "service",
+    "waiting_time",
+    "menu_diversity",
+    "price_competitiveness",
+]
+
+
 class GetMerchantProfileSummaryInput(BaseModel):
-    merchant_id: str = Field(..., description="Merchant ID to look up.")
-    dimensions: Optional[List[str]] = Field(
+    merchant_id: str = Field(..., description="Target merchant ID to look up.")
+    dimensions: Optional[List[DimensionKey]] = Field(
         None,
         description=(
-            "Subset of dimension keys to retrieve. "
-            "Valid values: food_quality, image_quality, delivery_quality, packaging, "
-            "service, waiting_time, menu_diversity, price_competitiveness. "
-            "Leave empty to return all 8."
+            "Optional subset of 8 quality dimension keys to filter. "
+            "Leave empty/None to retrieve all 8 quality dimensions."
         ),
     )
 

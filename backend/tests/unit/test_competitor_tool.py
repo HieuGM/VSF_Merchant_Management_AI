@@ -6,7 +6,7 @@ from relational_test_fixtures import seed_relational_profile
 from tools.merchant.competitor_tool import compare_merchant_benchmark, CompareMerchantBenchmarkTool
 
 
-def _make_merchant(session, mid: str, lat: float, lng: float, cuisine: str = "Món Việt") -> Merchant:
+def _make_merchant(session, mid: str, lat: float, lng: float, cuisine: str = "Cơm Niêu Test") -> Merchant:
     m = Merchant(
         merchant_id=mid,
         name=f"Quán {mid}",

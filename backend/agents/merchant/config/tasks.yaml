@@ -2,37 +2,66 @@
 intent_planning_task:
   description: >
     Analyze the user prompt: "{query}" for merchant {merchant_id}.
-    Determine the primary intent (diagnosis, recommendation, competitor_analysis, profile_inquiry, general_chat)
+    Determine the primary intent (search, ops_analysis, benchmark, weakness_explanation, general_chat)
     and formulate an execution plan for specialist agents.
   expected_output: >
     JSON object containing 'intent', 'query_summary', and 'execution_plan'.
 
 analyze_profile_task:
-  description: Retrieve and analyze 8-dimension profile breakdown for merchant {merchant_id}.
-  expected_output: Structured 8-dimension score profile stripped of overall score.
+  description: >
+    Analyze merchant {merchant_id}'s operational data to answer query: "{query}".
+    LEAST PRIVILEGE INSTRUCTION:
+    Examine the user query "{query}" and execute ONLY the tool(s) strictly needed to answer the query (e.g. menu tool for menu queries, operational metrics tool for metrics, complaints tool for reviews).
+    Synthesize tool outputs into a clear, concise Vietnamese summary answering the user query.
+  expected_output: A concise, structured Vietnamese summary of relevant operational metrics, menu items, or complaint data.
 
 diagnose_merchant_task:
   description: Analyze weaknesses (score < 0.6 on the normalized 0..1 scale) for merchant {merchant_id} and output max 5 root causes backed by evidence_refs.
-  expected_output: JSON object containing 'causes' list, where each cause has 'dimension', 'score', and 'evidence_refs'.
+  expected_output: A concise Vietnamese summary listing root causes of underperformance and associated evidence references.
 
 recommend_improvements_task:
   description: Formulate actionable improvement steps corresponding to diagnostic causes for merchant {merchant_id}.
-  expected_output: JSON object containing 'actions' list, where each action maps to evidence_refs.
+  expected_output: A concise Vietnamese summary of recommended actionable improvement steps.
 
 compare_competitors_task:
-  description: Compare merchant {merchant_id} 8 dimensions with nearby competitors within radius.
-  expected_output: JSON object containing target merchant comparison vs top competitor profiles.
+  description: >
+    Compare merchant {merchant_id} 8 dimension scores against relevant nearby competitors in the same dining segment.
+    Synthesize comparative findings into a concise Vietnamese summary highlighting top competitive strengths and top weaknesses.
+  expected_output: >
+    A concise Vietnamese summary of competitive positioning, top strengths where target leads, and top weaknesses where target lags behind direct competitors.
+
+search_market_task:
+  description: >
+    Search restaurants, cuisine segments, or trending dishes in system database for user query: "{query}".
+    INSTRUCTION:
+    1. If user query asks about restaurants, stores, or places in a city/district/cuisine, call `search_merchants` passing extracted filters.
+    2. If user query asks about trending dishes, call `search_trending_dishes`.
+    3. Do NOT call `compare_merchant_benchmark` unless benchmark comparison is explicitly requested.
+    Synthesize search results into a concise Vietnamese list.
+  expected_output: A concise Vietnamese list of matching restaurants or trending dishes retrieved from system database.
 
 verify_evidence_task:
   description: Perform Layer 2 semantic verification on evidence references to ensure non-hallucination.
-  expected_output: Verified evidence audit result confirming all references exist and match diagnosis context.
+  expected_output: Verified evidence audit summary confirming all references exist and match diagnosis context.
 
 synthesis_chat_task:
   description: >
     You are the AI Merchant Operations Advisor chatting with the owner of merchant {merchant_id}.
     User query: "{query}".
     Session Context History: "{chat_history}".
-    Review all task outputs (profile, diagnosis, recommendations, competitor comparison, evidence verification)
-    and construct a comprehensive, warm, conversational, and direct answer in Vietnamese to the merchant owner.
+
+    STRICT ANTI-HALLUCINATION & PROFESSIONAL CONVERSATIONAL MANDATE:
+    1. ALWAYS address the user politely as the owner of their merchant {merchant_id}.
+    2. NEVER complain to the user about internal database terms or technicalities (such as "thiếu merchant ID", "ID bị bỏ ở tool", "ID không có", or "lỗi hệ thống").
+    3. Ground all statements 100% in facts from the specialist agent context or system database. NEVER invent fake merchant IDs or fake names.
+    4. MULTI-CITY & COMPARISON INSTRUCTION:
+       - If the user asks to compare their merchant {merchant_id} with search results in a different city or cuisine, compare their ratings and quality scores naturally and directly.
+       - Politely mention the location of target merchant {merchant_id} if relevant, but answer the comparison directly.
+
+    FORMATTING MANDATE:
+    1. Read the specialist agent output provided in your context window carefully.
+    2. Construct a warm, conversational, natural Vietnamese response directly addressing the merchant owner.
+    3. Present all compare/search findings clearly with clean markdown formatting.
   expected_output: >
-    A clear, natural language conversational response in Vietnamese directly answering the user query with real evidence and facts.
+    A warm, concise, professional Vietnamese response that naturally answers the merchant owner's comparison or query
+    without any technical jargon or leakages about internal tool/database IDs.

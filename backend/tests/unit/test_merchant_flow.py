@@ -17,7 +17,13 @@ from crewai.tasks.task_output import TaskOutput
 from database.models import Merchant
 from relational_test_fixtures import seed_relational_profile
 import flows.merchant_flow as merchant_flow_module
-from flows.merchant_flow import merchant_flow, validate_evidence_guardrail
+from flows.merchant_flow import (
+    merchant_flow,
+    validate_evidence_guardrail,
+    DiagnosisTaskOutput,
+    RecommendationTaskOutput,
+    CauseItem,
+)
 from core.dependencies import get_db_session
 from app.main import app
 

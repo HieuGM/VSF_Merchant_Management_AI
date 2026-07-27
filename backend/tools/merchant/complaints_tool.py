@@ -108,19 +108,24 @@ def get_merchant_complaints(
 
 # --- CrewAI Tool Class ---
 
+from typing import Literal
+
+SeverityLevel = Literal["low", "medium", "high"]
+
+
 class GetMerchantComplaintsInput(BaseModel):
-    merchant_id: str = Field(..., description="Merchant ID to fetch complaints for.")
+    merchant_id: str = Field(..., description="Target merchant ID to fetch customer complaints for.")
     category: Optional[str] = Field(
         None,
         description=(
-            "Filter by complaint category. Valid values: "
-            "giao_hàng_trễ, món_nguội, sai_hoặc_thiếu_món, đóng_gói_kém, "
-            "thái_độ_phục_vụ, giá_cao, vệ_sinh, chất_lượng_món."
+            "Optional category filter keyword (e.g., "
+            "'giao_hàng_trễ', 'món_nguội', 'sai_hoặc_thiếu_món', 'đóng_gói_kém', "
+            "'thái_độ_phục_vụ', 'chất_lượng_món'). Leave empty for all categories."
         ),
     )
-    severity: Optional[str] = Field(
+    severity: Optional[SeverityLevel] = Field(
         None,
-        description="Filter by severity: 'high', 'medium', or 'low'.",
+        description="Optional severity level filter: 'high', 'medium', or 'low'.",
     )
     limit_samples: int = Field(3, description="Max complaint text samples per category (1..5).")
 

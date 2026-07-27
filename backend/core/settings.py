@@ -28,10 +28,12 @@ class Settings(BaseSettings):
     # --- Redis (Feature D-02; optional at Phase 0 — memory adapter is default) ---
     redis_url: str | None = None
 
-    # --- LLM (CrewAI 1.15.5) ---
+    # --- LLM (CrewAI 1.15.5 Model Tiering) ---
     llm_provider: str = "openai"
     llm_api_key: str | None = None
     llm_model: str = "gpt-4o-mini"
+    llm_model_small: str | None = None  # Model nhỏ / fast (Intent, Scope Guard, etc.)
+    llm_model_large: str | None = None  # Model lớn / heavy (Synthesis, Audit, Diagnosis)
     llm_base_url: str | None = None
 
     # --- Cache ---

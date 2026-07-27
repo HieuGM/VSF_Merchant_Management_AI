@@ -122,7 +122,8 @@ class ChatSessionService:
     def get_compact_history(self, session_id: str, max_turns: int = 3) -> list[dict[str, Any]]:
         """Fetch compact history (last max_turns turns = 2 * max_turns messages).
 
-        Agent responses are truncated to 200 characters to conserve prompt tokens.
+        Agent responses preserve key facts (up to 450 characters) to retain context
+        like merchant names, ratings, and recommendations for multi-turn queries.
         """
         limit = max_turns * 2
         stmt = (
@@ -136,10 +137,11 @@ class ChatSessionService:
         compact_list = []
         for m in messages:
             text = m.text
-            if m.sender == "agent" and len(text) > 200:
-                text = text[:200] + "..."
+            role = "assistant" if m.sender in ("agent", "assistant") else "user"
+            if role == "assistant" and len(text) > 450:
+                text = text[:450] + "..."
             compact_list.append({
-                "role": m.sender,
+                "role": role,
                 "text": text,
             })
         return compact_list
@@ -175,5 +177,63 @@ class ChatSessionService:
             self._db.commit()
             snapshot = merged
 
-        redis_key = CacheKeys.session_context(session_id)
-        self._cache.set(redis_key, snapshot, ttl_seconds=TTL_SESSION_CONTEXT)
+    def list_merchant_sessions(self, merchant_id: str, limit: int = 30) -> list[dict[str, Any]]:
+        """List all chat sessions associated with a merchant_id, ordered by updated_at desc."""
+        stmt = (
+            select(ChatSession)
+            .order_by(ChatSession.updated_at.desc())
+            .limit(limit)
+        )
+        sessions = list(self._db.execute(stmt).scalars().all())
+
+        result = []
+        for s in sessions:
+            context = s.context_snapshot_json or {}
+            # Filter if context has merchant_id
+            if context.get("merchant_id") and context.get("merchant_id") != merchant_id:
+                continue
+
+            msg_stmt = (
+                select(ChatMessage)
+                .where(ChatMessage.session_id == s.session_id)
+                .order_by(ChatMessage.timestamp.desc())
+                .limit(1)
+            )
+            last_msg = self._db.execute(msg_stmt).scalar_one_or_none()
+            if not last_msg:
+                continue
+            
+            first_user_stmt = (
+                select(ChatMessage)
+                .where(ChatMessage.session_id == s.session_id, ChatMessage.sender == "user")
+                .order_by(ChatMessage.timestamp.asc())
+                .limit(1)
+            )
+            first_user_msg = self._db.execute(first_user_stmt).scalar_one_or_none()
+
+            title = s.title
+            if first_user_msg and first_user_msg.text:
+                title = first_user_msg.text[:40] + ("..." if len(first_user_msg.text) > 40 else "")
+
+            result.append({
+                "session_id": s.session_id,
+                "title": title or f"Trò chuyện {s.session_id[:8]}",
+                "created_at": s.created_at.isoformat() if s.created_at else None,
+                "updated_at": s.updated_at.isoformat() if s.updated_at else None,
+                "last_message": last_msg.text if last_msg else "",
+            })
+        return result
+
+    def delete_session(self, session_id: str) -> bool:
+        """Delete session and all its messages."""
+        msgs = list(self._db.execute(select(ChatMessage).where(ChatMessage.session_id == session_id)).scalars().all())
+        for m in msgs:
+            self._db.delete(m)
+
+        s = self._db.execute(select(ChatSession).where(ChatSession.session_id == session_id)).scalar_one_or_none()
+        if s:
+            self._db.delete(s)
+            self._db.commit()
+            return True
+        self._db.commit()
+        return False

@@ -52,26 +52,19 @@ def compare_merchant_benchmark(
     merchant_id: str,
     radius_km: float = 5.0,
     limit: int = 5,
+    cuisine: str | None = None,
+    category: str | None = None,
     dimensions: list[str] | None = None,
     db: Session | None = None,
     cache: CachePort | None = None,
 ) -> dict[str, Any]:
-    """Compare a merchant's dimension scores against same-cuisine competitors nearby.
-
-    Args:
-        merchant_id: Target merchant ID.
-        radius_km: Geographic search radius (default 5 km).
-        limit: Max competitors to return (1..10).
-        dimensions: Subset of dimension keys to compare. Defaults to all 8.
-        db: Optional injected DB session.
-        cache: Optional CachePort for read-through caching (TTL 5 min).
-
-    Returns:
-        dict with target scores, competitor benchmarks, and per-dimension delta.
-        overall_score_internal is NEVER included (Security Rule C2).
-    """
+    """Compare a merchant's dimension scores against competitors nearby using DB schema filters."""
     dims_key = ",".join(sorted(dimensions)) if dimensions else "all"
-    cache_key = CacheKeys.merchant_benchmark(merchant_id, radius_km, dims_key) if cache else None
+    cache_key = (
+        CacheKeys.merchant_benchmark(merchant_id, radius_km, f"{cuisine or 'all'}_{category or 'all'}_{dims_key}")
+        if cache
+        else None
+    )
 
     if cache_key and cache:
         cached = cache.get(cache_key)
@@ -82,7 +75,7 @@ def compare_merchant_benchmark(
     try:
         target_dims = [d for d in (dimensions or _ALL_DIMENSIONS) if d in _DIMENSION_COLUMNS]
 
-        # Load target
+        # Load target merchant
         row = (
             session.query(Merchant, MerchantProfile)
             .outerjoin(MerchantProfile, Merchant.merchant_id == MerchantProfile.merchant_id)
@@ -102,20 +95,29 @@ def compare_merchant_benchmark(
 
         target_scores = _profile_scores(target_p, target_dims)
 
-        # Load competitor candidates (same city, same cuisine, different ID)
-        candidates = (
+        # Build candidate query using DB fields
+        stmt = (
             session.query(Merchant, MerchantProfile)
             .outerjoin(MerchantProfile, Merchant.merchant_id == MerchantProfile.merchant_id)
             .filter(
                 Merchant.merchant_id != merchant_id,
-                Merchant.cuisine == target_m.cuisine,
                 Merchant.city == target_m.city,
                 Merchant.is_active == True,
                 Merchant.lat.isnot(None),
             )
-            .limit(50)  # Pre-filter; haversine applied below
-            .all()
         )
+
+        # Apply specific cuisine or fallback to target merchant cuisine
+        target_cuisine = cuisine or target_m.cuisine
+        if target_cuisine:
+            stmt = stmt.filter(Merchant.cuisine.ilike(f"%{target_cuisine.strip()}%"))
+
+        # Apply specific category or fallback to target merchant category
+        target_category = category or target_m.category
+        if target_category:
+            stmt = stmt.filter(Merchant.category.ilike(f"%{target_category.strip()}%"))
+
+        candidates = stmt.limit(50).all()
 
         # Apply haversine radius filter and sort
         nearby: list[tuple[float, Merchant, MerchantProfile | None]] = []
@@ -191,17 +193,29 @@ def register(reg: Any) -> None:
 
 # --- CrewAI Tool Class ---
 
+from typing import Literal
+
+DimensionKey = Literal[
+    "food_quality",
+    "image_quality",
+    "delivery_quality",
+    "packaging",
+    "service",
+    "waiting_time",
+    "menu_diversity",
+    "price_competitiveness",
+]
+
+
 class CompareMerchantBenchmarkInput(BaseModel):
-    merchant_id: str = Field(..., description="Target merchant ID to benchmark.")
-    radius_km: float = Field(5.0, description="Search radius for competitors in km (1..20).")
-    limit: int = Field(5, description="Max competitors to compare (1..10).")
-    dimensions: Optional[List[str]] = Field(
+    merchant_id: str = Field(..., description="Target merchant ID to benchmark against nearby competitors.")
+    radius_km: float = Field(5.0, description="Search radius for nearby competitors in kilometers (0.5..20.0). Defaults to 5.0 km.")
+    limit: int = Field(5, description="Max competitors to compare (1..10). Defaults to 5.")
+    cuisine: Optional[str] = Field(None, description="Optional cuisine filter (e.g. 'Món Việt', 'Món Nhật') to narrow down competitor set.")
+    category: Optional[str] = Field(None, description="Optional category filter (e.g. 'Quán ăn', 'Nhà hàng') to narrow down competitor set.")
+    dimensions: Optional[List[DimensionKey]] = Field(
         None,
-        description=(
-            "Subset of dimension keys to compare. "
-            "Valid: food_quality, image_quality, delivery_quality, packaging, "
-            "service, waiting_time, menu_diversity, price_competitiveness."
-        ),
+        description="Optional subset of dimension keys to compare. Leave empty/None to compare all 8 dimensions.",
     )
 
 
@@ -209,7 +223,7 @@ class CompareMerchantBenchmarkTool(BaseTool):
     name: str = "compare_merchant_benchmark"
     description: str = (
         "Compare a merchant's quality dimension scores against nearby competitors "
-        "of the same cuisine. Returns target scores, competitor scores, and "
+        "of the same cuisine or category. Returns target scores, competitor scores, and "
         "per-dimension delta (positive = competitor is better). "
         "Use `dimensions` to focus on specific areas of interest."
     )
@@ -220,6 +234,8 @@ class CompareMerchantBenchmarkTool(BaseTool):
         merchant_id: str,
         radius_km: float = 5.0,
         limit: int = 5,
+        cuisine: str | None = None,
+        category: str | None = None,
         dimensions: list[str] | None = None,
     ) -> str:
         from core.dependencies import get_cache
@@ -227,6 +243,8 @@ class CompareMerchantBenchmarkTool(BaseTool):
             merchant_id=merchant_id,
             radius_km=min(max(0.5, radius_km), 20.0),
             limit=min(max(1, limit), 10),
+            cuisine=cuisine,
+            category=category,
             dimensions=dimensions,
             cache=get_cache(),
         )
