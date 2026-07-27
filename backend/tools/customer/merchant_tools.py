@@ -150,7 +150,7 @@ def register(reg: ToolRegistry) -> None:
                 "lat": "float | None",
                 "lng": "float | None",
                 "radius_km": "float | None",
-                "limit": "int",
+                "limit": "int | None",
             },
             output_schema={
                 "merchants": "list[dict]",
@@ -173,12 +173,12 @@ def register(reg: ToolRegistry) -> None:
                 "category. Used for geo-filter and competitor analysis."
             ),
             input_schema={
-                "lat": "float (required)",
-                "lng": "float (required)",
-                "radius_km": "float (default 5.0)",
+                "lat": "float",
+                "lng": "float",
+                "radius_km": "float | None",
                 "query": "str | None",
                 "cuisine": "str | None",
-                "limit": "int (default 20)",
+                "limit": "int | None",
             },
             output_schema={
                 "merchants": "list[dict]",

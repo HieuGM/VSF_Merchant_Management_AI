@@ -51,7 +51,7 @@ python backend/scripts/test_customer_agent_manual.py
 
 **Kết quả:**
 - ✅ Real AI responses
-- ✅ Test hierarchical crew delegation
+- ✅ Test sequential specialist workflow
 - ✅ Test preference reasoning + explanation
 - ⏱️ Thời gian: ~10-20 giây
 
@@ -68,13 +68,13 @@ uvicorn app.main:app --reload --port 8000
 curl -X POST http://localhost:8000/api/v1/agent/customer/chat \
   -H "Content-Type: application/json" \
   -d '{
-    "query": "Tìm quán phở gần đây",
+    "message": "Tìm quán phở gần đây",
     "user_id": "user_demo",
     "session_id": "session_demo"
   }'
 ```
 
-**Lưu ý:** Route hiện tại là **stub** (chưa implement) - sẽ trả về `501 not_implemented`
+**Đã implement:** `POST /api/v1/agent/customer/chat` (+ `/chat/stream` SSE) — trả `CustomerChatResponse` (trace_id, answer, results, preference_suggestions).
 
 ---
 
@@ -212,11 +212,11 @@ python scripts/seed_user_demo.py
 echo "NVIDIA_NIM_API_KEY=nvapi-xxx" > .env
 ```
 
-### ❌ "Endpoint not implemented"
+### ❌ "Endpoint trả lỗi"
+Route `/api/v1/agent/customer/chat` đã implement (`backend/routes/customer_agent_routes.py`).
+Nếu lỗi, kiểm tra server chạy (`uvicorn app.main:app --reload --port 8000`) và DB đã seed.
+Test trực tiếp qua flow:
 ```bash
-# Route hiện tại là stub
-# Cần implement backend/routes/customer_agent_routes.py
-# Hoặc test trực tiếp qua flow:
 python -c "
 from flows.customer_flow import customer_flow
 resp = customer_flow.search_restaurants(query='phở', user_id='user_demo')
@@ -255,13 +255,12 @@ print(resp.answer)
 - `propose_profile_delta` đề xuất (không lưu)
 - `explanation` agent giải thích lý do chọn quán
 
-### Multi-agent Delegation
+### Multi-agent Workflow
 **Input:** "Tìm quán món Nhật, budget sinh viên, gần đây"
 **Expected:**
-- `customer_coordinator` delegates to:
-  - `restaurant_search` → merchant_search với filters
-  - `preference_reasoning` → propose budget constraint
-  - `customer_explanation` → tổng hợp kết quả
+- `restaurant_search` → merchant_search với filters
+- `preference_reasoning` → propose budget constraint, dùng kết quả search làm context
+- `customer_explanation` → tổng hợp search + preference context
 
 ---
 

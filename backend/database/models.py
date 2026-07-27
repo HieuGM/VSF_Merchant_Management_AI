@@ -52,6 +52,8 @@ class Merchant(Base):
     food_images = relationship("FoodImage", back_populates="merchant", cascade="all, delete-orphan")
     ratings = relationship("MerchantRating", back_populates="merchant", uselist=False, cascade="all, delete-orphan")
     complaints = relationship("MerchantComplaint", back_populates="merchant", cascade="all, delete-orphan")
+    profile = relationship("MerchantProfile", uselist=False, cascade="all, delete-orphan", lazy="select")
+    operational_metric = relationship("OperationalMetric", uselist=False, cascade="all, delete-orphan", lazy="select")
 
 class MenuItem(Base):
     __tablename__ = "menu_items"

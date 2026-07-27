@@ -6,6 +6,10 @@ per-dimension `basis` in `merchant_dimension_calculations`, typed evidence in
 `merchant_dimension_evidence`, platform ratings, operational KPIs, and the
 market trending aggregate. The legacy `dimensions_json` no longer exists.
 
+Optimized: uses a single query with eager-loaded relationships for the core
+entities (Merchant, MerchantProfile, MerchantRating, OperationalMetric) and
+batch queries for calculations/evidence. Down from 6 queries to 3.
+
 The returned dict keeps the FROZEN tool output shape (`get_merchant_profile`,
 `get_trending_dishes`): dimension key `price_competitiveness` is emitted back as
 `price_level` (the public contract name, design §6.4). Repository receives a
@@ -13,11 +17,10 @@ Session; it never opens/closes one (the tool layer owns the SessionLocal).
 """
 from __future__ import annotations
 
-from decimal import Decimal
 from typing import Any
 
 from sqlalchemy import select
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 from database.models import (
     Merchant,
@@ -68,15 +71,31 @@ class MerchantProfileRepository:
         self._db = db
 
     def get_profile(self, merchant_id: str) -> dict[str, Any] | None:
-        """Reconstruct the profile document for a merchant, or None if absent."""
-        prof = self._db.get(MerchantProfile, merchant_id)
-        if prof is None:
+        """Reconstruct the profile document for a merchant, or None if absent.
+
+        Optimized: single query for Merchant (with eager-loaded ratings, profile,
+        operational_metric), then 2 batch queries for calculations + evidence.
+        Total: 3 queries down from 6.
+        """
+        # Single query with eager-loaded relationships
+        stmt = (
+            select(Merchant)
+            .options(
+                joinedload(Merchant.profile),
+                joinedload(Merchant.ratings),
+                joinedload(Merchant.operational_metric),
+            )
+            .where(Merchant.merchant_id == merchant_id)
+        )
+        merchant = self._db.execute(stmt).unique().scalar_one_or_none()
+        if merchant is None or merchant.profile is None:
             return None
 
-        merchant = self._db.get(Merchant, merchant_id)
-        ratings = self._db.get(MerchantRating, merchant_id)
-        op = self._db.get(OperationalMetric, merchant_id)
+        prof = merchant.profile
+        ratings = merchant.ratings
+        op = merchant.operational_metric
 
+        # Batch queries for calculations and evidence (2 queries)
         basis_by_dim = {
             c.dimension: c.basis
             for c in self._db.execute(
