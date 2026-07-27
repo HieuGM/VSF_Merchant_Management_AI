@@ -14,6 +14,8 @@ CrewAI 1.15.5 BaseTool contract:
 from __future__ import annotations
 
 import json
+from contextlib import contextmanager
+from contextvars import ContextVar
 from typing import Any, Type
 
 from crewai.tools import BaseTool
@@ -25,6 +27,27 @@ from tools.registry import RegisteredTool, registry
 # Loose mapping of input_schema string hints → python types (only used when a tool
 # does not declare an explicit args_schema).
 _TYPE_HINTS: dict[str, type] = {"str": str, "int": int, "float": float, "bool": bool}
+
+# Per-crew-kickoff cache of tool outputs keyed by tool name. When a specialist re-calls
+# the SAME tool within one run, it gets the first result back instead of re-executing —
+# this caps LLM over-calling (DeepSeek sometimes calls merchant_search 2-3×). Different
+# tools (e.g. nearby_merchant_search + merchant_search) still run once each. Cleared by
+# `tool_call_scope()` around crew.kickoff in the flow. None = no scope active (no dedup).
+_tool_results: ContextVar[dict[str, str] | None] = ContextVar("tool_results", default=None)
+
+
+@contextmanager
+def tool_call_scope():
+    """Wrap crew.kickoff so same-tool repeat calls return cached results (dedupe).
+
+    Without this the search agent can call merchant_search multiple times in one run,
+    wasting latency without changing the outcome. The cache is keyed by tool name only —
+    intentional (a repeat call is a mistake we want to short-circuit, not re-run)."""
+    token = _tool_results.set({})
+    try:
+        yield
+    finally:
+        _tool_results.reset(token)
 
 
 def _args_model(spec) -> Type[BaseModel]:
@@ -113,6 +136,13 @@ class RegistryTool(BaseTool):
         return filtered
 
     def _run(self, **kwargs: Any) -> str:
+        name = self.reg_tool.spec.name
+        # Dedupe: if this tool already ran in the current crew kickoff, hand back the cached
+        # result so the agent stops re-calling it and finalizes (caps LLM over-calling).
+        cache = _tool_results.get()
+        if cache is not None and name in cache:
+            return cache[name]
+
         # Drop None AND empty-string kwargs so tool defaults apply. LLMs often pass explicit
         # nulls or "" for optional fields they skipped (e.g. min_rating=""), and "" would fail
         # pydantic float parsing inside the tool (validation error). Treat "" as "not provided".
@@ -131,7 +161,10 @@ class RegistryTool(BaseTool):
             if len(result_str) > 4000:
                 result = self._filter_essential_fields(result)
 
-        return json.dumps(result, ensure_ascii=False, default=str)
+        out = json.dumps(result, ensure_ascii=False, default=str)
+        if cache is not None:
+            cache[name] = out
+        return out
 
 
 def build_crewai_tool(reg_tool: RegisteredTool) -> BaseTool:

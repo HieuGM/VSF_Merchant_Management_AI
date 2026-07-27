@@ -34,9 +34,9 @@ def test_all_agents_use_same_llm(fake_llm_fpt):
     crew = build_customer_crew(llm_fpt=fake_llm_fpt)
     models = {a.llm.model for a in crew.agents}
     assert models == {"openai/DeepSeek-V4-Flash"}
-    # Sanity: the three specialist roles are present.
+    # Sanity: the three specialist roles are present (search / preference / explanation).
     roles = "\n".join(a.role for a in crew.agents)
-    assert "Tìm kiếm" in roles and "Suy luận" in roles and "Giải thích" in roles
+    assert "Tìm kiếm" in roles and "Suy luận" in roles and "thân thiện" in roles
 
 
 def test_specialists_do_not_delegate(fake_llm_fpt):

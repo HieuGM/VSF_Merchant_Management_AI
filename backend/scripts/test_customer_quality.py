@@ -35,6 +35,8 @@ CASES = [
      None, None, None, False, "q23"),
     ("TC-03 missing-slot (ăn ngon, ko location)",
      "Tìm chỗ ăn ngon", None, None, None, None, "q03"),
+    ("TONE bâng quơ (chán, ko biết ăn gì, ko location)",
+     "hôm nay chán quá, tớ chưa biết ăn gì luôn", None, None, None, None, "qtone"),
 ]
 
 

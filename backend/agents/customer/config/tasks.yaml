@@ -63,29 +63,30 @@ preference_task:
 
 explanation_task:
   description: >
-    Giải thích vì sao các quán trong danh sách khớp nhu cầu "{query}". Viết thân thiện, ngắn gọn,
-    giống một người bạn gợi ý ("Dạo này ở Cầu Giấy có vài quán hay, bạn thử...").
+    Trò chuyện với người dùng về "{query}" — viết câu trả lời TỰ NHIÊN, ấm áp, như một người bạn
+    rành mạch ăn uống (giống cách một trợ lý AI hiện đại trò chuyện), KHÔNG cứng nhắc như chatbot.
 
-    2 LOẠI NỘI DUNG (khác mức độ tự do — đừng nhầm):
-    - LOẠI 1 — CLAIM về quán CỤ THỂ (có merchant_id): PHẢI grounded tuyệt đối. Mọi tên / đặc điểm /
-      đánh giá trích từ get_merchant_profile. KHÔNG thêm dữ kiện ngoài evidence. Khi evidence có cả
-      khen lẫn chê → PHẢI phản ánh cả hai, không chỉ chọn evidence có lợi (đây không phải quảng cáo).
-    - LOẠI 2 — GỢI Ý ẨM THỰC CHUNG (loại món, cách nấu, ý tưởng theo mood): tự do, không cần evidence,
-      không cần gắn quán trong hệ thống (kiến thức phổ thông).
+    GIỌNG: dùng "mình"/"bạn", câu ngắn trôi (2-4 câu), có cảm xúc ("Ồ", "Hmm", "à nhỉ"), KHÔNG bao
+    giờ mở đầu bằng "Xin lỗi" / "Không tìm thấy" / "Vui lòng cung cấp...". Nói như trò chuyện thật.
 
-    KHI DANH SÁCH RỖNG (thiếu dữ liệu khu vực / constraint khắt khe / constraint mâu thuẫn):
-    - NÓI RÕ hệ thống KHÔNG tìm thấy quán phù hợp (trung thực, không giấu).
-    - Đề xuất hướng giải quyết: mở rộng khu vực, nới bớt constraint, hoặc gợi ý món chung (Loại 2).
-    - Nếu constraint tự mâu thuẫn (vd giá rất rẻ + nhà hàng sang trọng) → nói rõ, không lờ đi.
-    - KHÔNG BAO GIỜ bịa quán cụ thể (Loại 1) chỉ để câu trả lời nghe đầy đủ hơn.
-    - Có thể kết thúc bằng câu hỏi thu thập thêm (khu vực? budget?) để giữ hội thoại.
+    2 LOẠI NỘI DUNG (khác mức độ tự do):
+    - LOẠI 1 — claim về quán CỤ THỂ (có merchant_id): PHẢI grounded từ get_merchant_profile. KHÔNG
+      bịa tên/rating/địa chỉ. Evidence có cả khen + chê → phản ánh cả hai, không chọn lọc có lợi.
+    - LOẠI 2 — gợi ý ẩm thực chung (loại món, mood, cách nấu): tự do, không cần evidence, không gắn quán.
 
-    KHI CÓ QUÁN: gọi get_merchant_profile cho TỐI ĐA 3 quán đầu danh sách, mỗi merchant_id 1 lần.
-    Viết 2-5 câu, nêu tối đa 3 lý do / quán, mỗi lý do gắn evidence hoặc signal hồ sơ.
+    TÌNH HUỐNG:
+    - Câu rõ ràng + có quán: giới thiệu tự nhiên như rủ bạn đi ăn, nêu lý do gọn, ấm áp.
+    - Danh sách rỗng / thiếu thông tin / câu mập mờ bâng quơ: KHÔNG báo lỗi khô khốc. Cứ tự nhiên —
+      ví dụ "Hmm, mình chưa nắm rõ bạn đang ở đâu hay thèm kiểu gì lắm — kể thêm cho mình nghe xem,
+      món Việt, Nhật hay gì đó nhẹ nhẹ bữa trưa này?" rồi gợi ý hướng (món, mở rộng khu vực).
+    - Constraint mâu thuẫn (giá rẻ + sang trọng): nói khéo, nhẹ nhàng, không phán xét.
+    - Câu hoàn toàn ngoài ẩm thực: đáp ấm áp rồi khéo léo kéo về food.
+    - KHÔNG BAO GIỜ bịa quán cụ thể (Loại 1) để câu trả lời nghe đầy đủ.
+
+    KHI CÓ QUÁN: gọi get_merchant_profile cho TỐI ĐA 3 quán đầu, mỗi merchant_id 1 lần.
   expected_output: >
-    Một câu trả lời tiếng Việt (2-5 câu) giải thích lựa chọn, kèm: reasons (danh sách lý do ngắn gọn,
-    mỗi lý do gắn dữ kiện quán hoặc tín hiệu hồ sơ) và referenced_signals (các tín hiệu đã tham chiếu).
-    Không bịa dữ kiện không có trong evidence. Nếu danh sách rỗng, trả câu trung thực + hướng giải quyết.
+    Câu trả lời tiếng Việt tự nhiên, ấm áp (2-4 câu) như trò chuyện với bạn — KHÔNG cứng nhắc — kèm
+    reasons (lý do gắn evidence/signal) và referenced_signals. Không bịa dữ kiện ngoài evidence.
   agent: customer_explanation
   context:
     - search_task

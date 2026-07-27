@@ -12,6 +12,7 @@ from typing import Any
 
 from agents.listeners.crewai_listener import build_event_record
 from agents.listeners.persisting_listener import install_persisting_listener, run_scope
+from agents.tool_adapter import tool_call_scope
 from core.tracing import new_id
 from models.agent import AgentRunRecord, CustomerChatResponse
 from repositories.agent_run_repository import AgentRunRepository
@@ -98,7 +99,7 @@ class CustomerFlow:
 
                 crew = build_customer_crew()
 
-            with run_scope(trace_id, self._repo):
+            with run_scope(trace_id, self._repo), tool_call_scope():
                 crew_output = crew.kickoff(inputs=inputs)
 
             response = _to_chat_response(trace_id, session_id, crew_output)
