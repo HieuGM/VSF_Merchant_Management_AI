@@ -12,6 +12,11 @@ from tools.merchant.metrics_tool import GetMerchantOperationalMetricsTool
 from tools.merchant.complaints_tool import GetMerchantComplaintsTool
 from tools.merchant.menu_image_tool import GetMenuAndFoodImagesTool
 from tools.merchant.competitor_tool import CompareMerchantBenchmarkTool
+from tools.merchant.reviews_tool import GetMerchantReviewsTool
+from tools.merchant.cohort_tool import (
+    AggregatePublicMerchantCohortTool,
+    CompareOwnerToPublicCohortTool,
+)
 
 # Legacy diagnosis / recommendation tools (kept from original)
 from tools.merchant.diagnosis_tool import diagnose_merchant, recommend_improvements
@@ -77,6 +82,9 @@ merchant_tools = [
     GetMerchantProfileSummaryTool(),
     GetMerchantOperationalMetricsTool(),
     GetMerchantComplaintsTool(),
+    GetMerchantReviewsTool(),
+    AggregatePublicMerchantCohortTool(),
+    CompareOwnerToPublicCohortTool(),
     GetMenuAndFoodImagesTool(),
     CompareMerchantBenchmarkTool(),
     DiagnoseMerchantTool(),
@@ -91,6 +99,9 @@ __all__ = [
     "GetMerchantProfileSummaryTool",
     "GetMerchantOperationalMetricsTool",
     "GetMerchantComplaintsTool",
+    "GetMerchantReviewsTool",
+    "AggregatePublicMerchantCohortTool",
+    "CompareOwnerToPublicCohortTool",
     "GetMenuAndFoodImagesTool",
     "CompareMerchantBenchmarkTool",
     "DiagnoseMerchantTool",

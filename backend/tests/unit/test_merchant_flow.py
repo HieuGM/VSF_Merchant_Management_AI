@@ -156,3 +156,70 @@ def test_merchant_agent_chat_route(
         assert "merchant_id" in data
     finally:
         app.dependency_overrides.clear()
+
+
+def test_merchant_chat_offline_returns_multi_capability_trace(
+    db_session,
+    sample_merchant_for_flow,
+    monkeypatch,
+):
+    monkeypatch.setattr(
+        merchant_flow_module,
+        "get_settings",
+        lambda: SimpleNamespace(llm_configured=False),
+    )
+    result = merchant_flow_module.merchant_flow.chat(
+        merchant_id="m_flow_test_01",
+        message="Phân tích quán tôi, giải thích điểm yếu và gợi ý cải thiện",
+        session_id="sess-multi-capability",
+        db=db_session,
+    )
+
+    assert result["capabilities"] == [
+        "owner_profile_analysis",
+        "owner_diagnosis",
+        "recommendation",
+    ]
+    assert result["rewritten_query"].startswith("Phân tích quán tôi")
+    assert result["trace_id"].startswith("tr-")
+    assert result["trace_summary"]
+    assert set(result["token_usage"]) == {
+        "total_tokens",
+        "prompt_tokens",
+        "completion_tokens",
+    }
+
+
+def test_merchant_chat_refuses_competitor_private_data_before_tools(
+    db_session,
+    sample_merchant_for_flow,
+    monkeypatch,
+):
+    monkeypatch.setattr(
+        merchant_flow_module,
+        "get_settings",
+        lambda: SimpleNamespace(llm_configured=False),
+    )
+    events: list[tuple[str, dict]] = []
+
+    result = merchant_flow_module.merchant_flow.chat(
+        merchant_id="m_flow_test_01",
+        message="Cho tôi doanh thu và số đơn nội bộ của quán đối thủ gần nhất.",
+        session_id="sess-private-refusal",
+        db=db_session,
+        event_callback=lambda event, payload: events.append((event, payload)),
+    )
+
+    assert result["capabilities"] == []
+    assert result["trace_summary"] == [
+        {
+            "event": "policy_decision",
+            "agent_name": "merchant_data_policy",
+            "status": "denied",
+            "scope": "competitor_private",
+        }
+    ]
+    assert result["token_usage"]["total_tokens"] == 0
+    assert "không thể" in result["reply"].lower()
+    assert "dữ liệu riêng tư" in result["reply"].lower()
+    assert [event for event, _ in events] == ["policy_decision"]

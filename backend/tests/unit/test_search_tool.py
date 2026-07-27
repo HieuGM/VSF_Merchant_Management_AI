@@ -1,7 +1,7 @@
 """Unit tests for Search & Discovery Tools (search_merchants, search_trending_dishes)."""
 from __future__ import annotations
 
-from database.models import Merchant, MarketTrendingDish
+from database.models import Merchant, MarketTrendingDish, MenuItem
 from relational_test_fixtures import seed_relational_profile
 from tools.merchant.search_tool import (
     search_merchants,
@@ -69,6 +69,65 @@ def test_search_merchants_tool_class(db_session, monkeypatch):
     tool = SearchMerchantsTool()
     output_str = tool._run(cuisine="Món Phở Đặc Biệt")
     assert "m_search_tool_01" in output_str
+
+
+def test_search_merchants_filters_numeric_menu_budget(db_session):
+    cheap = Merchant(
+        merchant_id="m_search_budget_cheap",
+        name="Cơm Bình Dân Giá Tốt",
+        cuisine="Cơm Ngân Sách Test",
+        city="Đà Nẵng",
+        city_slug="da_nang",
+        address="1 Hải Châu",
+        is_active=True,
+    )
+    expensive = Merchant(
+        merchant_id="m_search_budget_expensive",
+        name="Nhà Hàng Cao Cấp",
+        cuisine="Cơm Ngân Sách Test",
+        city="Đà Nẵng",
+        city_slug="da_nang",
+        address="2 Hải Châu",
+        is_active=True,
+    )
+    db_session.add_all([cheap, expensive])
+    seed_relational_profile(db_session, cheap.merchant_id, scores={})
+    seed_relational_profile(db_session, expensive.merchant_id, scores={})
+    db_session.add_all(
+        [
+            MenuItem(
+                item_id="item_budget_cheap",
+                merchant_id=cheap.merchant_id,
+                name="Cơm gà",
+                price=45_000,
+                is_available=True,
+            ),
+            MenuItem(
+                item_id="item_budget_expensive",
+                merchant_id=expensive.merchant_id,
+                name="Cơm đặc biệt",
+                price=150_000,
+                is_available=True,
+            ),
+        ]
+    )
+    db_session.commit()
+
+    result = search_merchants(
+        cuisine="Cơm Ngân Sách Test",
+        city="Đà Nẵng",
+        max_menu_price=50_000,
+        db=db_session,
+    )
+
+    ids = {item["merchant_id"] for item in result["merchants"]}
+    assert cheap.merchant_id in ids
+    assert expensive.merchant_id not in ids
+    cheap_result = next(
+        item for item in result["merchants"] if item["merchant_id"] == cheap.merchant_id
+    )
+    assert cheap_result["menu_price_min"] == 45_000
+    assert cheap_result["menu_price_median"] == 45_000
 
 
 def test_search_trending_dishes(db_session):

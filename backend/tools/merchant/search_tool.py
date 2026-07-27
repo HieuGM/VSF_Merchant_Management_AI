@@ -6,6 +6,8 @@ returning token-efficient compact payloads (strips internal overall_score per C2
 from __future__ import annotations
 
 import json
+import math
+import statistics
 from typing import Any, Type
 from pydantic import BaseModel, Field
 from crewai.tools import BaseTool
@@ -13,11 +15,23 @@ from sqlalchemy.orm import Session
 
 from core.cache import CacheKeys, TTL_CANDIDATES, CachePort
 from database.connection import SessionLocal
-from database.models import Merchant, MerchantProfile, MarketTrendingDish
+from database.models import Merchant, MerchantProfile, MarketTrendingDish, MenuItem
 
 from sqlalchemy import or_
 
 _TTL_TRENDING = 10 * 60
+
+
+def _haversine_km(lat1: float, lng1: float, lat2: float, lng2: float) -> float:
+    radius = 6371.0
+    phi1, phi2 = math.radians(lat1), math.radians(lat2)
+    dphi = math.radians(lat2 - lat1)
+    dlambda = math.radians(lng2 - lng1)
+    value = (
+        math.sin(dphi / 2) ** 2
+        + math.cos(phi1) * math.cos(phi2) * math.sin(dlambda / 2) ** 2
+    )
+    return radius * 2 * math.atan2(math.sqrt(value), math.sqrt(1 - value))
 
 
 def normalize_city_slug_and_name(city_input: str | None) -> tuple[list[str], list[str]]:
@@ -86,7 +100,12 @@ def search_merchants(
     customer_segment: str | None = None,
     tier: str | None = None,
     price_level: str | None = None,
+    min_menu_price: int | None = None,
+    max_menu_price: int | None = None,
     min_rating: float | None = None,
+    anchor_merchant_id: str | None = None,
+    radius_km: float | None = None,
+    sort_by: str = "relevance",
     limit: int = 10,
     offset: int = 0,
     db: Session | None = None,
@@ -103,6 +122,10 @@ def search_merchants(
             limit=limit,
         )
         if cache
+        and min_menu_price is None
+        and max_menu_price is None
+        and anchor_merchant_id is None
+        and radius_km is None
         else None
     )
 
@@ -119,6 +142,17 @@ def search_merchants(
             .outerjoin(MerchantRating, Merchant.merchant_id == MerchantRating.merchant_id)
             .filter(Merchant.is_active == True)
         )
+
+        if min_menu_price is not None or max_menu_price is not None:
+            price_query = session.query(MenuItem.item_id).filter(
+                MenuItem.merchant_id == Merchant.merchant_id,
+                MenuItem.is_available == True,
+            )
+            if min_menu_price is not None:
+                price_query = price_query.filter(MenuItem.price >= min_menu_price)
+            if max_menu_price is not None:
+                price_query = price_query.filter(MenuItem.price <= max_menu_price)
+            stmt = stmt.filter(price_query.exists())
 
         # 1. City / City_slug normalization filter
         if city:
@@ -207,10 +241,42 @@ def search_merchants(
                 )
             )
 
-        rows = stmt.offset(offset).limit(min(limit, 25)).all()
+        anchor: Merchant | None = None
+        if anchor_merchant_id:
+            anchor = session.get(Merchant, anchor_merchant_id)
+        effective_radius = radius_km if (anchor and radius_km is not None) else None
+        row_limit = 200 if effective_radius is not None else min(limit, 25)
+        rows = stmt.offset(offset).limit(row_limit).all()
         results: list[dict[str, Any]] = []
 
         for m, p, r in rows:
+            distance_km: float | None = None
+            if (
+                effective_radius is not None
+                and anchor is not None
+                and anchor.lat is not None
+                and anchor.lng is not None
+                and m.lat is not None
+                and m.lng is not None
+            ):
+                distance_km = _haversine_km(anchor.lat, anchor.lng, m.lat, m.lng)
+                if distance_km > effective_radius:
+                    continue
+            elif effective_radius is not None:
+                continue
+
+            prices = [
+                int(value[0])
+                for value in (
+                    session.query(MenuItem.price)
+                    .filter(
+                        MenuItem.merchant_id == m.merchant_id,
+                        MenuItem.is_available == True,
+                    )
+                    .order_by(MenuItem.price)
+                    .all()
+                )
+            ]
             item = {
                 "merchant_id": m.merchant_id,
                 "name": m.name,
@@ -220,6 +286,11 @@ def search_merchants(
                 "city_slug": m.city_slug,
                 "address": m.address,
                 "price_level": p.price_level if p else "trung bình",
+                "menu_price_min": min(prices) if prices else None,
+                "menu_price_median": (
+                    int(statistics.median(prices)) if prices else None
+                ),
+                "menu_price_max": max(prices) if prices else None,
                 "tier": p.tier if p else None,
                 "ratings": {
                     "shopeefood": float(r.shopeefood_rating) if (r and r.shopeefood_rating) else None,
@@ -232,8 +303,32 @@ def search_merchants(
                     "customer_segments": m.customer_segments or [],
                 },
                 "is_active": m.is_active,
+                "distance_km": (
+                    round(distance_km, 2) if distance_km is not None else None
+                ),
             }
             results.append(item)
+
+        if sort_by == "distance":
+            results.sort(
+                key=lambda item: (
+                    item["distance_km"] is None,
+                    item["distance_km"] or math.inf,
+                    item["name"],
+                )
+            )
+        elif sort_by == "rating":
+            def _rating(item: dict[str, Any]) -> float:
+                ratings = item["ratings"]
+                if ratings.get("shopeefood") is not None:
+                    return float(ratings["shopeefood"])
+                if ratings.get("foody") is not None:
+                    return float(ratings["foody"]) / 2
+                return -1
+
+            results.sort(key=lambda item: (-_rating(item), item["name"]))
+
+        results = results[: min(limit, 25)]
 
         result = {
             "status": "ok",
@@ -340,8 +435,13 @@ class SearchMerchantsInput(BaseModel):
     taste: str | None = Field(None, description="Taste tag filter (e.g. 'cay', 'chua', 'ngọt', 'đậm đà')")
     customer_segment: str | None = Field(None, description="Customer segment tag filter (e.g. 'gia đình', 'học sinh sinh viên', 'dân văn phòng', 'cặp đôi')")
     tier: Literal["hero", "background"] | None = Field(None, description="Merchant tier filter.")
-    price_level: Literal["rẻ", "bình dân", "trung bình", "cao cấp"] | None = Field(None, description="Price level segment.")
+    price_level: Literal["rẻ", "trung bình", "cao cấp"] | None = Field(None, description="Price level segment.")
+    min_menu_price: int | None = Field(None, ge=0, description="Minimum available menu item price in VND.")
+    max_menu_price: int | None = Field(None, ge=0, description="Maximum affordable menu item price in VND.")
     min_rating: float | None = Field(None, description="Minimum platform rating threshold (0.0 .. 5.0).")
+    anchor_merchant_id: str | None = Field(None, description="Owner merchant used as the center of a nearby search.")
+    radius_km: float | None = Field(None, ge=0.5, le=20, description="Radius around anchor merchant in kilometers.")
+    sort_by: Literal["relevance", "rating", "distance"] = Field("relevance", description="Deterministic result ordering.")
     limit: int = Field(10, description="Max results (1..25)")
 
 
@@ -367,7 +467,12 @@ class SearchMerchantsTool(BaseTool):
         customer_segment: str | None = None,
         tier: str | None = None,
         price_level: str | None = None,
+        min_menu_price: int | None = None,
+        max_menu_price: int | None = None,
         min_rating: float | None = None,
+        anchor_merchant_id: str | None = None,
+        radius_km: float | None = None,
+        sort_by: str = "relevance",
         limit: int = 10,
     ) -> str:
         from core.dependencies import get_cache
@@ -383,7 +488,12 @@ class SearchMerchantsTool(BaseTool):
             customer_segment=customer_segment,
             tier=tier,
             price_level=price_level,
+            min_menu_price=min_menu_price,
+            max_menu_price=max_menu_price,
             min_rating=min_rating,
+            anchor_merchant_id=anchor_merchant_id,
+            radius_km=radius_km,
+            sort_by=sort_by,
             limit=limit,
             cache=get_cache(),
         )

@@ -79,18 +79,19 @@ def test_compact_session_memory(db_session):
         session_svc.append_message(
             "sess_compact_01",
             "agent",
-            f"Agent long response {i} " + ("x" * 250),
+            f"Agent long response {i} " + ("x" * 500),
         )
 
     # get_compact_history with max_turns=3 should return last 6 messages (3 turns)
     compact_history = session_svc.get_compact_history("sess_compact_01", max_turns=3)
     assert len(compact_history) == 6
 
-    # Verify agent messages are truncated to <= 203 chars (200 + '...')
-    agent_msgs = [m for m in compact_history if m["role"] == "agent"]
-    assert len(agent_msgs) == 3
-    for msg in agent_msgs:
-        assert len(msg["text"]) <= 203
+    # LLM-compatible history uses the standard assistant role. Responses retain
+    # up to 450 chars so follow-up rewrite keeps relevant merchant facts.
+    assistant_msgs = [m for m in compact_history if m["role"] == "assistant"]
+    assert len(assistant_msgs) == 3
+    for msg in assistant_msgs:
+        assert len(msg["text"]) <= 453
         assert msg["text"].endswith("...")
 
     # User messages should remain intact

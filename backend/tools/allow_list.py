@@ -27,12 +27,15 @@ AGENT_TOOL_ALLOW_LIST: dict[str, tuple[str, ...]] = {
         "get_merchant_profile_summary",
         "get_merchant_operational_metrics",
         "get_merchant_complaints",
+        "get_merchant_reviews",
         "get_menu_and_food_images",
+        "compare_merchant_images",
     ),
     "diagnosis": (
         "get_merchant_profile_summary",
         "get_merchant_operational_metrics",
         "get_merchant_complaints",
+        "get_merchant_reviews",
         "diagnose_merchant",
     ),
     "recommendation": (
@@ -45,6 +48,8 @@ AGENT_TOOL_ALLOW_LIST: dict[str, tuple[str, ...]] = {
         "search_merchants",
         "search_trending_dishes",
         "compare_merchant_benchmark",
+        "aggregate_public_merchant_cohort",
+        "compare_owner_to_public_cohort",
     ),
     "evidence_verifier": (
         "get_merchant_profile_summary",

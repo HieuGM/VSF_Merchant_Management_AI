@@ -7,6 +7,7 @@ Pipeline Flow:
 Query -> Load Session History -> Intent Extraction by LLM -> Planning Agent -> Specialist Agents Execution via BaseTools -> 2-Layer Evidence Verification -> Synthesis LLM Agent -> Update Session State & Token Usage -> Final Response.
 """
 import json
+import time
 import uuid
 from datetime import datetime, timezone
 from typing import Any, Generator
@@ -45,6 +46,18 @@ from tools.merchant.crewai_tools import (
     RecommendImprovementsTool,
 )
 from tools.merchant.diagnosis_tool import diagnose_merchant
+from models.merchant_orchestration import (
+    Capability,
+    EvidenceValidationResult,
+    ExecutionResult,
+    MerchantExecutionContext,
+    PlannerResult,
+    TokenUsage,
+)
+from services.evidence_validation_service import EvidenceValidationService
+from services.merchant_plan_executor import execute_plan
+from services.merchant_query_planner import rewrite_then_plan
+from services.merchant_data_policy import MerchantDataPolicy
 
 
 from pydantic import BaseModel, Field
@@ -429,6 +442,24 @@ def classify_intent(message: str) -> str:
         except Exception as e:
             print(f"[LLM Intent Classifier Error]: {e}")
 
+    from services.merchant_query_planner import fallback_capability_plan
+    from models.merchant_orchestration import Capability
+
+    capabilities = set(fallback_capability_plan(clean_msg).capabilities)
+    if Capability.OWNER_VS_MARKET_BENCHMARK in capabilities:
+        return "benchmark"
+    if (
+        Capability.OWNER_DIAGNOSIS in capabilities
+        or Capability.RECOMMENDATION in capabilities
+    ):
+        return "weakness_explanation"
+    if (
+        Capability.OWNER_PROFILE_ANALYSIS in capabilities
+        or Capability.OWNER_REVIEW_ANALYSIS in capabilities
+    ):
+        return "ops_analysis"
+    if Capability.RESTAURANT_SEARCH in capabilities:
+        return "search"
     return "general_chat"
 
 
@@ -477,6 +508,246 @@ def rewrite_query(message: str, history_str: str = "") -> str:
         print(f"[Query Rewrite Error]: {e}")
 
     return clean_msg
+
+
+def _deterministic_synthesis(
+    query: str,
+    capabilities: list[Capability],
+    execution: ExecutionResult,
+    evidence: EvidenceValidationResult,
+) -> str:
+    """Render a grounded Vietnamese response when the synthesis LLM is unavailable."""
+    sections: list[str] = []
+    outputs = execution.outputs
+
+    search = outputs.get("search")
+    if search is not None:
+        merchants = search.get("merchants", [])
+        if merchants:
+            lines = []
+            for item in merchants[:10]:
+                ratings = item.get("ratings") or {}
+                rating = ratings.get("shopeefood") or ratings.get("foody")
+                price = item.get("menu_price_median")
+                metadata = []
+                if rating is not None:
+                    metadata.append(f"rating {rating}")
+                if price is not None:
+                    metadata.append(f"giá giữa khoảng {int(price):,}đ")
+                if item.get("distance_km") is not None:
+                    metadata.append(f"cách {item['distance_km']} km")
+                suffix = f" — {', '.join(metadata)}" if metadata else ""
+                lines.append(f"- **{item['name']}** ({item.get('cuisine', '')}){suffix}")
+            sections.append("### Kết quả tìm kiếm\n" + "\n".join(lines))
+        else:
+            sections.append(
+                "### Kết quả tìm kiếm\nKhông tìm thấy quán phù hợp trong dữ liệu hiện có."
+            )
+
+    cohort = outputs.get("cohort")
+    if cohort and cohort.get("cohort_count", 0):
+        lines = [f"- Quy mô cohort: {cohort['cohort_count']} quán."]
+        dimensions = cohort.get("aggregates", {}).get("dimensions", {})
+        for dimension, stats in dimensions.items():
+            lines.append(
+                f"- {dimension}: trung bình {stats['mean']:.3f}, "
+                f"trung vị {stats['median']:.3f}."
+            )
+        themes = cohort.get("aggregates", {}).get("review_themes", {})
+        if themes:
+            top_themes = ", ".join(
+                f"{name} ({count})" for name, count in list(themes.items())[:5]
+            )
+            lines.append(f"- Chủ đề review công khai nổi bật: {top_themes}.")
+        sections.append("### Phân tích nhóm quán\n" + "\n".join(lines))
+
+    profile = outputs.get("owner_profile")
+    if profile and profile.get("status") == "ok":
+        dimensions = profile.get("dimensions", {})
+        ranked = sorted(
+            (
+                (name, score)
+                for name, score in dimensions.items()
+                if isinstance(score, (int, float))
+            ),
+            key=lambda item: item[1],
+        )
+        lines = [f"- {name}: {score:.3f}" for name, score in ranked]
+        sections.append("### Chất lượng quán của bạn\n" + "\n".join(lines))
+
+    reviews = outputs.get("owner_reviews")
+    if reviews and reviews.get("total_count", 0):
+        sentiments = reviews.get("sentiment_counts", {})
+        themes = reviews.get("themes", {})
+        sections.append(
+            "### Review của quán\n"
+            f"- Tổng review phân tích: {reviews['total_count']}.\n"
+            f"- Cảm xúc: {sentiments}.\n"
+            f"- Chủ đề nổi bật: {themes}."
+        )
+
+    diagnosis = outputs.get("diagnosis")
+    if diagnosis:
+        causes = diagnosis.get("causes", [])
+        if causes:
+            lines = [
+                f"- {cause.get('issue', cause.get('dimension'))} "
+                f"(evidence: {', '.join(cause.get('evidence_refs', []))})"
+                for cause in causes[:5]
+            ]
+            sections.append("### Điểm yếu và nguyên nhân\n" + "\n".join(lines))
+        elif diagnosis.get("status") == "healthy":
+            sections.append(
+                "### Điểm yếu và nguyên nhân\n"
+                "Không có chiều chất lượng nào dưới ngưỡng chẩn đoán 0.600."
+            )
+
+    benchmark = outputs.get("benchmark")
+    if benchmark and benchmark.get("dimensions"):
+        lines = []
+        for dimension, item in benchmark["dimensions"].items():
+            direction = "cao hơn" if item["delta"] > 0 else "thấp hơn"
+            lines.append(
+                f"- {dimension}: quán {item['owner_value']:.3f}, "
+                f"cohort {item['cohort_mean']:.3f} — {direction} "
+                f"{abs(item['delta']):.3f}."
+            )
+        sections.append(
+            "### So sánh quán với cohort công khai\n" + "\n".join(lines)
+        )
+
+    image_comparison = outputs.get("image_comparison")
+    if image_comparison:
+        owner = image_comparison.get("owner_summary", {})
+        public = image_comparison.get("public_cohort_summary", {})
+        gaps = image_comparison.get("gaps", {})
+        lines = [
+            f"- Hình ảnh quán: {owner.get('image_count', 0)} ảnh, "
+            f"chất lượng trung bình {owner.get('quality_mean')}, "
+            f"độ mờ trung bình {owner.get('blur_mean')}.",
+            f"- Nhóm công khai: {public.get('image_count', 0)} ảnh từ "
+            f"{public.get('merchant_count', 0)} quán, chất lượng trung bình "
+            f"{public.get('quality_mean')}, độ mờ trung bình "
+            f"{public.get('blur_mean')}.",
+            f"- Khác biệt chất lượng: {gaps.get('quality_delta')}; "
+            f"khác biệt độ mờ: {gaps.get('blur_delta')}.",
+        ]
+        lines.extend(
+            f"- {difference}"
+            for difference in image_comparison.get("differences", [])
+        )
+        public_samples = image_comparison.get("public_samples", [])
+        if public_samples:
+            lines.append(
+                "- Ảnh công khai tham chiếu: "
+                + ", ".join(
+                    f"{sample.get('merchant_name')} / {sample.get('item_name')}"
+                    for sample in public_samples
+                )
+                + "."
+            )
+        sections.append("### So sánh hình ảnh món ăn\n" + "\n".join(lines))
+
+    recommendation = outputs.get("recommendation")
+    if recommendation is not None:
+        actions = recommendation.get("actions", [])
+        if actions:
+            lines = [
+                f"- **{action['action_title']}**: {action['description']}"
+                for action in actions
+            ]
+            body = "\n".join(lines)
+        else:
+            body = (
+                "Chưa đủ evidence để đề xuất hành động cụ thể; cần bổ sung dữ "
+                "liệu hoặc kiểm tra lại các tín hiệu chẩn đoán."
+            )
+        sections.append("### Hành động đề xuất\n" + body)
+
+    if evidence.rejected:
+        sections.append(
+            f"_Đã loại {len(evidence.rejected)} nhận định không vượt qua kiểm tra "
+            "evidence/policy._"
+        )
+
+    if not sections:
+        return (
+            "Xin chào! Tôi có thể giúp tìm và phân tích thị trường quán ăn, "
+            "đánh giá quán của bạn, giải thích điểm yếu, so sánh cohort công khai "
+            "và đề xuất cải thiện."
+        )
+    return "\n\n".join(sections)
+
+
+def _synthesize_with_usage(
+    merchant_id: str,
+    query: str,
+    history_str: str,
+    execution: ExecutionResult,
+    evidence: EvidenceValidationResult,
+    settings: Any,
+) -> tuple[str, TokenUsage]:
+    if not settings.llm_configured:
+        return (
+            _deterministic_synthesis(
+                query,
+                [],
+                execution,
+                evidence,
+            ),
+            TokenUsage(),
+        )
+
+    verified_context = {
+        "tool_outputs": execution.outputs,
+        "verified_claims": [
+            claim.model_dump() for claim in evidence.valid_claims
+        ],
+        "rejected_claim_count": len(evidence.rejected),
+    }
+    task = Task(
+        description=(
+            "Trả lời trực tiếp câu hỏi merchant owner bằng tiếng Việt.\n"
+            "User query: {query}\n"
+            "Conversation history: {chat_history}\n"
+            "Verified structured context: {execution_context}\n"
+            "Chỉ dùng dữ liệu trong verified context. Không tiết lộ KPI vận hành "
+            "riêng, complaint hoặc diagnosis của đối thủ. Nếu dữ liệu thiếu, nói "
+            "rõ giới hạn. Với câu compound, trả lời đủ từng phần."
+        ),
+        expected_output=(
+            "Câu trả lời tiếng Việt có cấu trúc, grounded, ngắn gọn và đủ các "
+            "phần user yêu cầu."
+        ),
+        agent=MerchantAdvisorCrew().synthesis_advisor(),
+    )
+    crew = Crew(
+        agents=[task.agent],
+        tasks=[task],
+        process=Process.sequential,
+        verbose=False,
+    )
+    result = crew.kickoff(
+        inputs={
+            "merchant_id": merchant_id,
+            "query": query,
+            "chat_history": history_str,
+            "execution_context": json.dumps(
+                verified_context,
+                ensure_ascii=False,
+                default=str,
+            ),
+        }
+    )
+    usage = getattr(result, "token_usage", None)
+    return (
+        str(result.raw if hasattr(result, "raw") else result),
+        TokenUsage(
+            total_tokens=getattr(usage, "total_tokens", 0),
+            prompt_tokens=getattr(usage, "prompt_tokens", 0),
+            completion_tokens=getattr(usage, "completion_tokens", 0),
+        ),
+    )
 
 
 class MerchantFlowDispatcher:
@@ -541,6 +812,463 @@ class MerchantFlowDispatcher:
                 session.close()
 
     def chat(
+        self,
+        merchant_id: str,
+        message: str,
+        session_id: str | None = None,
+        user_id: str | None = None,
+        db: Session | None = None,
+        step_callback: Any = None,
+        task_callback: Any = None,
+        event_callback: Any = None,
+    ) -> dict[str, Any]:
+        """Execute one rewrite-first, multi-capability, policy-aware chat run."""
+        del step_callback, task_callback  # Backward-compatible parameters.
+        started_clock = time.perf_counter()
+        session = db or SessionLocal()
+        settings = get_settings()
+        trace_id = f"tr-{uuid.uuid4().hex[:12]}"
+        session_svc = ChatSessionService(session)
+        run_svc = AgentRunService(session)
+        run_started = False
+
+        try:
+            session_obj = session_svc.get_or_create_session(
+                session_id=session_id,
+                user_id=user_id,
+                context_snapshot={"merchant_id": merchant_id},
+            )
+            sid = session_obj.session_id
+            history = session_svc.get_compact_history(
+                session_id=sid,
+                max_turns=3,
+            )
+            session_svc.append_message(
+                session_id=sid,
+                sender="user",
+                text=message,
+                trace_id=trace_id,
+            )
+
+            is_in_scope, reject_reason = validate_query_scope(message)
+            if not is_in_scope:
+                run_svc.start_run(
+                    trace_id=trace_id,
+                    session_id=sid,
+                    user_id=user_id,
+                    crew_name="merchant_advisor_crew",
+                    intent="out_of_scope",
+                )
+                run_started = True
+                reply = reject_reason or (
+                    "Câu hỏi nằm ngoài phạm vi hỗ trợ của Merchant Advisor AI."
+                )
+                token_dict = TokenUsage().model_dump()
+                run_svc.finish_run(
+                    trace_id=trace_id,
+                    status="completed",
+                    token_usage_json=token_dict,
+                )
+                session_svc.append_message(
+                    session_id=sid,
+                    sender="agent",
+                    text=reply,
+                    trace_id=trace_id,
+                    structured_payload={"token_usage": token_dict},
+                )
+                return {
+                    "trace_id": trace_id,
+                    "session_id": sid,
+                    "merchant_id": merchant_id,
+                    "intent": "out_of_scope",
+                    "capabilities": [],
+                    "rewritten_query": message.strip(),
+                    "reply": reply,
+                    "token_usage": token_dict,
+                    "trace_summary": [],
+                    "duration_ms": round(
+                        (time.perf_counter() - started_clock) * 1000
+                    ),
+                    "merchants": [],
+                }
+
+            query_policy = MerchantDataPolicy(merchant_id).query_decision(message)
+            if not query_policy.allowed:
+                run_svc.start_run(
+                    trace_id=trace_id,
+                    session_id=sid,
+                    user_id=user_id,
+                    crew_name="merchant_advisor_crew",
+                    intent="policy_denied",
+                )
+                run_started = True
+                policy_payload = {
+                    "agent_name": "merchant_data_policy",
+                    "status": "denied",
+                    "scope": query_policy.scope,
+                    "private_fields": query_policy.private_fields,
+                    "decision": "deny_competitor_private",
+                    "timestamp": _utc_now_iso(),
+                }
+                run_svc.record_event(
+                    trace_id=trace_id,
+                    event_type="policy_decision",
+                    agent_name="merchant_data_policy",
+                    task_name="query_policy_gate",
+                    output_summary_json={
+                        key: value
+                        for key, value in policy_payload.items()
+                        if key != "timestamp"
+                    },
+                    status="denied",
+                )
+                if event_callback is not None:
+                    event_callback("policy_decision", policy_payload)
+                reply = query_policy.reason or (
+                    "Không thể cung cấp dữ liệu riêng tư của merchant khác."
+                )
+                token_dict = TokenUsage().model_dump()
+                run_svc.finish_run(
+                    trace_id=trace_id,
+                    status="completed",
+                    token_usage_json=token_dict,
+                )
+                session_svc.append_message(
+                    session_id=sid,
+                    sender="agent",
+                    text=reply,
+                    trace_id=trace_id,
+                    structured_payload={
+                        "token_usage": token_dict,
+                        "policy_scope": query_policy.scope,
+                    },
+                )
+                return {
+                    "trace_id": trace_id,
+                    "session_id": sid,
+                    "merchant_id": merchant_id,
+                    "intent": "policy_denied",
+                    "capabilities": [],
+                    "rewritten_query": message.strip(),
+                    "reply": reply,
+                    "token_usage": token_dict,
+                    "trace_summary": [
+                        {
+                            "event": "policy_decision",
+                            "agent_name": "merchant_data_policy",
+                            "status": "denied",
+                            "scope": query_policy.scope,
+                        }
+                    ],
+                    "duration_ms": round(
+                        (time.perf_counter() - started_clock) * 1000
+                    ),
+                    "merchants": [],
+                    "competitors": [],
+                    "structured_outputs": {},
+                    "evidence_status": "not_required",
+                }
+
+            context = MerchantExecutionContext(
+                trace_id=trace_id,
+                session_id=sid,
+                user_id=user_id,
+                owner_merchant_id=merchant_id,
+            )
+            planner: PlannerResult = rewrite_then_plan(
+                message,
+                history=history,
+                context=context,
+            )
+            capabilities = [
+                capability.value for capability in planner.plan.capabilities
+            ]
+            intent = ",".join(capabilities)
+            run_svc.start_run(
+                trace_id=trace_id,
+                session_id=sid,
+                user_id=user_id,
+                crew_name="merchant_advisor_crew",
+                intent=intent,
+            )
+            run_started = True
+
+            def _persistable_payload(
+                event_type: str,
+                payload: dict[str, Any],
+            ) -> dict[str, Any]:
+                if event_type != "tool_result":
+                    return {
+                        key: value
+                        for key, value in payload.items()
+                        if key not in {"timestamp"}
+                    }
+                result = payload.get("result")
+                summary: dict[str, Any] = {
+                    "step_id": payload.get("step_id"),
+                    "status": payload.get("status"),
+                }
+                if isinstance(result, dict):
+                    for key in (
+                        "count",
+                        "cohort_count",
+                        "status",
+                    ):
+                        if key in result:
+                            summary[key] = result[key]
+                    if isinstance(result.get("dimensions"), dict):
+                        summary["dimensions"] = list(result["dimensions"])
+                return summary
+
+            def emit(event_type: str, payload: dict[str, Any]) -> None:
+                enriched = {**payload, "timestamp": _utc_now_iso()}
+                run_svc.record_event(
+                    trace_id=trace_id,
+                    event_type=event_type,
+                    agent_name=payload.get("agent_name"),
+                    task_name=payload.get("step_id") or payload.get("task"),
+                    tool_name=payload.get("tool_name"),
+                    output_summary_json=_persistable_payload(
+                        event_type,
+                        payload,
+                    ),
+                    duration_ms=payload.get("duration_ms"),
+                    status=payload.get("status", "ok"),
+                    error_code=payload.get("error_code"),
+                )
+                if event_callback is not None:
+                    event_callback(event_type, enriched)
+
+            emit(
+                "plan",
+                {
+                    "agent_name": "merchant_planner",
+                    "task": "rewrite_and_plan",
+                    "rewritten_query": planner.rewritten_query,
+                    "capabilities": capabilities,
+                    "filters": planner.plan.filters.model_dump(exclude_none=True),
+                    "used_fallback": planner.used_fallback,
+                },
+            )
+            execution = execute_plan(
+                planner.plan,
+                context=context,
+                db=session,
+                event_callback=emit,
+            )
+            if execution.claims:
+                evidence = EvidenceValidationService(session).validate_claims(
+                    execution.claims,
+                    context=context,
+                    aggregate_snapshots=execution.aggregate_snapshots,
+                )
+            else:
+                evidence = EvidenceValidationResult(status="not_required")
+            emit(
+                "evidence_validation",
+                {
+                    "agent_name": "evidence_resolver",
+                    "task": "resolve_and_filter_evidence",
+                    "status": evidence.status,
+                    "valid_claims": len(evidence.valid_claims),
+                    "rejected_claims": len(evidence.rejected),
+                    "rejection_reasons": [
+                        item.reason for item in evidence.rejected
+                    ],
+                },
+            )
+
+            history_str = json.dumps(history, ensure_ascii=False)
+            try:
+                reply, synthesis_usage = _synthesize_with_usage(
+                    merchant_id,
+                    planner.rewritten_query,
+                    history_str,
+                    execution,
+                    evidence,
+                    settings,
+                )
+            except Exception as synthesis_error:
+                emit(
+                    "agent_retry",
+                    {
+                        "agent_name": "synthesis_advisor",
+                        "task": "deterministic_synthesis_fallback",
+                        "detail": str(synthesis_error),
+                    },
+                )
+                reply = _deterministic_synthesis(
+                    planner.rewritten_query,
+                    planner.plan.capabilities,
+                    execution,
+                    evidence,
+                )
+                synthesis_usage = TokenUsage()
+
+            total_usage = planner.token_usage + synthesis_usage
+            token_dict = total_usage.model_dump()
+            duration_ms = round(
+                (time.perf_counter() - started_clock) * 1000
+            )
+            trace_summary = [
+                {
+                    "event": "plan",
+                    "agent_name": "merchant_planner",
+                    "capabilities": capabilities,
+                },
+                *execution.trace_steps,
+                {
+                    "event": "evidence_validation",
+                    "agent_name": "evidence_resolver",
+                    "status": evidence.status,
+                    "valid_claims": len(evidence.valid_claims),
+                    "rejected_claims": len(evidence.rejected),
+                },
+            ]
+            run_svc.finish_run(
+                trace_id=trace_id,
+                status="completed",
+                token_usage_json=token_dict,
+            )
+            session_svc.append_message(
+                session_id=sid,
+                sender="agent",
+                text=reply,
+                trace_id=trace_id,
+                structured_payload={
+                    "token_usage": token_dict,
+                    "capabilities": capabilities,
+                    "rewritten_query": planner.rewritten_query,
+                    "duration_ms": duration_ms,
+                },
+            )
+            return {
+                "trace_id": trace_id,
+                "session_id": sid,
+                "merchant_id": merchant_id,
+                "intent": intent,
+                "capabilities": capabilities,
+                "rewritten_query": planner.rewritten_query,
+                "reply": reply,
+                "token_usage": token_dict,
+                "trace_summary": trace_summary,
+                "duration_ms": duration_ms,
+                "merchants": execution.merchants,
+                "competitors": execution.merchants,
+                "structured_outputs": execution.outputs,
+                "evidence_status": evidence.status,
+            }
+        except Exception as error:
+            if run_started:
+                try:
+                    run_svc.finish_run(
+                        trace_id=trace_id,
+                        status="failed",
+                        error_code=str(error),
+                    )
+                except Exception:
+                    pass
+            raise
+        finally:
+            if db is None:
+                session.close()
+
+    def chat_stream(
+        self,
+        merchant_id: str,
+        message: str,
+        session_id: str | None = None,
+        user_id: str | None = None,
+        db: Session | None = None,
+    ) -> Generator[str, None, None]:
+        """Stream events from the same single chat run used for the final answer."""
+        del db  # Worker owns a thread-local SQLAlchemy session.
+        import queue
+        import threading
+
+        event_queue: queue.Queue[tuple[str, dict[str, Any]] | None] = queue.Queue()
+        result_box: dict[str, Any] = {}
+
+        def event_cb(event_type: str, payload: dict[str, Any]) -> None:
+            event_queue.put((event_type, payload))
+
+        def worker() -> None:
+            worker_session = SessionLocal()
+            try:
+                result_box["res"] = self.chat(
+                    merchant_id=merchant_id,
+                    message=message,
+                    session_id=session_id,
+                    user_id=user_id,
+                    db=worker_session,
+                    event_callback=event_cb,
+                )
+            except Exception as error:
+                result_box["err"] = error
+            finally:
+                worker_session.close()
+                event_queue.put(None)
+
+        thread = threading.Thread(target=worker, daemon=True)
+        thread.start()
+        start_time = time.time()
+        timeout_seconds = 300
+
+        while True:
+            try:
+                event = event_queue.get(timeout=0.2)
+                if event is None:
+                    break
+                event_type, payload = event
+                yield (
+                    f"event: {event_type}\n"
+                    f"data: {json.dumps(payload, ensure_ascii=False, default=str)}\n\n"
+                )
+            except queue.Empty:
+                if time.time() - start_time > timeout_seconds:
+                    result_box["err"] = RuntimeError(
+                        "Hệ thống xử lý quá thời gian chờ 300 giây."
+                    )
+                    break
+                if not thread.is_alive() and event_queue.empty():
+                    break
+
+        thread.join(timeout=1.0)
+        if "res" in result_box:
+            result = result_box["res"]
+            reply = result.get("reply", "")
+            for index in range(0, len(reply), 24):
+                yield (
+                    "event: token_chunk\n"
+                    f"data: {json.dumps({'text': reply[index:index + 24]}, ensure_ascii=False)}\n\n"
+                )
+            finish = {
+                "trace_id": result.get("trace_id", ""),
+                "status": "COMPLETED",
+                "capabilities": result.get("capabilities", []),
+                "rewritten_query": result.get("rewritten_query", message),
+                "token_usage": result.get("token_usage", {}),
+                "duration_ms": result.get("duration_ms"),
+                "merchants": result.get("merchants", []),
+                "competitors": result.get("merchants", []),
+                "evidence_status": result.get("evidence_status"),
+            }
+            yield (
+                "event: execution_finish\n"
+                f"data: {json.dumps(finish, ensure_ascii=False, default=str)}\n\n"
+            )
+        else:
+            error_text = str(result_box.get("err", "Unknown execution error"))
+            yield (
+                "event: agent_error\n"
+                f"data: {json.dumps({'agent_name': 'MerchantFlow', 'detail': error_text, 'timestamp': _utc_now_iso()}, ensure_ascii=False)}\n\n"
+            )
+            yield (
+                "event: execution_finish\n"
+                f"data: {json.dumps({'status': 'FAILED', 'error': error_text}, ensure_ascii=False)}\n\n"
+            )
+
+    def _legacy_chat(
         self,
         merchant_id: str,
         message: str,
@@ -723,7 +1451,7 @@ class MerchantFlowDispatcher:
             if db is None:
                 session.close()
 
-    def chat_stream(
+    def _legacy_chat_stream(
         self,
         merchant_id: str,
         message: str,
