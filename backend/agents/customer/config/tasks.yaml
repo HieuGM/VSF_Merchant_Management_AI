@@ -83,7 +83,7 @@ explanation_task:
     - Câu hoàn toàn ngoài ẩm thực: đáp ấm áp rồi khéo léo kéo về food.
     - KHÔNG BAO GIỜ bịa quán cụ thể (Loại 1) để câu trả lời nghe đầy đủ.
 
-    KHI CÓ QUÁN: gọi get_merchant_profile cho TỐI ĐA 3 quán đầu, mỗi merchant_id 1 lần.
+    KHI CÓ QUÁN: gọi get_merchant_profile cho TỐI ĐA 2 quán đầu, mỗi merchant_id 1 lần.
   expected_output: >
     Câu trả lời tiếng Việt tự nhiên, ấm áp (2-4 câu) như trò chuyện với bạn — KHÔNG cứng nhắc — kèm
     reasons (lý do gắn evidence/signal) và referenced_signals. Không bịa dữ kiện ngoài evidence.
