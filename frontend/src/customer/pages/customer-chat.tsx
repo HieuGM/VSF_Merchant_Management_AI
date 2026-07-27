@@ -1,23 +1,26 @@
 /**
  * Customer Discovery chat (core screen). Streams the crew run over SSE and renders
- * live progress → answer → ranked restaurant cards. Preferences from the Preference
- * Center are folded into the query; location is sent when the user opted in.
+ * live progress → answer → ranked restaurant cards. Chat state is shared via context
+ * (lifted to CustomerHome); scroll is driven by useStickToBottom (instant pin while
+ * near the bottom, otherwise a "jump to latest" pill). Preferences are folded into the
+ * query; location is sent when the user opted in.
  */
 import { useEffect, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
+import { ArrowDown, Leaf } from "lucide-react";
 import { ChatMessageView } from "../components/chat-message";
+import { Composer } from "../components/composer";
 import { QuickPrompts } from "../components/quick-prompts";
-import { useCustomerChat } from "../hooks/use-customer-chat";
-import { useCustomerIdentity } from "../hooks/use-customer-identity";
+import { useChat } from "../context/chat-provider";
 import { preferencesToContext, usePreferences } from "../hooks/use-preferences";
+import { useStickToBottom } from "../hooks/use-stick-to-bottom";
 import "./customer-chat.css";
 
 export default function CustomerChat() {
-  const identity = useCustomerIdentity();
-  const { messages, sending, send } = useCustomerChat(identity);
+  const { messages, sending, send, stop } = useChat();
   const { prefs } = usePreferences();
   const [draft, setDraft] = useState("");
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const { ref, atBottom, scrollToBottom, onScroll } = useStickToBottom<HTMLDivElement>();
   // Ref-guard for the seed effect: React StrictMode double-invokes mount effects in dev,
   // so without this the landing-page prompt fires twice and the query is sent duplicated.
   const seededRef = useRef(false);
@@ -43,56 +46,58 @@ export default function CustomerChat() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Keep the latest turn in view as content streams in.
-  useEffect(() => {
-    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
-  }, [messages]);
-
   const empty = messages.length === 0;
 
   return (
     <div className="cchat">
-      <div ref={scrollRef} className="cchat__stream cust-scroll">
-        {empty ? (
-          <div className="cchat__welcome cust-rise">
-            <div className="cchat__welcome-badge">🍽️</div>
-            <h2>Hôm nay bạn muốn ăn gì?</h2>
-            <p>Kể cho trợ lý nghe khẩu vị, ngân sách hay tâm trạng — mình lo phần còn lại.</p>
-            <QuickPrompts onPick={submit} columns />
-          </div>
-        ) : (
-          <div className="cchat__messages">
-            {messages.map((m) => (
-              <ChatMessageView key={m.id} msg={m} />
-            ))}
-          </div>
-        )}
+      <div
+        ref={ref}
+        className="cchat__stream cust-scroll"
+        onScroll={onScroll}
+      >
+        <div className="cchat__inner">
+          {empty ? (
+            <div className="cchat__welcome cust-rise">
+              <span className="cchat__welcome-logo" aria-hidden="true">
+                <Leaf size={26} strokeWidth={2.2} />
+              </span>
+              <h2>Hôm nay bạn muốn ăn gì?</h2>
+              <p>Kể cho trợ lý nghe khẩu vị, ngân sách hay tâm trạng — mình lo phần còn lại.</p>
+              <QuickPrompts onPick={submit} columns />
+            </div>
+          ) : (
+            <div className="cchat__messages">
+              {messages.map((m) => (
+                <ChatMessageView key={m.id} msg={m} />
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
-      <form
-        className="cchat__composer cust-glass-strong"
-        onSubmit={(e) => {
-          e.preventDefault();
-          submit(draft);
-        }}
-      >
-        <input
-          className="cchat__input"
-          value={draft}
-          onChange={(e) => setDraft(e.target.value)}
-          placeholder="Nhập món, khẩu vị hoặc tâm trạng…"
-          disabled={sending}
-          aria-label="Tin nhắn"
-        />
+      {!atBottom && !empty && (
         <button
-          type="submit"
-          className="cust-btn cust-btn-primary cchat__send"
-          disabled={sending || !draft.trim()}
-          aria-label="Gửi"
+          type="button"
+          className="cchat__jump cust-btn"
+          onClick={() => scrollToBottom("smooth")}
+          aria-label="Cuộn xuống tin mới nhất"
         >
-          {sending ? <span className="cchat__send-spin" /> : "➤"}
+          <ArrowDown size={16} /> Xem tin mới
         </button>
-      </form>
+      )}
+
+      <div className="cchat__composer-wrap">
+        <Composer
+          value={draft}
+          onChange={setDraft}
+          onSubmit={() => submit(draft)}
+          onStop={stop}
+          streaming={sending}
+          placeholder="Nhập món, khẩu vị hoặc tâm trạng…"
+          autoFocus={!empty}
+        />
+        <p className="cchat__hint">Trợ lý có thể sai sót. Hãy kiểm tra thông tin quan trọng.</p>
+      </div>
     </div>
   );
 }

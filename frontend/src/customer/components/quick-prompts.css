@@ -3,7 +3,16 @@
   gap: 0.5rem;
   flex-wrap: wrap;
 }
-.qprompts--col { flex-direction: column; flex-wrap: nowrap; }
+.qprompts--col {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.55rem;
+}
+@media (min-width: 560px) {
+  .qprompts--col {
+    grid-template-columns: 1fr 1fr;
+  }
+}
 
 .qprompt {
   display: inline-flex;
@@ -13,24 +22,38 @@
   font: inherit;
   font-size: 0.83rem;
   font-weight: 600;
-  color: var(--c-ink-soft);
-  background: rgba(255, 255, 255, 0.7);
+  color: var(--ink-700);
+  background: var(--glass-bg-strong);
   border: 1px solid var(--glass-border);
   border-radius: var(--r-pill);
   padding: 0.55rem 0.85rem;
   cursor: pointer;
-  transition: transform 0.15s ease, box-shadow 0.2s ease, background 0.2s ease;
+  transition: transform 0.15s var(--ease), box-shadow 0.2s var(--ease), background 0.2s var(--ease),
+    border-color 0.2s var(--ease);
 }
 .qprompts--col .qprompt {
   border-radius: var(--r-md);
-  padding: 0.75rem 0.9rem;
+  padding: 0.8rem 0.95rem;
 }
 .qprompt:hover {
   transform: translateY(-2px);
-  background: #fff;
+  border-color: rgba(16, 185, 129, 0.4);
   box-shadow: var(--shadow-sm);
 }
+.qprompt:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.35);
+}
 .qprompt__icon {
-  flex: 0 0 auto;
-  font-size: 1.05rem;
+  flex: none;
+  display: inline-grid;
+  place-items: center;
+  width: 1.7rem;
+  height: 1.7rem;
+  border-radius: 0.55rem;
+  color: var(--gsm-700);
+  background: rgba(16, 185, 129, 0.12);
+}
+[data-theme="dark"] .customer-root .qprompt__icon {
+  color: var(--gsm-300);
 }

@@ -1,0 +1,55 @@
+/* Customer shell layout: sidebar | main grid (full height), mobile top bar.
+   Token/utility classes come from theme/customer-theme.css; this is layout only. */
+
+.customer-shell {
+  height: 100%;
+  display: grid;
+  grid-template-columns: 16rem 1fr;
+  position: relative;
+  overflow: hidden;
+}
+
+.customer-main {
+  position: relative;
+  z-index: 1;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Each page fills the viewport and owns its own scroll region. */
+.customer-viewport {
+  position: relative;
+  z-index: 1;
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Mobile top bar (hidden on desktop) — hamburger + brand + theme toggle. */
+.customer-mobile-bar {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .customer-shell {
+    grid-template-columns: 1fr;
+  }
+  .customer-mobile-bar {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.55rem 0.75rem;
+    background: var(--glass-bg-strong);
+    border-bottom: 1px solid var(--glass-border);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+  }
+  .customer-mobile-bar .brand-mark {
+    margin-right: auto;
+  }
+}

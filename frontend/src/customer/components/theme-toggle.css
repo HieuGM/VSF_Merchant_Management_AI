@@ -1,0 +1,9 @@
+.theme-toggle {
+  color: var(--ink-600);
+}
+.theme-toggle:hover {
+  color: var(--gsm-600);
+}
+[data-theme="dark"] .customer-root .theme-toggle:hover {
+  color: var(--gsm-400);
+}

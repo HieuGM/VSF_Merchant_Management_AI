@@ -1,6 +1,12 @@
+/* Global resets + full-height root + canvas. Theme tokens live in
+   customer/theme/customer-theme.css; this file only sets up the document shell and
+   the light/dark body canvas driven by [data-theme] on <html>. */
+
 :root {
   color-scheme: light;
-  font-family: system-ui, -apple-system, sans-serif;
+}
+[data-theme="dark"] {
+  color-scheme: dark;
 }
 
 * {
@@ -9,7 +15,41 @@
   padding: 0;
 }
 
+html,
+body,
+#root {
+  height: 100%;
+}
+
 body {
-  min-height: 100vh;
-  background: linear-gradient(135deg, #fff7ed 0%, #fef2f2 100%);
+  min-height: 100dvh;
+  font-family: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  background: linear-gradient(160deg, #f0fdf4 0%, #ecfdf5 45%, #f0fdfa 100%);
+  background-attachment: fixed;
+  transition: background 0.3s ease;
+}
+
+[data-theme="dark"] body {
+  background: linear-gradient(160deg, #0b1220 0%, #0f1f1a 50%, #08120f 100%);
+  color: #f1f5f9;
+}
+
+#root {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Respect users who prefer less motion. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

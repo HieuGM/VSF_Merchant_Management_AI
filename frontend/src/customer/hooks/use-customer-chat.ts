@@ -2,6 +2,9 @@
  * Chat state machine for the Customer Discovery agent.
  * Drives one streamed conversation: pushes a user turn, opens an agent turn, and
  * folds live SSE frames (tool/task progress → answer → final results) into it.
+ *
+ * Lifted to CustomerHome and shared via ChatProvider so the sidebar's "New chat" and
+ * the chat page use one instance. `stop()` aborts an in-flight stream.
  */
 import { useCallback, useRef, useState } from "react";
 import {
@@ -16,6 +19,7 @@ import {
 export interface ProgressStep {
   id: string;
   label: string;
+  tool?: string;
   done: boolean;
 }
 
@@ -35,14 +39,17 @@ export interface ChatMessage {
 const TOOL_LABEL: Record<string, string> = {
   merchant_search: "Đang tìm quán ăn phù hợp",
   nearby_merchant_search: "Đang tìm quán gần bạn",
-  get_user_profile: "Đọc sở thích của bạn",
-  get_session_candidates: "Xem lại gợi ý trong phiên",
-  get_weather_context: "Kiểm tra thời tiết hôm nay",
-  propose_profile_delta: "Cân nhắc điều chỉnh khẩu vị",
-  get_merchant_profile: "Phân tích hồ sơ từng quán",
+  get_user_profile: "Đang đọc sở thích của bạn",
+  get_session_candidates: "Đang xem lại gợi ý trong phiên",
+  get_weather_context: "Đang kiểm tra thời tiết hôm nay",
+  propose_profile_delta: "Đang cân nhắc điều chỉnh khẩu vị",
+  get_merchant_profile: "Đang phân tích hồ sơ từng quán",
 };
 
-const uid = () => Math.random().toString(36).slice(2);
+const uid = () =>
+  typeof crypto !== "undefined" && "randomUUID" in crypto
+    ? crypto.randomUUID()
+    : Math.random().toString(36).slice(2);
 
 interface SendArgs {
   message: string;
@@ -54,12 +61,9 @@ export function useCustomerChat(identity: { userId: string; sessionId: string })
   const [sending, setSending] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
 
-  const patchAgent = useCallback(
-    (agentId: string, patch: (m: ChatMessage) => ChatMessage) => {
-      setMessages((prev) => prev.map((m) => (m.id === agentId ? patch(m) : m)));
-    },
-    [],
-  );
+  const patchAgent = useCallback((agentId: string, patch: (m: ChatMessage) => ChatMessage) => {
+    setMessages((prev) => prev.map((m) => (m.id === agentId ? patch(m) : m)));
+  }, []);
 
   const send = useCallback(
     async ({ message, location }: SendArgs) => {
@@ -87,14 +91,17 @@ export function useCustomerChat(identity: { userId: string; sessionId: string })
       const onFrame = (frame: StreamFrame) => {
         const { event, data } = frame;
         if (event === "tool_started") {
-          const label = TOOL_LABEL[data?.tool] ?? `Đang dùng ${data?.tool ?? "công cụ"}`;
+          const tool = data?.tool as string | undefined;
+          const label = (tool && TOOL_LABEL[tool]) ?? `Đang dùng ${tool ?? "công cụ"}`;
           patchAgent(agentId, (m) => ({
             ...m,
-            progress: [...(m.progress ?? []), { id: uid(), label, done: false }],
+            progress: [...(m.progress ?? []), { id: uid(), label, tool, done: false }],
           }));
         } else if (event === "tool_finished") {
-          patchAgent(agentId, (m) => ({ ...m, progress: markLastDone(m.progress) }));
+          const tool = data?.tool as string | undefined;
+          patchAgent(agentId, (m) => ({ ...m, progress: markDone(m.progress, tool) }));
         } else if (event === "answer_delta") {
+          // Backend sends the full answer once (not incremental) → replace is correct.
           patchAgent(agentId, (m) => ({ ...m, text: data?.answer ?? m.text }));
         } else if (event === "run_finished") {
           patchAgent(agentId, (m) => ({
@@ -122,14 +129,13 @@ export function useCustomerChat(identity: { userId: string; sessionId: string })
         if (!controller.signal.aborted) {
           patchAgent(agentId, (m) => ({
             ...m,
-            text:
-              "Không kết nối được tới trợ lý. Kiểm tra máy chủ (localhost:8000) rồi thử lại.",
+            text: "Không kết nối được tới trợ lý. Thử lại sau một lát nhé.",
             error: true,
             streaming: false,
           }));
         }
       } finally {
-        // Safety net: never leave the bubble stuck in the streaming state.
+        // Safety net: never leave the bubble stuck streaming.
         patchAgent(agentId, (m) => (m.streaming ? { ...m, streaming: false } : m));
         setSending(false);
         abortRef.current = null;
@@ -138,23 +144,27 @@ export function useCustomerChat(identity: { userId: string; sessionId: string })
     [identity, sending, patchAgent],
   );
 
+  const stop = useCallback(() => {
+    abortRef.current?.abort();
+  }, []);
+
   const reset = useCallback(() => {
     abortRef.current?.abort();
     setMessages([]);
     setSending(false);
   }, []);
 
-  return { messages, sending, send, reset };
+  return { messages, sending, send, stop, reset };
 }
 
-function markLastDone(steps?: ProgressStep[]): ProgressStep[] {
+/** Mark a step done — by tool name if given (parallel-safe), else the oldest pending. */
+function markDone(steps: ProgressStep[] | undefined, tool?: string): ProgressStep[] {
   if (!steps?.length) return steps ?? [];
+  const idx = tool
+    ? steps.findIndex((s) => !s.done && s.tool === tool)
+    : steps.findIndex((s) => !s.done);
+  if (idx === -1) return steps;
   const next = [...steps];
-  for (let i = next.length - 1; i >= 0; i--) {
-    if (!next[i].done) {
-      next[i] = { ...next[i], done: true };
-      break;
-    }
-  }
+  next[idx] = { ...next[idx], done: true };
   return next;
 }

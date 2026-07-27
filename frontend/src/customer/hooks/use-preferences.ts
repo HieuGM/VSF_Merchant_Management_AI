@@ -1,10 +1,11 @@
 /**
  * Local taste profile (Preference Center). The backend profile endpoints are still
  * stubbed (routes/user_routes.py → not_implemented), so preferences live in
- * localStorage and are folded into the chat query as soft context. When the profile
- * API lands, swap the storage layer here without touching the UI.
+ * localStorage and are folded into the chat query as soft context. Syncs across tabs
+ * via the `storage` event. When the profile API lands, swap the storage layer here
+ * without touching the UI.
  */
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 export type Budget = "" | "student" | "standard" | "premium";
 
@@ -39,17 +40,36 @@ function load(): Preferences {
   }
 }
 
+function persist(next: Preferences) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+  } catch {
+    /* storage full / disabled — keep in-memory only */
+  }
+}
+
 export function usePreferences() {
   const [prefs, setPrefs] = useState<Preferences>(load);
+
+  // Cross-tab sync: another tab editing preferences updates this one live.
+  useEffect(() => {
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === STORAGE_KEY && e.newValue) {
+        try {
+          setPrefs({ ...DEFAULTS, ...JSON.parse(e.newValue) });
+        } catch {
+          /* malformed — ignore */
+        }
+      }
+    };
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, []);
 
   const update = useCallback((patch: Partial<Preferences>) => {
     setPrefs((prev) => {
       const next = { ...prev, ...patch };
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-      } catch {
-        /* storage full / disabled — keep in-memory only */
-      }
+      persist(next);
       return next;
     });
   }, []);
@@ -60,16 +80,10 @@ export function usePreferences() {
         const list = prev[key];
         const next = {
           ...prev,
-          [key]: list.includes(value)
-            ? list.filter((v) => v !== value)
-            : [...list, value],
+          [key]: list.includes(value) ? list.filter((v) => v !== value) : [...list, value],
         };
-        try {
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-        } catch {
-          /* ignore */
-        }
-        return next;
+        persist(next as Preferences);
+        return next as Preferences;
       });
     },
     [],

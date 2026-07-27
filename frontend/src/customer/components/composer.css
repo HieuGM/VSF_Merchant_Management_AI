@@ -1,0 +1,55 @@
+.composer {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.5rem;
+  padding: 0.5rem 0.5rem 0.5rem 1.05rem;
+  border-radius: var(--r-pill);
+  background: var(--glass-bg-strong);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--shadow-md);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  transition: border-color 0.2s var(--ease), box-shadow 0.2s var(--ease);
+}
+.composer:focus-within {
+  border-color: rgba(16, 185, 129, 0.45);
+  box-shadow: var(--shadow-md), 0 0 0 4px rgba(16, 185, 129, 0.12);
+}
+.composer--large {
+  padding: 0.65rem 0.65rem 0.65rem 1.25rem;
+  border-radius: var(--r-xl);
+}
+
+.composer__input {
+  flex: 1 1 auto;
+  min-height: 1.5rem;
+  max-height: 200px;
+  width: 100%;
+  resize: none;
+  border: none;
+  background: transparent;
+  padding: 0.55rem 0;
+  font: inherit;
+  font-size: 0.98rem;
+  line-height: 1.5;
+  color: var(--ink-900);
+}
+.composer__input:focus {
+  outline: none;
+  box-shadow: none;
+}
+.composer__input::placeholder {
+  color: var(--ink-400);
+}
+
+.composer__send,
+.composer__stop {
+  flex: none;
+}
+.composer__stop {
+  color: var(--ink-700);
+  background: var(--glass-bg);
+}
+.composer__stop:hover {
+  background: var(--glass-bg-strong);
+}

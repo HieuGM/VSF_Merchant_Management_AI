@@ -1,0 +1,27 @@
+.star-rating {
+  position: relative;
+  display: inline-flex;
+  vertical-align: middle;
+}
+.star-rating__row {
+  display: inline-flex;
+  gap: 1px;
+}
+.star-rating__bg {
+  color: var(--ink-400);
+  opacity: 0.45;
+}
+.star-rating__fg {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  color: var(--warm-500);
+}
+[data-theme="dark"] .customer-root .star-rating__fg {
+  color: var(--warm-400);
+}
+.star-rating__muted,
+.star-rating__on {
+  flex: none;
+}

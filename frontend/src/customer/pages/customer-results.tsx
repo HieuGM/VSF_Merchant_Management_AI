@@ -1,11 +1,15 @@
 /**
  * Explore screen — a browsable grid of restaurant cards backed by the merchant search
  * API (UC-04). Complements the conversational chat with a filter-driven view: cuisine
- * chips, budget, and "near me" all hit /api/v1/merchants/search.
+ * chips, budget, and "near me" (live geolocation). All filters hit
+ * /api/v1/merchants/search via the in-vertical explore-client (no boundary leak).
  */
 import { useCallback, useEffect, useState } from "react";
+import { LocateFixed, SearchX } from "lucide-react";
 import { RestaurantCard } from "../components/restaurant-card";
-import { searchMerchants, type Merchant, type SearchFilters } from "../../lib/api";
+import { searchMerchants } from "../api/explore-client";
+import type { Merchant, SearchFilters } from "../api/explore-client";
+import { useGeolocation } from "../hooks/use-geolocation";
 import { usePreferences } from "../hooks/use-preferences";
 import "./customer-results.css";
 
@@ -18,14 +22,26 @@ const BUDGETS: Array<{ v: string; label: string }> = [
 ];
 
 export default function CustomerResults() {
-  const { prefs } = usePreferences();
+  const { prefs, update } = usePreferences();
+  const geo = useGeolocation();
   const [query, setQuery] = useState("");
   const [cuisine, setCuisine] = useState("");
   const [budget, setBudget] = useState("");
-  const [nearby, setNearby] = useState(prefs.useLocation);
+  const [nearby, setNearby] = useState(false);
   const [results, setResults] = useState<Merchant[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  const toggleNearby = async () => {
+    if (nearby) {
+      setNearby(false);
+      return;
+    }
+    const coords = await geo.request();
+    if (!coords) return; // error surfaced via geo.error
+    update({ lat: coords.lat, lng: coords.lng, useLocation: true });
+    setNearby(true);
+  };
 
   const run = useCallback(async () => {
     setLoading(true);
@@ -35,7 +51,7 @@ export default function CustomerResults() {
         query: query || undefined,
         cuisine: cuisine || undefined,
         budget: budget || undefined,
-        limit: 20,
+        limit: 24,
       };
       if (nearby) {
         filters.lat = prefs.lat;
@@ -51,7 +67,7 @@ export default function CustomerResults() {
     }
   }, [query, cuisine, budget, nearby, prefs.lat, prefs.lng]);
 
-  // Initial + filter-change load (debounced lightly for typing).
+  // Debounced reload on any filter change.
   useEffect(() => {
     const t = setTimeout(run, 300);
     return () => clearTimeout(t);
@@ -59,31 +75,46 @@ export default function CustomerResults() {
 
   return (
     <div className="cres cust-scroll">
-      <header className="cres__head">
-        <h2 className="cres__title">Khám phá quán ăn</h2>
-        <p className="cres__sub">Lọc theo ẩm thực, ngân sách và vị trí</p>
-      </header>
+      <div className="cres__inner">
+        <header className="cres__head">
+          <h2 className="cres__title">Khám phá quán ăn</h2>
+          <p className="cres__sub">Lọc theo ẩm thực, ngân sách và vị trí</p>
+        </header>
 
-      <div className="cres__filters cust-glass-strong">
-        <input
-          className="cust-input"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Tìm tên quán, món ăn…"
-        />
-        <div className="cres__chips">
-          {CUISINES.map((c) => (
+        <div className="cres__filters cust-glass-strong">
+          <input
+            className="cust-input cres__search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Tìm tên quán, món ăn…"
+            aria-label="Tìm kiếm"
+          />
+
+          <div className="cres__chiprow">
+            <div className="cres__chips">
+              {CUISINES.map((c) => (
+                <button
+                  key={c}
+                  type="button"
+                  className={`cust-chip ${cuisine === c ? "is-selected" : ""}`}
+                  onClick={() => setCuisine(cuisine === c ? "" : c)}
+                >
+                  {c}
+                </button>
+              ))}
+            </div>
             <button
-              key={c}
               type="button"
-              className={`cust-chip ${cuisine === c ? "is-selected" : ""}`}
-              onClick={() => setCuisine(cuisine === c ? "" : c)}
+              className={`cust-chip cres__near ${nearby ? "is-selected" : ""}`}
+              onClick={toggleNearby}
+              disabled={geo.status === "loading"}
+              aria-pressed={nearby}
             >
-              {c}
+              <LocateFixed size={14} />
+              {geo.status === "loading" ? "Đang định vị…" : "Gần tôi"}
             </button>
-          ))}
-        </div>
-        <div className="cres__row">
+          </div>
+
           <div className="cres__chips">
             {BUDGETS.map((b) => (
               <button
@@ -96,39 +127,33 @@ export default function CustomerResults() {
               </button>
             ))}
           </div>
-          <label className="cres__near">
-            <input
-              type="checkbox"
-              checked={nearby}
-              onChange={(e) => setNearby(e.target.checked)}
-            />
-            <span>Gần tôi</span>
-          </label>
-        </div>
-      </div>
 
-      {error && <div className="cres__error">{error}</div>}
+          {geo.error && <p className="cres__geo-error">{geo.error}</p>}
+        </div>
 
-      {loading ? (
-        <div className="cres__skeletons">
-          {[0, 1, 2, 3].map((i) => (
-            <div key={i} className="cres__skel" />
-          ))}
-        </div>
-      ) : results.length > 0 ? (
-        <div className="cres__grid">
-          {results.map((m, i) => (
-            <RestaurantCard key={m.merchant_id} item={m} rank={i + 1} />
-          ))}
-        </div>
-      ) : (
-        !error && (
-          <div className="cres__empty">
-            <span>🔍</span>
-            <p>Không có quán khớp bộ lọc. Thử nới lỏng điều kiện nhé.</p>
+        {error && <div className="cres__error">{error}</div>}
+
+        {loading ? (
+          <div className="cres__grid">
+            {[0, 1, 2, 3].map((i) => (
+              <div key={i} className="cres__skel cust-skeleton" />
+            ))}
           </div>
-        )
-      )}
+        ) : results.length > 0 ? (
+          <div className="cres__grid">
+            {results.map((m, i) => (
+              <RestaurantCard key={m.merchant_id} item={m} rank={i + 1} />
+            ))}
+          </div>
+        ) : (
+          !error && (
+            <div className="cres__empty">
+              <SearchX size={30} />
+              <p>Không có quán khớp bộ lọc. Thử nới lỏng điều kiện nhé.</p>
+            </div>
+          )
+        )}
+      </div>
     </div>
   );
 }

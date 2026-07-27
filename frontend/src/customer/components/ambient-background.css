@@ -4,50 +4,94 @@
   z-index: 0;
   overflow: hidden;
   pointer-events: none;
-  background: var(--grad-canvas);
+  background: var(--canvas), var(--grad-aurora);
 }
 
 .cust-orb {
   position: absolute;
   border-radius: 50%;
-  filter: blur(48px);
+  filter: blur(46px);
   opacity: 0.55;
-  animation: cust-float 14s ease-in-out infinite;
+  will-change: transform;
+  animation: cust-float 16s ease-in-out infinite;
 }
-.cust-orb--coral {
-  width: 260px;
-  height: 260px;
-  top: -60px;
-  left: -70px;
-  background: radial-gradient(circle at 30% 30%, #ff8a5b, #e4572e);
+.cust-orb--emerald {
+  width: 26rem;
+  height: 26rem;
+  top: -7rem;
+  left: -6rem;
+  background: radial-gradient(circle at 35% 35%, #6ee7b7, #059669);
 }
-.cust-orb--amber {
-  width: 220px;
-  height: 220px;
-  top: 34%;
-  right: -80px;
-  background: radial-gradient(circle at 30% 30%, #ffd07a, #f59e0b);
-  animation-delay: -4s;
-  animation-duration: 18s;
-}
-.cust-orb--rose {
-  width: 240px;
-  height: 240px;
-  bottom: -90px;
-  left: 20%;
-  background: radial-gradient(circle at 30% 30%, #ffb4c6, #fb7185);
-  animation-delay: -8s;
+.cust-orb--teal {
+  width: 22rem;
+  height: 22rem;
+  bottom: -8rem;
+  right: -6rem;
+  background: radial-gradient(circle at 35% 35%, #5eead4, #0d9488);
+  animation-delay: -5s;
   animation-duration: 20s;
 }
+.cust-orb--amber {
+  width: 18rem;
+  height: 18rem;
+  top: 38%;
+  left: 42%;
+  background: radial-gradient(circle at 35% 35%, #fcd34d, #f59e0b);
+  opacity: 0.4;
+  animation-delay: -9s;
+  animation-duration: 22s;
+}
 
-/* Hero variant leans brighter/bolder for the landing screen. */
-.cust-ambient--hero .cust-orb { opacity: 0.7; }
+/* Hero variant leans brighter for the landing screen. */
+.cust-ambient--hero .cust-orb {
+  opacity: 0.7;
+}
+.cust-ambient--hero .cust-orb--amber {
+  opacity: 0.5;
+}
+
+/* Darker, calmer canvas in dark mode. */
+[data-theme="dark"] .customer-root .cust-orb {
+  opacity: 0.32;
+}
+[data-theme="dark"] .customer-root .cust-ambient--hero .cust-orb {
+  opacity: 0.4;
+}
 
 /* Subtle noise so large gradients don't band. */
 .cust-ambient__grain {
   position: absolute;
   inset: 0;
-  opacity: 0.05;
-  background-image: radial-gradient(rgba(124, 45, 18, 0.6) 0.5px, transparent 0.5px);
+  opacity: 0.04;
+  background-image: radial-gradient(rgba(6, 78, 59, 0.6) 0.5px, transparent 0.5px);
   background-size: 4px 4px;
+}
+[data-theme="dark"] .customer-root .cust-ambient__grain {
+  opacity: 0.05;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.5) 0.5px, transparent 0.5px);
+}
+
+/* Mobile: drop the amber orb + shrink blur to cut paint cost. */
+@media (max-width: 768px) {
+  .cust-orb {
+    filter: blur(34px);
+  }
+  .cust-orb--emerald {
+    width: 18rem;
+    height: 18rem;
+  }
+  .cust-orb--teal {
+    width: 15rem;
+    height: 15rem;
+  }
+  .cust-orb--amber {
+    display: none;
+  }
+}
+
+/* Honor reduced-motion: freeze the orbs. */
+@media (prefers-reduced-motion: reduce) {
+  .cust-orb {
+    animation: none;
+  }
 }
