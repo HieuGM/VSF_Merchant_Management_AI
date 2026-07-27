@@ -30,13 +30,15 @@ class FakeLLM(LLM):
 
 
 @pytest.fixture
-def fake_llm_large() -> "FakeLLM":
-    return FakeLLM("openai/meta/llama-3.3-70b-instruct")
+def fake_llm_nim() -> "FakeLLM":
+    """Fake NIM LLM for restaurant_search agent (8B model for speed)."""
+    return FakeLLM("openai/meta/llama-3.1-8b-instruct")
 
 
 @pytest.fixture
-def fake_llm_small() -> "FakeLLM":
-    return FakeLLM("openai/meta/llama-3.1-8b-instruct")
+def fake_llm_fpt() -> "FakeLLM":
+    """Fake FPT DeepSeek LLM for reasoning/explanation agents (fast + strong reasoning)."""
+    return FakeLLM("openai/DeepSeek-V4-Flash")
 
 
 class _StubSession:

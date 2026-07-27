@@ -8,8 +8,7 @@ from __future__ import annotations
 
 # Agent (role key) -> tools it may call directly (§5.4).
 AGENT_TOOL_ALLOW_LIST: dict[str, tuple[str, ...]] = {
-    # --- Customer Discovery Crew (Dev A) ---
-    "customer_coordinator": ("get_user_profile", "get_session_candidates"),
+    # --- Customer Discovery Crew (Dev A) — sequential, no coordinator ---
     "restaurant_search": ("merchant_search", "nearby_merchant_search"),
     "preference_reasoning": (
         "get_user_profile",

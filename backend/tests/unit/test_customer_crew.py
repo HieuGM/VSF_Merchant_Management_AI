@@ -1,4 +1,7 @@
-"""Customer crew assembly with fake LLM — no network/key (Phase 07 tests 8, 8b)."""
+"""Customer crew assembly with fake LLM — no network/key (Phase 07 tests 8, 8b).
+
+Sequential process: 3 specialists, no coordinator/manager.
+"""
 from __future__ import annotations
 
 from crewai import Process
@@ -13,41 +16,38 @@ def _ensure_tools():
         registry.auto_discover("tools.customer")
 
 
-def test_crew_builds_without_network(fake_llm_large, fake_llm_small):
+def test_crew_builds_without_network(fake_llm_nim, fake_llm_fpt):
     _ensure_tools()
-    crew = build_customer_crew(llm_large=fake_llm_large, llm_small=fake_llm_small)
-    assert crew.process == Process.hierarchical
-    assert crew.manager_agent is not None
-    assert len(crew.agents) == 3  # manager is separate, not in agents list
+    crew = build_customer_crew(llm_nim=fake_llm_nim, llm_fpt=fake_llm_fpt)
+    # Sequential process — no manager agent.
+    assert crew.process == Process.sequential
+    assert crew.manager_agent is None
+    assert len(crew.agents) == 3  # 3 specialists, no coordinator
     assert len(crew.tasks) == 3
 
 
-def test_per_agent_llm_tier(fake_llm_large, fake_llm_small):
+def test_per_agent_llm_tier(fake_llm_nim, fake_llm_fpt):
     _ensure_tools()
-    crew = build_customer_crew(llm_large=fake_llm_large, llm_small=fake_llm_small)
-    by_role = {a.role.split("(")[0].strip(): a for a in crew.agents}
-    by_role["manager"] = crew.manager_agent
-
-    # manager (coordinator) + restaurant_search → large (70b)
-    assert "70b" in crew.manager_agent.llm.model
+    crew = build_customer_crew(llm_nim=fake_llm_nim, llm_fpt=fake_llm_fpt)
+    # restaurant_search uses NIM 8B (fast for search).
     search = next(a for a in crew.agents if "Tìm kiếm" in a.role)
-    assert "70b" in search.llm.model
-    # preference_reasoning + explanation → small (8b)
+    assert "8b" in search.llm.model
+    # preference_reasoning + customer_explanation use FPT DeepSeek (strong reasoning).
     reasoning = next(a for a in crew.agents if "Suy luận" in a.role)
     explanation = next(a for a in crew.agents if "Giải thích" in a.role)
-    assert "8b" in reasoning.llm.model and "8b" in explanation.llm.model
+    assert "DeepSeek" in reasoning.llm.model and "DeepSeek" in explanation.llm.model
 
 
-def test_only_coordinator_delegates(fake_llm_large, fake_llm_small):
+def test_specialists_do_not_delegate(fake_llm_nim, fake_llm_fpt):
+    """Sequential specialists never delegate (no coordinator to hand off to)."""
     _ensure_tools()
-    crew = build_customer_crew(llm_large=fake_llm_large, llm_small=fake_llm_small)
-    assert crew.manager_agent.allow_delegation is True
+    crew = build_customer_crew(llm_nim=fake_llm_nim, llm_fpt=fake_llm_fpt)
     assert all(a.allow_delegation is False for a in crew.agents)
 
 
-def test_agents_only_have_allowlisted_tools(fake_llm_large, fake_llm_small):
+def test_agents_only_have_allowlisted_tools(fake_llm_nim, fake_llm_fpt):
     _ensure_tools()
-    crew = build_customer_crew(llm_large=fake_llm_large, llm_small=fake_llm_small)
+    crew = build_customer_crew(llm_nim=fake_llm_nim, llm_fpt=fake_llm_fpt)
     reasoning = next(a for a in crew.agents if "Suy luận" in a.role)
     names = {t.name for t in reasoning.tools}
     assert "merchant_search" not in names  # not allow-listed for this agent
