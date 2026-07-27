@@ -172,36 +172,50 @@ class MerchantSearchService:
         query: str | None = None,
         limit: int = 20,
     ) -> list[SearchResult]:
-        """Find merchants near a location (Haversine-based)."""
-        merchants = self._repo.search_merchants(
-            query=query, cuisine=cuisine, limit=limit * 3
-        )
+        """Find merchants near a location (Haversine-based).
 
-        results: list[SearchResult] = []
+        Fetches a wide candidate pool (whole catalog) so the geo filter isn't thwarted by a
+        text-relevance cutoff — otherwise nearby returns 0 even when matching merchants exist
+        near the user (they were just beyond the limit). Auto-expands the radius when the result
+        is sparse: desktop IP geolocation can be off by kilometres and some districts have few
+        merchants, so a hard 5km cutoff would wrongly return nothing."""
+        # 2000 > catalog size (~1681) → every query/cuisine-matching merchant is a geo candidate.
+        candidates = self._repo.search_merchants(query=query, cuisine=cuisine, limit=2000)
 
-        for merchant in merchants:
-            if merchant.lat is None or merchant.lng is None:
-                continue
-
-            distance_km = haversine_distance(lat, lng, merchant.lat, merchant.lng)
-
-            if distance_km <= radius_km:
-                avg_rating = _platform_rating(merchant)
-                tier = merchant.profile.tier if merchant.profile else None
-                price_level = merchant.profile.price_level if merchant.profile else None
-
-                results.append(
-                    SearchResult(
-                        merchant=merchant,
-                        distance_km=distance_km,
-                        avg_rating=avg_rating,
-                        match_score=1.0,
-                        tier=tier,
-                        price_level=price_level,
+        def geo_filter(radius: float) -> list[SearchResult]:
+            out: list[SearchResult] = []
+            for merchant in candidates:
+                if merchant.lat is None or merchant.lng is None:
+                    continue
+                distance_km = haversine_distance(lat, lng, merchant.lat, merchant.lng)
+                if distance_km <= radius:
+                    avg_rating = _platform_rating(merchant)
+                    tier = merchant.profile.tier if merchant.profile else None
+                    price_level = merchant.profile.price_level if merchant.profile else None
+                    out.append(
+                        SearchResult(
+                            merchant=merchant,
+                            distance_km=distance_km,
+                            avg_rating=avg_rating,
+                            match_score=1.0,
+                            tier=tier,
+                            price_level=price_level,
+                        )
                     )
-                )
+            out.sort(key=lambda r: r.distance_km or 9999)
+            return out
 
-        results.sort(key=lambda r: r.distance_km or 9999)
+        results = geo_filter(radius_km)
+        # Sparse-safety: escalate the radius until we have a few results or hit the cap.
+        if len(results) < 3:
+            for wider in (10.0, 25.0, 50.0):
+                if wider <= radius_km:
+                    continue
+                wider_results = geo_filter(wider)
+                if wider_results:
+                    results = wider_results
+                    if len(results) >= 3:
+                        break
         return results[:limit]
 
     def _calculate_match_score(
