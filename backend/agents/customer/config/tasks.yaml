@@ -20,6 +20,10 @@ search_task:
     2. Truyền ràng buộc NGUYÊN VẸN như người dùng đưa (min_rating, price_max, city, cuisine).
        KHÔNG tự hạ/raise ngưỡng, KHÔNG nới lỏng để "có kết quả". Bỏ qua (None) min_price /
        max_price / min_rating nếu người dùng không nói đến.
+       **ĐỊA ĐIỂM (RẤT QUAN TRỌNG):** nếu query nhắc khu vực/quận/phường/thành phố nào
+       (Cầu Giấy, Tây Hồ, Đống Đa, Mỹ Đình, Q.1, Hà Nội, Sài Gòn...) → PHẢI truyền vào `city`.
+       "gần X / ở X / khu X / quận X" → city=X. KHÔNG được bỏ qua địa điểm — không truyền city
+       sẽ trả quán SAU khu vực, sai nhu cầu người dùng.
     3. Phân biệt MÓN vs LOẠI: tên món ("phở", "sushi", "trà sữa") → tham số `query`;
        loại ẩm thực rộng ("Món Việt", "Nhật", "Hàn") → `cuisine`. KHÔNG nhét tên món vào cuisine.
 
