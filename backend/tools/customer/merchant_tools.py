@@ -189,6 +189,7 @@ def register(reg: ToolRegistry) -> None:
             allowed_agents=agents_allowed_for("nearby_merchant_search"),
             cache_policy="none",  # Location-based queries are dynamic
             source_kind="real",
+            required_args=("lat", "lng"),  # adapter rejects calls with no coords -> merchant_search instead
         ),
         nearby_merchant_search,
     )

@@ -42,6 +42,11 @@ class ToolSpec(BaseModel):
     # otherwise the adapter derives a loose model from `input_schema`. Additive
     # optional field — does not change existing registration behaviour.
     args_schema: type[BaseModel] | None = None
+    # Required argument names the adapter enforces BEFORE calling the tool: if the LLM
+    # omits any (e.g. calls nearby_merchant_search with no lat/lng because the query had
+    # no coords), the adapter returns a friendly error nudging it to a better tool —
+    # instead of letting the call fail with an opaque pydantic message. Defaults to none.
+    required_args: tuple[str, ...] = ()
 
 
 class RegisteredTool(BaseModel):

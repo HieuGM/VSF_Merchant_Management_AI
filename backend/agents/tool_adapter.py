@@ -147,6 +147,20 @@ class RegistryTool(BaseTool):
         # nulls or "" for optional fields they skipped (e.g. min_rating=""), and "" would fail
         # pydantic float parsing inside the tool (validation error). Treat "" as "not provided".
         call_kwargs = {k: v for k, v in kwargs.items() if v is not None and v != ""}
+
+        # Required-args guard: if the spec declares required_args and any are missing after
+        # dropping empty values, return a friendly error instead of letting the call fail.
+        # This catches the common lapse of calling nearby_merchant_search with no coords (the
+        # query had none) — the message nudges the agent toward merchant_search.
+        required = self.reg_tool.spec.required_args
+        if required:
+            missing = [a for a in required if a not in call_kwargs]
+            if missing:
+                return (
+                    f"[tool_error:{name}] thiếu tham số bắt buộc: {', '.join(missing)}. "
+                    f"Nếu truy vấn không có thông tin này (ví dụ không có toạ độ), hãy dùng "
+                    f"công cụ phù hợp hơn — merchant_search thay cho nearby_merchant_search."
+                )
         try:
             result = self.reg_tool.fn(**call_kwargs)
         except AppError as exc:
