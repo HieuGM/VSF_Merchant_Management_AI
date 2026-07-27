@@ -18,6 +18,9 @@ export default function CustomerChat() {
   const { prefs } = usePreferences();
   const [draft, setDraft] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
+  // Ref-guard for the seed effect: React StrictMode double-invokes mount effects in dev,
+  // so without this the landing-page prompt fires twice and the query is sent duplicated.
+  const seededRef = useRef(false);
   const routeState = useLocation().state as { prompt?: string } | null;
 
   const submit = (raw: string) => {
@@ -31,8 +34,12 @@ export default function CustomerChat() {
   };
 
   // Seed from a landing-page prompt (navigated with { state: { prompt } }).
+  // Idempotent via seededRef — survives StrictMode's dev double-mount.
   useEffect(() => {
-    if (routeState?.prompt) submit(routeState.prompt);
+    if (routeState?.prompt && !seededRef.current) {
+      seededRef.current = true;
+      submit(routeState.prompt);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
