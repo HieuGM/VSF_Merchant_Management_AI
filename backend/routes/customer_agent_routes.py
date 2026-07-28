@@ -102,7 +102,15 @@ def customer_chat_stream(request: CustomerChatRequest) -> StreamingResponse:
     def generate() -> Iterator[str]:
         yield _sse("run_started", {})
         while True:
-            item = events.get()
+            try:
+                item = events.get(timeout=15)
+            except queue.Empty:
+                # Heartbeat: an SSE comment frame (no `data:` line) keeps idle connections
+                # open so an intermediary proxy doesn't close the chunked stream during the
+                # ~5-30s the crew/search runs before the first answer_delta. FE parser
+                # ignores frames with no `data:` line (parseFrame returns null).
+                yield ": ping\n\n"
+                continue
             if item is _DONE:
                 break
             yield _sse(item["event"], item["data"])

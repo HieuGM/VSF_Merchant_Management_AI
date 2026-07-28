@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import concurrent.futures
 import contextvars
+import re
 import unicodedata
 from collections.abc import Iterator
 from datetime import datetime, timezone
@@ -73,6 +74,68 @@ def _query_has_preference_signals(query: str | None) -> bool:
         return False
     q = _norm_vi(query)
     return any(_norm_vi(sig) in q for sig in _PREFERENCE_SIGNAL_KEYWORDS)
+
+
+# --- Out-of-domain classifier (two-tier) ---
+# STRONG_OOD: unambiguous NON-food intent (code / prompt-injection / data fabrication).
+# Checked FIRST so it OVERRIDES the food whitelist. Without this ordering, "viết code sắp
+# xếp mảng" gets whitelisted as in-domain because the food token 'an' (ăn=eat) is a substring
+# of 'mảng'/'đoạn', and "bỏ qua toàn bộ hướng dẫn" because 'an' sits in 'toàn'/'hướng'.
+_STRONG_OOD_RE = re.compile(
+    r"viết.{0,4}code|viet.{0,4}code|đoạn code|doan code|code python|code\s+\w+"
+    r"|lập trình|lap trinh|thuật toán|thuat toan|sắp xếp|sap xep"
+    r"|bỏ qua.{0,20}hướng dẫn|bo qua.{0,20}huong dan|system prompt|in lại.{0,6}prompt"
+    r"|bỏ qua toàn bộ|bo qua toan bo|vô hiệu hóa|vo hieu hoa"
+    # Fabrication: 'giả' (fake) AND 'giá' (price) BOTH normalize to 'gia', so a bare 'gia'
+    # rule would false-positive on legit "quán ăn giá rẻ". Require a co-occurring fabrication
+    # marker (tạo/demo/mock/fake/test/merchant/dữ liệu).
+    r"|tao.{0,30}(gia|demo|mock|fake)"
+    r"|(merchant|du lieu|du-lieu).{0,6}gia"
+    r"|gia (mao|lap)"
+    r"|gia.{0,20}(demo|mock|fake)"
+)
+
+# Food tokens matched as WHOLE WORDS (\b). Bare substring match is unsafe: the short token
+# 'an' (ăn=eat) sits inside 'mảng'/'đoạn'/'toàn'/'hướng', 'com' inside 'combat'/'company',
+# 'tra' inside 'translate'/'trade'. Word boundaries (post-_norm_vi the string is ASCII) kill
+# those hits. Multi-word entries (ca phe, tra sua) work because \b anchors the token span.
+_FOOD_TOKEN_RE = re.compile(
+    r"\b(ăn|an|quán|quan|món|mon|nhà hàng|nha hang|phở|pho|bún|bun|cơm|com|chay|cay"
+    r"|trà sữa|tra sua|trà|tra|cà phê|ca phe|cafe|đồ ăn|do an|nhậu|nhau|lẩu|lau"
+    r"|nướng|nuong|xôi|xoi|mì|mi|bánh|banh|gỏi|goi|sushi|ramen|pizza|burger"
+    r"|gà|ga|bò|bo|heo|hải sản|hai san|bia|kem|chè|che|nước|nuoc"
+    r"|food|eat|restaurant|drink|beverage|healthy|eat clean|món ngon|mon ngon)\b"
+)
+
+# WEAK_OOD: blocks only when NO whole-word food token is present (food wins). Weather
+# questions and raw SQL-injection bait. SQL bait that also carries food ("quán ăn'; DROP
+# TABLE --") stays in-domain — the tool layer parameterizes queries, so it's not a threat.
+_WEAK_OOD_RE = re.compile(
+    r"thời tiết|thoi tiet|weather|dự báo|dubao"
+    r"|drop table|select\s+\*\s+from|union select"
+)
+
+_OUT_OF_DOMAIN_ANSWER = (
+    "Mình chỉ hỗ trợ tìm và gợi ý quán ăn thôi nha — câu hỏi này ngoài phạm vi của mình. "
+    "Bạn muốn tìm món gì, ở khu vực nào để mình gợi ý nhé?"
+)
+
+
+def _is_out_of_domain(query: str | None) -> bool:
+    """True for UNAMBIGUOUS out-of-domain queries.
+
+    Two-tier: STRONG_OOD (code/injection/fabrication) overrides food — a request to "viết
+    code" or "in lại system prompt" is refused even if it incidentally mentions food.
+    Otherwise any whole-word food token -> in-domain. Weather/SQL-bait block only when no
+    food token is present. Keeps 'trời mưa ăn gì', 'quán ăn giá rẻ' in-domain."""
+    if not query:
+        return False
+    q = _norm_vi(query)
+    if _STRONG_OOD_RE.search(q):
+        return True
+    if _FOOD_TOKEN_RE.search(q):
+        return False
+    return bool(_WEAK_OOD_RE.search(q))
 
 
 class CustomerFlow:
@@ -150,6 +213,30 @@ class CustomerFlow:
             lat=lat, lng=lng, radius_km=radius_km,
             user_id=user_id, session_id=session_id,
         )
+
+        # Out-of-domain guard: refuse weather/code/injection/fake-data/sql-injection BEFORE
+        # building crews. No coordinator exists to refuse, so everything otherwise runs
+        # search+explanation and the LLM leaks general-knowledge answers.
+        if _is_out_of_domain(query):
+            response = CustomerChatResponse(
+                trace_id=trace_id,
+                session_id=session_id,
+                intent="out_of_domain",
+                answer=_OUT_OF_DOMAIN_ANSWER,
+                results=[],
+                preference_suggestions=[],
+            )
+            self._repo.add_event(
+                build_event_record(
+                    trace_id=trace_id,
+                    event_type="run_finished",
+                    agent_name="customer_flow",
+                    task_name="search_restaurants",
+                    output_summary={"out_of_domain": True},
+                )
+            )
+            self._repo.finish_run(trace_id, status="ok", finished_at=_utc_now_iso())
+            return response
 
         try:
             if crew is None:
@@ -276,6 +363,32 @@ class CustomerFlow:
             user_id=user_id, session_id=session_id,
         )
 
+        # Out-of-domain guard: short-circuit BEFORE building crews. Streams the canned refuse
+        # answer then a terminal run_finished — the FE never waits on a crew for OOD queries.
+        if _is_out_of_domain(query):
+            answer = _OUT_OF_DOMAIN_ANSWER
+            yield {"event": "answer_delta", "data": {"answer_delta": answer}}
+            response = CustomerChatResponse(
+                trace_id=trace_id,
+                session_id=session_id,
+                intent="out_of_domain",
+                answer=answer,
+                results=[],
+                preference_suggestions=[],
+            )
+            self._repo.add_event(
+                build_event_record(
+                    trace_id=trace_id,
+                    event_type="run_finished",
+                    agent_name="customer_flow",
+                    task_name="search_restaurants_stream",
+                    output_summary={"out_of_domain": True},
+                )
+            )
+            self._repo.finish_run(trace_id, status="ok", finished_at=_utc_now_iso())
+            yield {"event": "run_finished", "data": response.model_dump()}
+            return
+
         try:
             # 1) Search + preference, NON-streaming and CONCURRENT. Run them as two
             #    single-task crews in parallel threads (true parallelism — a single 2-task
@@ -327,9 +440,27 @@ class CustomerFlow:
                 explanation_prompt_pieces(), inputs, results, suggestions, preference
             )
             answer_parts: list[str] = []
-            for delta in _stream_explanation_tokens(messages):
-                answer_parts.append(delta)
-                yield {"event": "answer_delta", "data": {"answer_delta": delta}}
+            stream_warnings: list[str] = []  # surfaced via CustomerChatResponse.warnings (FE renders)
+            try:
+                for delta in _stream_explanation_tokens(messages):
+                    answer_parts.append(delta)
+                    yield {"event": "answer_delta", "data": {"answer_delta": delta}}
+            except Exception as stream_exc:  # noqa: BLE001 - FPT stall/timeout -> graceful fallback, not a broken stream
+                # Without this the F3 symptom (stream stall -> broken connection) would be
+                # invisible: mark it so monitoring/FE can see the explanation was interrupted.
+                stream_warnings.append(f"explanation_stream_interrupted: {type(stream_exc).__name__}")
+                fallback = (
+                    "Hmm, mình đang gặp chút trục trặc khi tổng hợp câu trả lời — bạn thử lại nhé, "
+                    "hoặc kể thêm món/khu vực mình gợi ý cho."
+                )
+                if not answer_parts:
+                    answer_parts.append(fallback)
+                    yield {"event": "answer_delta", "data": {"answer_delta": fallback}}
+                else:
+                    # partial answer already streamed -> append a short close so it reads naturally
+                    tail = " (mình vừa bị ngắt kết nối nhỏ, gợi ý trên vẫn dùng được nhé)"
+                    answer_parts.append(tail)
+                    yield {"event": "answer_delta", "data": {"answer_delta": tail}}
             if not answer_parts:
                 # DeepSeek streamed nothing (rare FPT empty-response). Emit a graceful
                 # fallback so the bubble is never blank; run_finished carries the same text.
@@ -345,6 +476,7 @@ class CustomerFlow:
                 answer=answer,
                 results=results,
                 preference_suggestions=suggestions,
+                warnings=stream_warnings,
             )
             self._repo.add_event(
                 build_event_record(
@@ -416,24 +548,58 @@ def _task_pydantic(crew_output: Any, model_name: str) -> Any | None:
     return None
 
 
+# Common Vietnamese dish/cuisine terms (diacritics-stripped). Used by the recovery fallback
+# to extract a CLEAN search keyword from the raw message. Order matters: multi-word phrases
+# first so 'trà sữa' wins over bare 'trà', 'bánh mì' over 'bánh'. 'an' is last (broadest).
+_FOOD_TERMS = (
+    "tra sua", "ca phe", "banh mi", "ga ran", "bun dau", "com tam", "do an", "hai san",
+    "eat clean", "mon ngon", "pho", "bun", "com", "chay", "cay", "tra", "cafe", "lau",
+    "nuong", "xoi", "mi", "banh", "goi", "oc", "sushi", "ramen", "pizza", "burger",
+    "ga", "bo", "heo", "nhau", "bia", "kem", "che", "nuoc", "an",
+)
+
+
+def _extract_search_keyword(query: str | None) -> str | None:
+    """Best-effort dish/cuisine keyword from a free-text query (diacritics-stripped).
+
+    Returns the first matched _FOOD_TERMS entry, or None when no food term is found (vague
+    query like 'ăn gì' / 'chỗ ăn ngon' — caller then falls back to pure-distance nearby)."""
+    if not query:
+        return None
+    q = _norm_vi(query)
+    for term in _FOOD_TERMS:
+        if term in q:
+            return term
+    return None
+
+
 def _direct_nearby_results(
     query: str | None, lat: float, lng: float, limit: int = 6
 ) -> list[dict[str, Any]]:
-    """Deterministic fallback when the search agent drops its candidates.
+    """Distance-based last-resort fallback when the search agent drops its candidates.
 
     The gpt-oss-20b search agent non-deterministically returns candidates=[] even when the
-    tool found matches (verified: same code returns 3 at one location, 0 at another). To keep
-    the UX reliable, if the agent produced nothing we fetch nearby merchants directly. These
-    are REAL tool results (truthful — never fabricated), same shape as SearchTaskOutput
-    candidates, sorted by distance via the service's auto-expand."""
+    tool found matches. We then re-fetch nearby merchants directly — REAL tool results
+    (truthful — never fabricated), same shape as SearchTaskOutput candidates.
+
+    Extracts a CLEAN cuisine keyword (NOT the full message). This matters: the full sentence
+    as a text filter yields 0 candidates (verified 'Tìm quán ăn chay ở Hà Đông' → 0), and
+    query=None returns IRRELEVANT nearest shops for a specific query ('chay' → nearest phở/
+    coffee). With a keyword, nearby_search returns RELEVANT same-cuisine shops (correct
+    match_score tiers) — or an HONEST empty result when none exist nearby (we do NOT push
+    irrelevant shops for a specific ask). Vague queries (no keyword) fall back to pure
+    distance (match_score 1.0 = nearby)."""
     from database.connection import SessionLocal
     from repositories.merchant_repository import MerchantRepository
     from services.merchant_search_service import MerchantSearchService
 
+    keyword = _extract_search_keyword(query)
     db = SessionLocal()
     try:
         svc = MerchantSearchService(MerchantRepository(db))
-        ranked = svc.nearby_search(lat, lng, radius_km=5.0, query=query or None, limit=limit)
+        # keyword -> relevant same-cuisine shops + correct match tiers, or honest empty;
+        # None (vague query) -> pure-distance nearest. Never the full message (filters to 0).
+        ranked = svc.nearby_search(lat, lng, radius_km=5.0, query=keyword, limit=limit)
         return [
             {
                 "merchant_id": r.merchant.merchant_id,
@@ -509,7 +675,6 @@ def _strip_answer_artifacts(text: str) -> str:
     the terminal answer (not per-token deltas) — a label can span chunks, so per-delta
     stripping would corrupt valid text."""
     import json
-    import re
 
     s = (text or "").strip()
     if not s:
@@ -576,8 +741,6 @@ def _build_explanation_messages(
 
 def _safe_format(template: str, inputs: dict[str, Any]) -> str:
     """Interpolate {var} placeholders from inputs; unknown placeholders become empty."""
-    import re
-
     safe = {k: ("" if v is None else v) for k, v in inputs.items()}
     return re.sub(
         r"\{([a-zA-Z_]\w*)\}", lambda m: str(safe.get(m.group(1), "")), template
@@ -601,7 +764,14 @@ def _stream_explanation_tokens(messages: list[dict[str, str]]) -> Iterator[str]:
         )
     client = OpenAI(base_url=s.fpt_base_url, api_key=s.fpt_api_key)
     model = s.fpt_model_deepseek or "DeepSeek-V4-Flash"
-    stream = client.chat.completions.create(model=model, messages=messages, stream=True)
+    # timeout=30 is httpx read-timeout: a stalled FPT stream (no bytes for 30s) raises
+    # ReadTimeout instead of hanging ~90s until the proxy closes the chunked connection.
+    # Normal chunks arrive every ~10ms so this never fires on the happy path. The SSE
+    # heartbeat (route layer) keeps the connection alive meanwhile; this guard aborts a
+    # truly hung upstream so the streaming-loop fallback can take over.
+    stream = client.chat.completions.create(
+        model=model, messages=messages, stream=True, timeout=30.0
+    )
     for chunk in stream:
         if chunk.choices:
             delta = chunk.choices[0].delta.content
