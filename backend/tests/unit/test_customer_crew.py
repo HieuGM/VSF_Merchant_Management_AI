@@ -130,6 +130,25 @@ def test_safe_format_handles_missing_placeholders():
     assert _safe_format("no vars", {"query": "x"}) == "no vars"
 
 
+def test_query_has_preference_signals_detects_taste():
+    """Pure-discovery queries skip preference; taste/dietary/weather signals trigger it.
+    Diacritics-insensitive ('chay' ≡ 'chay')."""
+    from flows.customer_flow import _query_has_preference_signals
+
+    # Pure discovery → False (skip preference)
+    assert _query_has_preference_signals("phở gần Cầu Giấy") is False
+    assert _query_has_preference_signals("quán Nhật ở Hà Nội") is False
+    assert _query_has_preference_signals("gợi ý quán ăn trưa") is False
+    assert _query_has_preference_signals(None) is False
+    assert _query_has_preference_signals("") is False
+    # Signals present → True (run preference)
+    assert _query_has_preference_signals("quán chay gần đây") is True
+    assert _query_has_preference_signals("món ít cay cho người lớn tuổi") is True
+    assert _query_has_preference_signals("trời nóng, muốn ăn nhẹ") is True
+    # Diacritics-insensitive
+    assert _query_has_preference_signals("quan chay gan day") is True
+
+
 def test_explanation_raw_answer_reads_last_task():
     """With output_pydantic gone, the answer is the final task's raw text; never the
     CrewOutput object repr, and structural artifacts (label/JSON) are stripped."""

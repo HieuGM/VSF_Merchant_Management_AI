@@ -170,10 +170,14 @@ class CustomerDiscoveryCrew:
         )
 
     # Task graph by mode:
-    #   "full"       → search(async) + preference(async) + explanation(sync): search & preference
-    #                  run concurrently (explanation, the trailing sync task, awaits both).
-    #   "search"     → search only (sync, single-task).
-    #   "preference" → preference only (sync, single-task).
+    #   "full"           → search(async) + preference(async) + explanation(sync): search &
+    #                      preference run concurrently (explanation, the trailing sync task,
+    #                      awaits both). Blocking /chat path when the query has taste signals.
+    #   "search_explain" → search + explanation (skip preference) — blocking path for
+    #                      pure-discovery queries (no taste/dietary signals → preference would
+    #                      return empty anyway, ~15s saved).
+    #   "search"         → search only (sync, single-task).
+    #   "preference"     → preference only (sync, single-task).
     # The SSE path runs "search" + "preference" crews concurrently in two threads.
     @crew
     def crew(self) -> Crew:
@@ -183,6 +187,9 @@ class CustomerDiscoveryCrew:
         elif self._mode == "preference":
             agents = [self.preference_reasoning()]
             tasks = [self.preference_task()]
+        elif self._mode == "search_explain":
+            agents = [self.restaurant_search(), self.customer_explanation()]
+            tasks = [self.search_task(), self.explanation_task()]
         else:  # "full"
             agents = [
                 self.restaurant_search(),

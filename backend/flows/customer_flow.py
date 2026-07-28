@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import concurrent.futures
 import contextvars
+import unicodedata
 from collections.abc import Iterator
 from datetime import datetime, timezone
 from typing import Any
@@ -26,6 +27,52 @@ _CREW_NAME = "customer_discovery"
 
 def _utc_now_iso() -> str:
     return datetime.now(timezone.utc).isoformat()
+
+
+# Keywords that signal the query carries taste/dietary/context the preference agent would
+# act on. Their ABSENCE means a pure-discovery query (food + location only, e.g.
+# "phở gần Cầu Giấy") — preference_task would return empty anyway, so we skip it (~15s saved,
+# TTFT ~19s → ~7s). Conservative: any keyword present → run preference.
+#
+# Curation notes (avoid Vietnamese false positives — diacritics are stripped before matching,
+# and Vietnamese is monosyllabic): single words only for UNAMBIGUOUS terms (chay, cay);
+# everything ambiguous uses multi-word phrases. Specifically AVOID: "đường"/"duong" (also
+# "street" — ubiquitous in addresses), "nhẹ"/"nhe" (matches the particle "nhé"), "mưa"/"mua"
+# (matches "mua" = buy).
+_PREFERENCE_SIGNAL_KEYWORDS = (
+    # dietary / health (unambiguous singles + phrases)
+    "chay", "cay", "healthy", "eat clean", "kiêng", "ăn kiêng", "an kieng",
+    "ít dầu", "it dau", "ít mỡ", "it mo", "giảm cân", "giam can",
+    "dạ dày", "da day", "tiêu hóa", "tiep hoa", "thanh đạm", "thanh dam",
+    # audience
+    "người lớn tuổi", "nguoi lon tuoi", "người già", "nguoi gia",
+    "trẻ em", "tre em", "cho bé", "cho be", "cho trẻ", "cho tre", "gia đình", "gia dinh",
+    # weather / mood (phrases only — "trời X" avoids standalone false positives)
+    "trời lạnh", "troi lanh", "trời nóng", "troi nong", "trời mưa", "troi mua",
+    "trời mát", "troi mat", "trời nắng", "troi nang",
+    # explicit preference ask
+    "theo gu", "khẩu vị", "khau vi", "sở thích", "so thich", "hợp gu", "hop gu",
+)
+
+
+def _norm_vi(value: str) -> str:
+    """Lowercase + strip Vietnamese diacritics (so 'cay' ≡ 'cay' ≡ 'CAY')."""
+    nfd = unicodedata.normalize("NFD", value)
+    no_mark = "".join(c for c in nfd if not unicodedata.combining(c))
+    return no_mark.replace("đ", "d").replace("Đ", "d").lower()
+
+
+def _query_has_preference_signals(query: str | None) -> bool:
+    """True if the query carries taste/dietary/context signals worth running preference_task.
+
+    Pure-discovery queries (food + location) return False → preference is skipped. The
+    preference agent is only valuable with real signals (profile/weather/taste); without them
+    it returns empty by its truth-first rule, so skipping is quality-neutral and ~15s faster.
+    Conservative — any keyword → run preference."""
+    if not query:
+        return False
+    q = _norm_vi(query)
+    return any(_norm_vi(sig) in q for sig in _PREFERENCE_SIGNAL_KEYWORDS)
 
 
 class CustomerFlow:
@@ -108,7 +155,10 @@ class CustomerFlow:
             if crew is None:
                 from agents.customer.customer_crew import build_customer_crew
 
-                crew = build_customer_crew(has_location=has_location)
+                # Pure-discovery query (no taste/dietary signals) → skip preference_task
+                # (it would return empty anyway). ~15s faster.
+                mode = "full" if _query_has_preference_signals(query) else "search_explain"
+                crew = build_customer_crew(has_location=has_location, mode=mode)
 
             with run_scope(trace_id, self._repo), tool_call_scope():
                 crew_output = crew.kickoff(inputs=inputs)
@@ -231,23 +281,32 @@ class CustomerFlow:
             #    crew-level streaming is unreliable with these tool-calling agents on FPT, so
             #    the explanation is streamed separately below. Construction is inside the try
             #    so a ConfigError/LLM-init failure is persisted (same observability as blocking).
+            # Pure-discovery query → skip preference (no signals → it would return empty
+            # anyway). Only build+run the preference crew when taste/dietary signals exist.
+            has_signals = _query_has_preference_signals(query)
             search_crew = build_customer_crew(has_location=has_location, mode="search")
-            pref_crew = build_customer_crew(mode="preference")
 
             def _run_one(crew: Any) -> Any:
                 with run_scope(trace_id, self._repo), tool_call_scope():
                     return crew.kickoff(inputs=inputs)
 
+            pref_fut = None
             with concurrent.futures.ThreadPoolExecutor(max_workers=2) as pool:
                 # copy_context() captures stream_scope/run state from this thread; a single
                 # Context can't be .run() concurrently, so each worker gets its own copy.
                 search_fut = pool.submit(contextvars.copy_context().run, _run_one, search_crew)
-                pref_fut = pool.submit(contextvars.copy_context().run, _run_one, pref_crew)
+                if has_signals:
+                    pref_crew = build_customer_crew(mode="preference")
+                    pref_fut = pool.submit(contextvars.copy_context().run, _run_one, pref_crew)
                 search_output = search_fut.result()
-                pref_output = pref_fut.result()
+                pref_output = pref_fut.result() if pref_fut is not None else None
 
             search = _task_pydantic(search_output, "SearchTaskOutput")
-            preference = _task_pydantic(pref_output, "PreferenceTaskOutput")
+            preference = (
+                _task_pydantic(pref_output, "PreferenceTaskOutput")
+                if pref_output is not None
+                else None
+            )
             results = [c.model_dump() for c in search.candidates] if search is not None else []
             suggestions = (
                 [s.model_dump() for s in preference.suggestions] if preference is not None else []
