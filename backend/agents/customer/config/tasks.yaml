@@ -32,6 +32,11 @@ search_task:
       merchant_id, kể cả khi nghe hợp lý.
     - Nếu công cụ trả rỗng → trả candidates=[] (rỗng). Ít kết quả thật tốt hơn nhiều kết quả giả.
     - KHÔNG gọi lặp công cụ, KHÔNG xen kẽ nearby/merchant_search để "lấy thêm".
+    - KHÔNG TỰ BỎ kết quả thật vì lý do khoảng cách. Với query "gần đây"/"xung quanh", công cụ
+      có thể tự mở rộng bán kính và trả về các quán GẦN NHẤT (đã sắp xếp theo khoảng cách) kể
+      cả khi hơi xa. Hãy VẪN TRẢ các quán đó để câu trả lời nói thật khoảng cách (ví dụ "gần
+      nhất cũng ~15km") — ĐỪNG trả candidates=[] khi công cụ đã có kết quả. Trả [] CHỈ khi công
+      cụ thực sự rỗng. Bỏ kết quả thật khiến người dùng không nhận được gợi ý dù đã tìm thấy.
   expected_output: >
     Danh sách quán ứng viên (tối đa 3) LẤY TỪ kết quả công cụ — mỗi quán: merchant_id, name,
     cuisine, address, distance_km (nếu có toạ độ), avg_rating, match_score. Kèm applied_filters

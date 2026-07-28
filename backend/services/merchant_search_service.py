@@ -206,9 +206,13 @@ class MerchantSearchService:
             return out
 
         results = geo_filter(radius_km)
-        # Sparse-safety: escalate the radius until we have a few results or hit the cap.
+        # Sparse-safety: escalate the radius modestly until we have a few results. Capped at
+        # 20km — beyond that, results aren't meaningfully "nearby" for a "gần đây" query and an
+        # honest empty result (→ friendly "nothing close by" answer) is better than a 50km
+        # suggestion. (The search agent is instructed NOT to drop these nearest results, so the
+        # answer can state the real distance instead of returning nothing.)
         if len(results) < 3:
-            for wider in (10.0, 25.0, 50.0):
+            for wider in (10.0, 20.0):
                 if wider <= radius_km:
                     continue
                 wider_results = geo_filter(wider)
