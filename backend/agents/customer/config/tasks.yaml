@@ -89,8 +89,15 @@ explanation_task:
 
     KHI CÓ QUÁN: gọi get_merchant_profile cho TỐI ĐA 2 quán đầu, mỗi merchant_id 1 lần.
   expected_output: >
-    Câu trả lời tiếng Việt tự nhiên, ấm áp (2-4 câu) như trò chuyện với bạn — KHÔNG cứng nhắc — kèm
-    reasons (lý do gắn evidence/signal) và referenced_signals. Không bịa dữ kiện ngoài evidence.
+    Câu trả lời tiếng Việt tự nhiên, ấm áp (2-4 câu) như trò chuyện với bạn — KHÔNG cứng nhắc.
+    Chỉ viết lời thoại trực tiếp: KHÔNG bọc JSON, KHÔNG dán nhãn trường (như "answer:"/"reasons:"),
+    KHÔNG kèm metadata — vì câu trả lời được stream token-by-token ra UI và text thuần chính là
+    answer. Không bịa dữ kiện ngoài evidence (quán cụ thể phải có thật). Markdown nhẹ OK nếu giúp
+    dễ đọc (in đậm tên quán, gạch đầu dòng ngắn).
+
+    BẮT ĐẦU NGAY BẰNG LỜI THOẠI (không nhãn, không ngoặc JSON). VÍ DỤ định dạng đúng:
+    "Hmm, hôm nay hơi lạnh nhỉ — mình thấy Phở Lệ ở Cầu Giấy hợp ghê, cách bạn ~1.2km. Nước
+    dùng đậm đà, rating cũng ổn. Thêm nem cua bè cho đã miệng nhé?"
   agent: customer_explanation
   context:
     - search_task

@@ -65,3 +65,107 @@ def test_search_agent_tools_lock_by_location(fake_llm_fast, fake_llm_strong):
     no_loc = build_customer_crew(llm_fast=fake_llm_fast, llm_strong=fake_llm_strong, has_location=False)
     search_without = next(a for a in no_loc.agents if "Tìm kiếm" in a.role)
     assert {t.name for t in search_without.tools} == {"merchant_search"}
+
+
+def test_mode_controls_crew_shape(fake_llm_fast, fake_llm_strong):
+    """mode='full' → 3-task crew (blocking /chat path, search+preference async + explanation
+    sync); 'search'/'preference' → 1-task crews the SSE path runs concurrently. Explanation
+    is always free-text (output_pydantic dropped) so its tokens can stream readably."""
+    _ensure_tools()
+    full = build_customer_crew(llm_fast=fake_llm_fast, llm_strong=fake_llm_strong)
+    assert len(full.tasks) == 3
+    assert full.tasks[-1].output_pydantic is None  # explanation free-text
+    assert full.tasks[0].output_pydantic is not None  # search structured
+    assert full.tasks[1].output_pydantic is not None  # preference structured
+
+    search_crew = build_customer_crew(
+        llm_fast=fake_llm_fast, llm_strong=fake_llm_strong, mode="search"
+    )
+    assert len(search_crew.tasks) == 1
+    assert search_crew.tasks[0].output_pydantic is not None
+
+    pref_crew = build_customer_crew(
+        llm_fast=fake_llm_fast, llm_strong=fake_llm_strong, mode="preference"
+    )
+    assert len(pref_crew.tasks) == 1
+    assert pref_crew.tasks[0].output_pydantic is not None
+
+
+def test_build_explanation_messages_grounds_answer():
+    """The streamed explanation has no tool access (unlike the CrewAI explanation agent),
+    so its messages must carry the candidate + preference facts to stay truthful."""
+    from agents.customer.customer_crew import explanation_prompt_pieces
+    from flows.customer_flow import _build_explanation_messages
+
+    pieces = explanation_prompt_pieces()
+    inputs = {
+        "query": "phở gần đây", "cuisine": "", "city": "", "budget": "",
+        "lat": "", "lng": "", "radius_km": "", "user_id": "u1", "session_id": "s1",
+    }
+    results = [
+        {
+            "name": "Phở Lệ", "cuisine": "Việt", "address": "Cầu Giấy",
+            "distance_km": 1.2, "avg_rating": 4.5, "match_score": 0.9,
+        }
+    ]
+    suggestions = [{"field": "liked_cuisines", "value": "Việt", "rationale": "hỏi lại"}]
+
+    msgs = _build_explanation_messages(pieces, inputs, results, suggestions, preference=None)
+    assert msgs[0]["role"] == "system"
+    assert msgs[1]["role"] == "user"
+    user = msgs[1]["content"]
+    assert "phở gần đây" in user  # query interpolated into the instruction
+    assert "Phở Lệ" in user  # candidate grounded
+    assert "Việt" in user  # preference signal grounded
+
+
+def test_safe_format_handles_missing_placeholders():
+    """Unknown {var}s become empty; known ones interpolate (the explanation instruction
+    only references {query}, but _build_inputs passes the full dict)."""
+    from flows.customer_flow import _safe_format
+
+    assert _safe_format("Q: {query}", {"query": "phở"}) == "Q: phở"
+    # Missing placeholder → format would raise KeyError; _safe_format falls back to replace
+    assert _safe_format("Q: {query} / {missing}", {"query": "phở"}) == "Q: phở / "
+    assert _safe_format("no vars", {"query": "x"}) == "no vars"
+
+
+def test_explanation_raw_answer_reads_last_task():
+    """With output_pydantic gone, the answer is the final task's raw text; never the
+    CrewOutput object repr, and structural artifacts (label/JSON) are stripped."""
+    from types import SimpleNamespace
+
+    from flows.customer_flow import _explanation_raw_answer
+
+    crew_output = SimpleNamespace(
+        tasks_output=[
+            SimpleNamespace(raw="search output"),
+            SimpleNamespace(raw="preference output"),
+            SimpleNamespace(raw="Hôm nay ăn phở nhé!"),
+        ],
+        raw="fallback",
+    )
+    assert _explanation_raw_answer(crew_output) == "Hôm nay ăn phở nhé!"
+    # No task outputs → fall back to crew_output.raw
+    assert _explanation_raw_answer(SimpleNamespace(tasks_output=[], raw="only raw")) == "only raw"
+    # Both empty → "" (never the object repr)
+    assert _explanation_raw_answer(SimpleNamespace(tasks_output=[], raw="")) == ""
+    assert _explanation_raw_answer(SimpleNamespace(tasks_output=[], raw=None)) == ""
+    # Structural artifacts stripped (DeepSeek may emit a label/JSON despite free-text prompt)
+    assert (
+        _explanation_raw_answer(
+            SimpleNamespace(
+                tasks_output=[SimpleNamespace(raw="Câu trả lời: Hmm, hôm nay lạnh.")], raw="ok"
+            )
+        )
+        == "Hmm, hôm nay lạnh."
+    )
+    assert (
+        _explanation_raw_answer(
+            SimpleNamespace(
+                tasks_output=[SimpleNamespace(raw='{"answer": "Chào bạn!", "reasons": []}')],
+                raw="ok",
+            )
+        )
+        == "Chào bạn!"
+    )

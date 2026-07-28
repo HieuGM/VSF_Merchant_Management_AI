@@ -14,8 +14,8 @@ from database.connection import SessionLocal, engine
 from database.models import AgentEvent, AgentRun
 from models.agent import CustomerChatResponse
 from models.customer_tasks import (
-    ExplanationTaskOutput,
     MerchantCandidate,
+    PreferenceTaskOutput,
     SearchTaskOutput,
 )
 
@@ -34,12 +34,15 @@ class _MockCrew:
             candidates=[MerchantCandidate(merchant_id="m001", name="Phở Le", match_score=0.9)],
             count=1,
         )
-        explanation = ExplanationTaskOutput(answer="Gợi ý Phở Le vì gần và hợp khẩu vị.")
+        preference = PreferenceTaskOutput(suggestions=[], reasoning="không đủ tín hiệu")
+        # explanation_task is now free-text (output_pydantic dropped) → its answer lives on
+        # the last task's `.raw`, matching the real crew shape _to_chat_response reads.
         return SimpleNamespace(
             raw="ok",
             tasks_output=[
                 SimpleNamespace(pydantic=search),
-                SimpleNamespace(pydantic=explanation),
+                SimpleNamespace(pydantic=preference),
+                SimpleNamespace(raw="Gợi ý Phở Le vì gần và hợp khẩu vị."),
             ],
         )
 
@@ -55,7 +58,10 @@ def test_flow_persists_run_and_events():
         crew=_MockCrew(),
     )
     assert isinstance(resp, CustomerChatResponse)
-    assert resp.answer and len(resp.results) == 1
+    # Strengthened: answer must come from the explanation task's free-text .raw (not the
+    # placeholder crew_output.raw="ok") — catches a wrong-task-index or fallback regression.
+    assert resp.answer == "Gợi ý Phở Le vì gần và hợp khẩu vị."
+    assert len(resp.results) == 1
 
     db = SessionLocal()
     try:

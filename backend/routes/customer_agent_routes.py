@@ -3,7 +3,9 @@
 Two entry points, same crew:
 - POST /chat         — blocking; returns the full CustomerChatResponse when the crew finishes.
 - POST /chat/stream  — Server-Sent Events; emits live progress (task/tool started/finished)
-  while the crew runs, then the final answer + result. Kills the "blank 20-55s wait" feel.
+  while the crew runs AND streams the explanation agent's answer token-by-token
+  (answer_delta deltas), then the terminal run_finished with results. Kills the
+  "blank 20-55s wait then full dump" feel — text starts flowing at TTFT ~5s.
 
 Both run `CustomerFlow.search_restaurants` (CrewAI kickoff + run/event persistence). Typed/
 unexpected errors on /chat are rendered by the global handlers in app/extensions.py (§11.10);
@@ -79,10 +81,14 @@ def customer_chat_stream(request: CustomerChatRequest) -> StreamingResponse:
 
     def worker() -> None:
         try:
+            # stream_scope binds the StreamingListener's progress events (tool/task
+            # started/finished) to the SSE queue. The flow's streaming generator yields the
+            # explanation agent's answer_delta chunks + the terminal run_finished — both
+            # feed the same queue. Answer now streams token-by-token (TTFT ~5s) instead of
+            # being dumped once at the end.
             with stream_scope(events.put):
-                response = customer_flow.search_restaurants(**params)
-            events.put({"event": "answer_delta", "data": {"answer": response.answer}})
-            events.put({"event": "run_finished", "data": response.model_dump()})
+                for evt in customer_flow.search_restaurants_stream(**params):
+                    events.put(evt)
         except Exception as exc:  # noqa: BLE001 - stream already open; report, don't 500
             events.put({
                 "event": "error",

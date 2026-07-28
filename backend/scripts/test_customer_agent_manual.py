@@ -82,9 +82,9 @@ def test_with_fake_llm():
 
     from types import SimpleNamespace
     from flows.customer_flow import customer_flow
-    from models.customer_tasks import ExplanationTaskOutput, MerchantCandidate, SearchTaskOutput
+    from models.customer_tasks import MerchantCandidate, PreferenceTaskOutput, SearchTaskOutput
 
-    # Mock crew trả về kết quả giả
+    # Mock crew trả về kết quả giả (explanation giờ là free-text .raw, không còn pydantic)
     class _MockCrew:
         def kickoff(self, inputs=None):
             print(f"[INPUT] {inputs}")
@@ -105,10 +105,11 @@ def test_with_fake_llm():
                         ],
                         count=1,
                     )),
-                    SimpleNamespace(pydantic=ExplanationTaskOutput(
-                        answer="Tôi gợi ý Phở Le vì quán này gần vị trí của bạn (0.5km), "
-                              "phù hợp với sở thích món Việt và có đánh giá cao 4.5 sao."
+                    SimpleNamespace(pydantic=PreferenceTaskOutput(
+                        suggestions=[], reasoning="không đủ tín hiệu",
                     )),
+                    SimpleNamespace(raw="Tôi gợi ý Phở Le vì quán này gần vị trí của bạn (0.5km), "
+                                         "phù hợp với sở thích món Việt và có đánh giá cao 4.5 sao."),
                 ],
             )
 

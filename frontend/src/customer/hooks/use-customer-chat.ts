@@ -101,12 +101,20 @@ export function useCustomerChat(identity: { userId: string; sessionId: string })
           const tool = data?.tool as string | undefined;
           patchAgent(agentId, (m) => ({ ...m, progress: markDone(m.progress, tool) }));
         } else if (event === "answer_delta") {
-          // Backend sends the full answer once (not incremental) → replace is correct.
-          patchAgent(agentId, (m) => ({ ...m, text: data?.answer ?? m.text }));
+          // Backend streams the answer token-by-token now (incremental `answer_delta`
+          // deltas) → accumulate. The legacy full-`answer` shape is also accepted for
+          // backward compat with older backends. run_finished reconciles with the final.
+          const delta = (data?.answer_delta ?? data?.answer ?? "") as string;
+          if (delta) patchAgent(agentId, (m) => ({ ...m, text: m.text + delta }));
         } else if (event === "run_finished") {
+          // Reconcile with the authoritative final answer — but only when the backend
+          // actually sent one. answer is typed `str` (required), so it can legitimately be
+          // "" in streaming edge cases; use a truthiness guard (not ??) to keep the text
+          // the user already watched stream in rather than blanking the bubble.
+          const finalAnswer = data?.answer && String(data.answer).trim() ? data.answer : null;
           patchAgent(agentId, (m) => ({
             ...m,
-            text: data?.answer ?? m.text,
+            text: finalAnswer ?? m.text,
             results: data?.results ?? [],
             suggestions: data?.preference_suggestions ?? [],
             warnings: data?.warnings ?? [],
@@ -114,9 +122,12 @@ export function useCustomerChat(identity: { userId: string; sessionId: string })
             streaming: false,
           }));
         } else if (event === "error") {
+          // Preserve any answer text that already streamed in — append the error inline
+          // instead of overwriting (the user may have started reading the partial answer).
+          const errMsg = data?.message ?? "Đã có lỗi khi tìm quán. Bạn thử lại nhé.";
           patchAgent(agentId, (m) => ({
             ...m,
-            text: data?.message ?? "Đã có lỗi khi tìm quán. Bạn thử lại nhé.",
+            text: m.text ? `${m.text}\n\n[⚠️ ${errMsg}]` : errMsg,
             error: true,
             streaming: false,
           }));
@@ -127,9 +138,10 @@ export function useCustomerChat(identity: { userId: string; sessionId: string })
         await streamChat(req, onFrame, controller.signal);
       } catch {
         if (!controller.signal.aborted) {
+          const dropMsg = "Không kết nối được tới trợ lý. Thử lại sau một lát nhé.";
           patchAgent(agentId, (m) => ({
             ...m,
-            text: "Không kết nối được tới trợ lý. Thử lại sau một lát nhé.",
+            text: m.text ? `${m.text}\n\n[⚠️ ${dropMsg}]` : dropMsg,
             error: true,
             streaming: false,
           }));

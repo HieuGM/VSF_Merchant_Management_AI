@@ -16,6 +16,10 @@ Tests inject fake `llm_fast` / `llm_strong` so no network/key is required.
 """
 from __future__ import annotations
 
+import functools
+from pathlib import Path
+
+import yaml
 from crewai import LLM, Agent, Crew, Process, Task
 from crewai.project import CrewBase, agent, crew, task
 
@@ -23,10 +27,11 @@ from agents.tool_adapter import tools_for_crew_agent
 from core.errors import ConfigError
 from core.settings import get_settings
 from models.customer_tasks import (
-    ExplanationTaskOutput,
     PreferenceTaskOutput,
     SearchTaskOutput,
 )
+
+_CONFIG_DIR = Path(__file__).parent / "config"
 
 
 def _build_fast_llm() -> LLM:
@@ -75,6 +80,7 @@ class CustomerDiscoveryCrew:
         llm_fast: LLM | None = None,
         llm_strong: LLM | None = None,
         has_location: bool = False,
+        mode: str = "full",
     ) -> None:
         # Defer live LLM construction so tests can inject fakes without a key.
         self._llm_fast = llm_fast or _build_fast_llm()
@@ -84,6 +90,16 @@ class CustomerDiscoveryCrew:
         # (text/cuisine, all-VN). This removes the LLM's freedom to pick the non-geo tool
         # and leak far-away results (the HCM-instead-of-HN bug).
         self._has_location = has_location
+        # mode controls which tasks the crew runs:
+        #   "full"       → search + preference + explanation (blocking /chat path).
+        #   "search"     → search only (1-task crew).
+        #   "preference" → preference only (1-task crew).
+        # The SSE path runs "search" and "preference" crews CONCURRENTLY (two single-task
+        # crews in parallel threads) for true parallelism, then streams the explanation via
+        # a separate direct DeepSeek call. CrewAI crew-level streaming is unreliable with the
+        # tool-calling agents on FPT, and a 2-task async crew can't satisfy CrewAI's
+        # "end with at most one async task" rule without serializing — so we sidestep both.
+        self._mode = mode
 
     # --- agents (method name MUST equal the YAML key) ---
     @agent
@@ -123,46 +139,64 @@ class CustomerDiscoveryCrew:
     # (map_all_task_variables), so no explicit `agent=` kwarg is needed here.
     @task
     def search_task(self) -> Task:
-        # async_execution=True: runs in parallel with preference_task (no runtime dep — preference
-        # reads profile/weather/session, not search output). explanation_task waits for both via its
-        # context. Saves ~10s (the search duration) off the critical path.
+        # async_execution only in "full" mode (parallel with preference_task; explanation_task
+        # is the trailing sync task that awaits both). In single-task "search" mode it's sync.
         return Task(
             config=self.tasks_config["search_task"],
             output_pydantic=SearchTaskOutput,
-            async_execution=True,
+            async_execution=self._mode == "full",
         )
 
     @task
     def preference_task(self) -> Task:
-        # async_execution=True: runs in parallel with search_task.
+        # async_execution only in "full" mode (explanation is the trailing sync task). In
+        # single-task "preference" mode it's sync.
         return Task(
             config=self.tasks_config["preference_task"],
             output_pydantic=PreferenceTaskOutput,
-            async_execution=True,
+            async_execution=self._mode == "full",
         )
 
     @task
     def explanation_task(self) -> Task:
+        # Free-text output (no output_pydantic): the answer is conversational Vietnamese,
+        # and structured JSON would make streamed tokens unreadable on the UI
+        # (chunks would be JSON fragments like `{"answer": "Hôm`). Free-text lets the
+        # SSE stream forward readable token deltas; the full text IS the answer.
+        # `reasons`/`referenced_signals` (former ExplanationTaskOutput fields) were never
+        # surfaced to the FE, so dropping them is quality-neutral.
         return Task(
             config=self.tasks_config["explanation_task"],
-            output_pydantic=ExplanationTaskOutput,
         )
 
-    # Task graph: fixed sequential execution.
-    # search_task → preference_task (parallel) → explanation_task (context: both).
+    # Task graph by mode:
+    #   "full"       → search(async) + preference(async) + explanation(sync): search & preference
+    #                  run concurrently (explanation, the trailing sync task, awaits both).
+    #   "search"     → search only (sync, single-task).
+    #   "preference" → preference only (sync, single-task).
+    # The SSE path runs "search" + "preference" crews concurrently in two threads.
     @crew
     def crew(self) -> Crew:
-        return Crew(
-            agents=[
+        if self._mode == "search":
+            agents = [self.restaurant_search()]
+            tasks = [self.search_task()]
+        elif self._mode == "preference":
+            agents = [self.preference_reasoning()]
+            tasks = [self.preference_task()]
+        else:  # "full"
+            agents = [
                 self.restaurant_search(),
                 self.preference_reasoning(),
                 self.customer_explanation(),
-            ],
-            tasks=[
+            ]
+            tasks = [
                 self.search_task(),
                 self.preference_task(),
                 self.explanation_task(),
-            ],
+            ]
+        return Crew(
+            agents=agents,
+            tasks=tasks,
             process=Process.sequential,
             verbose=True,
             cache=True,
@@ -178,9 +212,46 @@ def build_customer_crew(
     llm_fast: LLM | None = None,
     llm_strong: LLM | None = None,
     has_location: bool = False,
+    mode: str = "full",
 ) -> Crew:
     """Factory — returns a ready Crew. Pass fake LLMs in tests to avoid network/key.
-    `has_location` locks the search agent to nearby_merchant_search (geo hard-filter)."""
+    `has_location` locks the search agent to nearby_merchant_search (geo hard-filter).
+    `mode`: "full" (3-task, blocking path) | "search" | "preference" (1-task crews the SSE
+    path runs concurrently, then streams the explanation via a separate DeepSeek call)."""
     return CustomerDiscoveryCrew(
-        llm_fast=llm_fast, llm_strong=llm_strong, has_location=has_location
+        llm_fast=llm_fast,
+        llm_strong=llm_strong,
+        has_location=has_location,
+        mode=mode,
     ).crew()
+
+
+@functools.lru_cache(maxsize=1)
+def _load_config(name: str) -> dict:
+    """Load a customer crew YAML config (agents/tasks). Cached — the YAML rarely changes."""
+    with open(_CONFIG_DIR / name, encoding="utf-8") as f:
+        return yaml.safe_load(f)
+
+
+def explanation_prompt_pieces() -> dict:
+    """Persona + instruction for the free-text explanation, sourced from agents.yaml +
+    tasks.yaml (single source of truth — same files the CrewAI agents read).
+
+    Used by the streaming flow to build a DIRECT DeepSeek streaming call: CrewAI's
+    crew-level streaming (Crew(stream=True)) is unreliable with the tool-calling
+    search/preference agents on FPT, so the SSE path runs search+preference non-streaming
+    and streams the explanation answer outside the crew. Returns:
+      - system: the agent backstory + role (+ output-format reminder)
+      - instruction: the explanation task description (references {query} etc.)
+    """
+    agent_cfg = _load_config("agents.yaml")["customer_explanation"]
+    task_cfg = _load_config("tasks.yaml")["explanation_task"]
+    system = (
+        f"{str(agent_cfg['backstory']).strip()}\n\n"
+        f"Vai trò: {str(agent_cfg['role']).strip()}\n\n"
+        f"Yêu cầu định dạng output:\n{str(task_cfg['expected_output']).strip()}"
+    )
+    return {
+        "system": system,
+        "instruction": str(task_cfg["description"]),
+    }

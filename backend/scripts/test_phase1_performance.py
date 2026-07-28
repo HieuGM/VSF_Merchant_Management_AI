@@ -15,7 +15,6 @@ backend_dir = Path(__file__).parent.parent
 sys.path.insert(0, str(backend_dir))
 
 from models.customer_tasks import (  # noqa: E402
-    ExplanationTaskOutput,
     MerchantCandidate,
     PreferenceTaskOutput,
     SearchTaskOutput,
@@ -23,7 +22,8 @@ from models.customer_tasks import (  # noqa: E402
 
 
 def _fake_outputs():
-    """Build schema-valid task outputs (no LLM)."""
+    """Build schema-valid task outputs (no LLM). Explanation is free-text (a raw string),
+    matching the real crew where explanation_task dropped output_pydantic."""
     search = SearchTaskOutput(
         candidates=[
             MerchantCandidate(
@@ -45,26 +45,23 @@ def _fake_outputs():
         weather_summary=None,
         reasoning="Demo mock — no preference delta.",
     )
-    explanation = ExplanationTaskOutput(
-        answer=(
-            "Mình gợi ý Phở Le — gần bạn (0.5km), rating 4.5, hợp gu món Việt. "
-            "Phở Gia Truyền cũng đáng thử nếu muốn đổi vị."
-        ),
-        reasons=["Phở Le gần (0.5km)", "rating 4.5, match 0.9"],
-        referenced_signals=["distance_km: 0.5", "avg_rating: 4.5"],
+    answer_text = (
+        "Mình gợi ý Phở Le — gần bạn (0.5km), rating 4.5, hợp gu món Việt. "
+        "Phở Gia Truyền cũng đáng thử nếu muốn đổi vị."
     )
-    return search, preference, explanation
+    return search, preference, answer_text
 
 
 def _mock_crew():
-    """Mock crew whose kickoff returns the 3 structured task outputs."""
-    search, preference, explanation = _fake_outputs()
+    """Mock crew whose kickoff returns the 3 task outputs (search/preference structured,
+    explanation free-text on the last task's .raw)."""
+    search, preference, answer_text = _fake_outputs()
     mock_output = SimpleNamespace(
         raw="ok",
         tasks_output=[
             SimpleNamespace(pydantic=search),
             SimpleNamespace(pydantic=preference),
-            SimpleNamespace(pydantic=explanation),
+            SimpleNamespace(raw=answer_text),
         ],
     )
     crew = Mock()
