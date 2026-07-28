@@ -1,0 +1,211 @@
+[
+  {
+    "id": "Q1",
+    "query": "Tìm quán phở gần Cầu Giấy",
+    "cat": "happy",
+    "total_s": 22.79,
+    "ttft_s": 22.02,
+    "search_s": 6.2,
+    "preference_s": null,
+    "preference_ran": false,
+    "explain_s": 0.76,
+    "results": 3,
+    "top_results": [
+      "Thanh Hằng Quán - Phở & Cháo Các Loại (0.53km, 4.7★)",
+      "Như Thảo 2 - Chân & Cánh Gà Nướng - Nguyễn Phong Sắc (0.6km, 3.5★)",
+      "Cuốn Xưa - Phở Cuốn Hà Thành - Đường 800a (1.28km, 4.6★)"
+    ],
+    "suggestions": [],
+    "answer": "Ồ, Cầu Giấy có quán phở ngon lắm đó bạn — **Thanh Hằng Quán** ở ngõ 130 Xuân Thủy, cách có 500m thôi. Rating 4.7, nước dùng thanh mà thịt mềm, mình thấy hợp cho bữa trưa nhẹ nhàng. Hay ghé thử, rủ mình đi cùng với nhé?",
+    "error": null,
+    "trace_id": "trace_8a3d79f69e5d410a"
+  },
+  {
+    "id": "Q2",
+    "query": "Tìm quán cơm gần Cầu Giấy, giá dưới 50k, rating trên 4 sao",
+    "cat": "happy",
+    "total_s": 13.01,
+    "ttft_s": 11.89,
+    "search_s": 5.35,
+    "preference_s": null,
+    "preference_ran": false,
+    "explain_s": 1.12,
+    "results": 2,
+    "top_results": [
+      "Thanh Hằng Quán - Phở & Cháo Các Loại (0.53km, 4.7★)",
+      "Bạch Hạc Trà - Trà Thảo Mộc - Tô Hiệu (0.65km, 4.9★)"
+    ],
+    "suggestions": [],
+    "answer": "Hmm, mình lục danh sách quán gần Cầu Giấy thì chưa thấy quán cơm nào vừa giá dưới 50k vừa rating trên 4 sao cả. Nhưng nếu bạn không ngại đổi gió, **Thanh Hằng Quán** (phở cháo) cách có 500m, rating 4.7 – giá chắc cũng mềm, hợp bữa trưa nhẹ. Hoặc **Bạch Hạc Trà** gần đó nếu thích uống gì thanh mát. Bạn thấy sao, hay mình tìm mở rộng ra khu vực khác?",
+    "error": null,
+    "trace_id": "trace_360c5d8f68f54ade"
+  },
+  {
+    "id": "Q3",
+    "query": "Quán bún chả ngon nhất khu Đống Đa",
+    "cat": "search+explain",
+    "total_s": 12.77,
+    "ttft_s": 11.98,
+    "search_s": 3.54,
+    "preference_s": null,
+    "preference_ran": false,
+    "explain_s": 0.79,
+    "results": 3,
+    "top_results": [
+      "Bún Chả Liên Anh (2.86km, 4.5★)",
+      "Bún Chả Sự - Hàng Mành (3.51km, 4.6★)",
+      "Bún Chả Nem - Hàng Bún (4.33km, 4.4★)"
+    ],
+    "suggestions": [],
+    "answer": "Hmm, mình chưa có quán bún chả nào ngay trong Đống Đa, nhưng gần đó có **Bún Chả Liên Anh** (148 Ngọc Khánh, Ba Đình) rating 4.5 – nước chấm chua ngọt đậm đà, thịt nướng thơm lắm. Hoặc **Bún Chả Sự - Hàng Mành** (2 Hàng Mành) rating 4.6, hơi xa tí nhưng đáng thử nếu bạn muốn đổi gió. Bạn thích quán nào gần hơn?",
+    "error": null,
+    "trace_id": "trace_f3701d4aed294a3a"
+  },
+  {
+    "id": "Q4",
+    "query": "Tìm quán ăn chay ở Hà Đông",
+    "cat": "pref-signal",
+    "total_s": 19.47,
+    "ttft_s": 18.51,
+    "search_s": 5.89,
+    "preference_s": 13.71,
+    "preference_ran": true,
+    "explain_s": 0.96,
+    "results": 0,
+    "top_results": [],
+    "suggestions": [
+      "cuisine",
+      "distance_preference"
+    ],
+    "answer": "Ồ, Hà Đông mưa nhẹ thế này mà bạn lại thèm đồ chay — hợp ghê. Mình chưa có quán cụ thể trong tay, nhưng bạn thử tìm mấy quán chay gần khu vực bạn ở, hoặc order ship về cho tiện nhỉ? Món chay thanh đạm mà ấm bụng kiểu canh nấm, đậu sốt cà chua ăn với cơm gạo lứt là chuẩn bài mưa luôn á.",
+    "error": null,
+    "trace_id": "trace_a478503f54e143b6"
+  },
+  {
+    "id": "Q5",
+    "query": "Gợi ý quán cay ngon cho buổi tối ở Cầu Giấy",
+    "cat": "pref-signal",
+    "total_s": 21.02,
+    "ttft_s": 20.09,
+    "search_s": 5.74,
+    "preference_s": 12.05,
+    "preference_ran": true,
+    "explain_s": 0.92,
+    "results": 3,
+    "top_results": [
+      "Bà Tuyết - Bún Thái Hải Sản & Mì Chua Cay (2.88km, 4.7★)",
+      "Shin - Mì Cay & Gà Rán Sốt Hàn - Hoàng Ngân (3.71km, 4.7★)",
+      "Shin Chicken - Gà Rán, Mỳ Cay & Kimbap - Phú Mỹ (1.94km, 4.6★)"
+    ],
+    "suggestions": [
+      "cuisine",
+      "location",
+      "time_of_day",
+      "delivery"
+    ],
+    "answer": "Ồ, tối nay mưa lất phất mà lại thèm cay — chuẩn bài luôn! Ở Cầu Giấy có **Bà Tuyết - Bún Thái Hải Sản** (21 Ngõ 1 Nguyễn Thị Định) cách bạn tầm 2.9km, rating 4.7, nước dùng chua cay hải sản tươi ngon. Gần hơn thì **Shin Chicken** ở Phú Mỹ chỉ 1.9km, gà rán sốt Hàn giòn rụm cũng cay xè. Bạn muốn ship cho tiện hay ra ngoài?",
+    "error": null,
+    "trace_id": "trace_e5cc0be1391a4b50"
+  },
+  {
+    "id": "Q6",
+    "query": "Tìm quán trà sữa gần đây",
+    "cat": "nearby(bug-case)",
+    "total_s": 9.3,
+    "ttft_s": 8.47,
+    "search_s": 3.99,
+    "preference_s": null,
+    "preference_ran": false,
+    "explain_s": 0.82,
+    "results": 3,
+    "top_results": [
+      "Trà Sữa TocoToco - 361 Hà Huy Tập (7.21km, 4.6★)",
+      "Trà Sữa TocoToco - 156 Nguyễn Sơn (7.45km, 4.6★)",
+      "Trà Sữa Mixue - 442 Vĩnh Hưng (7.7km, 4.7★)"
+    ],
+    "suggestions": [],
+    "answer": "Ồ, thèm trà sữa hả? Mình thấy có **Trà Sữa TocoToco** ở 361 Hà Huy Tập khá gần bạn — chỉ tầm 7.2km thôi, rating 4.6 cũng ổn áp. Cơ mà nếu muốn gần hơn nữa thì chi nhánh 156 Nguyễn Sơn cũng cùng chuỗi, chất lượng tương tự. Thêm trân châu hoặc pudding vào là chuẩn bài luôn á!",
+    "error": null,
+    "trace_id": "trace_7b4b8f31acac4f2d"
+  },
+  {
+    "id": "Q7",
+    "query": "Tìm quán sushi Nhật Bản chính gốc ở Mộc Châu",
+    "cat": "zero-result",
+    "total_s": 7.73,
+    "ttft_s": 6.88,
+    "search_s": 1.76,
+    "preference_s": null,
+    "preference_ran": false,
+    "explain_s": 0.85,
+    "results": 0,
+    "top_results": [],
+    "suggestions": [],
+    "answer": "Ồ, Mộc Châu à? Mình chưa thấy quán sushi Nhật chính gốc nào trong danh sách của mình ở đó. Nhưng nếu bạn thèm đồ Nhật, mình nghĩ có thể thử các quán sashimi hoặc cơm cuộn ở thị trấn gần đó — hoặc nếu bạn linh động, mình có thể gợi ý vài quán ở Hà Nội hoặc Sài Gòn cho chuyến đi tới. Bạn muốn khám phá thêm không?",
+    "error": null,
+    "trace_id": "trace_7bb9cf76c28145e0"
+  },
+  {
+    "id": "Q8",
+    "query": "Thời tiết Hà Nội hôm nay thế nào?",
+    "cat": "out-of-domain",
+    "total_s": 11.81,
+    "ttft_s": 10.9,
+    "search_s": 6.2,
+    "preference_s": null,
+    "preference_ran": false,
+    "explain_s": 0.91,
+    "results": 3,
+    "top_results": [
+      "Anh Béo - Bún Miến Ngan - Trần Quốc Vượng (Nonekm, 4.7★)",
+      "Aussie Burger Tayho - Pizza & Fast Food (Nonekm, 4.7★)",
+      "3Cây - Coffee & Studio (Nonekm, 5.0★)"
+    ],
+    "suggestions": [],
+    "answer": "Ồ, mình không có dữ liệu thời tiết chính xác hôm nay, nhưng Hà Nội mùa này hay se lạnh sáng sớm rồi nắng nhẹ buổi trưa — kiểu dễ chịu lắm. Nếu bạn đang ở Cầu Giấy, mình thấy **Anh Béo - Bún Miến Ngan** (1 Ngách 26 Ngõ 63 Trần Quốc Vượng) có bát miến ngan nóng hổi, rating 4.7, hợp với tiết trời hơi lạnh đấy. Hay bạn thèm món gì nhẹ nhàng hơn?",
+    "error": null,
+    "trace_id": "trace_4d8dadf0f6054892"
+  },
+  {
+    "id": "Q9",
+    "query": "tim cho an ngon o cau giay gia duoi 50k nha",
+    "cat": "no-diacritics",
+    "total_s": 14.62,
+    "ttft_s": 13.51,
+    "search_s": 3.82,
+    "preference_s": null,
+    "preference_ran": false,
+    "explain_s": 1.1,
+    "results": 3,
+    "top_results": [
+      "Anh Béo - Bún Miến Ngan - Trần Quốc Vượng (Nonekm, 4.7★)",
+      "Bento Delichi (by Cooky) - Cơm Gà Mắm Tỏi, Xối Mỡ - Dương Khuê (Nonekm, 4.6★)",
+      "Bánh Mì Chú Tiểu - Bánh Mì Muối Ớt & Nướng Sốt Kem Bơ Phô Mai - Số 47 Ngõ 66 Hồ Tùng Mậu (Nonekm, 4.8★)"
+    ],
+    "suggestions": [],
+    "answer": "Ồ, Cầu Giấy có mấy quán ngon mà giá cũng mềm lắm nè. Mình thấy **Anh Béo - Bún Miến Ngan** (4.7⭐) ở Trần Quốc Vượng, **Bento Delichi - Cơm Gà Mắm Tỏi** (4.6⭐) trên Dương Khuê, với **Bánh Mì Chú Tiểu** (4.8⭐) ngõ Hồ Tùng Mậu — toàn món Việt dễ ăn, chắc cũng hợp túi tiền dưới 50k đó. Bạn thích món nào nhất để mình gợi ý thêm?",
+    "error": null,
+    "trace_id": "trace_3f77a344ba04454d"
+  },
+  {
+    "id": "Q10",
+    "query": "Tìm chỗ ăn ngon",
+    "cat": "missing-slot",
+    "total_s": 12.9,
+    "ttft_s": 12.32,
+    "search_s": 4.45,
+    "preference_s": null,
+    "preference_ran": false,
+    "explain_s": 0.59,
+    "results": 3,
+    "top_results": [
+      "1893 Coffee Beer (Nonekm, 4.8★)",
+      "1976 Cafe - Nguyễn Thị Minh Khai (Nonekm, 4.7★)",
+      "1997 Quán - Bún Bò Huế - Huỳnh Văn Bánh (Nonekm, 4.8★)"
+    ],
+    "suggestions": [],
+    "answer": "Ồ, tìm chỗ ăn ngon hả? Bạn đang ở khu vực nào, hay hôm nay thèm món gì đặc biệt không? Mình biết vài quán món Việt siêu ngon, nhưng muốn gợi ý đúng gu thì bạn kể thêm chút nhé — món Huế, miền Nam hay đồ nhẹ như cà phê cũng có.",
+    "error": null,
+    "trace_id": "trace_c504d15bfd5c4220"
+  }
+]

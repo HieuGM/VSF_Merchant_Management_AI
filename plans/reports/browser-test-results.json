@@ -1,0 +1,74 @@
+[
+  {
+    "id": "Q1-pho-CauGiay",
+    "query": "Tìm quán phở gần Cầu Giấy",
+    "has_location": true,
+    "ttft_s": 17.6,
+    "total_s": 18.14,
+    "stream_s": 0.55,
+    "result_cards": 3,
+    "scroll_ok": true,
+    "answer_preview": "Ồ, Cầu Giấy á? Mình thấy có Cuốn Xưa - Phở Cuốn Hà Thành ở đường 800a, Nghĩa Đô — rating 4.6 khá ổn. Phở cuốn kiểu Hà Nội vừa lạ vừa quen, thích hợp cho bữa trưa nhẹ nhàng. Bạn muốn ghé thử không?",
+    "screenshot": "C:\\Users\\Laptop\\OneDrive\\Laptop\\WorkSpace\\VSF\\AI_Restaurant\\plans\\reports\\browser-shots\\Q1-pho-CauGiay.png"
+  },
+  {
+    "id": "Q2-cay-CauGiay",
+    "query": "Gợi ý quán cay ngon cho buổi tối ở Cầu Giấy",
+    "has_location": true,
+    "ttft_s": 7.81,
+    "total_s": 9.19,
+    "stream_s": 1.38,
+    "result_cards": 3,
+    "scroll_ok": true,
+    "answer_preview": "Ồ, tối nay muốn ăn cay hả bạn? Mình thấy Bà Tuyết - Bún Thái Hải Sản & Mì Chua Cay ở 21 Ngõ 1 Nguyễn Thị Định khá hợp — rating 4.7, vừa cay vừa đậm đà. Hoặc Anh Béo - Bún Miến Ngan ở Trần Quốc Vượng c",
+    "screenshot": "C:\\Users\\Laptop\\OneDrive\\Laptop\\WorkSpace\\VSF\\AI_Restaurant\\plans\\reports\\browser-shots\\Q2-cay-CauGiay.png"
+  },
+  {
+    "id": "Q3-trasua-GiaLam",
+    "query": "Tìm quán trà sữa gần đây",
+    "has_location": true,
+    "ttft_s": null,
+    "total_s": null,
+    "stream_s": null,
+    "result_cards": 0,
+    "scroll_ok": true,
+    "answer_preview": "",
+    "screenshot": "C:\\Users\\Laptop\\OneDrive\\Laptop\\WorkSpace\\VSF\\AI_Restaurant\\plans\\reports\\browser-shots\\Q3-trasua-GiaLam.png"
+  },
+  {
+    "id": "Q4-sushi-MocChau",
+    "query": "Tìm quán sushi Nhật Bản chính gốc ở Mộc Châu",
+    "has_location": false,
+    "ttft_s": 3.9,
+    "total_s": 4.81,
+    "stream_s": 0.92,
+    "result_cards": 0,
+    "scroll_ok": true,
+    "answer_preview": "Ồ, Mộc Châu mà kiếm sushi Nhật chính gốc thì hơi hiếm bạn ha — mình cũng chưa thấy quán nào chuyên về mảng đó ở đây. Nhưng nếu bạn thèm đồ Nhật, thử ghé mấy quán lẩu hoặc đồ nướng kiểu Nhật xem sao, h",
+    "screenshot": "C:\\Users\\Laptop\\OneDrive\\Laptop\\WorkSpace\\VSF\\AI_Restaurant\\plans\\reports\\browser-shots\\Q4-sushi-MocChau.png"
+  },
+  {
+    "id": "Q5-weather",
+    "query": "Thời tiết Hà Nội hôm nay thế nào?",
+    "has_location": false,
+    "ttft_s": 5.97,
+    "total_s": 7.38,
+    "stream_s": 1.41,
+    "result_cards": 0,
+    "scroll_ok": true,
+    "answer_preview": "Ồ, mình không có số liệu thời tiết thực tế đâu bạn ơi — nhưng mà nghe hỏi thế là biết bạn đang ở Hà Nội rồi. Hôm nay trời se lạnh hay nắng chang chang vậy? Nếu mà lạnh thì mình nghĩ ngay tới bát phở n",
+    "screenshot": "C:\\Users\\Laptop\\OneDrive\\Laptop\\WorkSpace\\VSF\\AI_Restaurant\\plans\\reports\\browser-shots\\Q5-weather.png"
+  },
+  {
+    "id": "Q6-nodiacritics",
+    "query": "tim cho an ngon o cau giay gia duoi 50k nha",
+    "has_location": false,
+    "ttft_s": 8.03,
+    "total_s": 98.06,
+    "stream_s": 90.02,
+    "result_cards": 0,
+    "scroll_ok": true,
+    "answer_preview": "peer closed connection without sending complete message body (incomplete chunked read)",
+    "screenshot": "C:\\Users\\Laptop\\OneDrive\\Laptop\\WorkSpace\\VSF\\AI_Restaurant\\plans\\reports\\browser-shots\\Q6-nodiacritics.png"
+  }
+]
