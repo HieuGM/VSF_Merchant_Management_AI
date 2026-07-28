@@ -11,7 +11,7 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from database.models import Merchant, MenuItem
-from repositories.merchant_repository import MerchantRepository
+from repositories.merchant_repository import MerchantRepository, _norm_text
 
 
 def haversine_distance(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
@@ -26,6 +26,22 @@ def haversine_distance(lat1: float, lon1: float, lat2: float, lon2: float) -> fl
         + math.cos(lat1_rad) * math.cos(lat2_rad) * math.sin(delta_lon / 2) ** 2
     )
     return R * 2 * math.asin(math.sqrt(a))
+
+
+def _nearby_match_score(merchant: Merchant, query: str | None) -> float:
+    """Relevance score for nearby ranking: name match (1.0) > cuisine match (0.7) > menu-only
+    (0.4). Diacritics-insensitive ("trà sữa" ≡ "tra sua"). Stops a Pizza Hut that only matched
+    "tra sua" via menu items from outranking a real "Trà Sữa TocoToco" shop on distance."""
+    if not query:
+        return 1.0
+    q = _norm_text(query)
+    if not q:
+        return 1.0
+    if q in _norm_text(merchant.name or ""):
+        return 1.0
+    if q in _norm_text(merchant.cuisine or ""):
+        return 0.7
+    return 0.4
 
 
 @dataclass
@@ -197,12 +213,14 @@ class MerchantSearchService:
                             merchant=merchant,
                             distance_km=distance_km,
                             avg_rating=avg_rating,
-                            match_score=1.0,
+                            match_score=_nearby_match_score(merchant, query),
                             tier=tier,
                             price_level=price_level,
                         )
                     )
-            out.sort(key=lambda r: r.distance_km or 9999)
+            # Rank by relevance first (name > cuisine > menu-only match), then distance — so a
+            # real "trà sữa" shop outranks a Pizza Hut that only matched "tra sua" via menu items.
+            out.sort(key=lambda r: (-r.match_score, r.distance_km or 9999))
             return out
 
         results = geo_filter(radius_km)

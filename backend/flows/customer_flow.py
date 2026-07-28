@@ -164,6 +164,11 @@ class CustomerFlow:
                 crew_output = crew.kickoff(inputs=inputs)
 
             response = _to_chat_response(trace_id, session_id, crew_output)
+            # Reliability fallback: the search agent non-deterministically drops candidates.
+            # If it returned none but we have a location, fetch nearby directly so the user
+            # still gets real results (deterministic tool output — never fabricated).
+            if not response.results and has_location:
+                response.results = _direct_nearby_results(inputs.get("query"), lat, lng)
 
             self._repo.add_event(
                 build_event_record(
@@ -308,6 +313,10 @@ class CustomerFlow:
                 else None
             )
             results = [c.model_dump() for c in search.candidates] if search is not None else []
+            # Reliability fallback: agent non-deterministically drops candidates. If empty
+            # and we have a location, fetch nearby directly (deterministic, truthful).
+            if not results and has_location:
+                results = _direct_nearby_results(inputs.get("query"), lat, lng)
             suggestions = (
                 [s.model_dump() for s in preference.suggestions] if preference is not None else []
             )
@@ -405,6 +414,41 @@ def _task_pydantic(crew_output: Any, model_name: str) -> Any | None:
         if pyd is not None and type(pyd).__name__ == model_name:
             return pyd
     return None
+
+
+def _direct_nearby_results(
+    query: str | None, lat: float, lng: float, limit: int = 6
+) -> list[dict[str, Any]]:
+    """Deterministic fallback when the search agent drops its candidates.
+
+    The gpt-oss-20b search agent non-deterministically returns candidates=[] even when the
+    tool found matches (verified: same code returns 3 at one location, 0 at another). To keep
+    the UX reliable, if the agent produced nothing we fetch nearby merchants directly. These
+    are REAL tool results (truthful — never fabricated), same shape as SearchTaskOutput
+    candidates, sorted by distance via the service's auto-expand."""
+    from database.connection import SessionLocal
+    from repositories.merchant_repository import MerchantRepository
+    from services.merchant_search_service import MerchantSearchService
+
+    db = SessionLocal()
+    try:
+        svc = MerchantSearchService(MerchantRepository(db))
+        ranked = svc.nearby_search(lat, lng, radius_km=5.0, query=query or None, limit=limit)
+        return [
+            {
+                "merchant_id": r.merchant.merchant_id,
+                "name": r.merchant.name,
+                "cuisine": r.merchant.cuisine,
+                "address": r.merchant.address,
+                "city": r.merchant.city,
+                "distance_km": round(r.distance_km, 2) if r.distance_km is not None else None,
+                "avg_rating": r.avg_rating,
+                "match_score": round(r.match_score, 3),
+            }
+            for r in ranked
+        ]
+    finally:
+        db.close()
 
 
 def _to_chat_response(trace_id: str, session_id: str | None, crew_output: Any) -> CustomerChatResponse:
