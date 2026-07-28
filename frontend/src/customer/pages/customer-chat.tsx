@@ -6,8 +6,8 @@
  * query; location is sent when the user opted in.
  */
 import { useEffect, useRef, useState } from "react";
-import { useLocation } from "react-router-dom";
-import { ArrowDown, Leaf } from "lucide-react";
+import { useLocation, useNavigate } from "react-router-dom";
+import { ArrowDown, Leaf, MapPin } from "lucide-react";
 import { ChatMessageView } from "../components/chat-message";
 import { Composer } from "../components/composer";
 import { QuickPrompts } from "../components/quick-prompts";
@@ -16,9 +16,18 @@ import { preferencesToContext, usePreferences } from "../hooks/use-preferences";
 import { useStickToBottom } from "../hooks/use-stick-to-bottom";
 import "./customer-chat.css";
 
+/** Human-readable geolocation accuracy with a "poor" flag (>2km → likely IP-based, off). */
+function accuracyLabel(m: number | null): { text: string; poor: boolean } | null {
+  if (m == null) return null;
+  const poor = m > 2000;
+  const text = m >= 1000 ? `±${(m / 1000).toFixed(1)}km` : `±${Math.round(m)}m`;
+  return { text, poor };
+}
+
 export default function CustomerChat() {
   const { messages, sending, send, stop } = useChat();
   const { prefs } = usePreferences();
+  const navigate = useNavigate();
   const [draft, setDraft] = useState("");
   const { ref, atBottom, scrollToBottom, onScroll } = useStickToBottom<HTMLDivElement>();
   // Ref-guard for the seed effect: React StrictMode double-invokes mount effects in dev,
@@ -50,6 +59,8 @@ export default function CustomerChat() {
   }, []);
 
   const empty = messages.length === 0;
+  const locActive = prefs.useLocation && prefs.locationReady;
+  const acc = accuracyLabel(prefs.accuracy);
 
   return (
     <div className="cchat">
@@ -90,6 +101,21 @@ export default function CustomerChat() {
       )}
 
       <div className="cchat__composer-wrap">
+        {locActive && (
+          <button
+            type="button"
+            className={`cchat__loc ${acc?.poor ? "is-poor" : ""}`}
+            onClick={() => navigate("/customer/preferences")}
+            title="Sửa vị trí ở mục Sở thích"
+          >
+            <MapPin size={13} />
+            {acc
+              ? acc.poor
+                ? `Định vị có thể lệch (${acc.text}) — bấm để sửa`
+                : `Đang tìm quanh vị trí (${acc.text})`
+              : "Đang dùng vị trí của bạn"}
+          </button>
+        )}
         <Composer
           value={draft}
           onChange={setDraft}

@@ -105,6 +105,29 @@
   font-size: 0.72rem;
   color: var(--ink-400);
 }
+.cchat__loc {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin: 0 auto 0.4rem;
+  padding: 0.28rem 0.7rem;
+  border: 1px solid var(--gsm-200, #a7f3d0);
+  border-radius: var(--r-pill, 999px);
+  background: var(--gsm-50, #ecfdf5);
+  color: var(--gsm-700, #047857);
+  font-size: 0.72rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+.cchat__loc:hover {
+  background: var(--gsm-100, #d1fae5);
+}
+.cchat__loc.is-poor {
+  border-color: var(--warm-400, #fbbf24);
+  background: rgba(251, 191, 36, 0.14);
+  color: var(--warm-600, #d97706);
+}
 
 @media (max-width: 768px) {
   .cchat__stream {

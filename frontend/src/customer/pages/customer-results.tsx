@@ -39,7 +39,13 @@ export default function CustomerResults() {
     }
     const coords = await geo.request();
     if (!coords) return; // error surfaced via geo.error
-    update({ lat: coords.lat, lng: coords.lng, useLocation: true, locationReady: true });
+    update({
+      lat: coords.lat,
+      lng: coords.lng,
+      useLocation: true,
+      locationReady: true,
+      accuracy: coords.accuracy,
+    });
     setNearby(true);
   };
 

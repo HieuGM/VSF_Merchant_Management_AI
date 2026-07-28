@@ -21,6 +21,9 @@ export interface Preferences {
   locationReady: boolean;
   lat: number;
   lng: number;
+  /** Geolocation accuracy in metres (95% confidence). null = unknown (manual entry or
+   *  unmeasured). The chat surfaces this so the user can spot a wrong location and fix it. */
+  accuracy: number | null;
 }
 
 const STORAGE_KEY = "cust_preferences";
@@ -35,6 +38,7 @@ const DEFAULTS: Preferences = {
   // Placeholder only (HCM). Never sent unless `locationReady` is true.
   lat: 10.79,
   lng: 106.66,
+  accuracy: null,
 };
 
 function load(): Preferences {

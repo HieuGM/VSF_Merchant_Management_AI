@@ -35,12 +35,14 @@ export default function PreferenceCenter() {
     // location-sending OFF until the user enters coords manually.
     update({ useLocation: true });
     const coords = await geo.request();
-    if (coords) update({ locationReady: true, lat: coords.lat, lng: coords.lng });
+    if (coords)
+      update({ locationReady: true, lat: coords.lat, lng: coords.lng, accuracy: coords.accuracy });
   };
 
   const useMyLocation = async () => {
     const coords = await geo.request();
-    if (coords) update({ lat: coords.lat, lng: coords.lng, locationReady: true });
+    if (coords)
+      update({ lat: coords.lat, lng: coords.lng, locationReady: true, accuracy: coords.accuracy });
   };
 
   return (
@@ -152,7 +154,9 @@ export default function PreferenceCenter() {
                   type="number"
                   value={prefs.lat}
                   step="0.001"
-                  onChange={(e) => update({ lat: Number(e.target.value), locationReady: true })}
+                  onChange={(e) =>
+                    update({ lat: Number(e.target.value), locationReady: true, accuracy: null })
+                  }
                 />
               </label>
               <label>
@@ -162,7 +166,9 @@ export default function PreferenceCenter() {
                   type="number"
                   value={prefs.lng}
                   step="0.001"
-                  onChange={(e) => update({ lng: Number(e.target.value), locationReady: true })}
+                  onChange={(e) =>
+                    update({ lng: Number(e.target.value), locationReady: true, accuracy: null })
+                  }
                 />
               </label>
             </div>
