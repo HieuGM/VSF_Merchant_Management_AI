@@ -54,12 +54,12 @@ function AgentTurn({ msg }: { msg: ChatMessage }) {
             {!msg.streaming && !msg.error && (
               <button
                 type="button"
-                className="cmsg__copy"
+                className={`cmsg__copy ${copied ? "is-copied" : ""}`}
                 onClick={copy}
                 aria-label={copied ? "Đã sao chép" : "Sao chép câu trả lời"}
-                title="Sao chép"
+                title={copied ? "Đã sao chép" : "Sao chép câu trả lời"}
               >
-                {copied ? <Check size={14} /> : <Copy size={14} />}
+                {copied ? <Check size={15} /> : <Copy size={15} />}
               </button>
             )}
           </>

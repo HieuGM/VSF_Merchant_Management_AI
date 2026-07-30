@@ -96,30 +96,33 @@
   border-radius: 6px;
 }
 
-/* --- Copy button --- */
+/* --- Copy button (below the answer, left — ChatGPT-style) --- */
 .cmsg__copy {
-  position: absolute;
-  top: 0.45rem;
-  right: 0.45rem;
-  display: inline-grid;
-  place-items: center;
-  width: 1.8rem;
-  height: 1.8rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.9rem;
+  height: 1.9rem;
+  margin: 0.4rem 0 0;
+  padding: 0;
   border: none;
   border-radius: var(--r-sm);
   background: transparent;
   color: var(--ink-400);
   cursor: pointer;
-  opacity: 0;
-  transition: opacity 0.18s var(--ease), background 0.18s var(--ease), color 0.18s var(--ease);
-}
-.cmsg__bubble:hover .cmsg__copy,
-.cmsg__copy:focus-visible {
-  opacity: 1;
+  transition: background 0.18s var(--ease), color 0.18s var(--ease);
 }
 .cmsg__copy:hover {
   background: var(--glass-bg);
   color: var(--gsm-700);
+}
+.cmsg__copy:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.3);
+  color: var(--gsm-700);
+}
+.cmsg__copy.is-copied {
+  color: var(--gsm-600);
 }
 
 /* --- Result cards --- */
