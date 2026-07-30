@@ -4,6 +4,29 @@ This document tracks all significant changes, features, fixes, and security impr
 
 ---
 
+## [2026-07-30] Customer Agent Memory Wire-up (Multiturn + Profile + Weather)
+
+### Problem
+Customer agent was stateless per-query: `chat_messages` had no writer, `preference_suggestions` were propose-only forever, `weather_override` dropped at the route → ~28/51 `ground_truth_customer.json` cases untestable (all multiturn `refinement_multiturn`, `preference_implicit`, `profile_conflict`). Memory infra (tables, read tools, agent config) existed but was disconnected.
+
+### Changes
+- **Conversation memory** (`backend/repositories/chat_message_repository.py` NEW, `backend/flows/customer_flow.py`): persist user+agent turns per `session_id` (get-or-create anonymous `ChatSession`, B1 FK fix), load last-4 into crew. TTL 24h filter (B2 → TC-11 honest-empty on stale). PII redaction on persist+render (`backend/core/pii.py` NEW).
+- **Anaphora resolution** (`customer_flow.py`, `config/tasks.yaml`): `NGỮ CẢNH PHIÊN TRƯỚC` prompt block (no coordinator); `exclude_merchant_ids` arg on `merchant_search`/`nearby_merchant_search` + service (`backend/tools/customer/merchant_tools.py`, `backend/services/merchant_search_service.py`) — deterministic TC-30.
+- **Weather** (`customer_flow.py`, `routes/customer_agent_routes.py`): thread `weather_override` → preference + server-side short-circuit via `preference_service.propose_deltas` (B3 → TC-06 deterministic).
+- **Profile confirm** (`routes/user_routes.py`, `repositories/user_profile_repository.py`, `services/preference_confirm_service.py` NEW, `models/agent.py`): implement `/confirm`+`/reject` with typed `apply_delta` (whitelist + per-field set/add/remove, B5), `evidence_refs_json` idempotency (B6), audit log + P1 auth TODO (B7, user choice: not 403-gate). Propose path stays 100% read-only (canary extended).
+- **FE** (`frontend/src/customer/**`): Lưu/Bỏ qua suggestion buttons, `session_id` localStorage-persisted + regenerate on New chat, `weather_override` field.
+- **GT** (`ground_truth_customer.json`): `diet`→`dietary` (JSONB list) on TC-07/29/48.
+
+### Verification
+- 32/32 tests green (`test_customer_memory_wireup.py` 18 + propose-only canary 3 + crew 11); app import restored.
+- E2e multiturn smoke (real LLM): turn-2 "quán đầu tiên" → resolved turn-1's #1 (Thanh Hằng Quán) + truth-first (no fabricated price); memory persisted.
+- E2e confirm/reject HTTP smoke: apply + idempotent + reject(body/no-body) + 400-on-bad-field.
+- **Status:** ✅ 9/10 targeted TCs achievable; TC-49 out-of-scope (no coordinator).
+- Plan + adversarial audit: `plans/260730-customer-agent-memory-wireup/`.
+- **Known limits:** FPT explanation transient flakiness (pre-existing F3, graceful fallback); double user-turn by-design (deduped on read); B4 flow→tool forward LLM-dependent.
+
+---
+
 ## [2026-07-22] Critical Bug Fixes (Security & Correctness)
 
 ### Security Fixes

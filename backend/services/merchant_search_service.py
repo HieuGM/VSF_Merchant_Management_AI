@@ -101,6 +101,7 @@ class MerchantSearchService:
         lng: float | None = None,
         radius_km: float | None = None,
         limit: int = 20,
+        exclude_merchant_ids: list[str] | None = None,
     ) -> list[SearchResult]:
         """Search merchants with filters and ranking (UC-04).
 
@@ -112,6 +113,12 @@ class MerchantSearchService:
             min_rating=min_rating,
             limit=limit * 2,
         )
+
+        # Subtractive exclude: drop ids BEFORE ranking/distance scoring so excluded
+        # merchants never win ties or consume a limit slot. None/[] = no change.
+        if exclude_merchant_ids:
+            excluded = set(exclude_merchant_ids)
+            merchants = [m for m in merchants if m.merchant_id not in excluded]
 
         results: list[SearchResult] = []
 
@@ -191,6 +198,7 @@ class MerchantSearchService:
         cuisine: str | None = None,
         query: str | None = None,
         limit: int = 20,
+        exclude_merchant_ids: list[str] | None = None,
     ) -> list[SearchResult]:
         """Find merchants near a location (Haversine-based).
 
@@ -201,6 +209,12 @@ class MerchantSearchService:
         merchants, so a hard 5km cutoff would wrongly return nothing."""
         # 2000 > catalog size (~1681) → every query/cuisine-matching merchant is a geo candidate.
         candidates = self._repo.search_merchants(query=query, cuisine=cuisine, limit=2000)
+
+        # Subtractive exclude: drop ids BEFORE geo/ranking so excluded merchants never win ties
+        # or consume a limit slot. None/[] = no change.
+        if exclude_merchant_ids:
+            excluded = set(exclude_merchant_ids)
+            candidates = [m for m in candidates if m.merchant_id not in excluded]
 
         def geo_filter(radius: float) -> list[SearchResult]:
             out: list[SearchResult] = []

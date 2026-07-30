@@ -48,6 +48,7 @@ def customer_chat(request: CustomerChatRequest) -> CustomerChatResponse:
         lng=location.lng if location else None,
         session_id=request.session_id,
         user_id=request.user_id,
+        weather_override=request.weather_override,
     )
 
 
@@ -77,6 +78,7 @@ def customer_chat_stream(request: CustomerChatRequest) -> StreamingResponse:
         "lng": location.lng if location else None,
         "session_id": request.session_id,
         "user_id": request.user_id,
+        "weather_override": request.weather_override,
     }
 
     def worker() -> None:

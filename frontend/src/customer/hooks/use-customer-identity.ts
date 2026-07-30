@@ -1,9 +1,14 @@
 /**
  * Stable anonymous identity for the customer agent.
- * `user_id` persists across visits (localStorage); `session_id` is minted per browser
- * tab load so each discovery conversation is its own session (design §11.4).
+ * `user_id` persists across visits (localStorage). `session_id` persists across
+ * reloads AND can be rotated via `regenerate()` so "New chat" starts a fresh memory
+ * window (design §11.4). Both storage keys live here so other modules read the same
+ * source (see `getCustomerUserId`).
  */
-import { useRef } from "react";
+import { useCallback, useMemo, useState } from "react";
+
+export const CUSTOMER_USER_ID_KEY = "cust_user_id";
+export const CUSTOMER_SESSION_ID_KEY = "cust_session_id";
 
 function makeId(prefix: string): string {
   const rand =
@@ -13,15 +18,69 @@ function makeId(prefix: string): string {
   return `${prefix}_${rand}`;
 }
 
-export function useCustomerIdentity(): { userId: string; sessionId: string } {
-  const ref = useRef<{ userId: string; sessionId: string } | null>(null);
-  if (ref.current === null) {
-    let userId = localStorage.getItem("cust_user_id");
-    if (!userId) {
-      userId = makeId("user");
-      localStorage.setItem("cust_user_id", userId);
-    }
-    ref.current = { userId, sessionId: makeId("session") };
+/** Safe localStorage read (SSR / privacy-mode guarded). */
+function readKey(key: string): string | null {
+  try {
+    return localStorage.getItem(key);
+  } catch {
+    return null;
   }
-  return ref.current;
+}
+
+/** Read the persisted anonymous user id WITHOUT subscribing to React state. */
+export function getCustomerUserId(): string | null {
+  return readKey(CUSTOMER_USER_ID_KEY);
+}
+
+/** Lazily mint+persist a user id once per browser identity. */
+function ensureUserId(): string {
+  const existing = readKey(CUSTOMER_USER_ID_KEY);
+  if (existing) return existing;
+  const id = makeId("user");
+  try {
+    localStorage.setItem(CUSTOMER_USER_ID_KEY, id);
+  } catch {
+    /* storage unavailable — keep the in-memory id for this session */
+  }
+  return id;
+}
+
+export interface CustomerIdentity {
+  userId: string;
+  sessionId: string;
+  /** Mint a fresh session_id + persist it (called by "New chat"). */
+  regenerate: () => void;
+}
+
+export function useCustomerIdentity(): CustomerIdentity {
+  // session_id is reactive so consumers (useCustomerChat) pick up the new id after
+  // regenerate(). Initialized from localStorage so a reload keeps the same session.
+  const [sessionId, setSessionId] = useState<string>(() => {
+    const stored = readKey(CUSTOMER_SESSION_ID_KEY);
+    if (stored) return stored;
+    const id = makeId("session");
+    try {
+      localStorage.setItem(CUSTOMER_SESSION_ID_KEY, id);
+    } catch {
+      /* storage unavailable */
+    }
+    return id;
+  });
+
+  // user_id never changes within a browser identity — compute once.
+  const userId = useMemo(() => ensureUserId(), []);
+
+  const regenerate = useCallback(() => {
+    const id = makeId("session");
+    try {
+      localStorage.setItem(CUSTOMER_SESSION_ID_KEY, id);
+    } catch {
+      /* storage unavailable — in-memory rotation still applies */
+    }
+    setSessionId(id);
+  }, []);
+
+  // Stable object reference between renders unless sessionId actually changes — keeps
+  // useCustomerChat's `send`/`reset` memo from churning every render.
+  return useMemo(() => ({ userId, sessionId, regenerate }), [userId, sessionId, regenerate]);
 }

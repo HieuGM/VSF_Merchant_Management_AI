@@ -3,6 +3,8 @@
  * Talks to the FROZEN chat contract (design §11.4):
  *   POST /api/v1/agent/customer/chat         — blocking full response
  *   POST /api/v1/agent/customer/chat/stream  — Server-Sent Events over POST
+ *   POST /api/v1/users/{userId}/profile/deltas/{deltaId}/confirm  — persist a proposed delta
+ *   POST /api/v1/users/{userId}/profile/deltas/{deltaId}/reject   — dismiss a proposed delta
  * EventSource can't POST, so `streamChat` parses the SSE frames off a fetch reader.
  */
 
@@ -25,8 +27,13 @@ export interface RestaurantResult {
   image_url?: string | null;
 }
 
-/** A proposed (never auto-saved) tweak to the user's taste profile. */
+/**
+ * A proposed (never auto-saved) tweak to the user's taste profile.
+ * `delta_id` is present only when the backend attached a persistable delta — older
+ * responses omit it and the FE hides the Lưu/Bỏ qua actions (graceful downgrade).
+ */
 export interface PreferenceSuggestion {
+  delta_id?: string | null;
   field: string;
   operation?: string;
   value?: unknown;
@@ -50,6 +57,19 @@ export interface CustomerChatRequest {
   session_id?: string;
   message: string;
   location?: Location | null;
+  /** Client-side weather signal (e.g. {is_rain:true}); FE omits today (null) by design. */
+  weather_override?: Record<string, unknown> | null;
+}
+
+/** Body for confirming a proposed preference delta (mirrors backend ConfirmDeltaRequest). */
+export interface ConfirmDeltaBody {
+  user_id: string;
+  field: string;
+  operation: "set" | "add" | "remove";
+  value: unknown;
+  confidence?: number | null;
+  rationale?: string | null;
+  session_id?: string | null;
 }
 
 /** SSE frame: `{ event, data }` — event names per STREAM_EVENT_TYPES (§11.4). */
@@ -121,4 +141,39 @@ function parseFrame(raw: string): StreamFrame | null {
   } catch {
     return { event, data: dataLines.join("\n") };
   }
+}
+
+/**
+ * Persist a proposed preference delta to the user's profile. Idempotent — repeating
+ * the same (userId, deltaId) is a no-op on the backend. Resolves to the updated
+ * profile (unused by the UI today; the row simply flips to "Đã lưu").
+ */
+export async function confirmDelta(
+  userId: string,
+  deltaId: string,
+  body: ConfirmDeltaBody,
+): Promise<unknown> {
+  const resp = await fetch(
+    `${API_BASE}/api/v1/users/${encodeURIComponent(userId)}/profile/deltas/${encodeURIComponent(deltaId)}/confirm`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    },
+  );
+  if (!resp.ok) throw new Error(`Confirm delta failed: HTTP ${resp.status}`);
+  return resp.json();
+}
+
+/**
+ * Dismiss a proposed preference delta. No profile mutation; the backend records the
+ * event as rejected. Best-effort from the UI's side — a failed dismiss still collapses
+ * the actions so the user is never blocked on a suggestion they skipped.
+ */
+export async function rejectDelta(userId: string, deltaId: string): Promise<void> {
+  const resp = await fetch(
+    `${API_BASE}/api/v1/users/${encodeURIComponent(userId)}/profile/deltas/${encodeURIComponent(deltaId)}/reject`,
+    { method: "POST" },
+  );
+  if (!resp.ok) throw new Error(`Reject delta failed: HTTP ${resp.status}`);
 }

@@ -1,7 +1,8 @@
 /**
  * One conversation turn. User turns are a pill (right). Agent turns compose the live
  * progress panel, the answer text (rendered as markdown), ranked restaurant cards,
- * taste-profile suggestions, warnings, and a copy button — inside a glass bubble.
+ * taste-profile suggestions (with Lưu/Bỏ qua when a delta_id is attached), warnings,
+ * and a copy button — inside a glass bubble.
  */
 import { useState } from "react";
 import ReactMarkdown from "react-markdown";
@@ -9,8 +10,9 @@ import remarkGfm from "remark-gfm";
 import { AlertTriangle, Check, Copy, Leaf, Lightbulb } from "lucide-react";
 import { AgentProgress } from "./agent-progress";
 import { RestaurantCard } from "./restaurant-card";
+import { confirmDelta, rejectDelta, type PreferenceSuggestion } from "../api/customer-agent-client";
+import { getCustomerUserId } from "../hooks/use-customer-identity";
 import type { ChatMessage } from "../hooks/use-customer-chat";
-import type { PreferenceSuggestion } from "../api/customer-agent-client";
 import "./chat-message.css";
 
 export function ChatMessageView({ msg }: { msg: ChatMessage }) {
@@ -98,8 +100,49 @@ function AgentTurn({ msg }: { msg: ChatMessage }) {
   );
 }
 
+/** Local per-row state for the Lưu/Bỏ qua actions. */
+type SuggestionStatus = "idle" | "saving" | "saved" | "dismissed";
+
 function SuggestionRow({ s }: { s: PreferenceSuggestion }) {
   const pct = s.confidence != null ? Math.round(s.confidence * 100) : null;
+  const [status, setStatus] = useState<SuggestionStatus>("idle");
+
+  // Persistable only when the backend attached a delta_id; older responses hide actions.
+  const deltaId = s.delta_id ?? null;
+
+  const onConfirm = async () => {
+    if (!deltaId || status !== "idle") return;
+    const userId = getCustomerUserId();
+    if (!userId) return;
+    setStatus("saving");
+    try {
+      await confirmDelta(userId, deltaId, {
+        user_id: userId,
+        field: s.field,
+        operation: toOperation(s.operation),
+        value: s.value,
+        confidence: s.confidence ?? null,
+        rationale: s.rationale ?? null,
+      });
+      setStatus("saved");
+    } catch {
+      // Network/server error — stay idle so the user can retry.
+      setStatus("idle");
+    }
+  };
+
+  const onReject = async () => {
+    if (!deltaId || status !== "idle") return;
+    const userId = getCustomerUserId();
+    setStatus("saving");
+    try {
+      if (userId) await rejectDelta(userId, deltaId);
+    } catch {
+      /* best-effort dismiss — never block the UI on a skipped suggestion */
+    }
+    setStatus("dismissed");
+  };
+
   return (
     <div className="cmsg__suggest">
       <div className="cmsg__suggest-main">
@@ -108,6 +151,42 @@ function SuggestionRow({ s }: { s: PreferenceSuggestion }) {
         {pct != null && <span className="cmsg__suggest-pct">{pct}%</span>}
       </div>
       {s.rationale && <p className="cmsg__suggest-why">{s.rationale}</p>}
+
+      {deltaId && (
+        <div className="cmsg__suggest-actions">
+          {status === "saved" ? (
+            <span className="cmsg__suggest-saved">
+              <Check size={13} /> Đã lưu
+            </span>
+          ) : status === "dismissed" ? (
+            <span className="cmsg__suggest-dismissed">Đã bỏ qua</span>
+          ) : (
+            <>
+              <button
+                type="button"
+                className="cmsg__suggest-btn cmsg__suggest-btn--save"
+                onClick={onConfirm}
+                disabled={status === "saving"}
+              >
+                Lưu
+              </button>
+              <button
+                type="button"
+                className="cmsg__suggest-btn cmsg__suggest-btn--dismiss"
+                onClick={onReject}
+                disabled={status === "saving"}
+              >
+                Bỏ qua
+              </button>
+            </>
+          )}
+        </div>
+      )}
     </div>
   );
+}
+
+/** Normalize a suggestion operation to the confirm-route whitelist. */
+function toOperation(op: string | undefined): "set" | "add" | "remove" {
+  return op === "add" || op === "remove" ? op : "set";
 }

@@ -3,7 +3,8 @@
 # TRUTH-FIRST: empty results are honest. Never fabricate merchants. Never relax user
 # constraints to "have something to return". `output_pydantic` is bound in customer_crew.py.
 # `{var}` interpolation filled by customer_flow._build_inputs: query, cuisine, city, budget,
-# lat, lng, radius_km, user_id, session_id.
+# lat, lng, radius_km, user_id, session_id, prior_context (anaphora, "" turn-1),
+# weather_hint (client weather override, "" when absent).
 
 search_task:
   description: >
@@ -37,6 +38,8 @@ search_task:
       cả khi hơi xa. Hãy VẪN TRẢ các quán đó để câu trả lời nói thật khoảng cách (ví dụ "gần
       nhất cũng ~15km") — ĐỪNG trả candidates=[] khi công cụ đã có kết quả. Trả [] CHỈ khi công
       cụ thực sự rỗng. Bỏ kết quả thật khiến người dùng không nhận được gợi ý dù đã tìm thấy.
+
+    {prior_context}
   expected_output: >
     Danh sách quán ứng viên (tối đa 3) LẤY TỪ kết quả công cụ — mỗi quán: merchant_id, name,
     cuisine, address, distance_km (nếu có toạ độ), avg_rating, match_score. Kèm applied_filters
@@ -52,7 +55,10 @@ preference_task:
     QUY TRÌNH (mỗi công cụ tối đa 1 lần, đúng thứ tự):
     1. get_user_profile → đọc sở thích đã xác nhận.
     2. get_session_candidates → ứng viên đã có trong phiên.
-    3. Nếu có toạ độ: get_weather_context({lat},{lng}) → thời tiết (mưa → cân nhắc gần / giao tận nơi).
+    3. Thời tiết: {weather_hint}
+       - Nếu weather_hint CÓ GIÁ TRỊ → DÙNG nguyên nó làm thời tiết, KHÔNG gọi get_weather_context.
+       - Nếu weather_hint rỗng VÀ có toạ độ → gọi get_weather_context({lat},{lng}) rồi dùng kết quả.
+       (Mưa → cân nhắc gần / giao tận nơi.)
     4. propose_profile_delta → sinh đề xuất từ constraints + weather.
 
     NGUYÊN TẮC TRUNG THỰC:
@@ -88,6 +94,13 @@ explanation_task:
     - Danh sách rỗng / thiếu thông tin / câu mập mờ bâng quơ: KHÔNG báo lỗi khô khốc. Cứ tự nhiên —
       ví dụ "Hmm, mình chưa nắm rõ bạn đang ở đâu hay thèm kiểu gì lắm — kể thêm cho mình nghe xem,
       món Việt, Nhật hay gì đó nhẹ nhẹ bữa trưa này?" rồi gợi ý hướng (món, mở rộng khu vực).
+    - ĐẠI TỪ ĐA LƯỢT ("quán đó", "quán này", "món đó", "quán đầu tiên", "cái đầu tiên", "quán kia"):
+      GIẢI MÃ dựa trên "DỮ LIỆU LỊCH SỬ" ở cuối (các quán đã gợi ý phiên trước). QUAN TRỌNG: nếu câu
+      là câu hỏi đại từ, BỎ QUA "Ứng viên quán" mới phía dưới — đó chỉ là tìm lại, quán người dùng
+      thực sự hỏi nằm trong DỮ LIỆU LỊCH SỬ. Nếu đại từ chỉ rõ thứ tự ("đầu tiên"/"thứ hai") → trả
+      lời về đúng quán đó. Nếu mơ hồ giữa nhiều quán (không có thứ tự) → LIỆT KÊ 2-3 quán trong ngữ
+      cảnh rồi hỏi người dùng chọn (vd "Bạn đang hỏi Cơm Rang Gà 30K, Le Pain Lee hay Doo Foods?"),
+      KHÔNG hỏi chung chung "quán nào". Chỉ khi DỮ LIỆU LỊCH SỬ rỗng mới được hỏi lại chung chung.
     - Constraint mâu thuẫn (giá rẻ + sang trọng): nói khéo, nhẹ nhàng, không phán xét.
     - Câu hoàn toàn ngoài ẩm thực: đáp ấm áp rồi khéo léo kéo về food.
     - BACKSTOP (ngoài phạm vi): nếu yêu cầu KHÔNG liên quan tới việc tìm/gợi ý/giải thích quán ăn
@@ -96,6 +109,8 @@ explanation_task:
     - KHÔNG BAO GIỜ bịa quán cụ thể (Loại 1) để câu trả lời nghe đầy đủ.
 
     KHI CÓ QUÁN: gọi get_merchant_profile cho TỐI ĐA 2 quán đầu, mỗi merchant_id 1 lần.
+
+    {prior_context}
   expected_output: >
     Câu trả lời tiếng Việt tự nhiên, ấm áp (2-4 câu) như trò chuyện với bạn — KHÔNG cứng nhắc.
     Chỉ viết lời thoại trực tiếp: KHÔNG bọc JSON, KHÔNG dán nhãn trường (như "answer:"/"reasons:"),

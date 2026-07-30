@@ -103,4 +103,23 @@ def propose_deltas(
                 )
             )
 
+    # --- Dietary signal (B5): detect chay / ăn-chay and propose adding to `dietary` ---
+    # Mirrors the liked_cuisines rule. `dietary` is a JSONB list[str], so the suggested value
+    # is a list (apply_delta 'add' accepts a list). Lets TC-48 ("ăn chay trường") be proposed
+    # deterministically instead of relying on the LLM guessing field+shape.
+    joined = " ".join(str(v).lower() for v in constraints.values())
+    dietary_kws = ("chay trường", "chay truong", "ăn chay", "an chay", "vegetarian", "eat clean", "chay")
+    if any(k in joined for k in dietary_kws):
+        current_dietary = [d.lower() for d in (profile.dietary if profile else [])]
+        if "chay" not in current_dietary:
+            suggestions.append(
+                _suggestion(
+                    "dietary",
+                    "add",
+                    ["chay"],
+                    0.6,
+                    "Tín hiệu ăn chay / kiêng thịt rút từ hội thoại — cân nhắc ghi nhận vào dietary.",
+                )
+            )
+
     return suggestions

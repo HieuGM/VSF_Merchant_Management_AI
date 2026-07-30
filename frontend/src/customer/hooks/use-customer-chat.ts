@@ -4,7 +4,9 @@
  * folds live SSE frames (tool/task progress → answer → final results) into it.
  *
  * Lifted to CustomerHome and shared via ChatProvider so the sidebar's "New chat" and
- * the chat page use one instance. `stop()` aborts an in-flight stream.
+ * the chat page use one instance. `stop()` aborts an in-flight stream; `reset()`
+ * rotates the session id (via identity.regenerate) so a new conversation starts a
+ * fresh memory window.
  */
 import { useCallback, useRef, useState } from "react";
 import {
@@ -15,6 +17,7 @@ import {
   type RestaurantResult,
   type StreamFrame,
 } from "../api/customer-agent-client";
+import type { CustomerIdentity } from "./use-customer-identity";
 
 export interface ProgressStep {
   id: string;
@@ -56,7 +59,7 @@ interface SendArgs {
   location?: Location | null;
 }
 
-export function useCustomerChat(identity: { userId: string; sessionId: string }) {
+export function useCustomerChat(identity: CustomerIdentity) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [sending, setSending] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
@@ -86,6 +89,9 @@ export function useCustomerChat(identity: { userId: string; sessionId: string })
         session_id: identity.sessionId,
         message: text,
         location: location ?? null,
+        // FE never auto-detects weather today (YAGNI); passthrough kept null so the
+        // field is wired for tests/future use (see phase-05).
+        weather_override: null,
       };
 
       const onFrame = (frame: StreamFrame) => {
@@ -164,7 +170,9 @@ export function useCustomerChat(identity: { userId: string; sessionId: string })
     abortRef.current?.abort();
     setMessages([]);
     setSending(false);
-  }, []);
+    // Rotate the session id so the next turn starts a fresh memory window (design §11.4).
+    identity.regenerate();
+  }, [identity]);
 
   return { messages, sending, send, stop, reset };
 }
