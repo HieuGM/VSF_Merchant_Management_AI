@@ -1,5 +1,7 @@
-/** Tappable sample questions to seed a conversation. Lucide icons (no emoji). */
-import { CloudRain, Coins, CupSoda, Fish, Leaf, Soup } from "lucide-react";
+/** Tappable sample questions to seed a conversation. Lucide icons (no emoji).
+ * variants: "row" = wrapping pills (chat empty-state), "grid3" = aligned 3-column grid
+ * with a trailing arrow (landing, fe reference). */
+import { ArrowRight, CloudRain, Coins, CupSoda, Fish, Leaf, Soup } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import "./quick-prompts.css";
 
@@ -20,12 +22,15 @@ export const SAMPLE_PROMPTS: SamplePrompt[] = [
 export function QuickPrompts({
   onPick,
   columns = false,
+  variant = "row",
 }: {
   onPick: (text: string) => void;
   columns?: boolean;
+  variant?: "row" | "grid3";
 }) {
+  const cls = variant === "grid3" ? "qprompts qprompts--grid3" : `qprompts ${columns ? "qprompts--col" : ""}`;
   return (
-    <div className={`qprompts ${columns ? "qprompts--col" : ""}`}>
+    <div className={cls}>
       {SAMPLE_PROMPTS.map((p) => {
         const Icon = p.icon;
         return (
@@ -33,7 +38,10 @@ export function QuickPrompts({
             <span className="qprompt__icon" aria-hidden="true">
               <Icon size={16} />
             </span>
-            <span>{p.text}</span>
+            <span className="qprompt__text">{p.text}</span>
+            {variant === "grid3" && (
+              <ArrowRight size={15} className="qprompt__arrow" aria-hidden="true" />
+            )}
           </button>
         );
       })}

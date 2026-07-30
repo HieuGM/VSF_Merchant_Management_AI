@@ -13,6 +13,26 @@
     grid-template-columns: 1fr 1fr;
   }
 }
+/* Landing variant (fe reference): aligned 3-column grid, light-green pills w/ arrow. */
+.qprompts--grid3 {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.55rem;
+}
+@media (min-width: 620px) {
+  .qprompts--grid3 {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+.qprompts--grid3 .qprompt {
+  border-radius: var(--r-md);
+  background: rgba(16, 185, 129, 0.08);
+  border-color: rgba(16, 185, 129, 0.18);
+}
+.qprompts--grid3 .qprompt__text {
+  flex: 1 1 auto;
+  min-width: 0;
+}
 
 .qprompt {
   display: inline-flex;
@@ -56,4 +76,8 @@
 }
 [data-theme="dark"] .customer-root .qprompt__icon {
   color: var(--gsm-300);
+}
+.qprompt__arrow {
+  flex: none;
+  color: var(--ink-400);
 }

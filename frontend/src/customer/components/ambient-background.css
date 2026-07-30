@@ -37,9 +37,56 @@
   top: 38%;
   left: 42%;
   background: radial-gradient(circle at 35% 35%, #fcd34d, #f59e0b);
-  opacity: 0.4;
+  opacity: 0.22;
   animation-delay: -9s;
   animation-duration: 22s;
+}
+
+/* fe reference: low-opacity LEAF shapes anchored in the four corners. */
+.cust-leaf {
+  position: absolute;
+  color: #34d399;
+  opacity: 0.1;
+  pointer-events: none;
+  will-change: transform;
+  animation: cust-float 24s ease-in-out infinite;
+}
+.cust-leaf--tl {
+  top: -2.5rem;
+  left: -2rem;
+  transform: rotate(-35deg);
+}
+.cust-leaf--tr {
+  top: -3rem;
+  right: -2.5rem;
+  transform: rotate(28deg);
+  animation-delay: -6s;
+}
+.cust-leaf--bl {
+  bottom: -2.5rem;
+  left: -2.5rem;
+  transform: rotate(200deg);
+  animation-delay: -12s;
+}
+.cust-leaf--br {
+  bottom: -3rem;
+  right: -2rem;
+  transform: rotate(155deg);
+  animation-delay: -18s;
+}
+[data-theme="dark"] .customer-root .cust-leaf {
+  color: #6ee7b7;
+  opacity: 0.06;
+}
+@media (max-width: 768px) {
+  .cust-leaf {
+    opacity: 0.07;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cust-leaf {
+    animation: none;
+  }
 }
 
 /* Hero variant leans brighter for the landing screen. */
