@@ -1,8 +1,8 @@
 /**
  * Restaurant result card — one candidate from the agent (or Explore search).
- * GSM emerald theme, Lucide cuisine icon (keyword-mapped), interactive: click to
- * expand the full address + copy. Names wrap (no nowrap that truncates Vietnamese).
- * Off-screen cards use content-visibility for smooth long-history scrolling.
+ * fe2 reference layout: circular real food photo (fallback cuisine icon) on the left
+ * with a rank badge overlapping, name/cuisine/rating/distance body, and a solid green
+ * MATCH badge on the right. Interactive: click to expand address + copy.
  */
 import { useState } from "react";
 import type { CSSProperties, KeyboardEvent, MouseEvent } from "react";
@@ -28,7 +28,7 @@ import { StarRating } from "./star-rating";
 import type { RestaurantResult } from "../api/customer-agent-client";
 import "./restaurant-card.css";
 
-/** Keyword → icon. Order matters: more specific first. */
+/** Keyword → icon. Order matters: more specific first. Used as the photo fallback. */
 const CUISINE_ICON: Array<[RegExp, LucideIcon]> = [
   [/cà phê|cafe|coffee|trà sữa|milk ?tea|trà đạo|tea/i, Coffee],
   [/pizza/i, Pizza],
@@ -53,9 +53,11 @@ function iconFor(cuisine?: string | null, name?: string | null): LucideIcon {
 export function RestaurantCard({ item, rank }: { item: RestaurantResult; rank?: number }) {
   const [expanded, setExpanded] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [imgFailed, setImgFailed] = useState(false);
   const match = item.match_score != null ? Math.round(item.match_score * 100) : null;
   const Icon = iconFor(item.cuisine, item.name);
   const showRank = rank != null && rank > 0 && rank <= 3;
+  const showPhoto = !!item.image_url && !imgFailed;
 
   const toggle = () => setExpanded((v) => !v);
   const onKeyDown = (e: KeyboardEvent) => {
@@ -86,8 +88,20 @@ export function RestaurantCard({ item, rank }: { item: RestaurantResult; rank?: 
       onKeyDown={onKeyDown}
     >
       <div className="rcard__main">
-        <span className="rcard__avatar" aria-hidden="true">
-          <Icon size={22} strokeWidth={2} />
+        <span className={`rcard__media ${showPhoto ? "has-photo" : ""}`} aria-hidden="true">
+          {showPhoto ? (
+            <img
+              className="rcard__img"
+              src={item.image_url as string}
+              alt=""
+              loading="lazy"
+              onError={() => setImgFailed(true)}
+            />
+          ) : (
+            <span className="rcard__icon">
+              <Icon size={22} strokeWidth={2} />
+            </span>
+          )}
           {showRank && <span className="rcard__rank">#{rank}</span>}
         </span>
 

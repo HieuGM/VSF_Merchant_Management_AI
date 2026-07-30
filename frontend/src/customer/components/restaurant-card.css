@@ -35,32 +35,60 @@
   gap: 0.85rem;
 }
 
-.rcard__avatar {
+/* Media: circular real food photo (preferred) or pastel cuisine-icon fallback.
+   fe2 reference — photo on the left, rank badge overlapping the top-left corner. */
+.rcard__media {
   position: relative;
   flex: none;
   display: grid;
   place-items: center;
-  width: 3rem;
-  height: 3rem;
-  border-radius: var(--r-sm);
-  color: var(--gsm-700);
+  width: 3.75rem;
+  height: 3.75rem;
+  border-radius: 50%;
   background: linear-gradient(135deg, rgba(16, 185, 129, 0.16), rgba(5, 150, 105, 0.1));
   box-shadow: inset 0 0 0 1px rgba(16, 185, 129, 0.18);
 }
-[data-theme="dark"] .customer-root .rcard__avatar {
+.rcard__media.has-photo {
+  background: var(--ink-100, #eef2f7);
+  box-shadow: none;
+}
+[data-theme="dark"] .customer-root .rcard__media {
+  background: rgba(16, 185, 129, 0.16);
+}
+.rcard__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  border-radius: 50%;
+}
+.rcard__icon {
+  display: grid;
+  place-items: center;
+  color: var(--gsm-700);
+}
+[data-theme="dark"] .customer-root .rcard__icon {
   color: var(--gsm-300);
 }
 .rcard__rank {
   position: absolute;
-  top: -7px;
-  left: -7px;
-  font-size: 0.62rem;
+  top: -6px;
+  left: -6px;
+  display: grid;
+  place-items: center;
+  width: 1.4rem;
+  height: 1.4rem;
+  font-size: 0.66rem;
   font-weight: 800;
   color: #fff;
   background: var(--grad-brand);
-  border-radius: var(--r-pill);
-  padding: 0.08rem 0.42rem;
+  border-radius: 50%;
+  border: 2px solid var(--hole, #fff);
   box-shadow: var(--shadow-sm);
+  z-index: 2;
+}
+[data-theme="dark"] .customer-root .rcard__rank {
+  border-color: #0b1220;
 }
 
 .rcard__body {
@@ -112,34 +140,30 @@
   font-weight: 500;
 }
 
-/* ---- Match ring ---- */
+/* ---- Match badge: solid brand-green circle, white number (fe2) ---- */
 .rcard__match {
   flex: none;
-  width: 3rem;
-  height: 3rem;
+  width: 3.25rem;
+  height: 3.25rem;
   display: grid;
   place-items: center;
   border-radius: 50%;
-  background:
-    radial-gradient(closest-side, var(--hole) 73%, transparent 75% 100%),
-    conic-gradient(var(--gsm-500) calc(var(--pct) * 1%), rgba(16, 185, 129, 0.14) 0);
+  background: var(--grad-brand);
   text-align: center;
   line-height: 1;
+  box-shadow: 0 3px 10px rgba(16, 185, 129, 0.28);
 }
 .rcard__match-num {
-  font-size: 0.92rem;
+  font-size: 1.02rem;
   font-weight: 800;
-  color: var(--gsm-700);
-}
-[data-theme="dark"] .customer-root .rcard__match-num {
-  color: var(--gsm-300);
+  color: #fff;
 }
 .rcard__match-lbl {
   font-size: 0.5rem;
   font-weight: 700;
   letter-spacing: 0.05em;
   text-transform: uppercase;
-  color: var(--ink-400);
+  color: rgba(255, 255, 255, 0.88);
 }
 
 /* ---- Expanded detail ---- */

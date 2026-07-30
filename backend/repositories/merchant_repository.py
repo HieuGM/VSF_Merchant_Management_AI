@@ -12,7 +12,7 @@ from typing import Any
 from sqlalchemy import select, and_, or_, func
 from sqlalchemy.orm import Session, joinedload
 
-from database.models import Merchant, MenuItem, Review, MerchantProfile, MerchantRating
+from database.models import Merchant, MenuItem, Review, MerchantProfile, MerchantRating, FoodImage
 from core.errors import NotFoundError
 
 # Vietnamese diacritic chars → ASCII base (paired char-by-char for SQL translate()).
@@ -211,6 +211,33 @@ class MerchantRepository:
         for item in items:
             result.setdefault(item.merchant_id, []).append(item)
         return result
+
+    def get_representative_images(
+        self, merchant_ids: list[str]
+    ) -> dict[str, str]:
+        """Batch-fetch ONE representative food image per merchant (best dish_image_quality).
+
+        Real merchant-provided photos (ShopeeFood CDN) shown on result cards. Ranks each
+        merchant's food_images by dish_image_quality DESC NULLS LAST (quality score is
+        usually NULL for scraped rows → falls back to any image), takes the top row.
+        Returns {merchant_id: url}; merchants with no image are simply absent."""
+        if not merchant_ids:
+            return {}
+        # rank images per merchant; NULL quality sorts last so a real photo wins over none.
+        rank_col = func.row_number().over(
+            partition_by=FoodImage.merchant_id,
+            order_by=[
+                FoodImage.dish_image_quality.desc().nullslast(),
+                FoodImage.created_at.desc().nullslast(),
+            ],
+        ).label("rn")
+        sub = (
+            select(FoodImage.image_id, FoodImage.merchant_id, FoodImage.url, rank_col)
+            .where(FoodImage.merchant_id.in_(merchant_ids))
+            .subquery()
+        )
+        stmt = select(sub.c.merchant_id, sub.c.url).where(sub.c.rn == 1)
+        return {mid: url for mid, url in self._db.execute(stmt).all()}
 
     def get_reviews(self, merchant_id: str, limit: int = 10) -> list[Review]:
         """Fetch recent reviews for a merchant."""

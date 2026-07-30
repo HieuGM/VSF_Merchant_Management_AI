@@ -430,6 +430,8 @@ class CustomerFlow:
             # and we have a location, fetch nearby directly (deterministic, truthful).
             if not results and has_location:
                 results = _direct_nearby_results(inputs.get("query"), lat, lng)
+            # Attach real merchant food photos (agent candidates carry no image field).
+            results = _enrich_with_images(results)
             suggestions = (
                 [s.model_dump() for s in preference.suggestions] if preference is not None else []
             )
@@ -610,11 +612,35 @@ def _direct_nearby_results(
                 "distance_km": round(r.distance_km, 2) if r.distance_km is not None else None,
                 "avg_rating": r.avg_rating,
                 "match_score": round(r.match_score, 3),
+                "image_url": r.representative_image,
             }
             for r in ranked
         ]
     finally:
         db.close()
+
+
+def _enrich_with_images(results: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Attach each agent candidate's real food photo (food_images) by merchant_id.
+
+    SearchTaskOutput candidates come from the LLM (no image field); the FE card shows a
+    real merchant photo, so look it up here. Rows already carrying image_url (recovery
+    path, from the service) are skipped — no-op for them."""
+    missing = [r["merchant_id"] for r in results
+               if r.get("merchant_id") and not r.get("image_url")]
+    if not missing:
+        return results
+    from database.connection import SessionLocal
+    from repositories.merchant_repository import MerchantRepository
+    db = SessionLocal()
+    try:
+        imgs = MerchantRepository(db).get_representative_images(missing)
+    finally:
+        db.close()
+    for r in results:
+        if r.get("merchant_id") and not r.get("image_url"):
+            r["image_url"] = imgs.get(r["merchant_id"])
+    return results
 
 
 def _to_chat_response(trace_id: str, session_id: str | None, crew_output: Any) -> CustomerChatResponse:
@@ -627,7 +653,7 @@ def _to_chat_response(trace_id: str, session_id: str | None, crew_output: Any) -
     search = _task_pydantic(crew_output, "SearchTaskOutput")
     preference = _task_pydantic(crew_output, "PreferenceTaskOutput")
 
-    results = (
+    results = _enrich_with_images(
         [c.model_dump() for c in search.candidates] if search is not None else []
     )
     suggestions = (

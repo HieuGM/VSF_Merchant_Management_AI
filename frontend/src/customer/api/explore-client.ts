@@ -14,6 +14,7 @@ export interface Merchant {
   distance_km: number | null;
   avg_rating: number | null;
   match_score: number;
+  image_url?: string | null;
 }
 
 export interface SearchFilters {

@@ -57,6 +57,7 @@ class SearchResult:
     price_level: str | None = None
     overall_score: float | None = None
     top_menu_items: list[dict[str, Any]] = field(default_factory=list)
+    representative_image: str | None = None  # real merchant food photo (ShopeeFood CDN)
     _matched_via_menu: bool = False  # internal flag for scoring
 
     def to_dict(self) -> dict[str, Any]:
@@ -74,6 +75,7 @@ class SearchResult:
             "tier": self.tier,
             "price_level": self.price_level,
             "taste_tags": list(self.merchant.taste_tags or []),
+            "image_url": self.representative_image,
         }
         if self.top_menu_items:
             d["top_dishes"] = self.top_menu_items
@@ -170,12 +172,14 @@ class MerchantSearchService:
         if final:
             mids = [r.merchant.merchant_id for r in final]
             top_items = self._repo.get_top_menu_items_batch(mids, per_merchant=3)
+            images = self._repo.get_representative_images(mids)
             for r in final:
                 items = top_items.get(r.merchant.merchant_id, [])
                 r.top_menu_items = [
                     {"name": it.name, "price": it.price, "likes": it.total_like}
                     for it in items
                 ]
+                r.representative_image = images.get(r.merchant.merchant_id)
 
         return final
 
@@ -238,7 +242,14 @@ class MerchantSearchService:
                     results = wider_results
                     if len(results) >= 3:
                         break
-        return results[:limit]
+        out = results[:limit]
+        if out:
+            images = self._repo.get_representative_images(
+                [r.merchant.merchant_id for r in out]
+            )
+            for r in out:
+                r.representative_image = images.get(r.merchant.merchant_id)
+        return out
 
     def _calculate_match_score(
         self,

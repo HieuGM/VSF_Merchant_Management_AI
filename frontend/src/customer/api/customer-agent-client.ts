@@ -22,6 +22,7 @@ export interface RestaurantResult {
   distance_km?: number | null;
   avg_rating?: number | null;
   match_score?: number | null;
+  image_url?: string | null;
 }
 
 /** A proposed (never auto-saved) tweak to the user's taste profile. */
