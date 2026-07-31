@@ -445,3 +445,35 @@ def test_declared_persistent_preference_filters_chay():
     assert pref("từ giờ nhớ tôi thích đi ăn sáng") is None
     assert pref(None) is None
 
+
+def test_query_references_absent_prior():
+    """Anaphor/demonstrative presumes a prior turn → refuse when prior is empty (TC-26/50)."""
+    from flows.customer_flow import _query_references_absent_prior as ref
+
+    assert ref("Quán này có ổn không?") is True                       # demonstrative 'này'
+    assert ref("Giải thích tại sao quán đó được gợi ý") is True       # anaphor 'quán đó'
+    assert ref("Cái đầu tiên đó giá bao nhiêu") is True
+    # Fresh search → no anaphor → False
+    assert ref("Tìm quán phở gần Cầu Giấy") is False
+    assert ref(None) is False
+
+
+def test_strip_prior_claims_removes_fabricated_prior():
+    """No prior + a confabulated prior-claim clause → strip it (TC-01/26/50)."""
+    from flows.customer_flow import _strip_prior_claims as strip
+
+    # Claim clause stripped, grounded content kept
+    out = strip("Mình thấy có Doo Foods. Ngoài quán mình gợi ý lúc trước thì khó kiếm hơn.", [])
+    assert "Doo Foods" in out
+    assert "lúc trước" not in out and "gợi ý" not in out
+    # Every sentence claimed a prior → honest fallback
+    out2 = strip("Như mình đã gợi ý lần trước, quán đó hợp bạn lắm.", [])
+    assert "Doo Foods" not in out2
+    assert "chưa gợi ý" in out2.lower() or "phiên này" in out2.lower()
+    # No claim → unchanged
+    clean = "Mình thấy có Doo Foods ở Cầu Giấy, rating chưa có dữ liệu."
+    assert strip(clean, []) == clean
+    # Had prior → untouched (cond b — named-merchant-vs-prior — deferred)
+    prior = [{"sender": "agent", "text": "x", "payload": {"results": []}}]
+    assert strip("Mình đã gợi ý lúc trước.", prior) == "Mình đã gợi ý lúc trước."
+

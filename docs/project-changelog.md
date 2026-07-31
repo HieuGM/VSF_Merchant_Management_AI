@@ -4,6 +4,25 @@ This document tracks all significant changes, features, fixes, and security impr
 
 ---
 
+## [2026-07-31] Customer Agent — Arch-Seam (trustworthy baseline: 34/39 = 87.2%)
+
+First **uncontaminated** GT measurement. Prior rounds reused `session_id=gt_{cid}` across runs while the DB persists `chat_messages` → `_load_recent_turns` read STALE prior turns → confabulation. The earlier "69%" was on contaminated sessions; **87.2% clean is the first trustworthy number.**
+
+### Changes
+- **Eval-fidelity (critical):** `eval_ground_truth.py` — per-run `_RUN_STAMP` → unique session/user ids (no cross-run `chat_messages`/`user_profile` leak). This alone removed most confabulation.
+- **Prior-context gate fix:** `customer_flow._build_inputs` now injects `_NO_PRIOR_NOTE` for ALL empty-prior queries (was gated behind `_references_prior`, so fresh searches like "tìm cơm" never saw it → confabulated a prior).
+- **No-prior-referent guard:** anaphor query + empty prior → refuse (no LLM call) — TC-26/50.
+- **Post-stream prior-claim sanitizer:** `_strip_prior_claims` — backstop that strips confabulated "lần trước/hồi nãy" clauses when no prior exists — TC-01.
+- **Lever-1 regression fix:** dropped noisy `_DEMONSTRATIVE_RE` (`do`/`nay` matched "đồ"/"nay") from the guard — restored TC-06/28/29/34.
+- **Test-drift fix:** `test_customer_memory_wireup` aligned to `_NO_PRIOR_NOTE`. +unit tests for guard/sanitizer (23/23 + integration green).
+
+### Outcome
+Cluster A prior-confabulation 0/4 → 3/4. Safety floor SOLID (no fabricated merchants / OOD-injection compliance / allergy override). **34/39 (87.2%)** trustworthy baseline.
+- **Known open holes (NOT claimed fixed):** anaphora w/ non-empty prior (TC-09/41/47, 0/3 — needs referent resolver + eval-fidelity seeding), mandatory-clarify on ambiguous/missing slots (TC-35/51), explanation-intent evidence discipline (TC-47 LLM-knowledge leak).
+- Report: `plans/reports/eval-260731-archseam-trustworthy-baseline.md`. **Status:** ✅ trustworthy floor; do NOT ship as "multi-turn conversation complete".
+
+---
+
 ## [2026-07-31] Customer Agent — GT Optimization (6 rounds: reliability + guards + anti-confabulation)
 
 Coordinator-light optimization measured on `ground_truth_customer.json` (39 cases; 12 coordinator-only skipped). Quality arc: **16/27 (59% WEAK) → 27/39 (69%)**. End-to-end correct 41% → 69%. All rounds adversarially quality-judged (0 overturned).

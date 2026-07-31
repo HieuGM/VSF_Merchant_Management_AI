@@ -34,6 +34,10 @@ API_CHAT = "http://localhost:8000/api/v1/agent/customer/chat"
 GT_PATH = Path(__file__).resolve().parent.parent.parent / "ground_truth_customer.json"
 OUT_PATH = Path(__file__).resolve().parent.parent.parent / "plans" / "reports" / "gt-eval-results.json"
 
+# Per-run stamp → unique session/user ids (see run_case). Prevents stale chat_messages/profile
+# from previous bench runs leaking into this run via _load_recent_turns/_load_profile.
+_RUN_STAMP = str(int(time.time()))
+
 # Coordinator-only cases the current (coordinator-less) system can't be fairly judged on.
 SKIP_IDS = {"TC-03", "TC-04", "TC-05", "TC-37", "TC-44",      # missing_slot
             "TC-30", "TC-31", "TC-32", "TC-33", "TC-40",       # out_of_scope_adjacent
@@ -155,8 +159,12 @@ def _server_durations(trace_id: str) -> tuple[float | None, float | None, dict]:
 
 def run_case(case: dict, engine) -> dict:
     cid = case["id"]
-    sid = f"gt_{cid}"
-    uid = f"gt_{cid}"
+    # Unique per-run session/user id so prior runs' persisted chat_messages + user_profiles
+    # can't leak into this run (_load_recent_turns / _load_profile would otherwise read STALE
+    # prior turns from earlier bench rounds → confabulation). Same stamp across the case so
+    # multiturn seeding + the test turn share a clean session.
+    sid = f"gt_{cid}_{_RUN_STAMP}"
+    uid = f"gt_{cid}_{_RUN_STAMP}"
     msg = case["user_message"]
     ctx = case.get("session_context") or {}
 

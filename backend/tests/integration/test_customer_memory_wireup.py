@@ -229,15 +229,18 @@ def test_get_recent_turns_ttl_excludes_stale():
 # --------------------------------------------------------------------------- #
 # phase-02: prior_context (anaphora block) + B4 exclude forwarding.
 # --------------------------------------------------------------------------- #
-def test_prior_context_empty_on_first_turn():
-    from flows.customer_flow import _build_inputs, _format_prior_context
+def test_prior_context_no_prior_note_on_first_turn():
+    from flows.customer_flow import _NO_PRIOR_NOTE, _build_inputs, _format_prior_context
 
-    assert _format_prior_context([]) == ""
-    assert _format_prior_context(None) == ""
+    # Empty prior → explicit NO-PRIOR note (not "") so the model can't confabulate a prior turn
+    # ("lần trước mình gợi ý…" on a first-turn query). Formerly "" (F4); changed to kill the
+    # fabricated-prior class — see _NO_PRIOR_NOTE in customer_flow.py.
+    assert _format_prior_context([]) == _NO_PRIOR_NOTE
+    assert _format_prior_context(None) == _NO_PRIOR_NOTE
     inputs = _build_inputs(
         query="phở", cuisine="", city="", budget="", lat=None, lng=None, radius_km=None,
         user_id="u", session_id="s", prior_turns=[], weather_override=None)
-    assert inputs["prior_context"] == "", "turn-1 must be literally unchanged (F4)"
+    assert inputs["prior_context"] == _NO_PRIOR_NOTE
 
 
 def test_prior_context_nonempty_and_carries_merchant_names():

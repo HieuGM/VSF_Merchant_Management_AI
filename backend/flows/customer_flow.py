@@ -204,7 +204,9 @@ def _pre_search_guard(
     query: str | None, prior_turns: list[Any], profile: Any
 ) -> tuple[str, str] | None:
     """Return (answer, intent) to short-circuit before search, or None to proceed normally.
-    Order: unparseable (clarify) → dietary-conflict (confirm). OOD is checked separately first."""
+    Order: no-prior-referent → unparseable (clarify) → dietary-conflict (confirm). OOD first."""
+    if not prior_turns and _query_references_absent_prior(query):
+        return (_NO_PRIOR_REFERENT_ANSWER, "no_prior_referent")
     if _is_unparseable(query):
         return (_UNPARSEABLE_ANSWER, "clarify")
     conflict = _detect_dietary_conflict(query, prior_turns, profile)
@@ -255,6 +257,57 @@ def _declared_persistent_preference(query: str | None) -> str | None:
     if "chay" in q:
         return "chay"
     return None
+
+
+# Prior-referent confabulation backstop (TC-01/26/47/50). The no-prior-note prompt rule is
+# ignored often enough that a deterministic layer is required. Two prongs:
+#  (A) pre-generation: anaphor/demonstrative query + empty prior → refuse (no LLM call).
+#  (B) post-generation: empty prior + a prior-claim phrase in the answer → strip the clause.
+# ASCII patterns — matched against _norm_vi() output.
+_PRIOR_CLAIM_RE = re.compile(
+    r"lan truoc|hoi nay|luc truoc|phien truoc|tung goi y|tung gioi thieu"
+    r"|minh (da )?goi y( roi)?|minh (da )?gioi thieu"
+    r"|nhu (minh|ta) (noi|goi y|nhac)"
+    r"|quan minh.{0,14}(goi y|gioi thieu|nhac)"
+    r"|ban da biet"
+)
+_NO_PRIOR_REFERENT_ANSWER = (
+    "Mình chưa gợi ý quán nào trong phiên này — bạn kể rõ tên quán, hoặc nói món/khu vực mới "
+    "để mình tìm giúp nhé!"
+)
+
+
+def _query_references_absent_prior(query: str | None) -> bool:
+    """True if the query presumes a prior turn (anaphor/'lần trước') — so an empty prior_turns
+    means the referent doesn't exist. Used to refuse rather than confabulate.
+
+    NOTE: deliberately does NOT use _DEMONSTRATIVE_RE — its bare tokens ('do','nay') false-match
+    'đồ' (food) and 'nay' (today), refusing fresh searches like 'đồ chiên' (TC-28) or 'Trưa nay
+    ăn gì' (TC-06). _ANAPHORA_RE already covers the real referent patterns (quán/món/cái + đó/
+    này/kia/đầu tiên) precisely."""
+    if not query:
+        return False
+    q = _norm_vi(query)
+    return bool(
+        _ANAPHORA_RE.search(q)
+        or "lan truoc" in q or "luc truoc" in q or "hoi nay" in q
+    )
+
+
+def _strip_prior_claims(text: str, prior_turns: list[Any] | None) -> str:
+    """Deterministic backstop: strip confabulated prior-claim clauses the model emits despite
+    the no-prior-note. Only fires when the claim is DEFINITIONALLY false — i.e. no prior turn
+    exists (had_prior=False). Splits into sentences, drops those carrying a prior-claim phrase;
+    if all sentences claimed a prior, returns the honest no-prior fallback. The had_prior=True
+    case (named-merchant-vs-prior, TC-47) is intentionally NOT handled here — too high an
+    over-strip risk on legitimate fresh-merchant mentions."""
+    if not text or prior_turns:
+        return text
+    if not _PRIOR_CLAIM_RE.search(_norm_vi(text)):
+        return text
+    parts = re.split(r"(?<=[.!?…])\s+", text.strip())
+    kept = [p for p in parts if not _PRIOR_CLAIM_RE.search(_norm_vi(p))]
+    return " ".join(kept) if kept else _NO_PRIOR_REFERENT_ANSWER
 
 
 def _is_out_of_domain(query: str | None) -> bool:
@@ -432,6 +485,7 @@ class CustomerFlow:
                     r for r in response.results
                     if pref_filter in _norm_vi(str(r.get("cuisine") or ""))
                 ]
+            response.answer = _strip_prior_claims(response.answer, prior_turns)
 
             # Phase-03 B3: server-side weather short-circuit — deterministic rain delta
             # merged into the preference crew's suggestions (no duplicate field/value).
@@ -748,6 +802,7 @@ class CustomerFlow:
                 yield {"event": "answer_delta", "data": {"answer_delta": fallback}}
 
             answer = _strip_answer_artifacts("".join(answer_parts))
+            answer = _strip_prior_claims(answer, prior_turns)
             response = CustomerChatResponse(
                 trace_id=trace_id,
                 session_id=session_id,
@@ -822,7 +877,7 @@ def _build_inputs(
     prior_ctx = (
         _format_prior_context(prior_turns)
         if prior_turns and _references_prior(query, prior_turns)
-        else ""
+        else (_NO_PRIOR_NOTE if not prior_turns else "")
     )
     return {
         "query": query or "",
