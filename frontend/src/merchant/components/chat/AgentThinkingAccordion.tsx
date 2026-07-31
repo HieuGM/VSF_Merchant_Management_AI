@@ -190,24 +190,137 @@ function LegacyRow({ event, index, isStreaming }: { event: TraceEvent; index: nu
   );
 }
 
-export function AgentThinkingAccordion({ events = [], isStreaming = false }: { events?: TraceEvent[]; isStreaming?: boolean }) {
-  const [open, setOpen] = useState(true);
+function extractTokenCount(record?: JsonRecord | null): number {
+  if (!record) return 0;
+  const usage = record.token_usage ?? record.tokenUsage;
+  if (typeof usage === 'number') return usage;
+  if (usage && typeof usage === 'object' && !Array.isArray(usage)) {
+    const u = usage as JsonRecord;
+    const tot = u.total_tokens ?? u.totalTokens;
+    if (typeof tot === 'number') return tot;
+  }
+  const directTotal = record.total_tokens ?? record.totalTokens;
+  if (typeof directTotal === 'number') return directTotal;
+  return 0;
+}
+
+function formatLatencySummary(ms: number): string {
+  if (ms <= 0) return '0ms';
+  return ms >= 1000 ? `${(ms / 1000).toFixed(2)}s` : `${Math.round(ms)}ms`;
+}
+
+function formatTokenSummary(count: number): string {
+  return `${count.toLocaleString()} tokens`;
+}
+
+export function AgentThinkingAccordion({
+  events = [],
+  isStreaming = false,
+  defaultOpen = false,
+}: {
+  events?: TraceEvent[];
+  isStreaming?: boolean;
+  defaultOpen?: boolean;
+}) {
+  const [open, setOpen] = useState(defaultOpen);
   const semanticRoots = useMemo(() => buildSemanticSpanTree(events), [events]);
   const legacy = events.filter((event) => !isTraceSpanEvent(event) && event.eventType !== 'token_chunk');
   const usingSemantic = semanticRoots.length > 0;
   const countSpans = (items: RenderSpan[]): number => items.reduce((total, span) => total + 1 + countSpans(span.children), 0);
   const count = usingSemantic ? countSpans(semanticRoots) : legacy.length;
 
+  const { totalLatencyMs, totalTokens, activeSpanTitle } = useMemo(() => {
+    let latency = 0;
+    let tokens = 0;
+    let runningTitle: string | null = null;
+
+    if (usingSemantic) {
+      const visited = new Set<string>();
+      const traverse = (spans: RenderSpan[]) => {
+        for (const span of spans) {
+          if (!visited.has(span.spanId)) {
+            visited.add(span.spanId);
+            const lat = span.metrics.latency_ms ?? span.metrics.latencyMs;
+            if (typeof lat === 'number' && lat > 0) latency += lat;
+
+            tokens += extractTokenCount(span.metrics);
+
+            if (span.latest.kind === 'started') {
+              runningTitle = span.latest.display.title;
+            }
+          }
+          traverse(span.children);
+        }
+      };
+      traverse(semanticRoots);
+    } else {
+      for (const ev of legacy) {
+        if (typeof ev.durationMs === 'number' && ev.durationMs > 0) latency += ev.durationMs;
+        tokens += extractTokenCount(ev.outputSummary);
+      }
+    }
+
+    return { totalLatencyMs: latency, totalTokens: tokens, activeSpanTitle: runningTitle };
+  }, [semanticRoots, legacy, usingSemantic]);
+
   return (
     <section className="trace-card" aria-label="CrewAI trace">
-      <button type="button" className="trace-card__header" onClick={() => setOpen((value) => !value)} aria-expanded={open}>
-        <span className="trace-card-icon" aria-hidden="true">◈</span>
-        <span className="trace-card-title-group"><strong>{isStreaming ? 'AI đang phân tích…' : `AI đã thực thi ${count} bước phân tích`}</strong></span>
-        <span className="trace-card__toggle" aria-hidden="true">{open ? '⌃' : '⌄'}</span>
+      <button
+        type="button"
+        className="trace-card__header"
+        onClick={() => setOpen((value) => !value)}
+        aria-expanded={open}
+        aria-label={`${open ? 'Thu gọn' : 'Mở'} CrewAI trace (${count} bước)`}
+      >
+        <span className={`trace-card-icon ${isStreaming ? 'is-streaming' : ''}`} aria-hidden="true">
+          {isStreaming ? <span className="trace-live-spinner" /> : '◈'}
+        </span>
+        <span className="trace-card-title-group">
+          <div className="trace-title-row">
+            <strong className="trace-main-title">
+              {isStreaming ? (
+                activeSpanTitle ? `AI đang thực thi: ${activeSpanTitle}…` : 'AI đang phân tích pipeline…'
+              ) : (
+                `AI đã thực thi ${count} bước phân tích`
+              )}
+            </strong>
+            <span className="trace-card-badge">CrewAI trace</span>
+          </div>
+          {(totalLatencyMs > 0 || totalTokens > 0 || isStreaming) && (
+            <div className="trace-header-metrics">
+              {totalLatencyMs > 0 && (
+                <span className="trace-metric-badge" title="Tổng thời gian thực thi">
+                  ⚡ {formatLatencySummary(totalLatencyMs)}
+                </span>
+              )}
+              {totalTokens > 0 && (
+                <span className="trace-metric-badge" title="Tổng token đã dùng">
+                  🪙 {formatTokenSummary(totalTokens)}
+                </span>
+              )}
+              {isStreaming && (
+                <span className="trace-metric-badge trace-metric-badge--live">
+                  <span className="live-pulse-dot" /> Đang chạy
+                </span>
+              )}
+            </div>
+          )}
+        </span>
+        <span className="trace-card__toggle" aria-hidden="true">
+          {open ? '⌃' : '⌄'}
+        </span>
       </button>
+
       {open && (
         <ol className="trace-timeline">
-          {count === 0 && <li className="trace-empty"><span>Cooking…</span></li>}
+          {count === 0 && (
+            <li className="trace-empty is-dynamic-loading">
+              <span className="trace-spinner-ring" />
+              <span className="trace-loading-text">
+                {isStreaming ? 'Đang khởi tạo pipeline phân tích…' : 'Chưa có bước thực thi nào.'}
+              </span>
+            </li>
+          )}
           {usingSemantic
             ? semanticRoots.map((span) => <SemanticSpanRow key={span.spanId} span={span} depth={0} isStreaming={isStreaming} />)
             : legacy.map((event, index) => <LegacyRow key={event.eventId ?? `${event.eventType}-${index}`} event={event} index={index} isStreaming={isStreaming} />)}

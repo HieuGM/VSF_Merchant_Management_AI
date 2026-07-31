@@ -33,8 +33,9 @@ describe('AgentThinkingAccordion semantic spans', () => {
     expect(started).not.toBeNull();
     expect(finished).not.toBeNull();
 
-    render(<AgentThinkingAccordion events={[started!, finished!]} isStreaming />);
+    render(<AgentThinkingAccordion events={[started!, finished!]} isStreaming defaultOpen />);
 
+    expect(screen.getByText('⚡ 84ms')).toBeInTheDocument();
     expect(screen.getAllByText('Đọc giờ mở cửa')).toHaveLength(1);
     expect(screen.getByText('Đã nhận giờ mở cửa 10:00–22:00')).toBeInTheDocument();
     expect(screen.getByText('84ms')).toBeInTheDocument();

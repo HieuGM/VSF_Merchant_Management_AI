@@ -20,24 +20,32 @@ export function MessageList({
       <div className="conversation-scroll chat-scrollbar">
         <div className="empty-conversation">
           <div className="empty-conversation__mark">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polygon points="12 8 16 12 12 16 8 12 12 8"/></svg>
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10" />
+              <polygon points="12 8 16 12 12 16 8 12 12 8" />
+            </svg>
           </div>
-          <p>MERCHANT AI ASSISTANT</p>
-          <h2>Hôm nay bạn muốn phân tích điều gì?</h2>
-          <span>Đặt câu hỏi để phân tích đối thủ, tìm kiếm địa điểm, xem review và nhận gợi ý chiến lược.</span>
+          <p className="empty-conversation__tag">MERCHANT AI ASSISTANT</p>
+          <h2 className="empty-conversation__title">Hôm nay bạn muốn phân tích điều gì?</h2>
+          <span className="empty-conversation__subtitle">
+            Đặt câu hỏi để phân tích đối thủ, tìm kiếm địa điểm, xem review và nhận gợi ý chiến lược.
+          </span>
           <div className="empty-prompts">
             {[
-              'Những quán poke bowl ngon gần tôi ở Quận 1?',
-              'Đánh giá chất lượng quán của tôi',
-              'Tìm đối thủ trong bán kính 5 km',
-              'Khách đang nói gì trong review?',
-            ].map((prompt) => (
+              { text: 'Những quán poke bowl ngon gần tôi ở Quận 1?', icon: '🍜' },
+              { text: 'Đánh giá chất lượng quán của tôi', icon: '⭐' },
+              { text: 'Tìm đối thủ trong bán kính 5 km', icon: '📍' },
+              { text: 'Khách đang nói gì trong review?', icon: '💬' },
+            ].map(({ text, icon }) => (
               <button
                 type="button"
-                key={prompt}
-                onClick={() => onPrompt?.(prompt)}
+                className="empty-prompt-chip"
+                key={text}
+                onClick={() => onPrompt?.(text)}
               >
-                {prompt}
+                <span className="empty-prompt-chip__icon" aria-hidden="true">{icon}</span>
+                <span className="empty-prompt-chip__text">{text}</span>
+                <span className="empty-prompt-chip__arrow" aria-hidden="true">→</span>
               </button>
             ))}
           </div>

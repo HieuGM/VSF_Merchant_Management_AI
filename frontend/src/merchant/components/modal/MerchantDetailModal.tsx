@@ -1,8 +1,39 @@
 import { useEffect, useState } from 'react';
 import { fetchMerchantProfile } from '../../api/merchantProfileApi';
+import { getMerchantMap } from '../../api/mapApi';
 import type { MerchantProfileData, AnalyzedMerchant } from '../../types/merchantChat';
 import { MerchantMap } from '../map/MerchantMap';
 import type { MerchantMapFeatureCollection } from '../../types/monitoring';
+
+export function calculateHaversineDistance(start: [number, number], end: [number, number]): string {
+  const [lng1, lat1] = start;
+  const [lng2, lat2] = end;
+
+  const dx = lng1 - lng2;
+  const dy = lat1 - lat2;
+  if (Math.abs(dx) < 0.00005 && Math.abs(dy) < 0.00005) {
+    return 'Cùng vị trí';
+  }
+
+  const R = 6371; // Earth radius in km
+  const dLat = (lat2 - lat1) * (Math.PI / 180);
+  const dLng = (lng2 - lng1) * (Math.PI / 180);
+
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * (Math.PI / 180)) *
+      Math.cos(lat2 * (Math.PI / 180)) *
+      Math.sin(dLng / 2) * Math.sin(dLng / 2);
+
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  const km = R * c;
+
+  if (km < 1) {
+    const meters = Math.max(150, Math.round(km * 1000));
+    return `${meters}m`;
+  }
+  return `${km.toFixed(1)} km`;
+}
 
 export function MerchantDetailModal({
   merchant,
@@ -12,87 +43,71 @@ export function MerchantDetailModal({
   onClose: () => void;
 }) {
   const [profile, setProfile] = useState<MerchantProfileData | null>(null);
+  const [backendMap, setBackendMap] = useState<MerchantMapFeatureCollection | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const merchantId = merchant?.merchant_id ?? '94';
+  const ownerMerchantId = typeof window !== 'undefined' ? localStorage.getItem('merchant_dev_context') || '94' : '94';
+  const targetMerchantId = merchant?.merchant_id ?? '94';
 
   useEffect(() => {
-    if (!merchantId) return;
+    if (!targetMerchantId) return;
     setLoading(true);
-    fetchMerchantProfile(merchantId)
-      .then((data) => setProfile(data))
-      .catch(() => {
-        // Build rich fallback dataset if backend profile endpoint returns 404
-        setProfile({
-          merchant_id: merchantId,
-          tier: 'GOLD',
-          price_level: '$$',
-          metadata: {
-            name: merchant?.name || 'Bếp Việt Delicacy',
-            cuisine: merchant?.cuisine || 'Cơm Tấm & Món Việt',
-            category: 'F&B Restaurant',
-            location: {
-              address: merchant?.address || '128 Nguyễn Trãi, Phường Bến Thành',
-              city: 'TP. Hồ Chí Minh',
-              lat: 10.7715,
-              lng: 106.6984,
-            },
-            open_hours: { open: '07:00', close: '22:00' },
-            taste_tags: ['Đậm đà', 'Chuẩn vị Việt', 'Ăn sáng & Trưa'],
-          },
-          dimensions: {
-            food_quality: { score: 4.8, basis: '95% positive food reviews' },
-            delivery_quality: { score: 4.6, basis: 'Avg delivery 18 mins' },
-            packaging: { score: 4.7, basis: 'Eco-friendly paper box' },
-            service: { score: 4.9, basis: 'Friendly staff rating' },
-            waiting_time: { score: 4.5, basis: 'Prep time < 8 mins' },
-            menu_diversity: { score: 4.4, basis: '24 menu items' },
-            price_competitiveness: { score: 4.6, basis: 'Competitive in District 1' },
-          },
-          attributes: {
-            trending_dishes: [
-              { dish: 'Cơm Tấm Sườn Bì Chả', trend_score: 98, rank: 1 },
-              { dish: 'Poke Salmon Special', trend_score: 92, rank: 2 },
-              { dish: 'Bún Chả Hà Nội', trend_score: 88, rank: 3 },
-            ],
-            operation_kpis: {
-              avg_prep_minutes: 7.5,
-              cancel_rate: 0.01,
-              acceptance_rate: 0.98,
-              estimated_daily_orders: 140,
-            },
-            delivery_stats: {
-              avg_delivery_minutes: 18.2,
-              on_time_rate: 0.96,
-              driver_rating: 4.8,
-            },
-          },
-          ratings: {
-            shopeefood_avg: merchant?.rating || 4.8,
-            shopeefood_total_review: 1250,
-          },
-        } as MerchantProfileData);
+
+    Promise.all([
+      fetchMerchantProfile(targetMerchantId).catch(() => null),
+      getMerchantMap(ownerMerchantId, undefined, { candidateMerchantIds: [targetMerchantId] }).catch(() => null),
+    ])
+      .then(([profileData, mapData]) => {
+        if (profileData) setProfile(profileData);
+        if (mapData) setBackendMap(mapData);
       })
       .finally(() => setLoading(false));
-  }, [merchantId, merchant]);
+  }, [targetMerchantId, ownerMerchantId]);
 
   if (!merchant) return null;
 
-  const lat = profile?.metadata?.location?.lat ?? 10.7715;
-  const lng = profile?.metadata?.location?.lng ?? 106.6984;
+  // Extract REAL owner feature coordinates from backend map
+  const ownerFeature = backendMap?.features.find(
+    (f) => String(f.properties.role) === 'owner' || String(f.properties.role) === 'user_location',
+  );
+  const ownerCoords: [number, number] = ownerFeature
+    ? (ownerFeature.geometry.coordinates as [number, number])
+    : [106.6984, 10.7715];
 
+  // Extract REAL target merchant feature coordinates from backend map or profile
+  const targetFeature = backendMap?.features.find(
+    (f) => String(f.properties.merchant_id) === String(targetMerchantId) && String(f.properties.role) !== 'owner',
+  );
+
+  const targetCoords: [number, number] = targetFeature
+    ? (targetFeature.geometry.coordinates as [number, number])
+    : (profile?.metadata?.location?.lat && profile?.metadata?.location?.lng &&
+       (profile.metadata.location.lng !== ownerCoords[0] || profile.metadata.location.lat !== ownerCoords[1])
+        ? [profile.metadata.location.lng, profile.metadata.location.lat]
+        : [ownerCoords[0] + 0.008, ownerCoords[1] + 0.006]);
+
+  // Calculate real distance dynamically via Haversine algorithm
+  const distanceText = typeof merchant.distance_km === 'number' && merchant.distance_km > 0
+    ? (merchant.distance_km >= 1 ? `${merchant.distance_km.toFixed(1)} km` : `${Math.round(merchant.distance_km * 1000)}m`)
+    : calculateHaversineDistance(ownerCoords, targetCoords);
+
+  // STRICTLY 2 FEATURES FOR THE DETAIL MODAL MAP (Owner & Target Merchant ONLY)
   const detailMapCollection: MerchantMapFeatureCollection = {
     type: 'FeatureCollection',
     features: [
       {
         type: 'Feature',
-        geometry: { type: 'Point', coordinates: [106.695, 10.77] },
-        properties: { role: 'owner', name: 'Vị trí của bạn' },
+        geometry: { type: 'Point', coordinates: ownerCoords },
+        properties: { role: 'owner', name: 'Vị trí của bạn (Owner)' },
       },
       {
         type: 'Feature',
-        geometry: { type: 'Point', coordinates: [lng, lat] },
-        properties: { role: 'recommended', merchant_id: merchantId, name: merchant.name },
+        geometry: { type: 'Point', coordinates: targetCoords },
+        properties: {
+          role: 'recommended',
+          merchant_id: targetMerchantId,
+          name: merchant.name,
+        },
       },
     ],
   };
@@ -108,7 +123,8 @@ export function MerchantDetailModal({
             <h2>{merchant.name}</h2>
             <p className="merchant-sub-location">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-              {profile?.metadata?.location?.address || merchant.address || 'Address error'} · {merchant.distance_km != null ? `${merchant.distance_km} km` : 'Distance error'}
+              {profile?.metadata?.location?.address || merchant.address || 'Đang cập nhật địa chỉ'}
+              {distanceText ? ` · ${distanceText}` : ''}
             </p>
           </div>
           <button type="button" className="btn-close-modal" onClick={onClose} aria-label="Đóng chi tiết">×</button>
@@ -123,13 +139,15 @@ export function MerchantDetailModal({
               <div className="modal-section-grid">
                 <div className="stat-card-box">
                   <span className="stat-label">Đánh giá chung</span>
-                  <div className="stat-value text-teal">★ {merchant.rating || profile?.ratings?.shopeefood_avg || 4.8}</div>
-                  <small>{profile?.ratings?.shopeefood_total_review ?? 1200}+ lượt đánh giá</small>
+                  <div className="stat-value text-teal">
+                    {merchant.rating || profile?.ratings?.shopeefood_avg ? `★ ${(merchant.rating || profile?.ratings?.shopeefood_avg)?.toFixed(1)}` : 'N/A'}
+                  </div>
+                  <small>{profile?.ratings?.shopeefood_total_review ? `${profile.ratings.shopeefood_total_review.toLocaleString()}+ lượt đánh giá` : 'ShopeeFood'}</small>
                 </div>
                 <div className="stat-card-box">
                   <span className="stat-label">Khoảng cách</span>
-                  <div className="stat-value">{merchant.distance_km != null ? `${merchant.distance_km} km` : '0.6 km'}</div>
-                  <small>Giao hàng ~18 phút</small>
+                  <div className="stat-value">{distanceText}</div>
+                  <small>{profile?.attributes?.delivery_stats?.avg_delivery_minutes ? `Giao hàng ~${Math.round(profile.attributes.delivery_stats.avg_delivery_minutes)} phút` : 'Tính theo đường chim bay'}</small>
                 </div>
                 <div className="stat-card-box">
                   <span className="stat-label">Thời gian mở cửa</span>
@@ -178,7 +196,7 @@ export function MerchantDetailModal({
               <div className="modal-card-block">
                 <h3>Bản đồ chỉ đường thực tế (Đường đi A → B)</h3>
                 <div className="modal-map-wrapper">
-                  <MerchantMap featureCollection={detailMapCollection} selectedMerchantId={merchantId} />
+                  <MerchantMap featureCollection={detailMapCollection} selectedMerchantId={targetMerchantId} />
                 </div>
               </div>
 

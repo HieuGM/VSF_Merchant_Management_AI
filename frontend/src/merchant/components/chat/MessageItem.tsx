@@ -94,28 +94,58 @@ export function MessageItem({
           <div className="merchant-carousel-wrapper">
             <div className="merchant-carousel">
               {merchantsToDisplay.map((item, index) => {
-                const rating = item.rating || (4.8 - index * 0.1).toFixed(1);
+                const hasRealImage = Boolean(item.image_url);
+                const ratingText = typeof item.rating === 'number' && item.rating > 0 ? item.rating.toFixed(1) : null;
+                const cuisineText = item.cuisine || item.category || null;
+                const distanceText = typeof item.distance_km === 'number'
+                  ? `${item.distance_km >= 1 ? item.distance_km.toFixed(1) : Math.round(item.distance_km * 1000) + 'm'} km`
+                  : null;
+                const deliveryText = typeof item.delivery_time_min === 'number' ? `${item.delivery_time_min} phút` : null;
+
                 return (
                   <div className="merchant-card" key={item.merchant_id || index}>
                     <div className="merchant-card-image-wrap">
-                      <div className="merchant-card-image-placeholder" style={{
-                        background: `linear-gradient(135deg, ${['#fdba74', '#f472b6', '#38bdf8', '#4ade80'][index % 4]} 0%, #1e293b 100%)`
-                      }}>
-                        <span className="food-emoji">{['🥗', '🍣', '🍲', '🥑'][index % 4]}</span>
-                      </div>
-                      <div className="rating-badge">★ {rating}</div>
+                      {hasRealImage ? (
+                        <img
+                          src={item.image_url}
+                          alt={item.name}
+                          className="merchant-card-real-image"
+                          onError={(e) => {
+                            (e.currentTarget as HTMLImageElement).style.display = 'none';
+                          }}
+                        />
+                      ) : (
+                        <div className="merchant-card-image-placeholder merchant-card-real-badge">
+                          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#00a398" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                            <polyline points="9 22 9 12 15 12 15 22"/>
+                          </svg>
+                          <span className="merchant-initial-tag">{item.name ? item.name.charAt(0).toUpperCase() : 'M'}</span>
+                        </div>
+                      )}
+                      {ratingText && <div className="rating-badge">★ {ratingText}</div>}
                     </div>
                     <div className="merchant-card-body">
                       <h4 className="merchant-card-title">{item.name}</h4>
                       <div className="merchant-card-meta">
-                        <span className="meta-tag">
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>
-                          {item.cuisine || 'Healthy'}
-                        </span>
-                        <span className="meta-distance">
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                          {item.distance_km != null ? `${item.distance_km} km` : '0.6 km'}
-                        </span>
+                        {cuisineText && (
+                          <span className="meta-tag">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>
+                            {cuisineText}
+                          </span>
+                        )}
+                        {distanceText && (
+                          <span className="meta-distance">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                            {distanceText}
+                          </span>
+                        )}
+                        {deliveryText && (
+                          <span className="meta-delivery">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                            {deliveryText}
+                          </span>
+                        )}
                       </div>
                       <button
                         type="button"
