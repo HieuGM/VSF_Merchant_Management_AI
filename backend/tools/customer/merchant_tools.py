@@ -47,6 +47,9 @@ class NearbyMerchantSearchArgs(BaseModel):
     radius_km: float | None = Field(None, description="Bán kính tìm kiếm (km).")
     query: str | None = Field(None, description="Từ khoá món/tên quán ('phở', 'bún bò').")
     cuisine: str | None = Field(None, description="Danh mục ẩm thực RỘNG, không dùng tên món.")
+    min_price: int | None = Field(None, description="Giá tối thiểu (từ menu).")
+    max_price: int | None = Field(None, description="Giá tối đa (từ menu).")
+    min_rating: float | None = Field(None, description="Đánh giá trung bình tối thiểu.")
     limit: int | None = Field(None, description="Số kết quả tối đa.")
     exclude_merchant_ids: list[str] | None = Field(
         None,
@@ -135,6 +138,9 @@ def nearby_merchant_search(
     radius_km: float = 5.0,
     query: str | None = None,
     cuisine: str | None = None,
+    min_price: int | None = None,
+    max_price: int | None = None,
+    min_rating: float | None = None,
     limit: int = 20,
     exclude_merchant_ids: list[str] | None = None,
 ) -> dict[str, Any]:
@@ -152,6 +158,9 @@ def nearby_merchant_search(
             Matches merchant name/cuisine/menu. Use this for dish searches, NOT cuisine.
         cuisine: Optional filter for a BROAD cuisine category only (e.g. "Món Việt",
             "Nhật", "Hàn"). Do NOT pass a dish name here.
+        min_price: Optional minimum price (from menu items) — HARD filter.
+        max_price: Optional maximum price (from menu items) — HARD filter.
+        min_rating: Optional minimum average rating — HARD filter.
         limit: Maximum results
         exclude_merchant_ids: Merchant ids to DROP from results (e.g. already-suggested
             in a prior turn, for "còn quán nào khác"). None/[] = no change (subtractive).
@@ -165,8 +174,9 @@ def nearby_merchant_search(
         service = MerchantSearchService(repo)
 
         results = service.nearby_search(
-            lat=lat, lng=lng, radius_km=radius_km, query=query, cuisine=cuisine, limit=limit,
-            exclude_merchant_ids=exclude_merchant_ids,
+            lat=lat, lng=lng, radius_km=radius_km, query=query, cuisine=cuisine,
+            min_price=min_price, max_price=max_price, min_rating=min_rating,
+            limit=limit, exclude_merchant_ids=exclude_merchant_ids,
         )
 
         return {
@@ -174,6 +184,11 @@ def nearby_merchant_search(
             "total": len(results),
             "search_center": {"lat": lat, "lng": lng},
             "radius_km": radius_km,
+            "filters_applied": {
+                "query": query, "cuisine": cuisine,
+                "price_range": (f"{min_price}-{max_price}" if min_price or max_price else None),
+                "min_rating": min_rating,
+            },
         }
     finally:
         db.close()
@@ -232,6 +247,9 @@ def register(reg: ToolRegistry) -> None:
                 "radius_km": "float | None",
                 "query": "str | None",
                 "cuisine": "str | None",
+                "min_price": "int | None",
+                "max_price": "int | None",
+                "min_rating": "float | None",
                 "limit": "int | None",
                 "exclude_merchant_ids": "list[str] | None",
             },

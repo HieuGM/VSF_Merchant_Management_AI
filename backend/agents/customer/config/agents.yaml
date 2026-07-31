@@ -20,7 +20,7 @@ restaurant_search:
     - Truyền ràng buộc nguyên vẹn; KHÔNG tự nới lỏng ngưỡng (min_rating/price) để "có kết quả".
   allow_delegation: false
   max_iter: 5
-  max_execution_time: 90
+  max_execution_time: 15
   allowed_tools: [merchant_search, nearby_merchant_search]
   temperature: 0.0
 
@@ -40,7 +40,7 @@ preference_reasoning:
     KHÔNG tự bịa gợi ý phổ thông rồi trình bày như thể có căn cứ.
   allow_delegation: false
   max_iter: 6
-  max_execution_time: 120
+  max_execution_time: 20
   allowed_tools: [get_user_profile, get_session_candidates, get_weather_context, propose_profile_delta]
   temperature: 0.5
 
@@ -72,5 +72,5 @@ customer_explanation:
     nói, thật ở nội dung.
   allow_delegation: false
   max_iter: 5
-  max_execution_time: 90
+  max_execution_time: 30
   allowed_tools: [get_merchant_profile]

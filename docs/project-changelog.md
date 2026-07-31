@@ -4,6 +4,34 @@ This document tracks all significant changes, features, fixes, and security impr
 
 ---
 
+## [2026-07-31] Customer Agent — GT Optimization (6 rounds: reliability + guards + anti-confabulation)
+
+Coordinator-light optimization measured on `ground_truth_customer.json` (39 cases; 12 coordinator-only skipped). Quality arc: **16/27 (59% WEAK) → 27/39 (69%)**. End-to-end correct 41% → 69%. All rounds adversarially quality-judged (0 overturned).
+
+### Reliability
+- **Search `max_execution_time` 5→15s** (`agents.yaml`) — TimeoutError **31%→2.6%** (was right at the median).
+- **`nearby_merchant_search` hard-filters** min_price/max_price/min_rating end-to-end (schema→tool→service→repo). Single-turn constraint cases (TC-01 cơm<50k>4★) now honored.
+
+### Coordinator-light guards (wired both /chat + /chat/stream)
+- Empty-query → honest empty (no catalog-by-name dump, TC-16).
+- Emoji/tokenless → clarify (TC-24).
+- **Dietary-allergy confirm** — scans prior turns for allergy+food, confirms before searching (TC-49, **health risk eliminated**).
+- Comparison/origin + no grounding data → truthful refuse, no hallucination (TC-38).
+- Anaphora unresolved → no fresh-search fallback (TC-47).
+- Persistent-diet declaration ("từ giờ ăn chay") → filter results (TC-48).
+
+### Anti-confabulation (explanation prompt + deterministic)
+- Plug example-leak (removed concrete merchant names from prompt examples — DeepSeek was copying them as real data).
+- TRUNG THỰC TỐI THƯỢNG block + results name allow-list; no-prior-note (explicit when prior_turns empty); persist-claim forbid; grounding cite-or-refuse (rating/price/spice).
+- Preference prompt requires `preferred_cuisine` (TC-06).
+
+### Known floor (12/39 fails — NOT prompt-fixable; scoped, NOT claimed fixed)
+One architectural seam the user declined the coordinator for: **prior-turn confabulation** (TC-01/26/47/50 — DeepSeek ignores no-prior-note), **anaphora/ordinal resolution** (TC-09/41), **constraint-propagation to results filter** (TC-01/07/28/35), **evidence injection** (TC-25), **CrewAI/gpt-oss ValidationError flakiness** (TC-10), **nutrition-advice edge** (TC-46). Safety envelope 100% locked (OOD/injection/abuse/allergy/SQLi/parse).
+- Tests: +9 unit (21/21 green). Eval tooling: `bench_customer_agent.py` (warnings), `stress_stream_explanation.py`, `eval_ground_truth.py` (GT-driven). Reports: `plans/reports/eval-260731-*.md`.
+- **Status:** ✅ commit-ready as scoped dev work. NOT a "grounding-safe" release — see `plans/reports/eval-260731-final-6-round-arc.md`.
+
+---
+
 ## [2026-07-31] Customer Agent — Explanation Stream Reliability (retry + non-stream fallback)
 
 ### Problem

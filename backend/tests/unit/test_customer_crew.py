@@ -383,3 +383,65 @@ def test_empty_stream_falls_back_to_nonstream(monkeypatch):
     assert out == "Real answer"
     assert [h[0] for h in client.history] == ["stream", "stream", "nonstream"]
 
+
+# --- coordinator-light safety guards (Fix B unparseable, Fix C dietary, B-Fix-1 grounding) ---
+
+def test_is_unparseable_flags_emoji_only():
+    """Emoji-only / tokenless input → clarify instead of a generic search (TC-24)."""
+    from flows.customer_flow import _is_unparseable
+
+    assert _is_unparseable("🍜🍜🍜😋") is True
+    assert _is_unparseable("??? !!!") is True
+    # Real queries (with/without diacritics) are parseable
+    assert _is_unparseable("gà rán") is False
+    assert _is_unparseable("tim cho an ngon o cau giay") is False
+    assert _is_unparseable("") is False
+    assert _is_unparseable(None) is False
+
+
+def test_detect_dietary_conflict_catches_allergy():
+    """Current request for a food the user just declared an allergy against → confirm (TC-49 health risk)."""
+    from flows.customer_flow import _detect_dietary_conflict as conflict
+
+    prior = [{"role": "user", "text": "Tôi không ăn được hải sản, bị dị ứng"},
+             {"role": "assistant", "text": "Đã ghi nhận"}]
+    # Asking for seafood after a seafood-allergy declaration → conflict
+    ans = conflict("Tìm quán hải sản ngon ở Cầu Giấy", prior, profile=None)
+    assert ans is not None and "hải sản" in ans
+    # Asking for a different food → no conflict
+    assert conflict("Tìm quán phở gần đây", prior, profile=None) is None
+    # No allergy declaration in history → never conflicts
+    plain = [{"role": "user", "text": "Tìm quán lẩu ở Hai Bà Trưng"}]
+    assert conflict("Tìm quán hải sản", plain, profile=None) is None
+    # Plain food mention without allergy verb doesn't register as an exclusion
+    assert conflict("Tìm quán tôm", [{"role": "user", "text": "hôm nay muốn ăn tôm"}], None) is None
+
+
+def test_grounding_guard_refuses_ungrounded_comparison():
+    """No results + comparison/claim query → truthful refuse instead of hallucinating (TC-38/50)."""
+    from flows.customer_flow import _grounding_guard_answer as guard
+
+    # Brand comparison with no results → refuse
+    assert guard("Highlands Coffee với The Coffee House thì quán nào ngon hơn", [], "") is not None
+    # Origin claim with no results → refuse
+    assert guard("Quán này có phải chuẩn vị gốc Hà Nội không", [], "") is not None
+    # Results exist → grounded, no guard
+    assert guard("quán nào ngon hơn", [{"name": "Phở X"}], "") is None
+    # Follow-up merchant resolved (profile_hints) → grounded, no guard
+    assert guard("quán này có ổn không", [], "QUÁN ĐƯỢC HỎI: Phở Y") is None
+    # Empty result but NOT a comparison/claim (e.g. zero-result search) → no guard (normal 'not found')
+    assert guard("Tìm quán sushi ở Mộc Châu", [], "") is None
+
+
+def test_declared_persistent_preference_filters_chay():
+    """'Từ giờ nhớ tôi ăn chay' → chay filter; transient mentions don't trigger (TC-48)."""
+    from flows.customer_flow import _declared_persistent_preference as pref
+
+    assert pref("Từ giờ nhớ giúp tôi là tôi ăn chay trường nhé") == "chay"
+    assert pref("từ nay mình ăn chay nhé") == "chay"
+    # No durable marker → None (transient 'ăn chay hôm nay' shouldn't permanently filter)
+    assert pref("hôm nay ăn chay thôi") is None
+    # Durable marker but no diet keyword → None
+    assert pref("từ giờ nhớ tôi thích đi ăn sáng") is None
+    assert pref(None) is None
+

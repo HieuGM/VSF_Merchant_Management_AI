@@ -123,6 +123,139 @@ _OUT_OF_DOMAIN_ANSWER = (
     "Bạn muốn tìm món gì, ở khu vực nào để mình gợi ý nhé?"
 )
 
+# --- Pre-search safety / clarity guards (coordinator-light) ---
+# Fire AFTER _is_out_of_domain and BEFORE building crews. They return an early answer
+# (clarify / confirm) so the pipeline doesn't search + free-form-explain its way into spurious
+# results or, worse, a health-risk recommendation (recommending a food the user is allergic to).
+
+_UNPARSEABLE_ANSWER = (
+    "Mình chưa nắm được bạn đang muốn ăn gì — bạn kể thêm món hoặc khu vực nhé, để mình gợi ý cho!"
+)
+
+
+def _is_unparseable(query: str | None) -> bool:
+    """Emoji-only / tokenless input (TC-24 '🍜🍜🍜😋'): no ASCII alnum after diacritic-strip →
+    no food/location signal can be extracted. Ask to clarify instead of running a generic
+    search that returns unrelated nearest merchants."""
+    if not query:
+        return False  # bare empty is handled by the missing-slot path, not here
+    return not re.search(r"[a-z0-9]", _norm_vi(query))
+
+
+# Dietary-conflict safety (TC-49, HEALTH RISK). A recent USER turn declares an allergy /
+# restriction against a food; the current query requests the SAME food → confirm before
+# searching. Catches in-session declarations (durable allergen persistence is a separate
+# coordinator dependency — see eval report "needs_real_coordinator").
+_ALLERGY_VERB_RE = re.compile(
+    r"di ung|khong an duoc|ko an duoc|kien|bi dau|benh"
+)
+# excluded-food key (display label) -> ASCII synonyms matched against _norm_vi text.
+_EXCLUDED_FOODS = {
+    "hải sản": ("hai san", "tom", "cua", "ghe", "muc", "ngao", "ngheu", "oc", "so"),
+}
+
+
+def _turn_text(turn: Any) -> str:
+    """Defensive text extraction from a prior-turn dict (shape varies by loader)."""
+    return (turn.get("text") or turn.get("content") or turn.get("message") or "") if isinstance(turn, dict) else ""
+
+
+def _extract_excluded_foods(text: str) -> set[str]:
+    """Foods the user declared an allergy/restriction against in `text`. Only counts when an
+    allergy verb co-occurs (so 'tôm hồ' / plain food mentions don't register as exclusions)."""
+    if not text:
+        return set()
+    t = _norm_vi(text)
+    if not _ALLERGY_VERB_RE.search(t):
+        return set()
+    return {key for key, syns in _EXCLUDED_FOODS.items() if any(s in t for s in syns)}
+
+
+def _detect_dietary_conflict(
+    query: str | None, prior_turns: list[Any], profile: Any
+) -> str | None:
+    """Return a confirm-answer if the current query requests a food the user just declared an
+    allergy/restriction against (in prior USER turns or profile); else None."""
+    excluded: set[str] = set()
+    for turn in prior_turns or []:
+        role = ((turn.get("role") or turn.get("sender") or "") if isinstance(turn, dict) else "").lower()
+        if "user" in role:
+            excluded |= _extract_excluded_foods(_turn_text(turn))
+    if profile is not None:
+        for attr in ("dietary", "disliked_cuisines"):
+            val = getattr(profile, attr, None) or []
+            if isinstance(val, (list, tuple)):
+                excluded |= _extract_excluded_foods(" ".join(str(x) for x in val))
+    if not excluded:
+        return None
+    q = _norm_vi(query or "")
+    requested = {key for key, syns in _EXCLUDED_FOODS.items() if any(s in q for s in syns)}
+    hit = excluded & requested
+    if not hit:
+        return None
+    names = "/".join(sorted(hit))
+    return (
+        f"Khoan, ở lượt trước bạn có vẻ đang kiêng/dị ứng {names} — mình muốn chắc chắn trước khi "
+        f"gợi ý. Bạn vẫn muốn tìm quán {names} nhé, hay mình gợi ý món khác an toàn hơn?"
+    )
+
+
+def _pre_search_guard(
+    query: str | None, prior_turns: list[Any], profile: Any
+) -> tuple[str, str] | None:
+    """Return (answer, intent) to short-circuit before search, or None to proceed normally.
+    Order: unparseable (clarify) → dietary-conflict (confirm). OOD is checked separately first."""
+    if _is_unparseable(query):
+        return (_UNPARSEABLE_ANSWER, "clarify")
+    conflict = _detect_dietary_conflict(query, prior_turns, profile)
+    if conflict:
+        return (conflict, "dietary_conflict")
+    return None
+
+
+# --- Grounding guard (post-search, pre-explanation) ---
+# No results AND a comparison/claim/origin query (TC-38 brand-vs-brand, TC-50 'chuẩn vị gốc')
+# → DeepSeek would otherwise answer from general LLM knowledge (hallucination). Refuse
+# truthfully instead. Does NOT fire when results exist (grounded) or a follow-up merchant was
+# resolved (profile_hints carries its real profile).
+# Matched against _norm_vi(query) (diacritics stripped) → patterns are ASCII. Narrow: only
+# true comparison/origin-QUESTION triggers, so a zero-result search that merely CONTAINS such a
+# word as a descriptor (e.g. TC-15 "sushi Nhật Bản chính gốc") is NOT misread as a comparison.
+_COMPARISON_CLAIM_RE = re.compile(
+    r"\bvs\b|versus|so (voi|sanh)|so sanh"
+    r"|the nao hon|tot hon|ngon hon"
+    r"|chuan.{0,6}(vi|goc)|goc ha noi|dung kieu"
+    r"|on khong"
+)
+_GROUNDING_REFUSE_ANSWER = (
+    "Mình chưa có dữ liệu thực tế để so sánh/giải thích trường hợp này — mình không muốn bịa "
+    "thông tin. Bạn kể rõ hơn (tên quán cụ thể, khu vực) để mình tra cứu từ dữ liệu thật nhé!"
+)
+
+
+def _grounding_guard_answer(
+    query: str | None, results: list[Any], profile_hints: str
+) -> str | None:
+    """Truthful refuse/ask answer when there's no grounding data for a comparison/claim query;
+    None → proceed with the normal streamed explanation."""
+    if results or profile_hints or not query:
+        return None
+    return _GROUNDING_REFUSE_ANSWER if _COMPARISON_CLAIM_RE.search(_norm_vi(query)) else None
+
+
+# Persistent-preference declaration (TC-48 'từ giờ nhớ tôi ăn chay trường'): the user states a
+# durable diet THIS turn. Filter results to match so we never recommend the opposite cuisine.
+# Narrow: requires a durable marker (từ giờ / từ nay / luôn) AND a diet keyword. None otherwise.
+def _declared_persistent_preference(query: str | None) -> str | None:
+    if not query:
+        return None
+    q = _norm_vi(query)
+    if not re.search(r"tu gio|tu nay|luon luon|trong tuong lai", q):
+        return None
+    if "chay" in q:
+        return "chay"
+    return None
+
 
 def _is_out_of_domain(query: str | None) -> bool:
     """True for UNAMBIGUOUS out-of-domain queries.
@@ -253,6 +386,25 @@ class CustomerFlow:
             self._repo.finish_run(trace_id, status="ok", finished_at=_utc_now_iso())
             return response
 
+        # Pre-search safety guards (coordinator-light): emoji-only → clarify; dietary-conflict
+        # (allergy) → confirm before searching. Fires after OOD, before building any crew.
+        guard = _pre_search_guard(query, prior_turns, _load_profile(user_id))
+        if guard:
+            g_answer, g_intent = guard
+            response = CustomerChatResponse(
+                trace_id=trace_id, session_id=session_id, intent=g_intent,
+                answer=g_answer, results=[], preference_suggestions=[],
+            )
+            _persist_turns(session_id, trace_id, query or "", response, displayed=[])
+            self._repo.add_event(
+                build_event_record(
+                    trace_id=trace_id, event_type="run_finished", agent_name="customer_flow",
+                    task_name="search_restaurants", output_summary={"guard": g_intent},
+                )
+            )
+            self._repo.finish_run(trace_id, status="ok", finished_at=_utc_now_iso())
+            return response
+
         try:
             if crew is None:
                 from agents.customer.customer_crew import build_customer_crew
@@ -273,6 +425,13 @@ class CustomerFlow:
             # still gets real results (deterministic tool output — never fabricated).
             if not response.results and has_location:
                 response.results = _direct_nearby_results(inputs.get("query"), lat, lng)
+            # TC-48: persistent diet declared this turn → filter results to that cuisine.
+            pref_filter = _declared_persistent_preference(query)
+            if pref_filter:
+                response.results = [
+                    r for r in response.results
+                    if pref_filter in _norm_vi(str(r.get("cuisine") or ""))
+                ]
 
             # Phase-03 B3: server-side weather short-circuit — deterministic rain delta
             # merged into the preference crew's suggestions (no duplicate field/value).
@@ -422,6 +581,27 @@ class CustomerFlow:
             yield {"event": "run_finished", "data": response.model_dump()}
             return
 
+        # Pre-search safety guards (coordinator-light): emoji-only → clarify; dietary-conflict
+        # (allergy) → confirm before searching. Mirrors the OOD short-circuit above.
+        guard = _pre_search_guard(query, prior_turns, _load_profile(user_id))
+        if guard:
+            g_answer, g_intent = guard
+            yield {"event": "answer_delta", "data": {"answer_delta": g_answer}}
+            response = CustomerChatResponse(
+                trace_id=trace_id, session_id=session_id, intent=g_intent,
+                answer=g_answer, results=[], preference_suggestions=[],
+            )
+            _persist_turns(session_id, trace_id, query or "", response, displayed=[])
+            self._repo.add_event(
+                build_event_record(
+                    trace_id=trace_id, event_type="run_finished", agent_name="customer_flow",
+                    task_name="search_restaurants_stream", output_summary={"guard": g_intent},
+                )
+            )
+            self._repo.finish_run(trace_id, status="ok", finished_at=_utc_now_iso())
+            yield {"event": "run_finished", "data": response.model_dump()}
+            return
+
         try:
             # phase-02b — anaphora follow-up ("giá của quán đầu tiên", "quán đó có cay không")
             # references a PRIOR merchant. Skip the fresh search (it would return an irrelevant
@@ -450,8 +630,10 @@ class CustomerFlow:
                 results = _followup_cards(target_ids) if target_ids else []
                 if results:
                     profile_hints = _profile_grounding(target_ids[:2])
-                else:
-                    is_followup = False  # nothing prior to resolve → normal search
+                # FIX-1: do NOT reset is_followup when resolution came back empty. Falling back
+                # to a fresh search here sprayed wrong-cuisine merchants (TC-47 "món đó" got
+                # unrelated nearest shops). Keep is_followup=True → skips the fresh-search branch
+                # below → honest empty + the grounding guard asks the user to clarify instead.
             if not is_followup:
                 # 1) Search + preference, NON-streaming and CONCURRENT (two single-task crews
                 #    in parallel threads — true parallelism; a single 2-task async crew can't
@@ -505,6 +687,33 @@ class CustomerFlow:
 
             # 2) Stream the explanation answer token-by-token via a DIRECT DeepSeek call
             #    (plain-text streaming is reliable on FPT, unlike CrewAI's crew-streaming).
+            # TC-48: persistent diet declared this turn ('từ giờ nhớ tôi ăn chay') → filter results
+            # to that cuisine so we never recommend the opposite.
+            pref_filter = _declared_persistent_preference(query)
+            if pref_filter:
+                results = [r for r in results
+                           if pref_filter in _norm_vi(str(r.get("cuisine") or ""))]
+            # Grounding guard: no results AND a comparison/claim/origin query → DeepSeek would
+            # answer from general knowledge (hallucination). Refuse truthfully + ask specifics.
+            guard_answer = _grounding_guard_answer(query, results, profile_hints)
+            if guard_answer:
+                yield {"event": "answer_delta", "data": {"answer_delta": guard_answer}}
+                response = CustomerChatResponse(
+                    trace_id=trace_id, session_id=session_id, intent="no_grounding",
+                    answer=_strip_answer_artifacts(guard_answer), results=results,
+                    preference_suggestions=suggestions, warnings=[],
+                )
+                _persist_turns(session_id, trace_id, query or "", response, results)
+                self._repo.add_event(
+                    build_event_record(
+                        trace_id=trace_id, event_type="run_finished", agent_name="customer_flow",
+                        task_name="search_restaurants_stream", output_summary={"grounding_guard": True},
+                    )
+                )
+                self._repo.finish_run(trace_id, status="ok", finished_at=_utc_now_iso())
+                yield {"event": "run_finished", "data": response.model_dump()}
+                return
+
             messages = _build_explanation_messages(
                 explanation_prompt_pieces(), inputs, results, suggestions, preference,
                 weather_override, profile_hints,
@@ -846,10 +1055,19 @@ _PRIOR_HEADER = (
 )
 _PRIOR_FOOTER_RULE = (
     "LƯU Ý ĐA LƯỢT: nếu câu hiện tại dùng đại từ ('quán đó', 'món đó', 'quán đầu tiên', "
-    "'cái đầu tiên'), GIẢI MÃ bằng dữ liệu trên — quán người dùng hỏi nằm Ở ĐÂY, KHÔNG phải "
+    "'cái đầu tiên'), GIẢI MÃ bằng dữ liệu trên — quán người dùng hỏi nằm Ở ĐÂU, KHÔNG phải "
     "trong kết quả tìm mới. Nếu mơ hồ giữa nhiều quán → LIỆT KÊ các quán trong ngữ cảnh rồi "
     "hỏi người dùng chọn, KHÔNG hỏi chung chung 'quán nào'. KHÔNG gợi ý lại quán đã liệt kê "
     "ở đây trừ khi người dùng hỏi lại rõ."
+)
+# Explicit "no prior conversation" signal. Without it {prior_context} resolves to "" on turn-1
+# and the model sees no mention of history → it confabulates one ("hồi nãy mình gợi ý…", "bạn
+# đã biết quán đó rồi nhỉ?"). Injecting a hard NO-PRIOR note killed that fabricated-prior class
+# (TC-01/07/47/50) at the source.
+_NO_PRIOR_NOTE = (
+    "LƯU Ý: phiên này CHƯA có lịch sử trò chuyện trước đó. TUYỆT ĐỐI KHÔNG nhắc "
+    "'lần trước'/'hồi nãy'/'từng gợi ý'/'bạn đã biết quán đó' hay bất kỳ gợi ý về cuộc trò "
+    "chuyện cũ — đó sẽ là BỊA. Mọi quán nhắc tới phải lấy từ 'Ứng viên quán' bên dưới."
 )
 
 
@@ -864,7 +1082,7 @@ def _format_prior_context(turns: list[dict] | None) -> str:
     (audit phase-02 risk: re-injected prompt-injection bait must not bypass the
     classifier)."""
     if not turns:
-        return ""
+        return _NO_PRIOR_NOTE
     # Pair each user turn with the agent results that followed it (chronological).
     pairs: list[tuple[str, list[dict]]] = []
     pending_user: str | None = None
@@ -887,7 +1105,7 @@ def _format_prior_context(turns: list[dict] | None) -> str:
         if u.strip() and not _STRONG_OOD_RE.search(_norm_vi(u))
     ]
     if not filtered:
-        return ""
+        return _NO_PRIOR_NOTE
 
     lines = [_PRIOR_HEADER]
     for user_text, res in filtered:
@@ -1327,6 +1545,10 @@ def _build_explanation_messages(
             )
     else:
         lines.append("Ứng viên quán: (không có quán khớp — trả lời tự nhiên, gợi mở hướng khác)")
+    if results:
+        names = ", ".join(str(r.get("name")) for r in results[:5] if r.get("name"))
+        if names:
+            lines.append(f"CHỈ được nhắc tên các quán sau (tên khác = BỊA): {names}")
     if profile_hints:
         # Follow-up grounding: real profile of the referred prior merchant (phase-02b).
         lines.append(profile_hints)

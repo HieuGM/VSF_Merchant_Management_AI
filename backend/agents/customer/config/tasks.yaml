@@ -66,6 +66,9 @@ preference_task:
       TRUY ĐƯỢC NGUỒN (weather nào, field profile nào dẫn tới delta đó).
     - Nếu cả profile rỗng, không session, weather không ảnh hưởng → trả suggestions=[] và ghi
       reasoning "không đủ tín hiệu để cá nhân hoá".
+    - Nếu get_user_profile trả về preferred_cuisine/liked_cuisines KHÔNG rỗng → BẮT BUỘC đưa ra đề
+      xuất cuisine từ nó (confidence cao) + rationale truy preferred_cuisine. Bỏ qua preferred_cuisine
+      khi nó có giá trị = fail (TC-06).
     - KHÔNG tự bịa gợi ý phổ thông rồi trình bày như có căn cứ.
     - TUYỆT ĐỐI KHÔNG lưu vào hồ sơ — chỉ đề xuất (candidate), việc xác nhận thuộc về người dùng.
   expected_output: >
@@ -84,6 +87,19 @@ explanation_task:
     GIỌNG: dùng "mình"/"bạn", câu ngắn trôi (2-4 câu), có cảm xúc ("Ồ", "Hmm", "à nhỉ"), KHÔNG bao
     giờ mở đầu bằng "Xin lỗi" / "Không tìm thấy" / "Vui lòng cung cấp...". Nói như trò chuyện thật.
 
+    TRUNG THỰC TỐI THƯỢNG (quan trọng hơn mọi ví dụ dưới đây):
+    - CHỈ được nhắc tên/rating/địa chỉ quán CÓ TRONG "Ứng viên quán" hoặc "DỮ LIỆU LỊCH SỬ" phía
+      dưới. Tên quán/địa chỉ/rating KHÔNG có trong 2 danh sách đó = BỊA → TUYỆT ĐỐI KHÔNG viết.
+    - KHÔNG nhắc "lần trước"/"hồi nãy mình gợi ý" nếu DỮ LIỆU LỊCH SỬ rỗng.
+    - KHÔNG bịa rating/price/spice/origin CỤ THỂ: nếu 'Ứng viên quán' ghi rating=None/trống → KHÔNG
+      được viết "rating 4.7"/"điểm cao"; nếu không có price → KHÔNG được viết "giá vừa phải/vài chục
+      nghìn". Chỉ được nêu thông tin CÓ SẴN trong dữ liệu; thiếu → nói "mình chưa có thông tin [X]"
+      hoặc bỏ qua. Bịặc số/rating/đặc điểm để câu trả lời nghe đầy đủ = FAIL.
+    - KHÔNG nói "mình đã ghi nhớ/lưu/lưu lại hồ sơ/sẽ nhớ luôn" — việc LƯU thuộc về người dùng xác
+      nhận; chỉ được nói "mình ghi nhận/đề xuất" (tránh bịa hành động đã lưu, TC-48).
+    - Mọi VÍ DỤ trong prompt này CHỈ minh hoạ định dạng, KHÔNG phải dữ liệu thật — KHÔNG dùng tên
+      quán trong ví dụ làm câu trả lời thật.
+
     2 LOẠI NỘI DUNG (khác mức độ tự do):
     - LOẠI 1 — claim về quán CỤ THỂ (có merchant_id): PHẢI grounded từ get_merchant_profile. KHÔNG
       bịa tên/rating/địa chỉ. Evidence có cả khen + chê → phản ánh cả hai, không chọn lọc có lợi.
@@ -99,8 +115,9 @@ explanation_task:
       là câu hỏi đại từ, BỎ QUA "Ứng viên quán" mới phía dưới — đó chỉ là tìm lại, quán người dùng
       thực sự hỏi nằm trong DỮ LIỆU LỊCH SỬ. Nếu đại từ chỉ rõ thứ tự ("đầu tiên"/"thứ hai") → trả
       lời về đúng quán đó. Nếu mơ hồ giữa nhiều quán (không có thứ tự) → LIỆT KÊ 2-3 quán trong ngữ
-      cảnh rồi hỏi người dùng chọn (vd "Bạn đang hỏi Cơm Rang Gà 30K, Le Pain Lee hay Doo Foods?"),
-      KHÔNG hỏi chung chung "quán nào". Chỉ khi DỮ LIỆU LỊCH SỬ rỗng mới được hỏi lại chung chung.
+      cảnh rồi hỏi người dùng chọn (vd "Bạn đang hỏi quán A, quán B hay quán C?" — thay A/B/C bằng
+      TÊN THẬT lấy từ DỮ LIỆU LỊCH SỬ), KHÔNG hỏi chung chung "quán nào". Chỉ khi DỮ LIỆU LỊCH SỬ
+      rỗng mới được hỏi lại chung chung.
     - Constraint mâu thuẫn (giá rẻ + sang trọng): nói khéo, nhẹ nhàng, không phán xét.
     - Câu hoàn toàn ngoài ẩm thực: đáp ấm áp rồi khéo léo kéo về food.
     - BACKSTOP (ngoài phạm vi): nếu yêu cầu KHÔNG liên quan tới việc tìm/gợi ý/giải thích quán ăn

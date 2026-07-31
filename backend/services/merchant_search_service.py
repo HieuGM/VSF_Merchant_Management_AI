@@ -107,6 +107,19 @@ class MerchantSearchService:
 
         Uses eagerly-loaded ratings/profile from repository — no N+1 queries.
         """
+        # Truth-first guard: with NO discriminative signal (no query/cuisine/city, no geo, AND no
+        # rating/price constraint), return [] instead of dumping the whole catalog ordered by
+        # name. That catalog-by-name fallthrough (the repo has no WHERE clause when conditions=[])
+        # is what surfaced 3 irrelevant Huế/HCM merchants for a fictional "Sao Hỏa" query (TC-16).
+        # min_rating/min_price/max_price count as discriminative so constraint-only queries like
+        # "chỉ lấy quán đúng 5.0 sao" (TC-14) still search instead of being emptied out.
+        if (
+            not (query or cuisine or city)
+            and lat is None and lng is None
+            and min_rating is None and min_price is None and max_price is None
+        ):
+            return []
+
         merchants = self._repo.search_merchants(
             query=query, cuisine=cuisine, city=city,
             min_price=min_price, max_price=max_price,
@@ -197,6 +210,9 @@ class MerchantSearchService:
         radius_km: float = 5.0,
         cuisine: str | None = None,
         query: str | None = None,
+        min_price: int | None = None,
+        max_price: int | None = None,
+        min_rating: float | None = None,
         limit: int = 20,
         exclude_merchant_ids: list[str] | None = None,
     ) -> list[SearchResult]:
@@ -206,9 +222,20 @@ class MerchantSearchService:
         text-relevance cutoff — otherwise nearby returns 0 even when matching merchants exist
         near the user (they were just beyond the limit). Auto-expands the radius when the result
         is sparse: desktop IP geolocation can be off by kilometres and some districts have few
-        merchants, so a hard 5km cutoff would wrongly return nothing."""
-        # 2000 > catalog size (~1681) → every query/cuisine-matching merchant is a geo candidate.
-        candidates = self._repo.search_merchants(query=query, cuisine=cuisine, limit=2000)
+        merchants, so a hard 5km cutoff would wrongly return nothing.
+
+        `min_price`/`max_price`/`min_rating` are HARD filters (forwarded to search_merchants,
+        which enforces them via EXISTS subqueries on menu prices / platform rating) — geo
+        queries must respect explicit price/rating constraints instead of silently dropping
+        them and surfacing the nearest merchants regardless."""
+        # 2000 > catalog size (~1681) → every query/cuisine/price/rating-matching merchant is
+        # a geo candidate. Constraints are applied HERE so radius-widening below never relaxes
+        # them (the candidate pool is already filtered before geo_filter runs).
+        candidates = self._repo.search_merchants(
+            query=query, cuisine=cuisine,
+            min_price=min_price, max_price=max_price, min_rating=min_rating,
+            limit=2000,
+        )
 
         # Subtractive exclude: drop ids BEFORE geo/ranking so excluded merchants never win ties
         # or consume a limit slot. None/[] = no change.
