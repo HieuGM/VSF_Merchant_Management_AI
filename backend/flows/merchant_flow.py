@@ -22,6 +22,8 @@ from crewai.lite_agent_output import LiteAgentOutput
 from crewai.project import CrewBase, agent, crew, task
 from crewai.tasks.task_output import TaskOutput
 
+from core.dependencies import get_cache
+from core.logging import get_logger
 from core.settings import get_settings
 from database.connection import SessionLocal
 from models.profile import SCORED_DIMENSIONS
@@ -61,6 +63,8 @@ from services.merchant_data_policy import MerchantDataPolicy
 
 
 from pydantic import BaseModel, Field
+
+logger = get_logger(__name__)
 
 
 class CauseItem(BaseModel):
@@ -832,7 +836,23 @@ class MerchantFlowDispatcher:
         run_svc = AgentRunService(session)
         run_started = False
 
+        def notify(event_type: str, payload: dict[str, Any]) -> None:
+            if event_callback is None:
+                return
+            try:
+                event_callback(
+                    event_type,
+                    {
+                        **payload,
+                        "trace_id": trace_id,
+                        "timestamp": _utc_now_iso(),
+                    },
+                )
+            except Exception:
+                logger.debug("Merchant trace callback failed", exc_info=True)
+
         try:
+            context_started = time.perf_counter()
             session_obj = session_svc.get_or_create_session(
                 session_id=session_id,
                 user_id=user_id,
@@ -842,6 +862,24 @@ class MerchantFlowDispatcher:
             history = session_svc.get_compact_history(
                 session_id=sid,
                 max_turns=3,
+            )
+            notify(
+                "context",
+                {
+                    "agent_name": "session_context",
+                    "task": "load_history",
+                    "status": "ok",
+                    "session_id": sid,
+                    "history_source": "database",
+                    "history_cache_status": "disabled",
+                    "history_count": len(history),
+                    "history_preview": history,
+                    "duration_ms": round(
+                        (time.perf_counter() - context_started) * 1000,
+                        3,
+                    ),
+                    "token_usage": None,
+                },
             )
             session_svc.append_message(
                 session_id=sid,
@@ -975,10 +1013,15 @@ class MerchantFlowDispatcher:
                 user_id=user_id,
                 owner_merchant_id=merchant_id,
             )
+            planner_started = time.perf_counter()
             planner: PlannerResult = rewrite_then_plan(
                 message,
                 history=history,
                 context=context,
+            )
+            planner_duration_ms = round(
+                (time.perf_counter() - planner_started) * 1000,
+                3,
             )
             capabilities = [
                 capability.value for capability in planner.plan.capabilities
@@ -1037,23 +1080,33 @@ class MerchantFlowDispatcher:
                     error_code=payload.get("error_code"),
                 )
                 if event_callback is not None:
-                    event_callback(event_type, enriched)
+                    try:
+                        event_callback(event_type, enriched)
+                    except Exception:
+                        logger.debug(
+                            "Merchant trace callback failed",
+                            exc_info=True,
+                        )
 
             emit(
                 "plan",
                 {
                     "agent_name": "merchant_planner",
                     "task": "rewrite_and_plan",
+                    "original_query": message,
                     "rewritten_query": planner.rewritten_query,
                     "capabilities": capabilities,
                     "filters": planner.plan.filters.model_dump(exclude_none=True),
                     "used_fallback": planner.used_fallback,
+                    "duration_ms": planner_duration_ms,
+                    "token_usage": planner.token_usage.model_dump(),
                 },
             )
             execution = execute_plan(
                 planner.plan,
                 context=context,
                 db=session,
+                cache=get_cache(),
                 event_callback=emit,
             )
             if execution.claims:
@@ -1079,6 +1132,8 @@ class MerchantFlowDispatcher:
             )
 
             history_str = json.dumps(history, ensure_ascii=False)
+            synthesis_started = time.perf_counter()
+            synthesis_fallback = False
             try:
                 reply, synthesis_usage = _synthesize_with_usage(
                     merchant_id,
@@ -1089,6 +1144,7 @@ class MerchantFlowDispatcher:
                     settings,
                 )
             except Exception as synthesis_error:
+                synthesis_fallback = True
                 emit(
                     "agent_retry",
                     {
@@ -1104,11 +1160,36 @@ class MerchantFlowDispatcher:
                     evidence,
                 )
                 synthesis_usage = TokenUsage()
+            synthesis_duration_ms = round(
+                (time.perf_counter() - synthesis_started) * 1000,
+                3,
+            )
+            emit(
+                "synthesis",
+                {
+                    "agent_name": "synthesis_advisor",
+                    "task": "synthesize_answer",
+                    "status": "fallback" if synthesis_fallback else "ok",
+                    "duration_ms": synthesis_duration_ms,
+                    "token_usage": synthesis_usage.model_dump(),
+                },
+            )
 
             total_usage = planner.token_usage + synthesis_usage
             token_dict = total_usage.model_dump()
             duration_ms = round(
                 (time.perf_counter() - started_clock) * 1000
+            )
+            emit(
+                "query_summary",
+                {
+                    "agent_name": "merchant_advisor",
+                    "task": "complete_query",
+                    "status": "ok",
+                    "duration_ms": duration_ms,
+                    "token_usage": token_dict,
+                    "tool_count": len(execution.trace_steps),
+                },
             )
             trace_summary = [
                 {

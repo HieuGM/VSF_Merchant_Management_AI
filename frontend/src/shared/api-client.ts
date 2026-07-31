@@ -28,7 +28,7 @@ export class ApiRequestError extends Error {
 export interface RequestOptions {
   method?: "GET" | "POST" | "DELETE" | "PUT";
   body?: unknown;
-  params?: Record<string, string | number | undefined>;
+  params?: Record<string, string | number | Array<string | number> | undefined>;
   signal?: AbortSignal;
 }
 
@@ -36,7 +36,11 @@ function buildUrl(path: string, params?: RequestOptions["params"]): string {
   const url = new URL(`${API_BASE}${path}`, window.location.origin);
   if (params) {
     for (const [key, value] of Object.entries(params)) {
-      if (value !== undefined) url.searchParams.set(key, String(value));
+      if (Array.isArray(value)) {
+        value.forEach((item) => url.searchParams.append(key, String(item)));
+      } else if (value !== undefined) {
+        url.searchParams.set(key, String(value));
+      }
     }
   }
   return url.toString();

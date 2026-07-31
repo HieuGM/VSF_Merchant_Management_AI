@@ -13,6 +13,7 @@ CLAUDE.md
 AGENTS.md
 .mcp.json
 .opencode/
+.vscode/
 
 # Superpowers tooling
 .superpowers

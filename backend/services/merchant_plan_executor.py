@@ -6,6 +6,7 @@ from typing import Any, Callable
 
 from sqlalchemy.orm import Session
 
+from core.cache import CachePort
 from models.merchant_orchestration import (
     CitedNumber,
     Capability,
@@ -335,6 +336,7 @@ def execute_plan(
     plan: CapabilityPlan,
     context: MerchantExecutionContext,
     db: Session,
+    cache: CachePort | None = None,
     event_callback: EventCallback | None = None,
 ) -> ExecutionResult:
     emit = event_callback or (lambda _event, _payload: None)
@@ -346,6 +348,16 @@ def execute_plan(
     trace_steps: list[dict[str, Any]] = []
 
     for step in build_execution_plan(plan):
+        tool_args: dict[str, Any] = {}
+        if step.step_id == "search":
+            tool_args = plan.filters.model_dump(exclude_none=True)
+            use_owner_location = bool(
+                tool_args.pop("use_owner_location", False)
+            )
+            if use_owner_location:
+                tool_args["anchor_merchant_id"] = context.owner_merchant_id
+                tool_args.setdefault("radius_km", 5.0)
+                tool_args.setdefault("sort_by", "distance")
         emit(
             "agent_start",
             {
@@ -380,18 +392,52 @@ def execute_plan(
                 "step_id": step.step_id,
                 "agent_name": step.agent_name,
                 "depends_on": step.depends_on,
+                "args": tool_args,
+                "token_usage": None,
             },
         )
         started = time.perf_counter()
 
         if step.step_id == "search":
-            filters = plan.filters.model_dump(exclude_none=True)
-            use_owner_location = bool(filters.pop("use_owner_location", False))
-            if use_owner_location:
-                filters["anchor_merchant_id"] = context.owner_merchant_id
-                filters.setdefault("radius_km", 5.0)
-                filters.setdefault("sort_by", "distance")
-            result = search_merchants(db=db, **filters)
+            try:
+                result = search_merchants(
+                    db=db,
+                    cache=cache,
+                    cache_event_callback=lambda payload: emit(
+                        "cache",
+                        {
+                            **payload,
+                            "step_id": step.step_id,
+                            "agent_name": step.agent_name,
+                            "token_usage": None,
+                        },
+                    ),
+                    **tool_args,
+                )
+            except Exception as error:
+                duration_ms = round(
+                    (time.perf_counter() - started) * 1000,
+                    3,
+                )
+                error_payload = {
+                    "tool_name": step.tool_name,
+                    "step_id": step.step_id,
+                    "agent_name": step.agent_name,
+                    "status": "error",
+                    "error_code": type(error).__name__,
+                    "error": str(error),
+                    "duration_ms": duration_ms,
+                    "token_usage": None,
+                }
+                emit("tool_result", error_payload)
+                emit(
+                    "agent_finish",
+                    {
+                        **error_payload,
+                        "task": step.step_id,
+                    },
+                )
+                raise
             if (
                 Capability.MARKET_COHORT_ANALYSIS in plan.capabilities
                 or Capability.OWNER_VS_MARKET_BENCHMARK in plan.capabilities
@@ -471,6 +517,18 @@ def execute_plan(
             {
                 **_tool_result_summary(step, result),
                 "duration_ms": duration_ms,
+                "token_usage": None,
+            },
+        )
+        emit(
+            "agent_finish",
+            {
+                "agent_name": step.agent_name,
+                "task": step.step_id,
+                "step_id": step.step_id,
+                "status": result.get("status", "ok"),
+                "duration_ms": duration_ms,
+                "token_usage": None,
             },
         )
 
