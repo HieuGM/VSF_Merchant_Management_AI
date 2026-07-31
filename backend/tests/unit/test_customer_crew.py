@@ -477,3 +477,86 @@ def test_strip_prior_claims_removes_fabricated_prior():
     prior = [{"sender": "agent", "text": "x", "payload": {"results": []}}]
     assert strip("Mình đã gợi ý lúc trước.", prior) == "Mình đã gợi ý lúc trước."
 
+
+def test_ambiguous_price_clarify_fires_only_on_unitless_budget_number():
+    """TC-35 'ngân sách khoảng 50 thôi' → ask the unit; protected cases don't fire."""
+    from flows.customer_flow import _ambiguous_price_clarify as apc
+
+    # TC-35 — bare '50', no unit, budget context → clarify.
+    assert apc("Ngân sách khoảng 50 thôi nhé, tìm quán ăn ở Long Biên") is not None
+    # Unit suffix present (k / nghìn) → not ambiguous (TC-01/22/23/43).
+    assert apc("Tìm quán cơm gần Cầu Giấy, giá dưới 50k, rating trên 4 sao") is None
+    assert apc("tim cho an ngon o cau giay gia duoi 50k nha") is None
+    assert apc("budget tầm 100k thôi nha") is None
+    assert apc("Tìm quán cơm gần Cầu Giấy dưới 50k") is None
+    # Rating '5.0 sao' — no budget keyword AND a decimal → not a price (TC-14).
+    assert apc("Chỉ lấy quán đúng 5.0 sao, không lấy quán nào dưới 5.0") is None
+    # Non-price counts adjacent (calo / người / quán).
+    assert apc("Tìm quán có món dưới 200 calo") is None
+    assert apc("Gợi ý quán nhậu cho nhóm 6 người tối nay") is None
+    # Time-word adjacent (TC-46 regression: 'dưới 200 calo ... trong 1 tuần' — '1 tuần' is not a price).
+    assert apc("Tìm quán có món dưới 200 calo để giảm cân trong 1 tuần") is None
+    # Vietnamese thousand-separator '50.000' = unambiguous 50k.
+    assert apc("Ngân sách 50.000 thôi nhé") is None
+    # >=4-digit literal price unambiguous.
+    assert apc("giá dưới 50000 nhé") is None
+
+
+def test_sparse_food_clarify_fires_only_on_bare_food_no_location():
+    """TC-51 'gà rán' → ask location; intent/location/prior queries don't fire."""
+    from flows.customer_flow import _sparse_food_clarify as sfc
+
+    # TC-51 — 2-token cuisine, no location, no intent, no prior → clarify.
+    assert sfc("gà rán", None, False) is not None
+    # Has an intent verb ('tìm') → genuine search request.
+    assert sfc("Tìm quán cơm", None, False) is None
+    # Has a location → search ok.
+    assert sfc("gà rán ở Cầu Giấy", None, True) is None
+    # Has prior turns → it's a follow-up, not a sparse first search.
+    assert sfc("gà rán", [{"sender": "agent", "text": "x"}], False) is None
+    # Too many tokens (4+) → not ultra-sparse.
+    assert sfc("gà rán pizza trà sữa", None, False) is None
+    # No food term → not a food query.
+    assert sfc("xin chào", None, False) is None
+
+
+def test_attribute_absence_note_forbids_fabrication():
+    """Price/spice/hours asked but profile lacks the field → hard absence note; else none."""
+    from flows.customer_flow import _attribute_absence_note as note
+
+    no_price = ' "price_level": "re", "ratings": {} '   # qualitative only, no numeric price
+    no_spice = ' "price_level": "cao cap" '
+    # Price asked, no numeric price in profile → note forbidding an invented number.
+    out = note("Quán đầu tiên đó giá khoảng bao nhiêu?", no_price)
+    assert "GIÁ" in out and "bịa" in out
+    assert "vài chục nghìn" in out          # names the forbidden fabrication
+    # Price asked BUT a numeric price exists → no note (grounded).
+    assert note("giá bao nhiêu", ' "avg_price": 45000 ') == ""
+    # Spice asked, no spice data → note forbidding a common-knowledge assertion.
+    out2 = note("Món đó có cay không, tôi không ăn cay được", no_spice)
+    assert "ĐỘ CAY" in out2 and "bún đậu vốn không cay" in out2
+    # Spice asked BUT spice data exists → no note.
+    assert note("có cay không", ' "spice": "mild" ') == ""
+    # Hours asked, no hours data → note.
+    out3 = note("Quán đó giờ này còn mở cửa không?", no_price)
+    assert "GIỜ MỞ CỬA" in out3
+    # No attribute asked (pure name/ordinal follow-up) → no note.
+    assert note("Cái đầu tiên đó", no_price) == ""
+
+
+def test_pre_search_guard_mandatory_clarify_branches():
+    """B1/B2 integrate after the safety guards; has_location gates the sparse branch."""
+    from flows.customer_flow import _pre_search_guard as guard
+
+    # B1 — ambiguous price unit.
+    ans = guard("Ngân sách khoảng 50 thôi nhé, tìm quán ăn ở Long Biên", [], None, True)
+    assert ans is not None and ans[1] == "clarify_price_unit"
+    # B2 — sparse food, no location.
+    ans2 = guard("gà rán", [], None, False)
+    assert ans2 is not None and ans2[1] == "clarify_location"
+    # B2 suppressed when a location is present (would search instead).
+    assert guard("gà rán", [], None, True) is None
+    # Safety guards still take precedence: anaphor + no prior → no_prior_referent (not clarify).
+    ans3 = guard("Quán đó giá bao nhiêu", [], None, False)
+    assert ans3 is not None and ans3[1] == "no_prior_referent"
+

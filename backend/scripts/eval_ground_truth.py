@@ -97,6 +97,88 @@ def _seed_profile(engine, user_id: str, profile: dict | None) -> None:
         })
 
 
+# --- Eval-fidelity: deterministic prior-referent seeding for anaphora cases (TC-09/41/47) ---
+# The GT prior_turns script merchant names ("Lẩu Gà Ớt Hiểm", "Phở Thìn Bờ Hồ", "Bún Đậu Homemade")
+# that are NOT in the merchant DB, and the real prior-turn search is non-deterministic / often empty
+# for these cuisine+location combos. When the replayed prior AGENT turn carries no results, the
+# follow-up has no referent and the anaphora capability can't be fairly exercised. We fall back to
+# seeding a prior agent turn with REAL DB merchants of the detected cuisine — a faithful referent
+# that tests resolution + evidence-discipline reproducibly. Prefers real results when they exist.
+import unicodedata  # noqa: F401  (kept for clarity; _norm_vi reused from the flow below)
+from flows.customer_flow import _norm_vi  # reuse the flow's diacritic+đ normalizer (single source)
+
+_POOL_CACHE: list[tuple] | None = None
+
+
+def _pick_prior_merchants(engine, cuisine_kw: str, prefer_city: str | None = None, n: int = 3) -> list[dict]:
+    """REAL DB merchants whose name contains `cuisine_kw` as a WHOLE WORD (diacritic-insensitive,
+    so 'phở'→'pho' matches 'Phở Thìn' but not 'Cơm Văn Phòng'; 'bún đậu'→'bun dau' matches
+    'Bún Đậu Chị Yến'). Prefer the requested city, then deterministic by name. (merchants has no
+    rating column — rating is a derived search-service field.) Returns [] if no match."""
+    global _POOL_CACHE
+    from sqlalchemy import text
+    import re
+    if _POOL_CACHE is None:
+        with engine.connect() as c:
+            _POOL_CACHE = [tuple(r) for r in c.execute(text(
+                "SELECT merchant_id, name, city, cuisine FROM merchants"))]
+    kw = _norm_vi(cuisine_kw)
+    if not kw:
+        return []
+    pref = _norm_vi(prefer_city or "")
+    word_re = re.compile(rf"\b{re.escape(kw)}\b")
+
+    def _key(row):
+        same_city = 0 if (pref and pref in _norm_vi(row[2] or "")) else 1
+        return (same_city, _norm_vi(row[1] or ""))
+
+    matches = [r for r in _POOL_CACHE if word_re.search(_norm_vi(r[1] or ""))]
+    matches.sort(key=_key)
+    return [{"merchant_id": r[0], "name": r[1], "cuisine": r[3]} for r in matches[:n]]
+
+
+def _ensure_prior_referent(engine, session_id: str, prior_turns: list[dict], city: str | None) -> bool:
+    """If the most recent replayed AGENT turn has NO results, seed a deterministic prior agent
+    turn with real cuisine-matched merchants so anaphora (TC-09/41/47) has a referent. Returns
+    True when it seeded (logged per-case). No-op when real results already exist."""
+    from sqlalchemy import text
+    from flows.customer_flow import _extract_search_keyword
+    with engine.connect() as c:
+        row = c.execute(text(
+            "SELECT structured_payload_json FROM chat_messages "
+            "WHERE session_id=:s AND sender='agent' ORDER BY timestamp DESC LIMIT 1"), {"s": session_id}
+        ).fetchone()
+    if row and row[0]:
+        payload = row[0] if isinstance(row[0], dict) else json.loads(row[0])
+        if (payload or {}).get("results"):
+            return False  # real results exist → keep them (most faithful)
+    # Derive a cuisine keyword from the prior USER turn (e.g. 'lẩu', 'phở', 'bún đậu').
+    kw = None
+    for t in prior_turns or []:
+        if t.get("role") == "user":
+            kw = _extract_search_keyword(t.get("text", ""))
+            if kw:
+                break
+    if not kw:
+        return False
+    seeded = _pick_prior_merchants(engine, kw, prefer_city=city)
+    if not seeded:
+        return False
+    payload = {
+        "result_merchant_ids": [m["merchant_id"] for m in seeded],
+        "results": seeded,
+        "_seeded_referent": True,  # marker: this prior was eval-seeded (GT names absent from DB)
+    }
+    names = ", ".join(m["name"] for m in seeded)
+    with engine.begin() as c:
+        c.execute(text(
+            "INSERT INTO chat_messages (session_id, sender, text, trace_id, structured_payload_json, timestamp) "
+            "VALUES (:s, 'agent', :t, NULL, :p::jsonb, now())"),
+            {"s": session_id, "t": f"Mình thấy có vài quán {kw} hợp bạn, ví dụ {names}.",
+             "p": json.dumps(payload, ensure_ascii=False)})
+    return True
+
+
 def _post_sse(payload: dict, t0: float) -> dict:
     """POST to /chat/stream; return captured timing + answer + results + trace_id."""
     out = {"total_ms": 0.0, "ttft_ms": None, "explain_ms": None, "answer": "",
@@ -169,7 +251,12 @@ def run_case(case: dict, engine) -> dict:
     ctx = case.get("session_context") or {}
 
     _seed_profile(engine, uid, ctx.get("user_profile"))
-    coords = _coords_for(msg)
+    # Derive coords from the TEST message AND prior turns — multiturn cases put the location in
+    # the prior turn ("...ở Bờ Hồ") while the test turn is a bare anaphor ("Cái đầu tiên đó").
+    # Without this the prior replay searches with no location → empty results → no referent, and
+    # the _direct_nearby_results fallback (needs location) never fires.
+    loc_text = msg + " " + " ".join(t.get("text", "") for t in (ctx.get("prior_turns") or []))
+    coords = _coords_for(loc_text)
     wov = _weather_override(ctx)
 
     base = {"user_id": uid, "session_id": sid}
@@ -186,6 +273,13 @@ def run_case(case: dict, engine) -> dict:
             except Exception:  # noqa: BLE001 - best-effort seeding
                 pass
 
+    # Eval-fidelity: if the replayed prior agent turn has no results (GT-scripted prior merchants
+    # aren't in the DB / search non-deterministic), seed REAL cuisine-matched merchants so the
+    # anaphora follow-up (TC-09/41/47) has a deterministic referent.
+    seeded = _ensure_prior_referent(engine, sid, ctx.get("prior_turns") or [], None)
+    if seeded:
+        print(f"   [seed] {cid}: prior referent seeded from real DB merchants")
+
     # Test turn (timed).
     t0 = time.perf_counter()
     res = _post_sse({**base, "message": msg}, t0)
@@ -194,7 +288,7 @@ def run_case(case: dict, engine) -> dict:
                 "query": msg, "expected": case.get("expected"),
                 "search_ms": search_ms, "preference_ms": pref_ms, "tools": tools,
                 "coords_sent": coords is not None, "weather_sent": wov is not None,
-                "had_prior_turns": bool(ctx.get("prior_turns"))})
+                "had_prior_turns": bool(ctx.get("prior_turns")), "prior_seeded": seeded})
     return res
 
 

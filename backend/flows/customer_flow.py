@@ -200,11 +200,101 @@ def _detect_dietary_conflict(
     )
 
 
+# --- Mandatory-clarify gates (coordinator-light) ---
+# Two ambiguity classes the deterministic pipeline must ASK about instead of guessing:
+#   B1 — bare unitless price number in a budget context (TC-35 'ngân sách khoảng 50 thôi'):
+#        '50' could be 50k/500k/50đ — confirming the unit is a guess we must not silently make.
+#   B2 — ultra-sparse food-only query with no location (TC-51 'gà rán'): infer the cuisine but
+#        ask WHERE before dumping a country-wide list.
+# Both fire AFTER the safety guards (no-prior-referent / unparseable / dietary) inside
+# _pre_search_guard. Patterns are ASCII, matched against _norm_vi() output.
+
+# A query is in a price/budget context iff one of these strong keywords is present. Without one,
+# a bare number is a rating/count/calorie (TC-14 '5.0 sao', TC-46 '200 calo') — not a price guess.
+_BUDGET_CTX_RE = re.compile(r"ngan sach|budget|gia ca|gia duoi|duoi\b|khoang\b")
+# Words that make a bare number a NON-price count — when adjacent, the number is rating / people /
+# time / portions, not money. Keeps B1 off TC-46 ('200 calo', '1 tuần'), TC-07 ('6 người'), etc.
+_NONPRICE_COUNT_RE = re.compile(
+    r"\b(sao|sanh|star|nguoi|calo|calori|quan|mon|diem"           # rating / people / dishes
+    r"|tuan|thang|nam|ngay|lan|bua|buoi|gio|tieng|phut"           # time periods
+    r"|phan|suat|ly|coc|dia|khay|bat)\b"                          # portions
+)
+# A bare 1-3 digit integer NOT part of a longer number nor a decimal. The (?!\.\d) lookahead
+# protects '5.0 sao' (TC-14 rating) and Vietnamese '50.000' (unambiguous 50k thousand-separator).
+_BARE_NUM_RE = re.compile(r"(?<![\d.])(\d{1,3})(?![\d])(?!\.\d)")
+# A unit word immediately after the number (k/nghìn/ngàn/triệu/đồng/vnd) → unambiguous, skip.
+_NUM_UNIT_RE = re.compile(r"^\s*(k|nghin|ngan|trieu|vnd|dong)\b")
+
+
+def _ambiguous_price_clarify(query: str | None) -> str | None:
+    """TC-35: a small unitless number in a budget context → ask the unit before searching.
+
+    Returns a clarify answer, or None. Protected from false-fires by THREE gates:
+      1) budget-context keyword required (TC-14 '5.0 sao' has none);
+      2) '50k'/'50 nghìn' — the unit suffix right after the number → skip (TC-01/22/23/43);
+      3) '5.0 sao'/'6 người'/'200 calo'/'1 quán' — a non-price count adjacent → skip.
+    A bare '50' (next token 'thôi') passes all three → ambiguous → clarify. '50000' never matches
+    (_BARE_NUM_RE requires the digit run to END at ≤3 digits)."""
+    if not query:
+        return None
+    q = _norm_vi(query)
+    if not _BUDGET_CTX_RE.search(q):
+        return None
+    for m in _BARE_NUM_RE.finditer(q):
+        num = m.group(1)
+        tail = q[m.end():m.end() + 8]          # ~next token after the number
+        prev = q[max(0, m.start() - 8):m.start()]
+        if _NUM_UNIT_RE.match(tail):            # unit suffix → not ambiguous
+            continue
+        if _NONPRICE_COUNT_RE.search(tail) or _NONPRICE_COUNT_RE.search(prev):
+            continue                            # rating/people/calorie/count → not a price
+        return (
+            f"Khoan, bạn nói ngân sách '{num}' — mình muốn chắc đơn vị: {num} nghìn "
+            f"({num}.000đ), {num}0 nghìn, hay {num} triệu? Khu vực mình đã có rồi, chỉ cần "
+            f"giá cụ thể để lọc chuẩn cho bạn nhé!"
+        )
+    return None
+
+
+# Intent verbs that turn a short query into a real search request (so 'tìm quán cơm' / 'ăn gì'
+# are NOT misread as too-sparse). Word-boundary, ASCII.
+_SPARSE_INTENT_RE = re.compile(r"\b(tim|cho|goi y|goi gia|muon|thich|an gi|co quan|giup|hen)\b")
+
+
+def _sparse_food_clarify(
+    query: str | None, prior_turns: list[Any] | None, has_location: bool
+) -> str | None:
+    """TC-51: an ultra-short food-only query with no location → ask WHERE before searching.
+
+    'gà rán' (2 tokens, cuisine 'ga ran', no location, no intent verb, no prior) is too sparse to
+    dump a country-wide list. Returns a clarify answer, or None. Narrow by design:
+      - requires a food/cuisine term (_extract_search_keyword);
+      - requires no prior turns (a follow-up like 'cái đầu tiên' has prior → handled elsewhere);
+      - requires NO location (has_location False);
+      - requires NO intent verb ('tìm'/'cho'/'ăn gì' → genuine request, search it);
+      - requires ≤3 tokens ('tìm quán phở' has 3 but has intent → excluded).
+    Verified unique to TC-51 across the 39 measured cases."""
+    if not query or prior_turns:
+        return None
+    q = _norm_vi(query)
+    toks = [t for t in re.split(r"\W+", q) if t]
+    if len(toks) > 3 or not _extract_search_keyword(q):
+        return None
+    if has_location or _SPARSE_INTENT_RE.search(q):
+        return None
+    food = (query or "").strip()
+    return (
+        f"Bạn đang thèm '{food}' à? Mình tìm được liền, nhưng bạn đang ở khu vực nào để mình "
+        f"gợi ý quán gần bạn nhất nhỉ?"
+    )
+
+
 def _pre_search_guard(
-    query: str | None, prior_turns: list[Any], profile: Any
+    query: str | None, prior_turns: list[Any], profile: Any, has_location: bool = False
 ) -> tuple[str, str] | None:
     """Return (answer, intent) to short-circuit before search, or None to proceed normally.
-    Order: no-prior-referent → unparseable (clarify) → dietary-conflict (confirm). OOD first."""
+    Order: no-prior-referent → unparseable (clarify) → dietary-conflict (confirm) →
+    ambiguous-price-unit (clarify) → sparse-food-no-location (clarify). OOD handled upstream."""
     if not prior_turns and _query_references_absent_prior(query):
         return (_NO_PRIOR_REFERENT_ANSWER, "no_prior_referent")
     if _is_unparseable(query):
@@ -212,6 +302,12 @@ def _pre_search_guard(
     conflict = _detect_dietary_conflict(query, prior_turns, profile)
     if conflict:
         return (conflict, "dietary_conflict")
+    price_clarify = _ambiguous_price_clarify(query)
+    if price_clarify:
+        return (price_clarify, "clarify_price_unit")
+    sparse_clarify = _sparse_food_clarify(query, prior_turns, has_location)
+    if sparse_clarify:
+        return (sparse_clarify, "clarify_location")
     return None
 
 
@@ -441,7 +537,7 @@ class CustomerFlow:
 
         # Pre-search safety guards (coordinator-light): emoji-only → clarify; dietary-conflict
         # (allergy) → confirm before searching. Fires after OOD, before building any crew.
-        guard = _pre_search_guard(query, prior_turns, _load_profile(user_id))
+        guard = _pre_search_guard(query, prior_turns, _load_profile(user_id), has_location)
         if guard:
             g_answer, g_intent = guard
             response = CustomerChatResponse(
@@ -637,7 +733,7 @@ class CustomerFlow:
 
         # Pre-search safety guards (coordinator-light): emoji-only → clarify; dietary-conflict
         # (allergy) → confirm before searching. Mirrors the OOD short-circuit above.
-        guard = _pre_search_guard(query, prior_turns, _load_profile(user_id))
+        guard = _pre_search_guard(query, prior_turns, _load_profile(user_id), has_location)
         if guard:
             g_answer, g_intent = guard
             yield {"event": "answer_delta", "data": {"answer_delta": g_answer}}
@@ -683,7 +779,7 @@ class CustomerFlow:
                 target_ids = name_targets or _resolve_followup_targets(query, prior_turns)
                 results = _followup_cards(target_ids) if target_ids else []
                 if results:
-                    profile_hints = _profile_grounding(target_ids[:2])
+                    profile_hints = _profile_grounding(target_ids[:2], query)
                 # FIX-1: do NOT reset is_followup when resolution came back empty. Falling back
                 # to a fresh search here sprayed wrong-cuisine merchants (TC-47 "món đó" got
                 # unrelated nearest shops). Keep is_followup=True → skips the fresh-search branch
@@ -1370,19 +1466,41 @@ def _followup_cards(merchant_ids: list[str]) -> list[dict[str, Any]]:
     return _enrich_with_images(cards)
 
 
-def _profile_grounding(merchant_ids: list[str]) -> str:
+# Attribute-truthfulness (TC-09 price / TC-47 spice / TC-42 hours). The explanation prompt's
+# TRUNG THỰC block already forbids fabricating price/spice — but the model ignores a general rule
+# often enough (TC-09 invented 'vài chục nghìn', TC-47 asserted 'bún đậu vốn không cay' from
+# culinary common knowledge). An EXPLICIT, attribute-specific, in-context absence note placed
+# right next to the profile data is far stronger. Detect what attribute the follow-up asks, then
+# if the profile JSON lacks it, forbid the fabrication by name.
+_ASK_PRICE_RE = re.compile(r"\bgia\b|bao nhieu|ngan sach|gia ca|bao nhieu tien")
+_ASK_SPICE_RE = re.compile(r"cay.*(khong|duoc|nhe|nhieu)|an cay|khong an cay|do cay|co cay")
+_ASK_HOURS_RE = re.compile(r"mo cua|dong cua|gio mo|gio dong|con mo|bao gio|mo tu")
+# Does the (ASCII-normalized) profile JSON carry a grounded value for the attribute?
+_PROF_PRICE_NUM_RE = re.compile(r"price[^a-z]{0,12}\d|avg_price|price_from|price_to|gia[^a-z]{0,6}\d")
+_PROF_SPICE_RE = re.compile(r"cay|spice|heat_level")
+_PROF_HOURS_RE = re.compile(r"opening_hours|open_hours|business_hour|gio_mo|mo_cua")
+
+
+def _profile_grounding(merchant_ids: list[str], query: str | None = None) -> str:
     """Fetch the target merchant profile(s) server-side and return a grounding block for
     the (tool-less) streaming explanation — so 'giá của quán đầu tiên' is answered with the
     REAL price/hours, not a helpless 'chưa có thông tin'. Robust to profile shape: dumps a
-    compact JSON the model reads under truth-first rules."""
+    compact JSON the model reads under truth-first rules.
+
+    Attribute-aware (query → asked attribute): when the follow-up asks price/spice/hours and the
+    profile JSON LACKS that field, append an explicit absence note forbidding fabrication. This is
+    the deterministic backstop that stops TC-09 (invented number) / TC-47 (common-knowledge spice
+    assertion) where the prompt-level truth rule alone was ignored."""
     import json
     from tools.shared.shared_readonly_tools import get_merchant_profile
 
     hints: list[str] = []
+    joined_ascii = ""  # ASCII-normalized concat of all fetched profiles (for attribute search)
     for mid in merchant_ids[:2]:
         try:
             prof = get_merchant_profile(mid)
             compact = json.dumps(prof, ensure_ascii=False, default=str)
+            joined_ascii += " " + _norm_vi(compact)
             if len(compact) > 700:
                 compact = compact[:700] + "…"
             hints.append(f"- merchant {mid}: {compact}")
@@ -1390,10 +1508,37 @@ def _profile_grounding(merchant_ids: list[str]) -> str:
             continue
     if not hints:
         return ""
+    absence = _attribute_absence_note(query, joined_ascii)
     return (
         "THÔNG TIN PROFILE quán được hỏi (dùng trả lời giá/giờ/đặc điểm — CHỈ dữ liệu thật, "
-        "không bịa):\n" + "\n".join(hints)
+        "không bịa):\n" + "\n".join(hints) + absence
     )
+
+
+def _attribute_absence_note(query: str | None, profile_ascii: str) -> str:
+    """If the follow-up asks an attribute the profile lacks, return a hard absence note (else '')."""
+    if not query:
+        return ""
+    q = _norm_vi(query)
+    prof = profile_ascii or ""
+    if _ASK_PRICE_RE.search(q) and not _PROF_PRICE_NUM_RE.search(prof):
+        return (
+            "\n⚠ CÂU HỎI HỎI GIÁ — profile KHÔNG có giá SỐ cụ thể (chỉ price_level định tính nếu "
+            "có). Bắt buộc nói 'mình chưa có giá cụ thể', TUYỆT ĐỐI KHÔNG bịa con số ('vài chục "
+            "nghìn'/'khoảng 50k')."
+        )
+    if _ASK_SPICE_RE.search(q) and not _PROF_SPICE_RE.search(prof):
+        return (
+            "\n⚠ CÂU HỎI HỎI ĐỘ CAY — profile KHÔNG có dữ liệu độ cay của món/quán. Bắt buộc nói "
+            "'mình không có thông tin độ cay', TUYỆT ĐỐI KHÔNG khẳng định hay phủ định độ cay dựa "
+            "trên loại món / kiến thức chung ('bún đậu vốn không cay' = bịa)."
+        )
+    if _ASK_HOURS_RE.search(q) and not _PROF_HOURS_RE.search(prof):
+        return (
+            "\n⚠ CÂU HỎI HỎI GIỜ MỞ CỬA — profile KHÔNG có dữ liệu giờ. Bắt buộc nói 'mình không "
+            "có thông tin giờ mở cửa', KHÔNG suy đoán từ loại hình quán ('quán ăn thường mở tới 22h')."
+        )
+    return ""
 
 
 def _weather_summary(d: dict | None) -> str | None:
