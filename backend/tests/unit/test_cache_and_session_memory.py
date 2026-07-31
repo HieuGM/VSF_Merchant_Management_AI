@@ -7,9 +7,6 @@ from relational_test_fixtures import seed_relational_profile
 from services.chat_session_service import ChatSessionService
 from tools.merchant.profile_tool import get_merchant_profile_summary
 from tools.merchant.metrics_tool import get_merchant_operational_metrics
-from tools.merchant.competitor_tool import compare_merchant_benchmark
-from tools.merchant.search_tool import search_merchants, search_trending_dishes
-from tools.merchant.helper_tool import get_merchant_metadata_catalog
 
 
 def test_tool_cache_profile_summary(db_session):
@@ -52,17 +49,6 @@ def test_tool_cache_metrics(db_session):
     # Verify cached entry exists
     res2 = get_merchant_operational_metrics("m_cache_metrics_01", db=db_session, cache=cache)
     assert res2["status"] == "not_found"
-
-
-def test_tool_cache_metadata_catalog():
-    cache = InMemoryCache()
-    res1 = get_merchant_metadata_catalog(cache=cache)
-    assert "official_8_dimensions" in res1
-
-    res2 = get_merchant_metadata_catalog(cache=cache)
-    assert res1 == res2
-
-
 def test_compact_session_memory(db_session):
     session_svc = ChatSessionService(db_session)
 
@@ -98,3 +84,24 @@ def test_compact_session_memory(db_session):
     user_msgs = [m for m in compact_history if m["role"] == "user"]
     assert len(user_msgs) == 3
     assert user_msgs[0]["text"] == "User question 2"
+
+
+def test_replacing_session_snapshot_removes_stale_keys(db_session):
+    session_svc = ChatSessionService(db_session)
+    session_svc.get_or_create_session(
+        session_id="sess_replace_snapshot",
+        context_snapshot={
+            "merchant_id": "94",
+            "merchant_agentic.legacy_state": {"stale": True},
+        },
+    )
+
+    session_svc.update_session_snapshot(
+        "sess_replace_snapshot",
+        {"merchant_id": "94"},
+        replace=True,
+    )
+
+    assert session_svc.get_session_snapshot("sess_replace_snapshot") == {
+        "merchant_id": "94"
+    }

@@ -9,8 +9,6 @@ from sqlalchemy.orm import Session
 from database.connection import SessionLocal
 from repositories.merchant_profile_repository import MerchantProfileRepository
 from repositories.evidence_repository import EvidenceRepository
-from tools.allow_list import agents_allowed_for
-from tools.registry import ToolRegistry, ToolSpec
 
 
 def diagnose_merchant(
@@ -101,31 +99,3 @@ def recommend_improvements(
         "status": diag.get("status", "healthy"),
         "actions": actions,
     }
-
-
-def register(reg: ToolRegistry) -> None:
-    """Auto-discovery entry point for diagnosis & recommendation tools."""
-    reg.register(
-        ToolSpec(
-            name="diagnose_merchant",
-            description="Analyze merchant weaknesses and return evidence-backed root causes.",
-            input_schema={"merchant_id": "str"},
-            output_schema={"merchant_id": "str", "status": "str", "causes": "list"},
-            allowed_agents=agents_allowed_for("diagnose_merchant"),
-            cache_policy="profile_snapshot",
-            source_kind="real",
-        ),
-        diagnose_merchant,
-    )
-    reg.register(
-        ToolSpec(
-            name="recommend_improvements",
-            description="Generate evidence-backed improvement actions based on merchant diagnosis.",
-            input_schema={"merchant_id": "str"},
-            output_schema={"merchant_id": "str", "status": "str", "actions": "list"},
-            allowed_agents=agents_allowed_for("recommend_improvements"),
-            cache_policy="profile_snapshot",
-            source_kind="real",
-        ),
-        recommend_improvements,
-    )

@@ -5,22 +5,22 @@ Phase 0b: basic query + geo search foundation for UC-04 slice.
 """
 from __future__ import annotations
 
-from datetime import datetime
-from math import cos, radians
 from typing import Any
 
-from sqlalchemy import select, and_, or_, func, literal
+from sqlalchemy import select, and_, or_
 from sqlalchemy.orm import Session
 
 from database.models import Merchant, MenuItem, Review
 from core.errors import NotFoundError
+from services.geo.h3_index import H3CandidateIndex
 
 
 class MerchantRepository:
     """Repository for merchant data access with search capabilities."""
 
-    def __init__(self, db: Session) -> None:
+    def __init__(self, db: Session, h3_index: H3CandidateIndex | None = None) -> None:
         self._db = db
+        self._h3_index = h3_index or H3CandidateIndex()
 
     def get_by_id(self, merchant_id: str) -> Merchant | None:
         """Fetch merchant by ID."""
@@ -35,6 +35,30 @@ class MerchantRepository:
                 details={"merchant_id": merchant_id},
             )
         return merchant
+
+    def get_by_ids(self, merchant_ids: list[str]) -> list[Merchant]:
+        """Fetch a bounded set of active merchants by their already-retrieved IDs."""
+        ids = list(dict.fromkeys(str(value) for value in merchant_ids if value))[:100]
+        if not ids:
+            return []
+        stmt = (
+            select(Merchant)
+            .where(Merchant.merchant_id.in_(ids), Merchant.is_active.is_(True))
+            .order_by(Merchant.name)
+        )
+        return list(self._db.execute(stmt).scalars().all())
+
+    def list_demo_targets(self) -> list[Merchant]:
+        """Return active owner merchants that may be selected by the demo UI."""
+        stmt = (
+            select(Merchant)
+            .where(
+                Merchant.is_demo_target.is_(True),
+                Merchant.is_active.is_(True),
+            )
+            .order_by(Merchant.name, Merchant.merchant_id)
+        )
+        return list(self._db.execute(stmt).scalars().all())
 
     def search_merchants(
         self,
@@ -96,15 +120,72 @@ class MerchantRepository:
             stmt = stmt.outerjoin(Review)
             conditions.append(Review.rating >= min_rating)
 
+        if lat is not None and lng is not None and radius_km is not None:
+            conditions.append(
+                Merchant.merchant_h3_cell.in_(
+                    self._h3_index.cells_for_radius(lat, lng, radius_km)
+                )
+            )
+
         if conditions:
             stmt = stmt.where(and_(*conditions))
-
-        # Geo-spatial filtering (Haversine applied in service layer for now)
-        # TODO: Add native Haversine function to PostgreSQL in Phase 1
 
         stmt = stmt.distinct().order_by(Merchant.name).limit(limit).offset(offset)
         result = self._db.execute(stmt).scalars().all()
         return list(result)
+
+    def find_nearby_candidates(
+        self,
+        *,
+        lat: float,
+        lng: float,
+        radius_km: float,
+        cuisine: str | None = None,
+        city: str | None = None,
+        exclude_merchant_id: str | None = None,
+        limit: int = 20,
+    ) -> list[Merchant]:
+        """Return nearby candidates constrained by their indexed H3 cells.
+
+        This deliberately does not attach an exact distance.  A dedicated
+        PostGIS or routing adapter can rank this already-bounded set later.
+        """
+        if radius_km <= 0:
+            return []
+
+        conditions = [Merchant.is_active.is_(True)]
+        if exclude_merchant_id:
+            conditions.append(Merchant.merchant_id != exclude_merchant_id)
+        if cuisine:
+            conditions.append(Merchant.cuisine == cuisine)
+        if city:
+            conditions.append(Merchant.city == city)
+
+        attempts = (
+            (9, Merchant.h3_index_9, radius_km),
+            (8, Merchant.merchant_h3_cell, radius_km * 2),
+            (6, Merchant.h3_index_6, radius_km * 4),
+        )
+        for resolution, h3_column, attempt_radius in attempts:
+            stmt = (
+                select(Merchant)
+                .where(
+                    and_(
+                        *conditions,
+                        h3_column.in_(
+                            H3CandidateIndex(
+                                resolution=resolution
+                            ).cells_for_radius(lat, lng, attempt_radius)
+                        ),
+                    )
+                )
+                .order_by(Merchant.name)
+                .limit(max(1, limit))
+            )
+            candidates = list(self._db.execute(stmt).scalars().all())
+            if candidates:
+                return candidates
+        return []
 
     def find_nearby_competitors(
         self,
@@ -116,51 +197,17 @@ class MerchantRepository:
         cuisine: str | None = None,
         city: str | None = None,
         limit: int = 20,
-    ) -> list[tuple[Merchant, float]]:
-        """Return nearby merchants with distance calculated at query time.
-
-        Distance is deliberately not persisted.  The bounding box keeps the
-        candidate set small, while the Haversine expression provides the exact
-        radius filter in PostgreSQL.
-        """
-        if radius_km <= 0:
-            return []
-        lat_delta = radius_km / 111.32
-        lng_delta = radius_km / (111.32 * max(abs(cos(radians(lat))), 0.01))
-        distance = (
-            literal(6371.0)
-            * 2
-            * func.asin(
-                func.sqrt(
-                    func.pow(func.sin(func.radians(Merchant.lat - lat) / 2), 2)
-                    + func.cos(func.radians(lat))
-                    * func.cos(func.radians(Merchant.lat))
-                    * func.pow(func.sin(func.radians(Merchant.lng - lng) / 2), 2)
-                )
-            )
-        ).label("distance_km")
-
-        conditions = [
-            Merchant.merchant_id != merchant_id,
-            Merchant.is_active.is_(True),
-            Merchant.lat.is_not(None),
-            Merchant.lng.is_not(None),
-            Merchant.lat.between(lat - lat_delta, lat + lat_delta),
-            Merchant.lng.between(lng - lng_delta, lng + lng_delta),
-        ]
-        if cuisine:
-            conditions.append(Merchant.cuisine == cuisine)
-        if city:
-            conditions.append(Merchant.city == city)
-
-        stmt = (
-            select(Merchant, distance)
-            .where(and_(*conditions))
-            .where(distance <= radius_km)
-            .order_by(distance, Merchant.name)
-            .limit(max(1, limit))
+    ) -> list[Merchant]:
+        """Backward-compatible semantic alias for H3 nearby candidates."""
+        return self.find_nearby_candidates(
+            lat=lat,
+            lng=lng,
+            radius_km=radius_km,
+            cuisine=cuisine,
+            city=city,
+            exclude_merchant_id=merchant_id,
+            limit=limit,
         )
-        return [(row[0], float(row[1])) for row in self._db.execute(stmt).all()]
 
     def get_menu_items(self, merchant_id: str) -> list[MenuItem]:
         """Fetch all menu items for a merchant."""

@@ -16,7 +16,6 @@ def test_stub_routes_return_501(client):
         ("post", "/api/v1/agent/customer/chat"),
         ("get", "/api/v1/users/u1/profile"),
         ("post", "/api/v1/users/u1/events"),
-        ("get", "/api/v1/maps/merchants.geojson"),
     ]:
         resp = getattr(client, method)(path)
         assert resp.status_code == 501, f"{method} {path}"

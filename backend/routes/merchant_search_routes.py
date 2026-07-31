@@ -56,7 +56,7 @@ def search_merchants(
     - Text search (name, cuisine)
     - Cuisine, city filters
     - Budget level → price range
-    - Geo-spatial search (Haversine)
+    - Geo-spatial candidate retrieval through indexed H3 cells
     - Cache integration (Phase 0b: in-memory adapter)
 
     Returns:
@@ -125,7 +125,7 @@ def nearby_merchants(
     limit: int = Query(20, ge=1, le=100, description="Max results"),
     cache: CachePort = Depends(get_cache),
 ) -> dict:
-    """Find merchants near a location (Haversine-based).
+    """Find merchants near a location through indexed H3 cells.
 
     Used by:
     - Customer search (geo-filter)

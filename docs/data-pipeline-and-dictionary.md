@@ -3,7 +3,7 @@
 Tài liệu DUY NHẤT về dữ liệu: (1) **luồng pipeline** tạo ra dữ liệu (từng bước), và (2) **từ điển** mô tả dữ liệu cuối. **Đọc file này thay vì lục thư mục `data/`.** Schema DB xem [`database-schema.md`](./database-schema.md); công thức chấm điểm xem [`scoring-methodology.md`](./scoring-methodology.md).
 
 ## Nguồn sự thật (source of truth)
-➡️ **`data/profiles.jsonl`** — MỘT file, mỗi dòng là 1 Merchant Profile hợp nhất (**1.625 dòng**), TỰ CHỨA ĐỦ. Agent/UI chỉ cần đọc file này. Load: `for line in open(...): json.loads(line)`. Bản trong DB: bảng `merchant_profiles.dimensions_json`.
+➡️ **`data/profiles.jsonl`** — input snapshot, mỗi dòng là 1 Merchant Profile hợp nhất (**1.625 dòng**). Importer phân rã snapshot này thành các bảng typed relational; runtime Agent đọc qua repository, không đọc JSON profile trực tiếp.
 
 ---
 
@@ -27,7 +27,7 @@ flowchart TD
     C & F & J & L & N --> O[build_profiles.py<br/>chấm 8 dimension + gộp]
     O --> P[(profiles.jsonl ⭐<br/>1.625 profile)]
     P --> Q[validate_profiles.py<br/>kiểm tra PASS]
-    P --> R[import_dataset.py<br/>ETL] --> S[(Postgres<br/>7 bảng, ~208k row)]
+    P --> R[import_dataset.py<br/>ETL] --> S[(Postgres<br/>merchant relational tables)]
 ```
 
 ## Chi tiết từng bước
@@ -83,7 +83,7 @@ flowchart TD
 - **Output:** báo cáo PASS (`data/profiles_validation_report.json`).
 
 ### Bước 11 — Import Postgres  `db/import_dataset.py`  *(cần Postgres)*
-- **Làm gì:** map profiles + crawled → **7 bảng** Postgres. `tier hero → is_demo_target=1`; review `score → sentiment` (≥7 pos, <5 neg); `dimensions+attributes+ratings → dimensions_json` (JSONB); delivery `on_time → rating 1–5`. Idempotent (TRUNCATE + insert).
+- **Làm gì:** map profiles + crawled → typed merchant tables. `tier hero → is_demo_target=true`; review `score → sentiment` (≥7 pos, <5 neg); 8 scores → `merchant_profiles` columns; operational/rating facts → dedicated tables; evidence → `merchant_dimension_evidence`; delivery `on_time → rating 1–5`. Idempotent (TRUNCATE + insert).
 - **Output:** Postgres ~**208k row**. Chi tiết bảng: [`database-schema.md`](./database-schema.md).
 
 ## Kịch bản quán yếu có chủ đích
@@ -123,9 +123,9 @@ cd backend && python ../scripts/db/import_dataset.py   # cần Postgres
 |---|---|
 | `merchant_id` | ID ShopeeFood (số) |
 | `tier` | `hero` (18, dữ liệu sâu) hoặc `background` (1.607, nhẹ) |
-| `overall_score` | Trung bình 8 dimension (0–1). ⚠️ **Chỉ nội bộ — không show ra ngoài** (xem scoring-methodology) |
+| `overall_score` | Trung bình 8 dimension (0–1), generated internally as `overall_score_internal`. ⚠️ **Không show ra ngoài** |
 | `metadata` | name, cuisine, category, location{address,lat,lng,city}, open_hours, image_url, source_url, phones, taste_tags, diet_tags |
-| `price_level` | nhãn: rẻ / trung bình / cao cấp |
+| `price_level` | nhãn: rẻ / trung bình / cao cấp; score dimension lưu ở `price_competitiveness_score` |
 | `dimensions` | 8 scored dimension, mỗi cái `{score 0-1, evidence[], basis}` |
 | `attributes` | customer_segments, peak_time, competitors[], trending_dishes[], operation_kpis, delivery_stats |
 | `ratings` | shopeefood_avg (0-5), shopeefood_total_review, foody_rating (0-10), foody_review_count |
@@ -146,7 +146,7 @@ cd backend && python ../scripts/db/import_dataset.py   # cần Postgres
 | service | rating − complaint thái độ | service_complaint_count |
 | waiting_time | thời gian chuẩn bị (thấp→điểm cao) − complaint trễ | avg_prep_minutes |
 | menu_diversity | số món + số nhóm món | dish_count, dish_type_count |
-| price_level | giá vs median CÙNG cuisine; ngang/rẻ hơn peers→1.0, chỉ ĐẮT hơn mới giảm | peer_median_price, price_ratio_vs_peers |
+| price_competitiveness | giá vs median CÙNG cuisine; ngang/rẻ hơn peers→1.0, chỉ ĐẮT hơn mới giảm | peer_median_price, price_ratio_vs_peers |
 
 > Công thức đầy đủ (trọng số, hệ số): [`scoring-methodology.md`](./scoring-methodology.md). **Nguyên tắc:** mọi score kèm evidence số liệu truy vết được.
 

@@ -1,4 +1,3 @@
-import datetime
 from sqlalchemy import (
     Boolean,
     CheckConstraint,
@@ -8,16 +7,27 @@ from sqlalchemy import (
     Float,
     ForeignKey,
     Integer,
+    Index,
     Numeric,
     String,
     Text,
     Time,
     TIMESTAMP,
+    event,
     text as sa_text,
 )
 from sqlalchemy.dialects.postgresql import ARRAY, JSONB
 from sqlalchemy.orm import relationship
 from database.connection import Base
+from models.merchant_agentic import normalize_city_slugs
+from services.geo.h3_index import H3CandidateIndex
+
+
+_H3_INDEXES = {
+    6: H3CandidateIndex(resolution=6),
+    8: H3CandidateIndex(resolution=8),
+    9: H3CandidateIndex(resolution=9),
+}
 
 class Merchant(Base):
     __tablename__ = "merchants"
@@ -29,6 +39,9 @@ class Merchant(Base):
     address = Column(String)
     lat = Column(Float)
     lng = Column(Float)
+    h3_index_6 = Column(String(32), index=True)
+    merchant_h3_cell = Column(String(32), index=True)
+    h3_index_9 = Column(String(32), index=True)
     opens_at = Column(Time)
     closes_at = Column(Time)
     timezone = Column(String, nullable=False, default="Asia/Ho_Chi_Minh")
@@ -58,6 +71,26 @@ class Merchant(Base):
     reviews = relationship("Review", back_populates="merchant", cascade="all, delete-orphan")
     delivery_feedbacks = relationship("DeliveryFeedback", back_populates="merchant", cascade="all, delete-orphan")
     food_images = relationship("FoodImage", back_populates="merchant", cascade="all, delete-orphan")
+
+
+@event.listens_for(Merchant, "before_insert")
+@event.listens_for(Merchant, "before_update")
+def _synchronize_merchant_h3_cell(_mapper, _connection, merchant: Merchant) -> None:
+    """Keep persisted location fields canonical when a merchant changes."""
+    if merchant.city_slug:
+        merchant.city_slug = normalize_city_slugs(merchant.city_slug) or merchant.city_slug
+    elif merchant.city:
+        merchant.city_slug = normalize_city_slugs(merchant.city)
+    has_location = merchant.lat is not None and merchant.lng is not None
+    merchant.h3_index_6 = (
+        _H3_INDEXES[6].cell_for(merchant.lat, merchant.lng) if has_location else None
+    )
+    merchant.merchant_h3_cell = (
+        _H3_INDEXES[8].cell_for(merchant.lat, merchant.lng) if has_location else None
+    )
+    merchant.h3_index_9 = (
+        _H3_INDEXES[9].cell_for(merchant.lat, merchant.lng) if has_location else None
+    )
 
 class MenuItem(Base):
     __tablename__ = "menu_items"
@@ -494,6 +527,15 @@ class AgentRun(Base):
 class AgentEvent(Base):
     """Task/tool/delegation trace (§6.2 agent_events). Listener contract."""
     __tablename__ = "agent_events"
+    __table_args__ = (
+        Index(
+            "uq_agent_events_trace_semantic_seq",
+            "trace_id",
+            "seq",
+            unique=True,
+            postgresql_where=sa_text("seq IS NOT NULL"),
+        ),
+    )
 
     event_id = Column(String, primary_key=True)
     trace_id = Column(String, ForeignKey("agent_runs.trace_id", ondelete="CASCADE"), nullable=False)
@@ -507,4 +549,15 @@ class AgentEvent(Base):
     duration_ms = Column(Integer)
     status = Column(String, default="ok")
     error_code = Column(String)
+    # Semantic timeline v2.  These remain nullable so existing legacy trace
+    # events and already-running deployments continue to be readable.
+    seq = Column(Integer)
+    span_id = Column(String)
+    parent_span_id = Column(String)
+    phase = Column(String)
+    kind = Column(String)
+    actor_type = Column(String)
+    actor_name = Column(String)
+    metrics_json = Column(JSONB)
+    debug_payload_json = Column(JSONB)
     created_at = Column(TIMESTAMP(timezone=False), server_default=sa_text("CURRENT_TIMESTAMP"))

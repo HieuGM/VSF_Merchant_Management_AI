@@ -4,10 +4,8 @@ Fetches operational performance data: prep time, cancel rate, on-time rate, etc.
 """
 from __future__ import annotations
 
-import json
-from typing import Any, Type
+from typing import Any
 
-from crewai.tools import BaseTool
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
@@ -88,26 +86,5 @@ def get_merchant_operational_metrics(
             session.close()
 
 
-# --- CrewAI Tool Class ---
-
 class GetMerchantOperationalMetricsInput(BaseModel):
     merchant_id: str = Field(..., description="Merchant ID to look up operational metrics for.")
-
-
-class GetMerchantOperationalMetricsTool(BaseTool):
-    name: str = "get_merchant_operational_metrics"
-    description: str = (
-        "Fetch operational performance metrics for a specific merchant: "
-        "avg_prep_time_min, cancel_rate, acceptance_rate, on_time_rate, "
-        "avg_delivery_time_min, driver_rating, packaging_ok_rate, estimated_daily_orders, peak_hours. "
-        "Only populated fields are returned."
-    )
-    args_schema: Type[BaseModel] = GetMerchantOperationalMetricsInput
-
-    def _run(self, merchant_id: str) -> str:
-        from core.dependencies import get_cache
-        res = get_merchant_operational_metrics(
-            merchant_id=merchant_id,
-            cache=get_cache(),
-        )
-        return json.dumps(res, ensure_ascii=False)

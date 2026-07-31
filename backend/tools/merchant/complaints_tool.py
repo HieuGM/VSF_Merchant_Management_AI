@@ -5,11 +5,9 @@ Returns aggregated counts + sample text (no raw personal data).
 """
 from __future__ import annotations
 
-import json
 from collections import defaultdict
-from typing import Any, Optional, Type
+from typing import Any, Optional
 
-from crewai.tools import BaseTool
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
@@ -106,8 +104,6 @@ def get_merchant_complaints(
             session.close()
 
 
-# --- CrewAI Tool Class ---
-
 from typing import Literal
 
 SeverityLevel = Literal["low", "medium", "high"]
@@ -128,28 +124,3 @@ class GetMerchantComplaintsInput(BaseModel):
         description="Optional severity level filter: 'high', 'medium', or 'low'.",
     )
     limit_samples: int = Field(3, description="Max complaint text samples per category (1..5).")
-
-
-class GetMerchantComplaintsTool(BaseTool):
-    name: str = "get_merchant_complaints"
-    description: str = (
-        "Fetch aggregated complaint data for a merchant, grouped by category. "
-        "Returns total count, per-category breakdown with severity counts, "
-        "and sample complaint texts. Use category/severity filters to focus analysis."
-    )
-    args_schema: Type[BaseModel] = GetMerchantComplaintsInput
-
-    def _run(
-        self,
-        merchant_id: str,
-        category: str | None = None,
-        severity: str | None = None,
-        limit_samples: int = 3,
-    ) -> str:
-        res = get_merchant_complaints(
-            merchant_id=merchant_id,
-            category=category,
-            severity=severity,
-            limit_samples=max(1, min(limit_samples, 5)),
-        )
-        return json.dumps(res, ensure_ascii=False)

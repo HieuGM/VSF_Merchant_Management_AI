@@ -155,26 +155,16 @@ describe('useMerchantChat', () => {
     expect(assistant?.isStreaming).toBe(false);
   });
 
-  it('replays only missing trace spans after a stream ends before execution_finish', async () => {
+  it('keeps directly received trace spans without requesting a persistence replay', async () => {
     const firstSpan = {
       trace_id: 'tr-disconnect', seq: 1, span_id: 'input-1', phase: 'input', kind: 'started',
       actor_type: 'analyzer', actor_name: 'Input Analyzer',
       display: { title: 'Chuẩn bị yêu cầu', summary: 'Đang đọc ngữ cảnh', status: 'running' }, metrics: {}, debug: {},
     };
-    const replaySpan = {
-      ...firstSpan,
-      seq: 2,
-      span_id: 'input-1',
-      kind: 'finished',
-      display: { title: 'Chuẩn bị yêu cầu', summary: 'Đã chuẩn bị câu hỏi', status: 'ok' },
-    };
     const stream = ['event: trace_span', `data: ${JSON.stringify(firstSpan)}`, ''].join('\n');
     const fetchMock = vi.fn().mockImplementation((input: RequestInfo | URL) => {
       const url = String(input);
       if (url.includes('/chat/stream')) return Promise.resolve(new Response(stream));
-      if (url.includes('/agent/runs/tr-disconnect/events?after_seq=1')) {
-        return Promise.resolve(Response.json({ trace_id: 'tr-disconnect', events: [replaySpan] }));
-      }
       if (url.includes('/chat/history')) return Promise.resolve(Response.json({ messages: [] }));
       return Promise.resolve(Response.json({ sessions: [] }));
     });
@@ -183,8 +173,8 @@ describe('useMerchantChat', () => {
 
     await act(async () => { await result.current.sendMessage('Quán này mở lúc nào?'); });
 
-    await waitFor(() => expect(result.current.liveTraceEvents.map((event) => ('seq' in event ? event.seq : null))).toEqual([1, 2]));
-    expect(fetchMock).toHaveBeenCalledWith(expect.stringContaining('after_seq=1'), expect.any(Object));
+    await waitFor(() => expect(result.current.liveTraceEvents.map((event) => ('seq' in event ? event.seq : null))).toEqual([1]));
+    expect(fetchMock.mock.calls.some(([input]) => String(input).includes('/events?after_seq='))).toBe(false);
     expect(result.current.messages.find((message) => message.sender === 'assistant')?.isError).toBe(true);
   });
 

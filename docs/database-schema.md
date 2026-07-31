@@ -1,114 +1,154 @@
-# Database Schema — AI Restaurant
+# Merchant platform database schema
 
-Schema Postgres (as-built). Định nghĩa gốc: `backend/database/models.py` (SQLAlchemy). Nạp dữ liệu: `scripts/db/import_dataset.py` (idempotent: `create_all` → `TRUNCATE ... RESTART IDENTITY CASCADE` → bulk insert). Chi tiết field nghiệp vụ + pipeline xem [`data-pipeline-and-dictionary.md`](./data-pipeline-and-dictionary.md).
+Current production schema for the merchant domain. PostgreSQL remains the
+database; no PostGIS extension is required. The source of truth is
+`backend/database/models.py` plus the Alembic revisions:
 
-## Tổng quan
+- `b7c8d9e0f1a2`: additive relational expansion and backfill-ready columns.
+- `c8d9e0f1a2b3`: validated cutover and removal of legacy profile JSON.
 
-- **10 bảng.** 7 bảng được import từ dataset đã chuẩn bị; 3 bảng (`user_profiles`, `chat_sessions`, `chat_messages`) là **runtime** — trống cho tới khi app dùng.
-- **~208k row** sau import (dry-run thật):
+The migration was applied to `merchant_platform` on 2026-07-23 after a
+custom-format backup at `/tmp/merchant_platform-before-relational-20260723.dump`.
 
-| Bảng | Row | Nguồn |
-|---|---|---|
-| `merchants` | 1.625 | profiles.jsonl → metadata |
-| `operational_metrics` | 1.625 | profiles.jsonl → operation_kpis |
-| `merchant_profiles` | 1.625 | profiles.jsonl → dimensions/attributes/ratings (JSONB) |
-| `reviews` | 4.391 | profiles.jsonl → reviews (thật) + synthetic_reviews |
-| `delivery_feedbacks` | 90 | profiles.jsonl → delivery_feedback (18 hero × 5) |
-| `menu_items` | 99.396 | crawled/*.json (menu đầy đủ) |
-| `food_images` | 99.396 | crawled/*.json (1 ảnh đại diện/món) |
-| `user_profiles` / `chat_sessions` / `chat_messages` | 0 | runtime (app tạo) |
+## Design rules
 
-> `--core-only` bỏ qua `menu_items` + `food_images` (2 bảng nặng) → chỉ 5 bảng lõi.
+- Merchant profile facts are typed columns or normalized child rows.
+- `merchant_profiles` contains no `JSON`/`JSONB` columns.
+- Filterable attributes are columns: cuisine, category, city, coordinates,
+  open/close times, tags, active/demo flags, price level and ratings.
+- Scores use one normalized scale, `0..1`; all eight score columns are
+  constrained to that range.
+- `overall_score_internal` is a generated database value for internal QA only;
+  API and agent payloads never expose it.
+- Competitors and `distance_km` are not persisted. Nearby queries calculate
+  Haversine distance at query time.
+- JSONB is still allowed in runtime/user tables where it represents evolving
+  session state, but not in merchant profile facts.
 
-## Quan hệ (ER)
+## Merchant domain
 
 ```
-merchants (1) ─┬─< menu_items (N) ─< food_images (N)
-               ├─< reviews (N)
-               ├─< delivery_feedbacks (N)
-               ├─< food_images (N)          [FK trực tiếp merchant_id]
-               ├─1 operational_metrics       [PK = merchant_id]
-               └─1 merchant_profiles         [PK = merchant_id]
-
-user_profiles (1) ─< chat_sessions (N) ─< chat_messages (N)   [runtime, tách biệt]
+merchants (1)
+  ├── merchant_profiles (1)
+  ├── merchant_ratings (1)
+  ├── operational_metrics (1)
+  ├── merchant_dimension_calculations (8)
+  ├── merchant_dimension_evidence (N)
+  ├── merchant_complaints (N)
+  ├── reviews (N)
+  ├── delivery_feedbacks (N)
+  ├── menu_items (N) ─── food_images (N)
+  └── market_trending_dishes (cluster-level, no merchant FK)
 ```
-Mọi FK con của `merchants` là `ON DELETE CASCADE`; `food_images.item_id` là `ON DELETE SET NULL`.
 
-## Bảng import (7)
+All merchant child FKs cascade on merchant deletion. `food_images.item_id`
+uses `ON DELETE SET NULL`.
 
-### `merchants` — PK `merchant_id` (String)
-| Cột | Kiểu | Null | As-built |
-|---|---|---|---|
-| `merchant_id` | String | PK | ID ShopeeFood (số dạng chuỗi) |
-| `name` | String | không | |
-| `cuisine` | String | không | fallback `"N/A"` nếu thiếu |
-| `address` `lat` `lng` | String/Float/Float | có | vị trí |
-| `open_hours` | JSONB | có | `{open, close}` |
-| `city` `city_slug` | String | không | slug suy từ city nếu catalog thiếu |
-| `source` | String | mặc định `shopeefood` | |
-| `source_url` | String | có | |
-| `is_demo_target` | Integer | mặc định 0 | **1 = hero** (18 quán demo), 0 = background |
-| `created_at` | TIMESTAMP | server default | |
+### `merchants`
 
-### `operational_metrics` — PK `merchant_id`
-| Cột | Kiểu | As-built |
+| Column | Type | Notes |
 |---|---|---|
-| `avg_prep_time_min` | Float | từ `operation_kpis.avg_prep_minutes`, mặc định 12.0 |
-| `peak_hours` | JSONB | mảng khung giờ |
+| `merchant_id` | `text` PK | Source merchant ID |
+| `name`, `cuisine`, `city`, `city_slug` | `text` NOT NULL | Filterable identity |
+| `category` | `text` | Merchant category |
+| `address` | `text` | |
+| `lat`, `lng` | `double precision` | Pair must be both null or both present; range checks |
+| `opens_at`, `closes_at` | `time` | Local business hours |
+| `timezone` | `text` NOT NULL | Defaults to `Asia/Ho_Chi_Minh` |
+| `taste_tags`, `diet_tags`, `ingredient_tags`, `customer_segments` | `text[]` NOT NULL | Typed multi-value filters |
+| `source`, `source_url` | `text` | Provenance |
+| `is_active`, `is_demo_target` | `boolean` NOT NULL | Current availability/demo cohort |
+| `created_at`, `updated_at` | `timestamptz` | |
 
-> ⚠️ Chỉ 2 metric vào bảng riêng. Các ops khác (`cancel_rate`, `on_time_rate`, `driver_rating`, `packaging_ok_rate`…) nằm trong `merchant_profiles.dimensions_json.attributes`, KHÔNG có cột riêng.
+### `merchant_profiles`
 
-### `merchant_profiles` — PK `merchant_id`
-| Cột | Kiểu | As-built |
+One current row per merchant. `tier` is `hero` or `background`; `price_level`
+is a categorical label (`rẻ`, `trung bình`, `cao cấp`).
+
+| Column | Type | Notes |
 |---|---|---|
-| `dimensions_json` | JSONB | không null. Chứa `{overall_score, tier, price_level, dimensions{8}, attributes, ratings}` — **nguồn chính cho Agent** |
-| `updated_at` | TIMESTAMP | server default |
+| `merchant_id` | `text` PK/FK | |
+| `tier`, `price_level` | `text` NOT NULL | |
+| `food_quality_score`, `image_quality_score`, `delivery_quality_score` | `numeric(4,3)` | `0..1` |
+| `packaging_score`, `service_score`, `waiting_time_score` | `numeric(4,3)` | `0..1` |
+| `menu_diversity_score`, `price_competitiveness_score` | `numeric(4,3)` | `0..1` |
+| `overall_score_internal` | generated `numeric(4,3)` | Mean of eight scores; internal only |
+| `scoring_version`, `scored_at`, `updated_at` | `text`/`timestamptz` | Calculation provenance |
 
-### `reviews` — PK `review_id`
-`review_id` = `{mid}_rv{i}` (thật) hoặc `{mid}_srv{i}` (synthetic).
-| Cột | Kiểu | Null | As-built |
-|---|---|---|---|
-| `merchant_id` | String FK | không | |
-| `rating` | Float | có | thang 0–10 (giữ nguyên score gốc) |
-| `text` | String | không | |
-| `sentiment` | String | CHECK `positive/negative/neutral` | map từ score: ≥7 pos, <5 neg, else neutral |
-| `source_page` | String | có | `foody` (thật) / `synthetic` (bù) |
-| `total_like` | Integer | mặc định 0 | import để 0 |
-| `created_at` | TIMESTAMP | không | = thời điểm import |
-| `foody_restaurant_id` `author_id` `author_name` `total_comment` `total_pictures` `review_url` `comments_json` | — | có | **NULL as-built** (schema teammate dự phòng, import chưa đổ) |
+### `merchant_ratings`
 
-### `delivery_feedbacks` — PK `feedback_id` (`{mid}_df{i}`)
-| Cột | Kiểu | As-built |
-|---|---|---|
-| `merchant_id` | String FK | |
-| `driver_id` | String | `drv_{mid}_{i}` (giả lập) |
-| `rating` | Integer | CHECK 1–5; map `on_time=true→5`, `false→3` |
-| `comment` | String | text phản hồi tài xế |
-| `created_at` | TIMESTAMP | = thời điểm import |
+One row per merchant: `shopeefood_rating` (`0..5`), `shopeefood_review_count`,
+`foody_rating` (`0..10`), `foody_review_count`, and `updated_at`.
 
-### `menu_items` — PK `item_id` (`{mid}::{dish_id}`)
-| Cột | Kiểu | Null | As-built |
-|---|---|---|---|
-| `merchant_id` | String FK | không | |
-| `name` | String | không | |
-| `price` | Integer | không | 0 nếu thiếu |
-| `description` `category` `image_url` | String | có | category = dish_type_name |
-| `diet_tags` `ingredient_tags` `taste_tags` | JSONB | có | tag mức merchant (catalog) |
+### `operational_metrics`
 
-### `food_images` — PK `image_id` (`img_{item_id}`)
-| Cột | Kiểu | Null | As-built |
-|---|---|---|---|
-| `merchant_id` | String FK | không | |
-| `item_id` | String FK (SET NULL) | có | |
-| `url` | String | không | 1 ảnh đại diện/món |
-| `dish_image_quality` | Float | có | CHECK 0–1; **NULL as-built** (vision score chưa map vào bảng này) |
-| `logo_quality` `blur_score` | Float | có | CHECK 0–1; **NULL as-built** |
+One row per merchant. Typed operational and delivery facts:
+`avg_prep_time_min`, `cancel_rate`, `acceptance_rate`,
+`estimated_daily_orders`, `peak_hours text[]`, `avg_delivery_time_min`,
+`on_time_rate`, `driver_rating`, `packaging_ok_rate`, `source_kind`,
+`updated_at`. Rates are constrained to `0..1`; driver rating is `0..5`.
 
-## Bảng runtime (3) — chưa import
-`user_profiles` (user_id, liked/disliked_cuisines, spice_tolerance ∈ none/mild/medium/hot, dietary, budget_level ∈ student/standard/premium, distance_preference_km, current_lat/lng, context_memory, interaction_history) · `chat_sessions` (session_id, user_id) · `chat_messages` (message_id, session_id, sender ∈ user/agent, text). App tạo lúc chạy.
+### `merchant_dimension_calculations`
 
-## Ghi chú (as-built vs schema)
-- Schema teammate rộng hơn dữ liệu import: nhiều cột dự phòng đang **NULL** (đánh dấu ở trên). Không xoá — để tương lai đổ thêm.
-- Vision image score hiện chỉ nằm trong `merchant_profiles.dimensions_json` (dimension `image_quality`), **chưa** ghi vào `food_images.dish_image_quality`.
-- Ops chi tiết (delivery/packaging) tra trong `dimensions_json.attributes`, không phải bảng `operational_metrics`.
-- Import idempotent: chạy lại cho cùng kết quả, không nhân đôi.
+Exactly eight rows per complete merchant profile. Composite PK is
+`(merchant_id, dimension)`. `dimension` is constrained to:
+`food_quality`, `image_quality`, `delivery_quality`, `packaging`, `service`,
+`waiting_time`, `menu_diversity`, `price_competitiveness`.
+
+Columns: `basis`, `source_kind`, `scoring_version`, `calculated_at`.
+The score itself lives in the typed `merchant_profiles` column, avoiding
+duplicate score values.
+
+### `merchant_dimension_evidence`
+
+Evidence rows reference a dimension and hold exactly one typed scalar:
+`value_numeric`, `value_text`, or `value_boolean`. Other columns are
+`evidence_id`, `merchant_id`, `dimension`, `evidence_type`, `unit`,
+`reference_type`, `reference_ids text[]`, `source_kind`, `observed_at`,
+`created_at`.
+
+### `merchant_complaints`
+
+Typed complaint facts: `complaint_id`, `merchant_id`, `category`,
+`severity`, `text`, `occurred_on`, optional `review_id`, `source_kind`,
+`created_at`. Category/severity/source values are constrained by the migration.
+
+### `reviews` and `delivery_feedbacks`
+
+Reviews retain source rating (`0..10`), text, sentiment, source page,
+source kind and timestamp. Delivery feedback retains `on_time`, `issue`,
+driver/rating/comment, source kind and timestamp. Neither table stores JSON
+profile blobs.
+
+### `menu_items` and `food_images`
+
+Menu items contain typed price/discount, likes, photo/availability flags,
+description/category and image URL. Merchant-level tags are stored on
+`merchants`; they are not repeated as JSON on every menu item.
+
+## Runtime tables
+
+`user_profiles`, `chat_sessions`, `chat_messages`, agent runs and token usage
+remain runtime/application tables. Their JSONB context snapshots are outside
+the merchant profile domain and are intentionally unchanged by this migration.
+
+## Validation queries
+
+```sql
+-- no legacy merchant-profile JSON remains
+SELECT column_name
+FROM information_schema.columns
+WHERE table_name = 'merchant_profiles'
+  AND column_name IN ('dimensions_json', 'profile_json');
+
+-- every current profile has eight calculations
+SELECT merchant_id
+FROM merchant_profiles
+WHERE (SELECT count(*) FROM merchant_dimension_calculations c
+       WHERE c.merchant_id = merchant_profiles.merchant_id) <> 8;
+
+-- dynamic nearby distance (illustrative; application uses the same expression)
+SELECT merchant_id
+FROM merchants
+WHERE lat IS NOT NULL AND lng IS NOT NULL;
+```

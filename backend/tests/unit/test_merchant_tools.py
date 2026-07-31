@@ -1,25 +1,15 @@
 """Unit tests for Merchant Tools Package (Task 2).
 
-Ensures:
-- `get_profile_evidence` tool retrieves profile and evidence details while obeying C2.
-- `compare_competitors` tool compares candidate merchants in radius.
-- `diagnose_merchant` tool caps diagnosis causes at max 5 and requires evidence_refs.
-- `recommend_improvements` tool generates evidence-backed actionable steps.
-- All tools register cleanly with ToolRegistry and adhere to allow_list permissions.
+Ensures active pure tool functions preserve evidence and privacy contracts.
 """
 from __future__ import annotations
-
-import json
 
 import pytest
 from database.models import Merchant
 from relational_test_fixtures import seed_relational_profile
 from tools.merchant.profile_tool import get_merchant_profile_summary
-from tools.merchant.competitor_tool import compare_competitors
+from tools.merchant.competitor_tool import compare_merchant_benchmark
 from tools.merchant.diagnosis_tool import diagnose_merchant, recommend_improvements
-import tools.merchant.crewai_tools as crewai_tools_module
-from tools.merchant.crewai_tools import DiagnoseMerchantTool
-from tools.registry import registry
 
 
 @pytest.fixture
@@ -92,31 +82,6 @@ def test_diagnose_merchant_tool(db_session, sample_merchant_for_tools):
         assert len(cause["evidence_refs"]) >= 1
 
 
-def test_crewai_diagnose_tool_returns_causes_contract(
-    db_session, sample_merchant_for_tools, monkeypatch
-):
-    class SessionProxy:
-        def __getattr__(self, name):
-            return getattr(db_session, name)
-
-        def close(self):
-            pass
-
-    monkeypatch.setattr(
-        crewai_tools_module,
-        "SessionLocal",
-        lambda: SessionProxy(),
-    )
-
-    result = json.loads(
-        DiagnoseMerchantTool()._run(merchant_id="m_tool_test_01")
-    )
-
-    assert result["status"] == "ok"
-    assert len(result["causes"]) == 2
-    assert "actions" not in result
-
-
 def test_recommend_improvements_tool(db_session, sample_merchant_for_tools):
     res = recommend_improvements("m_tool_test_01", db=db_session)
 
@@ -130,8 +95,12 @@ def test_recommend_improvements_tool(db_session, sample_merchant_for_tools):
         assert len(action["evidence_refs"]) >= 1
 
 
-def test_compare_competitors_tool(db_session, sample_merchant_for_tools):
-    res = compare_competitors("m_tool_test_01", radius_km=5.0, db=db_session)
+def test_compare_merchant_benchmark_tool(db_session, sample_merchant_for_tools):
+    res = compare_merchant_benchmark(
+        "m_tool_test_01",
+        radius_km=5.0,
+        db=db_session,
+    )
 
     assert res["target_merchant_id"] == "m_tool_test_01"
     assert "competitors" in res
@@ -139,12 +108,3 @@ def test_compare_competitors_tool(db_session, sample_merchant_for_tools):
     first_comp = res["competitors"][0]
     assert "merchant_id" in first_comp
     assert "distance_km" in first_comp
-
-
-def test_merchant_tools_registered_in_registry():
-    registered_names = set(registry.names())
-
-    assert "diagnose_merchant" in registered_names
-    assert "recommend_improvements" in registered_names
-    # Note: compare_competitors / profile tools now use CrewAI BaseTool
-    # and are NOT registered in the legacy ToolRegistry.

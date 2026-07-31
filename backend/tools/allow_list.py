@@ -18,44 +18,6 @@ AGENT_TOOL_ALLOW_LIST: dict[str, tuple[str, ...]] = {
         "propose_profile_delta",
     ),
     "customer_explanation": ("get_merchant_profile",),
-    # --- Merchant Advisor Crew (Dev B) ---
-    "merchant_coordinator": (
-        "get_merchant_profile_summary",
-        "get_merchant_metadata_catalog",
-    ),
-    "merchant_profile_analyst": (
-        "get_merchant_profile_summary",
-        "get_merchant_operational_metrics",
-        "get_merchant_complaints",
-        "get_merchant_reviews",
-        "get_menu_and_food_images",
-        "compare_merchant_images",
-    ),
-    "diagnosis": (
-        "get_merchant_profile_summary",
-        "get_merchant_operational_metrics",
-        "get_merchant_complaints",
-        "get_merchant_reviews",
-        "diagnose_merchant",
-    ),
-    "recommendation": (
-        "get_merchant_profile_summary",
-        "get_merchant_operational_metrics",
-        "search_trending_dishes",
-        "recommend_improvements",
-    ),
-    "competitor": (
-        "search_merchants",
-        "search_trending_dishes",
-        "compare_merchant_benchmark",
-        "aggregate_public_merchant_cohort",
-        "compare_owner_to_public_cohort",
-    ),
-    "evidence_verifier": (
-        "get_merchant_profile_summary",
-        "get_merchant_complaints",
-    ),
-    "synthesis_advisor": (),
 }
 
 # Tools consumed by BOTH domains — shipped frozen in Phase 0 (C1) so neither vertical

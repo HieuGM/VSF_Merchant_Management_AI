@@ -1,91 +1,81 @@
-"""Search & Discovery Tools (`search_merchants`, `search_trending_dishes`).
+"""Public merchant search with adaptive H3 nearby expansion.
 
-Supports rich parametric filtering across merchants and market trending dishes,
-returning token-efficient compact payloads (strips internal overall_score per C2).
+Supports rich filtering and token-efficient public projections.
 """
 from __future__ import annotations
 
-import json
 import math
+import re
 import statistics
-from typing import Any, Type
+import time
+from typing import Any, Callable
 from pydantic import BaseModel, Field
-from crewai.tools import BaseTool
+from sqlalchemy import String, and_, cast, or_
 from sqlalchemy.orm import Session
 
 from core.cache import CacheKeys, TTL_CANDIDATES, CachePort
+from core.logging import get_logger
 from database.connection import SessionLocal
-from database.models import Merchant, MerchantProfile, MarketTrendingDish, MenuItem
+from database.models import Merchant, MerchantProfile, MerchantRating, MenuItem
+from models.merchant_agentic import normalize_city_slugs, normalize_text
+from services.geo.h3_index import H3CandidateIndex, haversine_km
 
-from sqlalchemy import or_
+CacheEventCallback = Callable[[dict[str, Any]], None]
+logger = get_logger(__name__)
 
-_TTL_TRENDING = 10 * 60
+
+def _emit_cache_event(
+    callback: CacheEventCallback | None,
+    payload: dict[str, Any],
+) -> None:
+    if callback is None:
+        return
+    try:
+        callback(payload)
+    except Exception:
+        logger.debug("Cache trace callback failed", exc_info=True)
 
 
-def _haversine_km(lat1: float, lng1: float, lat2: float, lng2: float) -> float:
-    radius = 6371.0
-    phi1, phi2 = math.radians(lat1), math.radians(lat2)
-    dphi = math.radians(lat2 - lat1)
-    dlambda = math.radians(lng2 - lng1)
-    value = (
-        math.sin(dphi / 2) ** 2
-        + math.cos(phi1) * math.cos(phi2) * math.sin(dlambda / 2) ** 2
+def _keyword_match_predicate(keyword: str):
+    """Require all meaningful terms while still preferring an exact phrase."""
+
+    def match(value: str):
+        pattern = f"%{value}%"
+        return or_(
+            Merchant.name.ilike(pattern),
+            Merchant.cuisine.ilike(pattern),
+            Merchant.category.ilike(pattern),
+            Merchant.address.ilike(pattern),
+            cast(Merchant.ingredient_tags, String).ilike(pattern),
+            cast(Merchant.diet_tags, String).ilike(pattern),
+            cast(Merchant.taste_tags, String).ilike(pattern),
+            cast(Merchant.customer_segments, String).ilike(pattern),
+        )
+
+    def menu_match(value: str):
+        return (
+            MenuItem.__table__.select()
+            .where(
+                MenuItem.merchant_id == Merchant.merchant_id,
+                MenuItem.is_available == True,
+                MenuItem.name.ilike(f"%{value}%"),
+            )
+            .exists()
+        )
+
+    phrase = keyword.strip()
+    terms = list(
+        dict.fromkeys(
+            term
+            for term in re.findall(r"[\wÀ-ỹ]+", phrase, flags=re.UNICODE)
+            if len(term) > 1 and term.casefold() not in {"quán", "quan", "nhà", "hàng"}
+        )
     )
-    return radius * 2 * math.atan2(math.sqrt(value), math.sqrt(1 - value))
-
-
-def normalize_city_slug_and_name(city_input: str | None) -> tuple[list[str], list[str]]:
-    """Map any input city string (e.g. 'da_nang', 'da-nang', 'da nang', 'Đà Nẵng')
-    to (city_slugs, city_names) for database filtering.
-    
-    Database values:
-      city_slug: 'da_nang', 'tp_hcm', 'ha_noi', 'can_tho', 'hue', 'vung_tau', 'hai_phong', 'khanh_hoa', 'dong_nai'
-      city: 'Đà Nẵng', 'TP. HCM', 'Hà Nội', 'Cần Thơ', 'Huế', 'Vũng Tàu', 'Hải Phòng', 'Khánh Hoà', 'Đồng Nai'
-    """
-    if not city_input:
-        return ([], [])
-    raw = city_input.strip()
-    s = raw.lower().replace("-", " ").replace("_", " ")
-
-    slugs: list[str] = []
-    names: list[str] = [raw]
-
-    if "da" in s and ("nang" in s or "năng" in s):
-        slugs.append("da_nang")
-        names.extend(["Đà Nẵng", "da_nang", "da-nang", "da nang"])
-    elif "hcm" in s or "hồ chí minh" in s or "ho chi minh" in s or "saigon" in s or "sài gòn" in s:
-        slugs.append("tp_hcm")
-        names.extend(["TP. HCM", "tp_hcm", "tp-hcm", "Hồ Chí Minh", "Sài Gòn"])
-    elif "ha" in s and ("noi" in s or "nội" in s):
-        slugs.append("ha_noi")
-        names.extend(["Hà Nội", "ha_noi", "ha-noi", "ha noi"])
-    elif "can" in s and ("tho" in s or "thơ" in s):
-        slugs.append("can_tho")
-        names.extend(["Cần Thơ", "can_tho", "can-tho", "can tho"])
-    elif "hue" in s or "huế" in s:
-        slugs.append("hue")
-        names.extend(["Huế", "hue"])
-    elif "vung" in s and ("tau" in s or "tàu" in s):
-        slugs.append("vung_tau")
-        names.extend(["Vũng Tàu", "vung_tau", "vung-tau", "vung tau"])
-    elif "hai" in s and ("phong" in s or "phòng" in s):
-        slugs.append("hai_phong")
-        names.extend(["Hải Phòng", "hai_phong", "hai-phong", "hai phong"])
-    elif "khanh" in s and ("hoa" in s or "hoà" in s):
-        slugs.append("khanh_hoa")
-        names.extend(["Khánh Hoà", "Khánh Hòa", "khanh_hoa", "khanh-hoa"])
-    elif "dong" in s and ("nai" in s):
-        slugs.append("dong_nai")
-        names.extend(["Đồng Nai", "dong_nai", "dong-nai", "dong nai"])
-    else:
-        slugs.append(s.replace(" ", "_"))
-        names.append(raw)
-
-    return (list(dict.fromkeys(slugs)), list(dict.fromkeys(names)))
-
-
-from sqlalchemy import cast, String
-from database.models import Merchant, MerchantProfile, MarketTrendingDish, MerchantRating
+    exact = or_(match(phrase), menu_match(phrase))
+    if not terms:
+        return exact
+    all_terms = and_(*(or_(match(term), menu_match(term)) for term in terms))
+    return or_(exact, all_terms)
 
 
 def search_merchants(
@@ -110,27 +100,57 @@ def search_merchants(
     offset: int = 0,
     db: Session | None = None,
     cache: CachePort | None = None,
+    cache_event_callback: CacheEventCallback | None = None,
 ) -> dict[str, Any]:
     """Search merchants with rich multi-dimensional parametric filtering across all DB fields."""
-    search_q = query or cuisine or ""
     cache_key = (
-        CacheKeys.merchant_search(
-            query=search_q,
-            cuisine=cuisine or "",
-            city=city or "",
-            budget=price_level or "",
-            limit=limit,
+        CacheKeys.merchant_search_filters(
+            {
+                "query": query,
+                "cuisine": cuisine,
+                "city": city,
+                "district": district,
+                "category": category,
+                "ingredient": ingredient,
+                "diet": diet,
+                "taste": taste,
+                "customer_segment": customer_segment,
+                "tier": tier,
+                "price_level": price_level,
+                "min_menu_price": min_menu_price,
+                "max_menu_price": max_menu_price,
+                "min_rating": min_rating,
+                "anchor_merchant_id": anchor_merchant_id,
+                "radius_km": radius_km,
+                "sort_by": sort_by,
+                "limit": limit,
+                "offset": offset,
+            }
         )
         if cache
-        and min_menu_price is None
-        and max_menu_price is None
-        and anchor_merchant_id is None
-        and radius_km is None
         else None
     )
 
+    cache_backend = type(cache).__name__ if cache is not None else "disabled"
     if cache_key and cache:
+        cache_started = time.perf_counter()
         cached = cache.get(cache_key)
+        cache_duration_ms = round(
+            (time.perf_counter() - cache_started) * 1000,
+            3,
+        )
+        _emit_cache_event(
+            cache_event_callback,
+            {
+                "tool_name": "search_merchants",
+                "operation": "lookup",
+                "status": "hit" if cached is not None else "miss",
+                "cache_key": cache_key,
+                "backend": cache_backend,
+                "ttl_seconds": TTL_CANDIDATES,
+                "duration_ms": cache_duration_ms,
+            },
+        )
         if cached is not None:
             return cached
 
@@ -156,30 +176,17 @@ def search_merchants(
 
         # 1. City / City_slug normalization filter
         if city:
-            slugs, names = normalize_city_slug_and_name(city)
-            city_conditions = (
-                [Merchant.city_slug == s for s in slugs] +
-                [Merchant.city == n for n in names] +
-                [Merchant.city.ilike(f"%{n}%") for n in names] +
-                [Merchant.city_slug.ilike(f"%{s}%") for s in slugs]
+            normalized_city_slugs = normalize_city_slugs(city)
+            city_slugs = (
+                [slug for slug in normalized_city_slugs.split(",") if slug]
+                if normalized_city_slugs
+                else []
             )
-            stmt = stmt.filter(or_(*city_conditions))
+            stmt = stmt.filter(Merchant.city_slug.in_(city_slugs))
 
         # 2. General keyword query (matches name, cuisine, category, address, tags)
         if query:
-            q_clean = f"%{query.strip()}%"
-            stmt = stmt.filter(
-                or_(
-                    Merchant.name.ilike(q_clean),
-                    Merchant.cuisine.ilike(q_clean),
-                    Merchant.category.ilike(q_clean),
-                    Merchant.address.ilike(q_clean),
-                    cast(Merchant.ingredient_tags, String).ilike(q_clean),
-                    cast(Merchant.diet_tags, String).ilike(q_clean),
-                    cast(Merchant.taste_tags, String).ilike(q_clean),
-                    cast(Merchant.customer_segments, String).ilike(q_clean),
-                )
-            )
+            stmt = stmt.filter(_keyword_match_predicate(query))
 
         # 3. Cuisine filter (matches cuisine OR name)
         if cuisine:
@@ -245,38 +252,92 @@ def search_merchants(
         if anchor_merchant_id:
             anchor = session.get(Merchant, anchor_merchant_id)
         effective_radius = radius_km if (anchor and radius_km is not None) else None
-        row_limit = 200 if effective_radius is not None else min(limit, 25)
-        rows = stmt.offset(offset).limit(row_limit).all()
+        selected_h3_resolution: int | None = None
+        expanded_search = False
+        if effective_radius is not None:
+            if anchor.lat is None or anchor.lng is None:
+                return {"status": "ok", "count": 0, "merchants": []}
+            stmt = stmt.filter(Merchant.merchant_id != anchor.merchant_id)
+            h3_attempts = (
+                (9, Merchant.h3_index_9, float(effective_radius)),
+                (8, Merchant.merchant_h3_cell, float(effective_radius) * 2),
+                (6, Merchant.h3_index_6, float(effective_radius) * 4),
+            )
+            rows = []
+            for resolution, column, attempt_radius in h3_attempts:
+                selected_h3_resolution = resolution
+                effective_radius = attempt_radius
+                expanded_search = resolution != 9
+                candidate_rows = (
+                    stmt.filter(
+                        column.in_(
+                            H3CandidateIndex(resolution=resolution).cells_for_radius(
+                                anchor.lat,
+                                anchor.lng,
+                                attempt_radius,
+                            )
+                        )
+                    )
+                    .offset(offset)
+                    .limit(200)
+                    .all()
+                )
+                rows = [
+                    row
+                    for row in candidate_rows
+                    if row[0].lat is not None
+                    and row[0].lng is not None
+                    and haversine_km(
+                        anchor.lat,
+                        anchor.lng,
+                        row[0].lat,
+                        row[0].lng,
+                    )
+                    <= attempt_radius
+                ]
+                if rows:
+                    break
+        else:
+            rows = (
+                stmt.offset(offset)
+                .limit(200 if query else min(limit, 25))
+                .all()
+            )
+
+        merchant_ids = [row[0].merchant_id for row in rows]
+        prices_by_merchant: dict[str, list[int]] = {
+            merchant_id: [] for merchant_id in merchant_ids
+        }
+        menu_names_by_merchant: dict[str, list[str]] = {
+            merchant_id: [] for merchant_id in merchant_ids
+        }
+        if merchant_ids:
+            price_rows = (
+                session.query(MenuItem.merchant_id, MenuItem.name, MenuItem.price)
+                .filter(
+                    MenuItem.merchant_id.in_(merchant_ids),
+                    MenuItem.is_available == True,
+                )
+                .order_by(MenuItem.merchant_id, MenuItem.price, MenuItem.name)
+                .all()
+            )
+            for merchant_id, menu_name, price in price_rows:
+                prices_by_merchant[str(merchant_id)].append(int(price))
+                menu_names_by_merchant[str(merchant_id)].append(str(menu_name))
+
         results: list[dict[str, Any]] = []
 
         for m, p, r in rows:
-            distance_km: float | None = None
-            if (
-                effective_radius is not None
-                and anchor is not None
+            prices = prices_by_merchant.get(str(m.merchant_id), [])
+            distance_km = (
+                haversine_km(anchor.lat, anchor.lng, m.lat, m.lng)
+                if anchor is not None
                 and anchor.lat is not None
                 and anchor.lng is not None
                 and m.lat is not None
                 and m.lng is not None
-            ):
-                distance_km = _haversine_km(anchor.lat, anchor.lng, m.lat, m.lng)
-                if distance_km > effective_radius:
-                    continue
-            elif effective_radius is not None:
-                continue
-
-            prices = [
-                int(value[0])
-                for value in (
-                    session.query(MenuItem.price)
-                    .filter(
-                        MenuItem.merchant_id == m.merchant_id,
-                        MenuItem.is_available == True,
-                    )
-                    .order_by(MenuItem.price)
-                    .all()
-                )
-            ]
+                else None
+            )
             item = {
                 "merchant_id": m.merchant_id,
                 "name": m.name,
@@ -303,6 +364,7 @@ def search_merchants(
                     "customer_segments": m.customer_segments or [],
                 },
                 "is_active": m.is_active,
+                "_search_menu_names": menu_names_by_merchant.get(str(m.merchant_id), []),
                 "distance_km": (
                     round(distance_km, 2) if distance_km is not None else None
                 ),
@@ -313,7 +375,7 @@ def search_merchants(
             results.sort(
                 key=lambda item: (
                     item["distance_km"] is None,
-                    item["distance_km"] or math.inf,
+                    item["distance_km"] if item["distance_km"] is not None else math.inf,
                     item["name"],
                 )
             )
@@ -327,87 +389,72 @@ def search_merchants(
                 return -1
 
             results.sort(key=lambda item: (-_rating(item), item["name"]))
+        elif query:
+            normalized_phrase = normalize_text(query)
+            query_terms = normalized_phrase.split()
+
+            def _relevance(item: dict[str, Any]) -> tuple[int, str]:
+                name = normalize_text(str(item.get("name") or ""))
+                cuisine_text = normalize_text(str(item.get("cuisine") or ""))
+                menu_text = normalize_text(
+                    " ".join(item.get("_search_menu_names") or [])
+                )
+                score = 0
+                if normalized_phrase in name:
+                    score += 100
+                if normalized_phrase in cuisine_text:
+                    score += 60
+                if normalized_phrase in menu_text:
+                    score += 50
+                score += sum(12 for term in query_terms if term in name)
+                score += sum(6 for term in query_terms if term in cuisine_text)
+                score += sum(3 for term in query_terms if term in menu_text)
+                return (-score, str(item["name"]))
+
+            results.sort(key=_relevance)
 
         results = results[: min(limit, 25)]
+        for item in results:
+            item.pop("_search_menu_names", None)
 
         result = {
             "status": "ok",
             "count": len(results),
             "merchants": results,
         }
+        if selected_h3_resolution is not None:
+            result.update(
+                {
+                    "h3_resolution": selected_h3_resolution,
+                    "effective_radius_km": float(effective_radius),
+                    "expanded_search": expanded_search,
+                }
+            )
 
         if cache_key and cache:
+            cache_started = time.perf_counter()
             cache.set(cache_key, result, ttl_seconds=TTL_CANDIDATES)
+            _emit_cache_event(
+                cache_event_callback,
+                {
+                    "tool_name": "search_merchants",
+                    "operation": "set",
+                    "status": "store",
+                    "cache_key": cache_key,
+                    "backend": cache_backend,
+                    "ttl_seconds": TTL_CANDIDATES,
+                    "duration_ms": round(
+                        (time.perf_counter() - cache_started) * 1000,
+                        3,
+                    ),
+                },
+            )
 
         return result
     finally:
         if db is None:
             session.close()
 
-
-def search_trending_dishes(
-    cuisine: str | None = None,
-    city_slug: str | None = None,
-    limit: int = 5,
-    db: Session | None = None,
-    cache: CachePort | None = None,
-) -> dict[str, Any]:
-    """Query top trending food items from market_trending_dishes."""
-    cache_key = CacheKeys.trending_dishes(city_slug or "", cuisine or "") if cache else None
-
-    if cache_key and cache:
-        cached = cache.get(cache_key)
-        if cached is not None:
-            return cached
-
-    session = db or SessionLocal()
-    try:
-        stmt = session.query(MarketTrendingDish)
-        if city_slug:
-            slugs, names = normalize_city_slug_and_name(city_slug)
-            city_conditions = (
-                [MarketTrendingDish.city_slug == s for s in slugs] +
-                [MarketTrendingDish.city_slug == n for n in names] +
-                [MarketTrendingDish.city_slug.ilike(f"%{s}%") for s in slugs] +
-                [MarketTrendingDish.city_slug.ilike(f"%{n}%") for n in names]
-            )
-            stmt = stmt.filter(or_(*city_conditions))
-
-        if cuisine:
-            stmt = stmt.filter(
-                or_(
-                    MarketTrendingDish.cuisine.ilike(f"%{cuisine.strip()}%"),
-                    MarketTrendingDish.dish_name.ilike(f"%{cuisine.strip()}%"),
-                )
-            )
-
-        dishes = stmt.order_by(MarketTrendingDish.rank.asc()).limit(min(limit, 10)).all()
-        results = [
-            {
-                "dish_name": d.dish_name,
-                "cuisine": d.cuisine,
-                "city_slug": d.city_slug,
-                "trend_score": float(d.trend_score),
-                "rank": d.rank,
-            }
-            for d in dishes
-        ]
-        result = {
-            "status": "ok",
-            "count": len(results),
-            "trending_dishes": results,
-        }
-
-        if cache_key and cache:
-            cache.set(cache_key, result, ttl_seconds=_TTL_TRENDING)
-
-        return result
-    finally:
-        if db is None:
-            session.close()
-
-
-# --- CrewAI Tool Classes ---
 
 from typing import Literal
 
@@ -426,7 +473,7 @@ CitySlug = Literal[
 
 class SearchMerchantsInput(BaseModel):
     query: str | None = Field(None, description="General search keyword for restaurant name, dish, or concept (e.g. 'sushi', 'cơm tấm', 'lẩu', 'gia đình')")
-    city: str | None = Field(None, description="City name or slug filter. Valid city_slugs: 'da_nang', 'tp_hcm', 'ha_noi', 'can_tho', 'hue', 'vung_tau', 'hai_phong', 'khanh_hoa', 'dong_nai'")
+    city: str | None = Field(None, description="City name or slug filter. Valid city_slugs format must be in snake format (e.g. 'da_nang', 'tp_hcm', 'ha_noi') or list separated by commas (e.g. 'da_nang, tp_hcm').")
     cuisine: str | None = Field(None, description="Cuisine type filter (e.g. 'Món Nhật', 'Món Việt', 'Café/Dessert')")
     category: str | None = Field(None, description="Category filter (e.g. 'Quán ăn', 'Nhà hàng', 'Café/Dessert')")
     district: str | None = Field(None, description="District filter (e.g. 'Quận 1', 'Bình Thạnh', 'Hải Châu', 'Q1')")
@@ -443,80 +490,3 @@ class SearchMerchantsInput(BaseModel):
     radius_km: float | None = Field(None, ge=0.5, le=20, description="Radius around anchor merchant in kilometers.")
     sort_by: Literal["relevance", "rating", "distance"] = Field("relevance", description="Deterministic result ordering.")
     limit: int = Field(10, description="Max results (1..25)")
-
-
-class SearchMerchantsTool(BaseTool):
-    name: str = "search_merchants"
-    description: str = (
-        "Search restaurants using rich multi-dimensional parametric filters (query, city, district, cuisine, "
-        "category, ingredient tags, diet tags, taste tags, customer segment tags, tier, price level, min rating). "
-        "Returns compact list of matching merchant profiles from the database."
-    )
-    args_schema: Type[BaseModel] = SearchMerchantsInput
-
-    def _run(
-        self,
-        query: str | None = None,
-        cuisine: str | None = None,
-        city: str | None = None,
-        district: str | None = None,
-        category: str | None = None,
-        ingredient: str | None = None,
-        diet: str | None = None,
-        taste: str | None = None,
-        customer_segment: str | None = None,
-        tier: str | None = None,
-        price_level: str | None = None,
-        min_menu_price: int | None = None,
-        max_menu_price: int | None = None,
-        min_rating: float | None = None,
-        anchor_merchant_id: str | None = None,
-        radius_km: float | None = None,
-        sort_by: str = "relevance",
-        limit: int = 10,
-    ) -> str:
-        from core.dependencies import get_cache
-        res = search_merchants(
-            query=query,
-            cuisine=cuisine,
-            city=city,
-            district=district,
-            category=category,
-            ingredient=ingredient,
-            diet=diet,
-            taste=taste,
-            customer_segment=customer_segment,
-            tier=tier,
-            price_level=price_level,
-            min_menu_price=min_menu_price,
-            max_menu_price=max_menu_price,
-            min_rating=min_rating,
-            anchor_merchant_id=anchor_merchant_id,
-            radius_km=radius_km,
-            sort_by=sort_by,
-            limit=limit,
-            cache=get_cache(),
-        )
-        return json.dumps(res, ensure_ascii=False)
-
-
-class SearchTrendingDishesInput(BaseModel):
-    cuisine: str | None = Field(None, description="Target cuisine segment or dish keyword, e.g., 'Món Việt', 'Trà sữa', 'sushi'")
-    city_slug: str | None = Field(None, description="Target city_slug. Valid values: 'da_nang', 'tp_hcm', 'ha_noi', 'can_tho', 'hue', 'vung_tau', 'hai_phong', 'khanh_hoa', 'dong_nai'")
-    limit: int = Field(5, description="Number of top trending dishes to return (1..10)")
-
-
-class SearchTrendingDishesTool(BaseTool):
-    name: str = "search_trending_dishes"
-    description: str = "Query high-growth trending dishes in a target city or cuisine segment from system database."
-    args_schema: Type[BaseModel] = SearchTrendingDishesInput
-
-    def _run(self, cuisine: str | None = None, city_slug: str | None = None, limit: int = 5) -> str:
-        from core.dependencies import get_cache
-        res = search_trending_dishes(
-            cuisine=cuisine,
-            city_slug=city_slug,
-            limit=limit,
-            cache=get_cache(),
-        )
-        return json.dumps(res, ensure_ascii=False)

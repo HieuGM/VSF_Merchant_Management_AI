@@ -10,8 +10,9 @@ from typing import Any
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from database.models import AgentRun, AgentEvent
+from database.models import AgentRun, AgentEvent, ChatMessage, ChatSession
 from core.errors import NotFoundError
+from services.request_telemetry import RequestTelemetry
 
 
 class AgentRunService:
@@ -121,6 +122,54 @@ class AgentRunService:
         )
         events = list(self._db.execute(stmt).scalars().all())
 
+        event_records = [
+            {
+                "event_id": e.event_id,
+                "event_type": e.event_type,
+                "agent_name": e.agent_name,
+                "task_name": e.task_name,
+                "tool_name": e.tool_name,
+                "input_hash": e.input_hash,
+                "output_summary": e.output_summary_json,
+                "duration_ms": e.duration_ms,
+                "status": e.status,
+                "error_code": e.error_code,
+                "created_at": str(e.created_at) if e.created_at else None,
+            }
+            for e in events
+        ]
+        session = self._db.get(ChatSession, run.session_id) if run.session_id else None
+        messages = list(
+            self._db.execute(
+                select(ChatMessage)
+                .where(ChatMessage.trace_id == trace_id)
+                .order_by(ChatMessage.timestamp.asc())
+            ).scalars().all()
+        )
+        user_query = next(
+            (message.text for message in messages if message.sender == "user"),
+            None,
+        )
+        final_answer = next(
+            (message.text for message in reversed(messages) if message.sender == "agent"),
+            None,
+        )
+        rewritten_query = next(
+            (
+                event["output_summary"].get("rewritten_query")
+                for event in event_records
+                if isinstance(event["output_summary"], dict)
+                and event["output_summary"].get("rewritten_query")
+            ),
+            user_query,
+        )
+        envelope = RequestTelemetry.build_envelope(
+            trace_id=run.trace_id,
+            status=run.status,
+            run_token_usage=run.token_usage_json,
+            events=event_records,
+            session_state=session.context_snapshot_json if session else {},
+        )
         return {
             "trace_id": run.trace_id,
             "session_id": run.session_id,
@@ -132,20 +181,12 @@ class AgentRunService:
             "finished_at": str(run.finished_at) if run.finished_at else None,
             "error_code": run.error_code,
             "token_usage": run.token_usage_json,
-            "events": [
+            "chat": RequestTelemetry.sanitize(
                 {
-                    "event_id": e.event_id,
-                    "event_type": e.event_type,
-                    "agent_name": e.agent_name,
-                    "task_name": e.task_name,
-                    "tool_name": e.tool_name,
-                    "input_hash": e.input_hash,
-                    "output_summary": e.output_summary_json,
-                    "duration_ms": e.duration_ms,
-                    "status": e.status,
-                    "error_code": e.error_code,
-                    "created_at": str(e.created_at) if e.created_at else None,
+                    "user_query": user_query,
+                    "rewritten_query": rewritten_query,
+                    "final_answer": final_answer,
                 }
-                for e in events
-            ],
+            ),
+            **envelope,
         }

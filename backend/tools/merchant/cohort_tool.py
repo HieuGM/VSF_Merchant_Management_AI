@@ -1,12 +1,10 @@
 """Privacy-safe aggregation and owner comparison for public merchant cohorts."""
 from __future__ import annotations
 
-import json
 import statistics
 from collections import Counter
-from typing import Any, Type
+from typing import Any
 
-from crewai.tools import BaseTool
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
@@ -255,45 +253,6 @@ def compare_owner_to_public_cohort(
             session.close()
 
 
-class AggregatePublicMerchantCohortInput(BaseModel):
-    merchant_ids: list[str]
-    step_id: str
-
-
-class AggregatePublicMerchantCohortTool(BaseTool):
-    name: str = "aggregate_public_merchant_cohort"
-    description: str = (
-        "Aggregate only public rating, menu price, review theme, image, and public "
-        "quality dimensions for a merchant cohort."
-    )
-    args_schema: Type[BaseModel] = AggregatePublicMerchantCohortInput
-
-    def _run(self, merchant_ids: list[str], step_id: str) -> str:
-        return json.dumps(
-            aggregate_public_merchant_cohort(merchant_ids, step_id),
-            ensure_ascii=False,
-        )
-
-
 class CompareOwnerToPublicCohortInput(BaseModel):
     owner_merchant_id: str
     cohort: dict[str, Any] = Field(description="Public cohort aggregate payload.")
-
-
-class CompareOwnerToPublicCohortTool(BaseTool):
-    name: str = "compare_owner_to_public_cohort"
-    description: str = (
-        "Compare the owner's public quality signals with a privacy-safe public "
-        "merchant cohort aggregate."
-    )
-    args_schema: Type[BaseModel] = CompareOwnerToPublicCohortInput
-
-    def _run(
-        self,
-        owner_merchant_id: str,
-        cohort: dict[str, Any],
-    ) -> str:
-        return json.dumps(
-            compare_owner_to_public_cohort(owner_merchant_id, cohort),
-            ensure_ascii=False,
-        )

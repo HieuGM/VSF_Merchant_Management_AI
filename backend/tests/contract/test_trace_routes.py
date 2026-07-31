@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import pytest
 from datetime import datetime
-from database.models import AgentRun, AgentEvent
+from database.models import AgentRun, AgentEvent, ChatMessage, ChatSession
 from services.agent_run_service import AgentRunService
 from core.dependencies import get_db_session
 from app.main import app
@@ -29,6 +29,12 @@ def test_get_trace_not_found(real_client):
 
 
 def test_get_trace_success(real_client, db_session):
+    db_session.add(
+        ChatSession(
+            session_id="sess_123",
+            context_snapshot_json={"merchant_id": "94", "current_intent": "search"},
+        )
+    )
     # Seed agent_run first
     run = AgentRun(
         trace_id="tr-test-obs-001",
@@ -46,17 +52,35 @@ def test_get_trace_success(real_client, db_session):
     event1 = AgentEvent(
         event_id="evt-001",
         trace_id="tr-test-obs-001",
-        event_type="tool_execution",
+        event_type="crewai_tool_requested",
         agent_name="diagnosis_specialist",
         task_name="diagnose_merchant_task",
         tool_name="diagnose_merchant",
         input_hash="hash_abc123",
-        output_summary_json={"status": "ok", "causes_count": 2},
+        output_summary_json={"args": {"query": "tôm", "city": "da_nang"}},
         duration_ms=120,
         status="ok",
         created_at=datetime.utcnow(),
     )
     db_session.add(event1)
+    db_session.add_all(
+        [
+            ChatMessage(
+                message_id="msg-trace-user",
+                session_id="sess_123",
+                sender="user",
+                text="Tìm quán tôm ở Đà Nẵng",
+                trace_id="tr-test-obs-001",
+            ),
+            ChatMessage(
+                message_id="msg-trace-agent",
+                session_id="sess_123",
+                sender="agent",
+                text="Đây là kết quả tìm kiếm.",
+                trace_id="tr-test-obs-001",
+            ),
+        ]
+    )
     db_session.flush()
 
     resp = real_client.get("/api/v1/agent/runs/tr-test-obs-001")
@@ -75,6 +99,12 @@ def test_get_trace_success(real_client, db_session):
     assert evt["tool_name"] == "diagnose_merchant"
     assert evt["duration_ms"] == 120
     assert evt["status"] == "ok"
+    assert evt["output_summary"]["args"]["city"] == "da_nang"
+    assert data["session_state"]["merchant_id"] == "94"
+    assert data["summary"]["event_count"] == 1
+    assert data["llm_usage"]["total_tokens"] == 0
+    assert data["chat"]["user_query"] == "Tìm quán tôm ở Đà Nẵng"
+    assert data["chat"]["final_answer"] == "Đây là kết quả tìm kiếm."
 
 
 def test_agent_run_service_record_run_and_events(db_session):

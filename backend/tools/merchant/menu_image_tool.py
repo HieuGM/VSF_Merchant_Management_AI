@@ -5,10 +5,8 @@ NEVER passes image pixels to LLMs — only URLs and quality scores.
 """
 from __future__ import annotations
 
-import json
-from typing import Any, Optional, Type
+from typing import Any, Optional
 
-from crewai.tools import BaseTool
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
@@ -92,8 +90,6 @@ def get_menu_and_food_images(
             session.close()
 
 
-# --- CrewAI Tool Class ---
-
 class GetMenuAndFoodImagesInput(BaseModel):
     merchant_id: str = Field(..., description="Merchant ID to fetch menu and food images for.")
     only_with_images: bool = Field(False, description="If True, only return menu items that have images.")
@@ -103,31 +99,3 @@ class GetMenuAndFoodImagesInput(BaseModel):
     )
     category: Optional[str] = Field(None, description="Filter menu items by category keyword.")
     limit: int = Field(10, description="Max number of menu items to return (1..20).")
-
-
-class GetMenuAndFoodImagesTool(BaseTool):
-    name: str = "get_menu_and_food_images"
-    description: str = (
-        "Fetch menu items with food image URLs and quality metadata for a merchant. "
-        "Returns item name, price, category, and image URLs with dish_image_quality + blur_score. "
-        "Images are returned as URLs only (NOT pixels) for frontend rendering. "
-        "Use min_image_quality to filter for high-quality dish photos."
-    )
-    args_schema: Type[BaseModel] = GetMenuAndFoodImagesInput
-
-    def _run(
-        self,
-        merchant_id: str,
-        only_with_images: bool = False,
-        min_image_quality: float | None = None,
-        category: str | None = None,
-        limit: int = 10,
-    ) -> str:
-        res = get_menu_and_food_images(
-            merchant_id=merchant_id,
-            only_with_images=only_with_images,
-            min_image_quality=min_image_quality,
-            category=category,
-            limit=limit,
-        )
-        return json.dumps(res, ensure_ascii=False)

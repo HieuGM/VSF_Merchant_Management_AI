@@ -5,8 +5,8 @@ import uuid
 from datetime import date
 
 from database.models import Merchant, MenuItem, FoodImage, MerchantComplaint
-from tools.merchant.complaints_tool import get_merchant_complaints, GetMerchantComplaintsTool
-from tools.merchant.menu_image_tool import get_menu_and_food_images, GetMenuAndFoodImagesTool
+from tools.merchant.complaints_tool import get_merchant_complaints
+from tools.merchant.menu_image_tool import get_menu_and_food_images
 
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
@@ -101,25 +101,11 @@ def test_get_merchant_complaints_not_found(db_session):
     assert res["total_count"] == 0
 
 
-def test_get_merchant_complaints_tool_class(db_session, monkeypatch):
-    _make_merchant(db_session, "m_complaints_tool_01")
-    _make_complaint(db_session, "m_complaints_tool_01", "vệ_sinh", "medium", "Quán bẩn quá.")
-    db_session.commit()
-
-    import tools.merchant.complaints_tool as mod
-    monkeypatch.setattr(mod, "SessionLocal", lambda: db_session)
-
-    tool = GetMerchantComplaintsTool()
-    output = tool._run(merchant_id="m_complaints_tool_01")
-    assert "m_complaints_tool_01" in output
-    assert "vệ_sinh" in output
-
-
 # ── Menu & Image Tests ────────────────────────────────────────────────────────
 
 def test_get_menu_and_food_images_basic(db_session):
     _make_merchant(db_session, "m_menu_01")
-    item = _make_menu_item(db_session, "m_menu_01", "item_menu_01")
+    _make_menu_item(db_session, "m_menu_01", "item_menu_01")
     _make_food_image(db_session, "m_menu_01", "item_menu_01", quality=0.85)
     db_session.commit()
 
@@ -137,9 +123,9 @@ def test_get_menu_and_food_images_basic(db_session):
 
 def test_get_menu_and_food_images_quality_filter(db_session):
     _make_merchant(db_session, "m_menu_02")
-    item = _make_menu_item(db_session, "m_menu_02", "item_menu_02a")
+    _make_menu_item(db_session, "m_menu_02", "item_menu_02a")
     _make_food_image(db_session, "m_menu_02", "item_menu_02a", quality=0.30)  # Low quality
-    item2 = _make_menu_item(db_session, "m_menu_02", "item_menu_02b")
+    _make_menu_item(db_session, "m_menu_02", "item_menu_02b")
     _make_food_image(db_session, "m_menu_02", "item_menu_02b", quality=0.90)  # High quality
     db_session.commit()
 
@@ -150,17 +136,3 @@ def test_get_menu_and_food_images_quality_filter(db_session):
     for item in items_with_images:
         for img in item["images"]:
             assert img["dish_image_quality"] >= 0.80
-
-
-def test_get_menu_and_food_images_tool_class(db_session, monkeypatch):
-    _make_merchant(db_session, "m_menu_tool_01")
-    _make_menu_item(db_session, "m_menu_tool_01", "item_tool_01")
-    db_session.commit()
-
-    import tools.merchant.menu_image_tool as mod
-    monkeypatch.setattr(mod, "SessionLocal", lambda: db_session)
-
-    tool = GetMenuAndFoodImagesTool()
-    output = tool._run(merchant_id="m_menu_tool_01")
-    assert "m_menu_tool_01" in output
-    assert "item_tool_01" in output

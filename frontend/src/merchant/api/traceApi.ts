@@ -130,18 +130,3 @@ export async function getRunTrace(traceId: string): Promise<RunTrace> {
   const payload = await apiFetch<unknown>(`/api/v1/agent/runs/${encodeURIComponent(traceId)}`);
   return parseRunTrace(payload);
 }
-
-export async function getTraceEventsAfter(
-  traceId: string,
-  afterSeq: number,
-): Promise<TraceSpanEvent[]> {
-  const payload = await apiFetch<unknown>(
-    `/api/v1/agent/runs/${encodeURIComponent(traceId)}/events?after_seq=${Math.max(0, afterSeq)}`,
-  );
-  const response = asRecord(payload);
-  const events = Array.isArray(response.events) ? response.events : [];
-  return events
-    .map(parseTraceSpanEvent)
-    .filter((event): event is TraceSpanEvent => event !== null)
-    .sort((left, right) => left.seq - right.seq);
-}

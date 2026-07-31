@@ -5,7 +5,6 @@ Includes compact session memory formatting for token-efficient LLM context injec
 """
 from __future__ import annotations
 
-import json
 import uuid
 from datetime import datetime
 from typing import Any
@@ -162,20 +161,34 @@ class ChatSessionService:
         return {}
 
     def update_session_snapshot(
-        self, session_id: str, snapshot: dict[str, Any], last_trace_id: str | None = None
+        self,
+        session_id: str,
+        snapshot: dict[str, Any],
+        last_trace_id: str | None = None,
+        *,
+        replace: bool = False,
     ) -> None:
         """Update durable snapshot in PG and hot copy in Redis."""
         stmt = select(ChatSession).where(ChatSession.session_id == session_id)
         session_obj = self._db.execute(stmt).scalar_one_or_none()
 
         if session_obj:
-            merged = {**(session_obj.context_snapshot_json or {}), **snapshot}
+            merged = (
+                dict(snapshot)
+                if replace
+                else {**(session_obj.context_snapshot_json or {}), **snapshot}
+            )
             session_obj.context_snapshot_json = merged
             if last_trace_id:
                 session_obj.last_trace_id = last_trace_id
             session_obj.updated_at = datetime.utcnow()
             self._db.commit()
             snapshot = merged
+            self._cache.set(
+                CacheKeys.session_context(session_id),
+                snapshot,
+                ttl_seconds=TTL_SESSION_CONTEXT,
+            )
 
     def list_merchant_sessions(self, merchant_id: str, limit: int = 30) -> list[dict[str, Any]]:
         """List all chat sessions associated with a merchant_id, ordered by updated_at desc."""

@@ -14,6 +14,9 @@ PyYAML>=6.0
 # Cache (Feature D-02; memory adapter is the Phase 0 default so this stays optional at runtime)
 redis>=5.0.0
 
+# Geospatial candidate indexing
+h3>=4.5.0,<5
+
 # Agents — pinned per plan decision (verify `pip show crewai` does NOT pull LangChain, doc §2)
 crewai==1.15.5
 

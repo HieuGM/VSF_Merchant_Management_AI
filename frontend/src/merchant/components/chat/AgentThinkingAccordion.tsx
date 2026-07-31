@@ -3,23 +3,22 @@ import type { JsonRecord, TraceEvent, TraceSpanEvent } from '../../types/monitor
 import { isTraceSpanEvent } from '../../types/monitoring';
 
 const LABELS: Record<string, string> = {
-  context: 'Hiểu yêu cầu',
+  context: 'Intent classifying',
   policy_decision: 'Kiểm tra policy',
-  crewai_agent_started: 'Agent bắt đầu',
-  crewai_agent_finished: 'Agent hoàn tất',
-  crewai_llm_started: 'Tìm kiếm dữ liệu',
-  crewai_llm_finished: 'LLM hoàn tất',
+  crewai_agent_started: 'Agent init',
+  crewai_agent_finished: 'Agent finished',
+  crewai_llm_started: 'Searching',
+  crewai_llm_finished: 'LLM call',
   crewai_tool_started: 'Phân tích & đánh giá',
   crewai_tool_finished: 'Lập danh sách đề xuất',
-  tool_call: 'Gọi công cụ',
-  tool_result: 'Nhận kết quả',
-  cache: 'Truy cập cache',
-  sql_query: 'Truy vấn database',
-  hitl_requested: 'Chờ người dùng',
+  tool_call: 'Tool call',
+  tool_result: 'Tool result',
+  cache: 'Cache query',
+  sql_query: 'DB query',
   synthesis: 'Tổng hợp kết quả',
   execution_finish: 'Hoàn thành',
-  error: 'Lỗi pipeline',
-  agent_error: 'Lỗi agent',
+  error: 'Error',
+  agent_error: 'Agent error',
 };
 
 interface RenderSpan {
@@ -198,18 +197,17 @@ export function AgentThinkingAccordion({ events = [], isStreaming = false }: { e
   const usingSemantic = semanticRoots.length > 0;
   const countSpans = (items: RenderSpan[]): number => items.reduce((total, span) => total + 1 + countSpans(span.children), 0);
   const count = usingSemantic ? countSpans(semanticRoots) : legacy.length;
-  const hasError = events.some((event) => isTraceSpanEvent(event) ? event.kind === 'failed' : event.eventType.includes('error') || event.status === 'failed');
 
   return (
     <section className="trace-card" aria-label="CrewAI trace">
       <button type="button" className="trace-card__header" onClick={() => setOpen((value) => !value)} aria-expanded={open}>
         <span className="trace-card-icon" aria-hidden="true">◈</span>
-        <span className="trace-card-title-group"><strong>{isStreaming ? 'AI đang phân tích…' : hasError ? 'Pipeline có lỗi' : `AI đã thực thi ${count} bước phân tích`}</strong></span>
+        <span className="trace-card-title-group"><strong>{isStreaming ? 'AI đang phân tích…' : `AI đã thực thi ${count} bước phân tích`}</strong></span>
         <span className="trace-card__toggle" aria-hidden="true">{open ? '⌃' : '⌄'}</span>
       </button>
       {open && (
         <ol className="trace-timeline">
-          {count === 0 && <li className="trace-empty"><span>Đang chờ event đầu tiên…</span></li>}
+          {count === 0 && <li className="trace-empty"><span>Cooking…</span></li>}
           {usingSemantic
             ? semanticRoots.map((span) => <SemanticSpanRow key={span.spanId} span={span} depth={0} isStreaming={isStreaming} />)
             : legacy.map((event, index) => <LegacyRow key={event.eventId ?? `${event.eventType}-${index}`} event={event} index={index} isStreaming={isStreaming} />)}

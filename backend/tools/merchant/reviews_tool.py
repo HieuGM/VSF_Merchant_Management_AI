@@ -1,11 +1,9 @@
 """Owner review retrieval with deterministic sentiment/theme aggregation."""
 from __future__ import annotations
 
-import json
 from collections import Counter
-from typing import Any, Literal, Type
+from typing import Any, Literal
 
-from crewai.tools import BaseTool
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
@@ -101,27 +99,3 @@ class GetMerchantReviewsInput(BaseModel):
     merchant_id: str
     sentiment: Literal["positive", "negative", "neutral"] | None = None
     limit_samples: int = Field(default=5, ge=1, le=10)
-
-
-class GetMerchantReviewsTool(BaseTool):
-    name: str = "get_merchant_reviews"
-    description: str = (
-        "Retrieve the current owner's reviews with sentiment counts, deterministic "
-        "themes, bounded samples, and evidence references."
-    )
-    args_schema: Type[BaseModel] = GetMerchantReviewsInput
-
-    def _run(
-        self,
-        merchant_id: str,
-        sentiment: str | None = None,
-        limit_samples: int = 5,
-    ) -> str:
-        return json.dumps(
-            get_merchant_reviews(
-                merchant_id,
-                sentiment=sentiment,
-                limit_samples=limit_samples,
-            ),
-            ensure_ascii=False,
-        )

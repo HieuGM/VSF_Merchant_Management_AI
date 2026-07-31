@@ -19,6 +19,7 @@ PUBLIC_DIMENSIONS: frozenset[str] = frozenset(
 
 PUBLIC_FIELDS: frozenset[str] = frozenset(
     {
+        "status",
         "merchant_id",
         "name",
         "cuisine",
@@ -43,6 +44,10 @@ PUBLIC_FIELDS: frozenset[str] = frozenset(
         "dimensions",
         "distance_km",
         "is_active",
+        "opens_at",
+        "closes_at",
+        "timezone",
+        "menu_items",
     }
 )
 

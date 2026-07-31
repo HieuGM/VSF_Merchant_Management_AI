@@ -9,6 +9,35 @@ from typing import Any
 from pydantic import BaseModel, Field, field_validator
 
 
+# Golden cases describe business capabilities, while the native crew reports
+# role names.  Keep this migration map here (not in prompts) so evaluation
+# remains stable across an implementation rename.
+_AGENT_ALIASES: dict[str, str] = {
+    "restaurant_search": "market_search",
+    "market_cohort_analysis": "cohort_analysis",
+    "owner_profile_analysis": "self_analysis",
+    "owner_review_analysis": "self_analysis",
+    "owner_diagnosis": "self_analysis",
+    "recommendation": "self_analysis",
+    "owner_vs_market_benchmark": "cohort_analysis",
+    "image_comparison": "self_analysis",
+}
+
+_TOOL_ALIASES: dict[str, str] = {
+    "get_merchant_profile_summary": "get_owner_profile_summary",
+    "get_merchant_operational_metrics": "get_owner_operational_metrics",
+    "get_merchant_reviews": "get_owner_reviews",
+    "get_merchant_complaints": "get_owner_complaints",
+    "get_menu_and_food_images": "get_owner_menu_and_food_images",
+    "diagnose_merchant": "diagnose_owner_merchant",
+    "recommend_improvements": "recommend_owner_improvements",
+}
+
+
+def _canonical(values: list[str], aliases: dict[str, str]) -> list[str]:
+    return list(dict.fromkeys(aliases.get(value, value) for value in values))
+
+
 class DatasetNotReviewedError(RuntimeError):
     """Raised when a golden dataset is used before owner review."""
 
@@ -120,14 +149,28 @@ def score_pipeline_result(
         if isinstance(case_data, MerchantEvalCase)
         else MerchantEvalCase.model_validate(case_data)
     )
-    actual_agents = [
+    traced_agents = [
+        str(step["agent_name"])
+        for step in pipeline_result.get("trace_summary", [])
+        if step.get("event") == "tool_started" and step.get("agent_name")
+    ]
+    raw_agents = traced_agents or [
         str(value) for value in pipeline_result.get("capabilities", [])
     ]
-    actual_tools = [
+    actual_agents = _canonical(raw_agents, _AGENT_ALIASES)
+    gateway_tools = [
+        str(step["tool_name"])
+        for step in pipeline_result.get("trace_summary", [])
+        if step.get("event") == "tool_started" and step.get("tool_name")
+    ]
+    raw_tools = gateway_tools or [
         str(step["tool_name"])
         for step in pipeline_result.get("trace_summary", [])
         if step.get("tool_name")
     ]
+    actual_tools = _canonical(raw_tools, _TOOL_ALIASES)
+    expected_agents = _canonical(case.expected_agent, _AGENT_ALIASES)
+    expected_tools = _canonical(case.expected_tools, _TOOL_ALIASES)
     reply = str(pipeline_result.get("reply", ""))
     lowered_reply = reply.casefold()
     matched_content = [
@@ -139,20 +182,20 @@ def score_pipeline_result(
         else 1.0
     )
     tool_accuracy, tool_f1 = _ragas_tool_scores(
-        case.expected_tools,
+        expected_tools,
         actual_tools,
     )
     return {
         "case_id": case.case_id,
         "question": case.question,
-        "expected_agent": case.expected_agent,
+        "expected_agent": expected_agents,
         "actual_agent": actual_agents,
-        "expected_tools": case.expected_tools,
+        "expected_tools": expected_tools,
         "actual_tools": actual_tools,
         "expected_content": case.expected_content,
         "matched_content": matched_content,
         "scores": {
-            "agent_f1": _set_f1(case.expected_agent, actual_agents),
+            "agent_f1": _set_f1(expected_agents, actual_agents),
             "tool_call_accuracy": tool_accuracy,
             "tool_call_f1": tool_f1,
             "content_coverage": round(content_coverage, 4),

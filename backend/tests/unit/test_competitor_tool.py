@@ -1,9 +1,9 @@
 """Unit tests for Competitor Benchmark Tool (Task 4)."""
 from __future__ import annotations
 
-from database.models import Merchant, MerchantProfile
+from database.models import Merchant
 from relational_test_fixtures import seed_relational_profile
-from tools.merchant.competitor_tool import compare_merchant_benchmark, CompareMerchantBenchmarkTool
+from tools.merchant.competitor_tool import compare_merchant_benchmark
 
 
 def _make_merchant(session, mid: str, lat: float, lng: float, cuisine: str = "Cơm Niêu Test") -> Merchant:
@@ -92,17 +92,3 @@ def test_compare_merchant_benchmark_no_location(db_session):
 
     res = compare_merchant_benchmark("m_no_loc_001", db=db_session)
     assert res["status"] == "no_location"
-
-
-def test_compare_merchant_benchmark_tool_class(db_session, monkeypatch):
-    _make_merchant(db_session, "m_bench_tool_01", lat=21.028, lng=105.854)
-    seed_relational_profile(db_session, "m_bench_tool_01", scores={"food_quality": 0.75})
-    db_session.commit()
-
-    import tools.merchant.competitor_tool as mod
-    monkeypatch.setattr(mod, "SessionLocal", lambda: db_session)
-
-    tool = CompareMerchantBenchmarkTool()
-    output = tool._run(merchant_id="m_bench_tool_01", radius_km=5.0, limit=3)
-    assert "m_bench_tool_01" in output
-    assert "status" in output

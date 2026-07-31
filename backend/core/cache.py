@@ -8,6 +8,7 @@ edit provider files across ownership boundaries.
 from __future__ import annotations
 
 import hashlib
+import json
 from abc import ABC, abstractmethod
 from typing import Any
 
@@ -43,6 +44,10 @@ class CacheKeys:
     @staticmethod
     def merchant_profile(merchant_id: str) -> str:
         return f"agent:merchant:{merchant_id}:profile_snapshot:v1"
+
+    @staticmethod
+    def merchant_public_detail(merchant_id: str) -> str:
+        return f"agent:merchant:{merchant_id}:public_detail:v1"
 
     @staticmethod
     def weather(lat: float, lng: float) -> str:
@@ -86,6 +91,18 @@ class CacheKeys:
         limit: int = 20,
     ) -> str:
         raw = f"{query}:{cuisine}:{city}:{budget}:{lat}:{lng}:{radius_km}:{limit}"
+        return f"agent:merchant_search:{_hash(raw)}"
+
+    @staticmethod
+    def merchant_search_filters(filters: dict[str, Any]) -> str:
+        """Build a collision-safe key from every filter that changes search output."""
+        raw = json.dumps(
+            {name: value for name, value in filters.items() if value is not None},
+            ensure_ascii=False,
+            sort_keys=True,
+            separators=(",", ":"),
+            default=str,
+        )
         return f"agent:merchant_search:{_hash(raw)}"
 
     @staticmethod

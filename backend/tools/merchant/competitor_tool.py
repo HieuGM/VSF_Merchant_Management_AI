@@ -5,17 +5,15 @@ of the same cuisine type. Returns compact token-efficient diff.
 """
 from __future__ import annotations
 
-import json
-import math
-from typing import Any, List, Optional, Type
+from typing import Any, List, Optional
 
-from crewai.tools import BaseTool
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from core.cache import CacheKeys, CachePort
 from database.connection import SessionLocal
 from database.models import Merchant, MerchantProfile
+from services.geo.h3_index import H3CandidateIndex
 
 _DIMENSION_COLUMNS = {
     "food_quality": "food_quality_score",
@@ -30,16 +28,6 @@ _DIMENSION_COLUMNS = {
 
 _ALL_DIMENSIONS = list(_DIMENSION_COLUMNS.keys())
 _TTL_BENCHMARK = 5 * 60
-
-
-def _haversine_km(lat1: float, lng1: float, lat2: float, lng2: float) -> float:
-    """Approximate haversine distance in km."""
-    R = 6371.0
-    phi1, phi2 = math.radians(lat1), math.radians(lat2)
-    dphi = math.radians(lat2 - lat1)
-    dlam = math.radians(lng2 - lng1)
-    a = math.sin(dphi / 2) ** 2 + math.cos(phi1) * math.cos(phi2) * math.sin(dlam / 2) ** 2
-    return R * 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
 
 
 def _profile_scores(p: MerchantProfile | None, dimensions: list[str]) -> dict[str, float | None]:
@@ -103,7 +91,13 @@ def compare_merchant_benchmark(
                 Merchant.merchant_id != merchant_id,
                 Merchant.city == target_m.city,
                 Merchant.is_active == True,
-                Merchant.lat.isnot(None),
+                Merchant.merchant_h3_cell.in_(
+                    H3CandidateIndex().cells_for_radius(
+                        target_m.lat,
+                        target_m.lng,
+                        radius_km,
+                    )
+                ),
             )
         )
 
@@ -117,22 +111,10 @@ def compare_merchant_benchmark(
         if target_category:
             stmt = stmt.filter(Merchant.category.ilike(f"%{target_category.strip()}%"))
 
-        candidates = stmt.limit(50).all()
-
-        # Apply haversine radius filter and sort
-        nearby: list[tuple[float, Merchant, MerchantProfile | None]] = []
-        for comp_m, comp_p in candidates:
-            if comp_m.lat is None:
-                continue
-            dist = _haversine_km(target_m.lat, target_m.lng, comp_m.lat, comp_m.lng)
-            if dist <= radius_km:
-                nearby.append((dist, comp_m, comp_p))
-
-        nearby.sort(key=lambda x: x[0])
-        nearby = nearby[: min(limit, 10)]
+        nearby = stmt.order_by(Merchant.name).limit(min(limit, 10)).all()
 
         competitors: list[dict[str, Any]] = []
-        for dist, comp_m, comp_p in nearby:
+        for comp_m, comp_p in nearby:
             comp_scores = _profile_scores(comp_p, target_dims)
             delta = {
                 d: round(comp_scores[d] - (target_scores[d] or 0), 3)
@@ -143,7 +125,7 @@ def compare_merchant_benchmark(
             competitors.append({
                 "merchant_id": comp_m.merchant_id,
                 "name": comp_m.name,
-                "distance_km": round(dist, 2),
+                "distance_km": None,
                 "scores": comp_scores,
                 "delta_vs_target": delta,
             })
@@ -167,31 +149,6 @@ def compare_merchant_benchmark(
         if db is None:
             session.close()
 
-
-# Backward-compat stub for old compare_competitors callers
-def compare_competitors(
-    merchant_id: str,
-    radius_km: float = 5.0,
-    limit: int = 5,
-    db: Session | None = None,
-    cache: CachePort | None = None,
-) -> dict[str, Any]:
-    """Backward-compatible wrapper around compare_merchant_benchmark."""
-    return compare_merchant_benchmark(
-        merchant_id=merchant_id,
-        radius_km=radius_km,
-        limit=limit,
-        db=db,
-        cache=cache,
-    )
-
-
-def register(reg: Any) -> None:
-    """Auto-discovery entry point (legacy registry). No-op — tools now registered via CrewAI tool classes."""
-    pass
-
-
-# --- CrewAI Tool Class ---
 
 from typing import Literal
 
@@ -217,35 +174,3 @@ class CompareMerchantBenchmarkInput(BaseModel):
         None,
         description="Optional subset of dimension keys to compare. Leave empty/None to compare all 8 dimensions.",
     )
-
-
-class CompareMerchantBenchmarkTool(BaseTool):
-    name: str = "compare_merchant_benchmark"
-    description: str = (
-        "Compare a merchant's quality dimension scores against nearby competitors "
-        "of the same cuisine or category. Returns target scores, competitor scores, and "
-        "per-dimension delta (positive = competitor is better). "
-        "Use `dimensions` to focus on specific areas of interest."
-    )
-    args_schema: Type[BaseModel] = CompareMerchantBenchmarkInput
-
-    def _run(
-        self,
-        merchant_id: str,
-        radius_km: float = 5.0,
-        limit: int = 5,
-        cuisine: str | None = None,
-        category: str | None = None,
-        dimensions: list[str] | None = None,
-    ) -> str:
-        from core.dependencies import get_cache
-        res = compare_merchant_benchmark(
-            merchant_id=merchant_id,
-            radius_km=min(max(0.5, radius_km), 20.0),
-            limit=min(max(1, limit), 10),
-            cuisine=cuisine,
-            category=category,
-            dimensions=dimensions,
-            cache=get_cache(),
-        )
-        return json.dumps(res, ensure_ascii=False)

@@ -5,10 +5,8 @@ Security Rule C2: `overall_score` / `overall_score_internal` MUST be stripped.
 """
 from __future__ import annotations
 
-import json
-from typing import Any, List, Optional, Type
+from typing import Any, List, Optional
 
-from crewai.tools import BaseTool
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
@@ -101,6 +99,10 @@ def get_merchant_profile_summary(
             "name": m.name,
             "cuisine": m.cuisine,
             "city": m.city,
+            "city_slug": m.city_slug,
+            "address": m.address,
+            "lat": float(m.lat) if m.lat is not None else None,
+            "lng": float(m.lng) if m.lng is not None else None,
             "tier": p.tier if p else None,
             "price_level": p.price_level if p else None,
             "dimensions": dim_data,
@@ -115,8 +117,6 @@ def get_merchant_profile_summary(
         if db is None:
             session.close()
 
-
-# --- CrewAI Tool Class ---
 
 from typing import Literal
 
@@ -141,27 +141,3 @@ class GetMerchantProfileSummaryInput(BaseModel):
             "Leave empty/None to retrieve all 8 quality dimensions."
         ),
     )
-
-
-class GetMerchantProfileSummaryTool(BaseTool):
-    name: str = "get_merchant_profile_summary"
-    description: str = (
-        "Retrieve a merchant's quality profile: 8-dimension scores (food_quality, "
-        "image_quality, delivery_quality, packaging, service, waiting_time, "
-        "menu_diversity, price_competitiveness), tier, price_level, and platform ratings. "
-        "Does NOT return overall_score. Use `dimensions` to request only what you need."
-    )
-    args_schema: Type[BaseModel] = GetMerchantProfileSummaryInput
-
-    def _run(
-        self,
-        merchant_id: str,
-        dimensions: list[str] | None = None,
-    ) -> str:
-        from core.dependencies import get_cache
-        res = get_merchant_profile_summary(
-            merchant_id=merchant_id,
-            dimensions=dimensions,
-            cache=get_cache(),
-        )
-        return json.dumps(res, ensure_ascii=False)

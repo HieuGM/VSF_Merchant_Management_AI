@@ -37,7 +37,7 @@ class Settings(BaseSettings):
     llm_base_url: str | None = None
 
     # --- Cache ---
-    cache_backend: str = "memory"  # "memory" | "redis"
+    cache_backend: str = "redis"  # "memory" | "redis"
 
     # --- CORS (FE origins) — comma-separated. Default is the Vite dev server only;
     # do NOT use "*" together with credentials (reflects any origin). ---

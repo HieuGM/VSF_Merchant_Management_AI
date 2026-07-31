@@ -14,7 +14,6 @@ from tools.allow_list import AGENT_TOOL_ALLOW_LIST
 _CONFIG_ROOT = Path(__file__).resolve().parents[1].parent / "agents"
 _YAML_FILES = [
     _CONFIG_ROOT / "customer" / "config" / "agents.yaml",
-    _CONFIG_ROOT / "merchant" / "config" / "agents.yaml",
 ]
 
 

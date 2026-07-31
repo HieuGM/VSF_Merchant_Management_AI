@@ -81,6 +81,37 @@ def test_score_pipeline_result_uses_ragas_tools_and_includes_trace_tokens():
     assert scored["token_usage"]["total_tokens"] == 100
 
 
+def test_score_pipeline_result_maps_native_roles_and_owner_bound_tool_names():
+    scored = score_pipeline_result(
+        _case(),
+        {
+            "capabilities": ["coordinator", "market_search", "cohort_analysis"],
+            "reply": "Đã tìm quán và phân tích nhóm.",
+            "trace_summary": [
+                {
+                    "event": "crewai_tool_requested",
+                    "agent_name": "Merchant Advisory Coordinator",
+                    "tool_name": "delegate_work_to_coworker",
+                },
+                {
+                    "event": "tool_started",
+                    "agent_name": "market_search",
+                    "tool_name": "search_merchants",
+                },
+                {
+                    "event": "tool_started",
+                    "agent_name": "cohort_analysis",
+                    "tool_name": "aggregate_public_merchant_cohort",
+                },
+            ],
+        },
+    )
+
+    assert scored["actual_agent"] == ["market_search", "cohort_analysis"]
+    assert scored["scores"]["agent_f1"] == 1.0
+    assert scored["scores"]["tool_call_f1"] == 1.0
+
+
 def test_markdown_report_exposes_per_case_trace_and_tokens():
     scored = score_pipeline_result(
         _case(),

@@ -25,8 +25,6 @@ def _merchant(db_session, merchant_id: str, name: str) -> None:
             is_active=True,
         )
     )
-
-
 def test_cohort_contains_public_aggregates_and_no_private_kpis(db_session):
     for merchant_id, food_score in (("m_cohort_01", 0.7), ("m_cohort_02", 0.9)):
         _merchant(db_session, merchant_id, f"Quán {merchant_id}")

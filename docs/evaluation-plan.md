@@ -3,6 +3,23 @@
 > Cập nhật: 2026-07-21. Maps roadmap Feature L (L-01..L-04). Nguồn: `sample-qa.md`, `demo-script.md`, design mục 5.6/11/15.
 > Nguyên tắc: chấm theo **cấu trúc + evidence + guardrail**, KHÔNG so khớp chuỗi free-text.
 
+## 0. Phân biệt benchmark và diagnostic guardrail
+
+`backend/tests/diagnostic/test_input_routing_trace_regression.py` là regression
+guardrail nhỏ, deterministic cho input routing, giới hạn công việc tool, và
+contract trace live/replay. Nó dùng fixture `PreparedRequest` qua fake-analyzer
+seam để test router thật, nhưng **không** gọi model/provider, không so sánh câu
+trả lời tự nhiên, không tạo benchmark score, và không thay thế việc dev đọc
+trace thực tế. Chạy:
+
+```bash
+conda run -n ocr python -m pytest backend/tests/diagnostic/test_input_routing_trace_regression.py -q
+```
+
+Dataset eval bên dưới là nguồn tình huống/evidence để triage và kiểm tra có
+review; không được dùng một mình như thước đo chất lượng hay mục tiêu tối ưu
+prompt/model.
+
 ## 1. Dataset eval (L-01)
 
 - Cố định, versioned: `data/eval/cases.jsonl` (mỗi dòng 1 case).

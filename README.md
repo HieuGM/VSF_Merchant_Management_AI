@@ -103,3 +103,15 @@ SELECT haversine(lat1, lon1, lat2, lon2);
    PYTHONPATH=. alembic upgrade head
    ```
 4. Always commit your migrations inside `backend/migrations/versions/` alongside your model updates.
+
+## Diagnostic routing and trace regression
+
+The diagnostic suite is a small deterministic guardrail for request routing,
+tool-work budgets, and the live/replay semantic trace contract. It deliberately
+does not score LLM prose, rank models, or replace manual trace inspection.
+
+Run it with the project Conda environment:
+
+```bash
+conda run -n ocr python -m pytest backend/tests/diagnostic/test_input_routing_trace_regression.py -q
+```

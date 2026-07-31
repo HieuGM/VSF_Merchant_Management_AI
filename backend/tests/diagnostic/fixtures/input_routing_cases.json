@@ -1,0 +1,103 @@
+{
+  "schema_version": 1,
+  "description": "Deterministic routing and semantic-trace guardrail cases. expected values deliberately exclude final assistant prose and LLM-quality assertions.",
+  "cases": [
+    {
+      "case_id": "out_of_scope_reject",
+      "description": "The deterministic scope guard rejects a known off-topic request before any coordinator or business tool work.",
+      "raw_query": "Bạn có thể viết code Python cho tôi không?",
+      "prepared": {
+        "rewritten_query": "Bạn có thể viết code Python cho tôi không?",
+        "resolved_references": [],
+        "scope_candidate": "out_of_scope",
+        "missing_context": [],
+        "proposed_outcome": "coordinate"
+      },
+      "expected": {
+        "route": "reject",
+        "max_crew_kickoffs": 0,
+        "business_tool_calls": 0
+      }
+    },
+    {
+      "case_id": "bound_immutable_fast_answer",
+      "description": "Only an immutable fact explicitly bound to the rewritten query can bypass tools and the coordinator.",
+      "raw_query": "Bạn là ai?",
+      "prepared": {
+        "rewritten_query": "Merchant Advisor identity",
+        "resolved_references": [],
+        "scope_candidate": "allowed",
+        "missing_context": [],
+        "proposed_outcome": "fast_answer"
+      },
+      "session_state": {
+        "merchant_agentic.immutable_facts": {
+          "identity": {
+            "source_stability": "immutable",
+            "normalized_query": "Merchant Advisor identity",
+            "value": "immutable session fact"
+          }
+        }
+      },
+      "expected": {
+        "route": "fast_answer",
+        "max_crew_kickoffs": 0,
+        "business_tool_calls": 0
+      }
+    },
+    {
+      "case_id": "context_resolved_market_search_coordinate",
+      "description": "A context-resolved discovery request reaches the coordinator once; it is not mistaken for a direct public-detail lookup.",
+      "raw_query": "Tìm quán bún cá gần đây ở Hải Phòng.",
+      "history": [{"sender": "user", "text": "Tôi đang ở Hải Phòng."}],
+      "prepared": {
+        "rewritten_query": "Tìm các quán bún cá gần vị trí người dùng ở Hải Phòng.",
+        "resolved_references": [{"kind": "location", "name": "Hải Phòng", "source": "recent_history", "confidence": "high"}],
+        "scope_candidate": "allowed",
+        "missing_context": [],
+        "proposed_outcome": "coordinate"
+      },
+      "expected": {
+        "route": "coordinate",
+        "max_crew_kickoffs": 1,
+        "business_tool_calls": 0
+      }
+    },
+    {
+      "case_id": "repeated_tool_calls_remain_visible",
+      "description": "Two genuine repeated business tool invocations stay as two completed semantic spans; trace correlation may merge SDK and gateway observations, never separate invocations.",
+      "raw_query": "Tìm quán bún cá gần đây ở Hải Phòng.",
+      "prepared": {
+        "rewritten_query": "Tìm các quán bún cá gần vị trí người dùng ở Hải Phòng.",
+        "resolved_references": [{"kind": "location", "name": "Hải Phòng", "source": "current_query", "confidence": "high"}],
+        "scope_candidate": "allowed",
+        "missing_context": [],
+        "proposed_outcome": "coordinate"
+      },
+      "simulated_business_tool_calls": 2,
+      "expected": {
+        "route": "coordinate",
+        "max_crew_kickoffs": 1,
+        "business_tool_calls": 2
+      }
+    },
+    {
+      "case_id": "stream_replay_sequence",
+      "description": "Live spans followed by replay after the last contiguous sequence reconstruct one ordered, duplicate-free trace.",
+      "raw_query": "Tìm quán bún cá gần đây ở Hải Phòng.",
+      "prepared": {
+        "rewritten_query": "Tìm các quán bún cá gần vị trí người dùng ở Hải Phòng.",
+        "resolved_references": [{"kind": "location", "name": "Hải Phòng", "source": "current_query", "confidence": "high"}],
+        "scope_candidate": "allowed",
+        "missing_context": [],
+        "proposed_outcome": "coordinate"
+      },
+      "assert_stream_replay": true,
+      "expected": {
+        "route": "coordinate",
+        "max_crew_kickoffs": 1,
+        "business_tool_calls": 0
+      }
+    }
+  ]
+}

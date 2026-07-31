@@ -44,15 +44,14 @@ Cách chấm điểm Merchant Profile (as-built). Code gốc: `scripts/profile/d
 - Evidence: rating, service_complaint_count.
 
 ### 6. waiting_time
-- `1 − (avg_prep_minutes − 5)/40 − 0.03·complaint_giao_hàng_trễ`. (5 phút≈1.0, 45 phút≈0.0). Mặc định prep 15.
-- Evidence: avg_prep_minutes, late_complaint_count.
-- ⚠️ **[QUYẾT ĐỊNH 2026-07-21 — CHỜ IMPLEMENT tuần 2]** Bỏ số hạng `− 0.03·complaint_giao_hàng_trễ` → `waiting_time = 1 − (avg_prep_minutes − 5)/40` (prep thuần). Xem Decision log.
+- `1 − (avg_prep_minutes − 5)/40`. (5 phút≈1.0, 45 phút≈0.0). Mặc định prep 15.
+- Evidence: `avg_prep_minutes` only. Khiếu nại giao trễ thuộc `delivery_quality`.
 
 ### 7. menu_diversity
 - `0.6·clamp(dish_count/80) + 0.4·clamp(dish_type_count/8)`.
 - Evidence: dish_count, dish_type_count.
 
-### 8. price_level  *(PRD 4.1: giá vs phân khúc/khu vực)*
+### 8. price_competitiveness  *(PRD 4.1: giá vs phân khúc/khu vực)*
 - **KHÔNG phải "giá tuyệt đối cao = xấu".** Điểm = độ cạnh tranh giá so với **peer cùng cuisine**.
 - `ratio = price / peer_median` (median giá cùng cuisine; cuisine <5 quán → fallback median toàn cục).
 - `over = max(0, ratio − 1)`; `score = clamp(1 − over·1.5)`. Giá ngang/rẻ hơn peers → 1.0; chỉ ĐẮT hơn peers mới giảm.
@@ -67,9 +66,9 @@ Cách chấm điểm Merchant Profile (as-built). Code gốc: `scripts/profile/d
 | delivery_quality | on_time 0.5 · driver 0.3 · time 0.2 | giao_hàng_trễ (−0.03) |
 | packaging | packaging_ok_rate | đóng_gói_kém (−0.05) |
 | service | rating_norm | thái_độ_phục_vụ (−0.06) |
-| waiting_time | avg_prep_minutes | giao_hàng_trễ (−0.03) |
+| waiting_time | avg_prep_minutes | — |
 | menu_diversity | dish_count 0.6 · dish_type 0.4 | — |
-| price_level | ratio vs peer_median cùng cuisine | — (giá_cao phản ánh gián tiếp qua ratio) |
+| price_competitiveness | ratio vs peer_median cùng cuisine | — (giá_cao phản ánh gián tiếp qua ratio) |
 
 ## Kịch bản quán yếu có chủ đích
 5 hero được gán 1 điểm yếu tất định (config `scripts/synth/scenarios.py`, nguồn gán `SCENARIO_ASSIGN`): `weak_delivery` (10344), `weak_service` (68814), `weak_packaging` (100810), `weak_food` (13909), `slow_prep` (233150). Hai cơ chế: (a) *ops-driven* ép số vận hành xấu (delivery/packaging/prep); (b) *rating-anchored* qua complaints tập trung + review điểm thấp. Chi tiết: [`data-pipeline-and-dictionary.md`](./data-pipeline-and-dictionary.md) (mục "Kịch bản quán yếu có chủ đích").
@@ -78,7 +77,7 @@ Cách chấm điểm Merchant Profile (as-built). Code gốc: `scripts/profile/d
 | Ngày | Quyết định | Trạng thái | Tác động |
 |---|---|---|---|
 | 2026-07-21 | **`overall_score` chỉ nội bộ**, không surface ra UI/Agent | ✅ chốt (rule cứng ở trên) | Enforce ở API #7 + Agent prompt |
-| 2026-07-21 | **Bỏ penalty `giao_hàng_trễ` khỏi `waiting_time`** (waiting = prep thuần); vẫn giữ ở `delivery_quality` | ⏳ chờ implement tuần 2 (2 dòng trong `dimension_scoring.py::waiting_time` + rebuild) | 16 quán hero. VD: 10344 waiting 0.70→0.85 (hết điểm yếu phụ giả), 233150 0.15→0.28 (vẫn thấp nhất). **Không đổi target nào của 5 hero** |
+| 2026-07-23 | **Bỏ penalty `giao_hàng_trễ` khỏi `waiting_time`** (waiting = prep thuần); vẫn giữ ở `delivery_quality` | ✅ đã migrate | Evidence waiting-time chỉ còn thời gian chuẩn bị; complaint giao trễ không còn bị gán cho bếp |
 
 **Lý do (b):** `giao_hàng_trễ` = khiếu nại *đơn tới trễ*, thuộc về giao hàng → chỉ trừ `delivery_quality`. Trừ thêm `waiting_time` (tốc độ bếp) là quy kết sai nguồn, tạo điểm yếu phụ giả, làm nhiễu chẩn đoán demo (mỗi hero nên lộ đúng 1 điểm yếu).
 

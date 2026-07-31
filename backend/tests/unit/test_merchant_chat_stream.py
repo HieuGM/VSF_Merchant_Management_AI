@@ -90,3 +90,32 @@ def test_chat_stream_executes_chat_once_and_finishes_with_plan_trace_tokens(
     ]
     assert payload["token_usage"]["total_tokens"] == 120
     assert payload["duration_ms"] == 456
+
+
+def test_chat_stream_yields_trace_span_before_execution_finish(monkeypatch):
+    """Semantic spans are sent as soon as the worker emits them, not post-hoc."""
+
+    def fake_chat(*args, event_callback=None, **kwargs):
+        assert event_callback is not None
+        event_callback(
+            "trace_span",
+            {
+                "trace_id": "tr-stream-semantic",
+                "seq": 1,
+                "span_id": "sp-input",
+                "kind": "finished",
+            },
+        )
+        return {"trace_id": "tr-stream-semantic", "reply": "Đã xong."}
+
+    monkeypatch.setattr(merchant_flow, "chat", fake_chat)
+
+    events = list(
+        merchant_flow.chat_stream(
+            merchant_id="68814", message="Giờ mở cửa?", session_id="sess-replay"
+        )
+    )
+
+    assert next(index for index, item in enumerate(events) if "event: trace_span" in item) < next(
+        index for index, item in enumerate(events) if "event: execution_finish" in item
+    )

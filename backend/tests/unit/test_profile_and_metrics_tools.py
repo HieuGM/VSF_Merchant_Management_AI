@@ -3,14 +3,8 @@ from __future__ import annotations
 
 from database.models import Merchant, OperationalMetric
 from relational_test_fixtures import seed_relational_profile
-from tools.merchant.profile_tool import (
-    get_merchant_profile_summary,
-    GetMerchantProfileSummaryTool,
-)
-from tools.merchant.metrics_tool import (
-    get_merchant_operational_metrics,
-    GetMerchantOperationalMetricsTool,
-)
+from tools.merchant.profile_tool import get_merchant_profile_summary
+from tools.merchant.metrics_tool import get_merchant_operational_metrics
 
 
 def test_get_merchant_profile_summary_dimension_filtering(db_session):
@@ -20,6 +14,9 @@ def test_get_merchant_profile_summary_dimension_filtering(db_session):
         cuisine="Món Việt",
         city="Hà Nội",
         city_slug="ha-noi",
+        address="12 Lê Lợi, Hoàn Kiếm",
+        lat=21.028,
+        lng=105.854,
     )
     db_session.add(m)
     seed_relational_profile(
@@ -43,28 +40,9 @@ def test_get_merchant_profile_summary_dimension_filtering(db_session):
     # Security Rule C2 check
     assert "overall_score" not in res
     assert "overall_score_internal" not in res
-
-
-def test_get_merchant_profile_summary_tool_class(db_session, monkeypatch):
-    m = Merchant(
-        merchant_id="m_profile_tool_class_01",
-        name="Quán Phở Thìn",
-        cuisine="Món Phở",
-        city="Hà Nội",
-        city_slug="ha-noi",
-    )
-    db_session.add(m)
-    seed_relational_profile(db_session, "m_profile_tool_class_01", scores={"food_quality": 0.80})
-    db_session.commit()
-
-    import tools.merchant.profile_tool as profile_tool_mod
-    monkeypatch.setattr(profile_tool_mod, "SessionLocal", lambda: db_session)
-
-    tool = GetMerchantProfileSummaryTool()
-    output_str = tool._run(merchant_id="m_profile_tool_class_01", dimensions=["food_quality"])
-    assert "m_profile_tool_class_01" in output_str
-    assert "food_quality" in output_str
-    assert "overall_score" not in output_str
+    assert res["address"] == "12 Lê Lợi, Hoàn Kiếm"
+    assert res["lat"] == 21.028
+    assert res["lng"] == 105.854
 
 
 def test_get_merchant_operational_metrics(db_session):
@@ -92,31 +70,3 @@ def test_get_merchant_operational_metrics(db_session):
     assert res["status"] == "ok"
     assert res["metrics"]["avg_prep_time_min"] == 18.5
     assert res["metrics"]["on_time_rate"] == 0.92
-
-
-def test_get_merchant_operational_metrics_tool_class(db_session, monkeypatch):
-    m = Merchant(
-        merchant_id="m_metrics_tool_01",
-        name="Quán Test Tool",
-        cuisine="Món Việt",
-        city="Hà Nội",
-        city_slug="ha-noi",
-    )
-    db_session.add(m)
-    db_session.flush()
-    metric = OperationalMetric(
-        merchant_id="m_metrics_tool_01",
-        avg_prep_time_min=22.0,
-        on_time_rate=0.85,
-        source_kind="development_fixture",
-    )
-    db_session.add(metric)
-    db_session.commit()
-
-    import tools.merchant.metrics_tool as metrics_tool_mod
-    monkeypatch.setattr(metrics_tool_mod, "SessionLocal", lambda: db_session)
-
-    tool = GetMerchantOperationalMetricsTool()
-    output_str = tool._run(merchant_id="m_metrics_tool_01")
-    assert "m_metrics_tool_01" in output_str
-    assert "22.0" in output_str

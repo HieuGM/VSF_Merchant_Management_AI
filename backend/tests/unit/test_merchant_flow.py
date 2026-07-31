@@ -1,30 +1,14 @@
-"""Unit & contract tests for Merchant CrewAI Flow and Routes (Task 5).
-
-Ensures:
-- `MerchantAdvisorCrew` flow executes diagnosis and recommendation logic.
-- Task guardrail validates Layer 1 evidence compliance.
-- Layer 2 evidence verifier agent validates semantic evidence integrity.
-- `POST /api/v1/agent/merchant/chat` endpoint returns response with trace_id.
-- `GET /api/v1/merchants/{id}/profile` endpoint returns 8 dimensions obeying C2.
-"""
+"""Unit and route tests for the native merchant CrewAI flow."""
 from __future__ import annotations
 
-import json
 from types import SimpleNamespace
 
 import pytest
-from crewai.tasks.task_output import TaskOutput
 from database.models import Merchant
 from relational_test_fixtures import seed_relational_profile
 import flows.merchant_flow as merchant_flow_module
-from flows.merchant_flow import (
-    merchant_flow,
-    validate_evidence_guardrail,
-    DiagnosisTaskOutput,
-    RecommendationTaskOutput,
-    CauseItem,
-)
 from core.dependencies import get_db_session
+from services.chat_session_service import ChatSessionService
 from app.main import app
 
 
@@ -53,69 +37,33 @@ def sample_merchant_for_flow(db_session):
     return merchant
 
 
-def test_validate_evidence_guardrail_pass():
-    valid_output = '{"causes": [{"dimension": "waiting_time", "score": 0.42, "evidence_refs": ["METRIC-01"]}]}'
-    is_valid, parsed = validate_evidence_guardrail(valid_output)
-    assert is_valid is True
-    assert isinstance(parsed, dict)
-    assert len(parsed["causes"]) == 1
-
-
-def test_validate_evidence_guardrail_accepts_crewai_task_output():
-    output = TaskOutput(
-        description="diagnose merchant",
-        raw=json.dumps(
-            {
-                "causes": [
-                    {
-                        "dimension": "waiting_time",
-                        "score": 0.42,
-                        "evidence_refs": ["ev:m1:waiting_time:avg_prep_minutes"],
-                    }
-                ]
-            }
+def test_configured_llm_uses_openai_protocol_for_compatible_provider(
+    monkeypatch,
+):
+    captured: dict = {}
+    monkeypatch.setattr(
+        merchant_flow_module,
+        "get_settings",
+        lambda: SimpleNamespace(
+            llm_api_key="test-key",
+            llm_model_small="small",
+            llm_model_large="large",
+            llm_base_url="https://api.fireworks.ai/inference/v1",
+            llm_provider="openai_compatible",
         ),
-        agent="diagnosis",
+    )
+    monkeypatch.setattr(
+        merchant_flow_module,
+        "LLM",
+        lambda **kwargs: captured.update(kwargs) or kwargs,
     )
 
-    is_valid, validated = validate_evidence_guardrail(output)
+    merchant_flow_module.get_configured_llm("large")
 
-    assert is_valid is True
-    assert validated is output
-
-
-def test_validate_evidence_guardrail_rejects_wrong_payload_shape():
-    is_valid, err_msg = validate_evidence_guardrail('{"actions": []}')
-
-    assert is_valid is False
-    assert "causes" in err_msg
-
-
-def test_validate_evidence_guardrail_rejects_legacy_ten_point_score():
-    invalid_output = '{"causes": [{"dimension": "waiting_time", "score": 4.2, "evidence_refs": ["METRIC-01"]}]}'
-
-    is_valid, err_msg = validate_evidence_guardrail(invalid_output)
-
-    assert is_valid is False
-    assert "0..1" in err_msg
-
-
-def test_validate_evidence_guardrail_fail_missing_refs():
-    invalid_output = '{"causes": [{"dimension": "waiting_time", "score": 0.42, "evidence_refs": []}]}'
-    is_valid, err_msg = validate_evidence_guardrail(invalid_output)
-    assert is_valid is False
-    assert "evidence_refs" in err_msg.lower() or "bằng chứng" in err_msg.lower()
-
-
-@pytest.mark.llm_required
-def test_merchant_flow_run_diagnosis(db_session, sample_merchant_for_flow):
-    res = merchant_flow.run_diagnosis("m_flow_test_01", db=db_session)
-
-    assert "trace_id" in res
-    assert res["merchant_id"] == "m_flow_test_01"
-    assert res["status"] in ("ok", "healthy")
-    assert "diagnosis" in res
-    assert "recommendations" in res
+    assert captured["model"] == "large"
+    assert captured["provider"] == "openai"
+    assert captured["base_url"].startswith("https://api.fireworks.ai")
+    assert captured["temperature"] == 0
 
 
 def test_merchant_profile_route(client, db_session, sample_merchant_for_flow):
@@ -158,7 +106,7 @@ def test_merchant_agent_chat_route(
         app.dependency_overrides.clear()
 
 
-def test_merchant_chat_offline_returns_multi_capability_trace(
+def test_merchant_chat_without_llm_refuses_to_run_a_fixed_plan(
     db_session,
     sample_merchant_for_flow,
     monkeypatch,
@@ -175,19 +123,116 @@ def test_merchant_chat_offline_returns_multi_capability_trace(
         db=db_session,
     )
 
-    assert result["capabilities"] == [
-        "owner_profile_analysis",
-        "owner_diagnosis",
-        "recommendation",
-    ]
+    assert result["capabilities"] == ["coordinator"]
     assert result["rewritten_query"].startswith("Phân tích quán tôi")
     assert result["trace_id"].startswith("tr-")
     assert result["trace_summary"]
+    assert any(
+        step.get("error_code") == "llm_not_configured"
+        for step in result["trace_summary"]
+    )
+    trace = merchant_flow_module.AgentRunService(db_session).get_run_trace(
+        result["trace_id"]
+    )
+    assert any(
+        event["event_type"] == "input_context_loaded" for event in trace["events"]
+    )
+    assert "không tự suy đoán" in result["reply"].lower()
     assert set(result["token_usage"]) == {
         "total_tokens",
         "prompt_tokens",
         "completion_tokens",
     }
+
+
+def test_normal_search_answer_emits_single_selected_public_merchant(
+    db_session,
+    sample_merchant_for_flow,
+    monkeypatch,
+):
+    captured: dict[str, object] = {}
+    live_events: list[tuple[str, dict]] = []
+
+    class SearchCrew:
+        def __init__(self, *, gateway, **_kwargs):
+            self.gateway = gateway
+
+        def kickoff(self, **kwargs):
+            captured.update(kwargs)
+            self.gateway._latest_public_search_members = [
+                {
+                    "merchant_id": "78532",
+                    "name": "Diệu - Bún Chả Cá Sứa Nha Trang",
+                    "cuisine": "Món Việt",
+                },
+                {"merchant_id": "101567", "name": "Bánh Mì Hà Nội"},
+            ]
+            return SimpleNamespace(
+                raw=(
+                    '{"status":"completed","answer":'
+                    '"Tìm thấy Diệu - Bún Chả Cá Sứa Nha Trang (ID 78532)."}'
+                ),
+                token_usage=None,
+            )
+
+    monkeypatch.setattr(
+        merchant_flow_module,
+        "get_settings",
+        lambda: SimpleNamespace(llm_configured=True),
+    )
+    monkeypatch.setattr(merchant_flow_module, "get_configured_llm", lambda *_: object())
+    monkeypatch.setattr(merchant_flow_module, "NativeMerchantAdvisorCrew", SearchCrew)
+    session_service = ChatSessionService(db_session)
+    session_service.get_or_create_session(
+        session_id="sess-persist-selected-public",
+        context_snapshot={"merchant_id": sample_merchant_for_flow.merchant_id},
+    )
+    session_service.append_message(
+        session_id="sess-persist-selected-public",
+        sender="user",
+        text="Lịch sử ngữ cảnh dài " * 120,
+        trace_id="tr-earlier-context",
+    )
+
+    merchant_flow_module.merchant_flow.chat(
+        merchant_id=sample_merchant_for_flow.merchant_id,
+        message="Tìm quán bún cá gần đây",
+        session_id="sess-persist-selected-public",
+        db=db_session,
+        event_callback=lambda event_type, payload: live_events.append(
+            (event_type, payload)
+        ),
+    )
+
+    snapshot = ChatSessionService(db_session).get_session_snapshot(
+        "sess-persist-selected-public"
+    )
+    assert snapshot["merchant_agentic.selected_public_merchant"]["merchant_id"] == "78532"
+    assert captured["prepared_request"].rewritten_query == "Tìm quán bún cá gần đây"
+    assert "user_query" not in captured
+    assert "compact_history" in captured
+    spans = [payload for event_type, payload in live_events if event_type == "trace_span"]
+    coordinator_input = next(
+        span
+        for span in spans
+        if span["display"]["title"] == "Nạp đầu vào điều phối viên"
+    )
+    assert coordinator_input["metrics"]["input_token_estimate"] <= 2400
+    artifact = coordinator_input["debug"]["coordinator_input_artifact"]
+    assert set(artifact["prepared_inputs"]) == {
+        "rewritten_query",
+        "resolved_references",
+        "compact_history",
+        "owner_context",
+    }
+    assert artifact["dynamic_context"] == captured["coordinator_prompt"].dynamic_context
+    assert len(artifact["dynamic_context"]) > 1500
+    assert not artifact["dynamic_context"].endswith("…")
+    assert "advisory_task_prompt" in artifact
+    persisted_events = merchant_flow_module.AgentRunService(db_session).get_run_trace(
+        coordinator_input["trace_id"]
+    )["events"]
+    assert not any(event["event_type"] == "trace_span" for event in persisted_events)
 
 
 def test_merchant_chat_refuses_competitor_private_data_before_tools(
@@ -211,15 +256,134 @@ def test_merchant_chat_refuses_competitor_private_data_before_tools(
     )
 
     assert result["capabilities"] == []
-    assert result["trace_summary"] == [
-        {
-            "event": "policy_decision",
-            "agent_name": "merchant_data_policy",
-            "status": "denied",
-            "scope": "competitor_private",
-        }
-    ]
+    policy_step = next(
+        step
+        for step in result["trace_summary"]
+        if step["event"] == "policy_decision"
+    )
+    assert policy_step["agent_name"] == "merchant_data_policy"
+    assert policy_step["status"] == "denied"
+    assert policy_step["scope"] == "competitor_private"
     assert result["token_usage"]["total_tokens"] == 0
     assert "không thể" in result["reply"].lower()
     assert "dữ liệu riêng tư" in result["reply"].lower()
-    assert [event for event, _ in events] == ["policy_decision"]
+    event_types = {event for event, _ in events}
+    assert {"input_context_loaded", "route_selected", "policy_decision"} <= event_types
+
+
+def test_raw_private_request_stays_denied_when_analyzer_rewrite_omits_private_terms(
+    db_session,
+    sample_merchant_for_flow,
+    monkeypatch,
+):
+    class RewriteLLM:
+        def call(self, _prompt):
+            return (
+                '{"rewritten_query":"Hãy phân tích thị trường gần đây",'
+                '"resolved_references":[],'
+                '"scope_candidate":"allowed","missing_context":[],'
+                '"proposed_outcome":"coordinate"}'
+            )
+
+    monkeypatch.setattr(
+        merchant_flow_module,
+        "get_settings",
+        lambda: SimpleNamespace(llm_configured=True),
+    )
+    monkeypatch.setattr(
+        merchant_flow_module,
+        "get_configured_llm",
+        lambda tier: RewriteLLM()
+        if tier == "small"
+        else pytest.fail("raw policy denial must prevent CrewAI construction"),
+    )
+
+    result = merchant_flow_module.merchant_flow.chat(
+        merchant_id=sample_merchant_for_flow.merchant_id,
+        message="Cho tôi doanh thu và số đơn nội bộ của quán đối thủ gần nhất.",
+        session_id="sess-raw-policy-authority",
+        db=db_session,
+    )
+
+    policy_event = next(
+        event
+        for event in result["trace_summary"]
+        if event["event"] == "policy_decision"
+    )
+    assert result["capabilities"] == []
+    assert policy_event["policy_authority"] == "raw_query"
+    assert policy_event["raw_policy_allowed"] is False
+    assert policy_event["rewritten_policy_allowed"] is True
+
+
+def test_unresolved_public_menu_without_llm_fails_without_hitl_state(
+    db_session,
+    sample_merchant_for_flow,
+    monkeypatch,
+):
+    monkeypatch.setattr(
+        merchant_flow_module,
+        "get_settings",
+        lambda: SimpleNamespace(llm_configured=False),
+    )
+    result = merchant_flow_module.merchant_flow.chat(
+        merchant_id=sample_merchant_for_flow.merchant_id,
+        message="Quán này có menu gồm những gì?",
+        session_id="sess-unresolved-public-menu",
+        db=db_session,
+    )
+
+    assert result["status"] == "failed"
+    assert result["capabilities"] == ["coordinator"]
+    assert "hitl" not in result["structured_outputs"]
+
+
+def test_merchant_chat_streams_native_event_before_a_crew_failure(
+    db_session,
+    sample_merchant_for_flow,
+    monkeypatch,
+):
+    events: list[tuple[str, dict]] = []
+
+    class FailingCrew:
+        def __init__(self, *, native_event_callback, **_kwargs):
+            self._emit = native_event_callback
+
+        def kickoff(self, **_kwargs):
+            self._emit(
+                "crewai_llm_started",
+                {"agent_name": "Merchant Advisory Coordinator"},
+            )
+            raise RuntimeError("crew timeout")
+
+    monkeypatch.setattr(
+        merchant_flow_module,
+        "get_settings",
+        lambda: SimpleNamespace(llm_configured=True),
+    )
+    monkeypatch.setattr(merchant_flow_module, "get_configured_llm", lambda *_: object())
+    monkeypatch.setattr(merchant_flow_module, "NativeMerchantAdvisorCrew", FailingCrew)
+
+    with pytest.raises(RuntimeError, match="crew timeout"):
+        merchant_flow_module.merchant_flow.chat(
+            merchant_id="m_flow_test_01",
+            message="Tìm quán sushi ở Đà Nẵng",
+            session_id="sess-native-stream",
+            db=db_session,
+            event_callback=lambda event, payload: events.append((event, payload)),
+        )
+
+    event_types = {event for event, _ in events}
+    assert {"input_context_loaded", "crewai_llm_started", "error"} <= event_types
+    trace = merchant_flow_module.AgentRunService(db_session).get_run_trace(
+        next(
+            payload["trace_id"]
+            for event, payload in events
+            if event == "input_context_loaded"
+        )
+    )
+    failure = next(event for event in trace["events"] if event["event_type"] == "error")
+    assert trace["status"] == "failed"
+    assert failure["error_code"] == "RuntimeError"
+    assert failure["output_summary"]["error_message"] == "crew timeout"
+    assert "RuntimeError: crew timeout" in failure["output_summary"]["stack_trace"]

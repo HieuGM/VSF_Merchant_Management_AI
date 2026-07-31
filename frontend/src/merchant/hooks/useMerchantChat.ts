@@ -2,11 +2,10 @@ import { useState, useCallback, useEffect } from 'react';
 import { ChatMessage, AgentStepLog, ChatSessionItem, AnalyzedMerchant } from '../types/merchantChat';
 import type { TraceEvent, TraceSpanEvent } from '../types/monitoring';
 import { isTraceSpanEvent } from '../types/monitoring';
-import { getRunTrace, getTraceEventsAfter, parseTraceSpanEvent } from '../api/traceApi';
+import { getRunTrace, parseTraceSpanEvent } from '../api/traceApi';
 
 /**
- * A replay can overlap live SSE. Semantic seq is the server's immutable cursor,
- * so use it—not arrival order—to make the client state stable and idempotent.
+ * Semantic seq keeps independently-emitted SSE spans stable and idempotent.
  */
 export function reduceTraceEvents(events: TraceEvent[], incoming: TraceEvent): TraceEvent[] {
   if (isTraceSpanEvent(incoming)) {
@@ -102,16 +101,8 @@ export function useMerchantChat(merchantId: string = '94') {
           for (const msg of formatted) {
             if (msg.sender === 'assistant' && msg.traceId) {
               try {
-                const [runTrace, semanticSpans] = await Promise.all([
-                  getRunTrace(msg.traceId),
-                  // Old runs may have no semantic spans; the replay endpoint is
-                  // the authoritative source when a v2 timeline does exist.
-                  getTraceEventsAfter(msg.traceId, 0).catch(() => []),
-                ]);
-                const traceEvents = semanticSpans.reduce<TraceEvent[]>(
-                  (current, span) => reduceTraceEvents(current, span),
-                  runTrace.events,
-                );
+                const runTrace = await getRunTrace(msg.traceId);
+                const traceEvents = runTrace.events;
                 if (isMounted && traceEvents.length > 0) {
                   setMessages((current) =>
                     current.map((item) =>
@@ -235,14 +226,9 @@ export function useMerchantChat(merchantId: string = '94') {
 
       let observedTraceId: string | undefined;
       let executionFinished = false;
-      let replayAttempted = false;
-      const receivedSpanSeqs = new Set<number>();
-      let contiguousSpanSeq = 0;
 
       const recordSpan = (span: TraceSpanEvent) => {
         observedTraceId = span.traceId;
-        receivedSpanSeqs.add(span.seq);
-        while (receivedSpanSeqs.has(contiguousSpanSeq + 1)) contiguousSpanSeq += 1;
         setLastTraceId(span.traceId);
         setLiveTraceEvents((current) => reduceTraceEvents(current, span));
         setMessages((current) => current.map((item) => (
@@ -255,13 +241,6 @@ export function useMerchantChat(merchantId: string = '94') {
               }
             : item
         )));
-      };
-
-      const replayMissingSpans = async () => {
-        if (replayAttempted || !observedTraceId) return;
-        replayAttempted = true;
-        const replayed = await getTraceEventsAfter(observedTraceId, contiguousSpanSeq);
-        replayed.forEach(recordSpan);
       };
 
       const markInterrupted = (error: unknown) => {
@@ -641,11 +620,6 @@ export function useMerchantChat(merchantId: string = '94') {
         }
 
         if (!executionFinished) {
-          try {
-            await replayMissingSpans();
-          } catch (replayError) {
-            console.warn('Unable to replay missing semantic trace spans:', replayError);
-          }
           markInterrupted(new Error('Luồng phản hồi kết thúc trước execution_finish.'));
         } else {
           setMessages((prev) =>
@@ -657,13 +631,8 @@ export function useMerchantChat(merchantId: string = '94') {
         // A transport can reject while the browser is closing the stream after
         // it already delivered the terminal event. The terminal event is the
         // authoritative lifecycle boundary; do not turn that completed answer
-        // into a failed one or make a needless replay request.
+        // into a failed one.
         if (!executionFinished) {
-          try {
-            await replayMissingSpans();
-          } catch (replayError) {
-            console.warn('Unable to replay missing semantic trace spans:', replayError);
-          }
           markInterrupted(err);
         }
       } finally {
