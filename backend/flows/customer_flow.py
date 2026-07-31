@@ -1364,7 +1364,16 @@ def _stream_explanation_tokens(messages: list[dict[str, str]]) -> Iterator[str]:
 
     CrewAI's crew-level streaming breaks with the tool-calling search/preference agents on
     FPT, so the SSE path streams the explanation separately through a plain-text streaming
-    call (proven reliable: DeepSeek-V4-Flash streams cleanly). Yields token delta strings."""
+    call. Yields token delta strings.
+
+    Reliability: FPT's streaming endpoint drops ~10-30% of connections mid-flight
+    (`RemoteProtocolError`: peer closed before the body completed; `ReadTimeout`: stalled
+    >30s). Strategy — stream once for the typewriter UX; on a PRE-prefill failure (no token
+    yielded yet) retry the stream once; if that also fails, fall back to a NON-streaming
+    completion (no chunked fragility — most robust on FPT) and yield the whole answer as a
+    single delta. A mid-stream drop AFTER partial output is NOT retried (would duplicate the
+    prefix) — the caller appends a graceful tail. Only when every path fails do we re-raise,
+    so the caller's apology + `explanation_stream_interrupted` warning fires."""
     from openai import OpenAI
 
     from core.settings import get_settings
@@ -1376,19 +1385,58 @@ def _stream_explanation_tokens(messages: list[dict[str, str]]) -> Iterator[str]:
         )
     client = OpenAI(base_url=s.fpt_base_url, api_key=s.fpt_api_key)
     model = s.fpt_model_deepseek or "DeepSeek-V4-Flash"
-    # timeout=30 is httpx read-timeout: a stalled FPT stream (no bytes for 30s) raises
+    # `timeout` is the httpx read-timeout: a stalled FPT stream (no bytes for N s) raises
     # ReadTimeout instead of hanging ~90s until the proxy closes the chunked connection.
-    # Normal chunks arrive every ~10ms so this never fires on the happy path. The SSE
-    # heartbeat (route layer) keeps the connection alive meanwhile; this guard aborts a
-    # truly hung upstream so the streaming-loop fallback can take over.
-    stream = client.chat.completions.create(
-        model=model, messages=messages, stream=True, timeout=30.0
-    )
-    for chunk in stream:
-        if chunk.choices:
-            delta = chunk.choices[0].delta.content
-            if delta:
-                yield delta
+    # Normal chunks arrive every ~10ms so this never fires on the happy path; the SSE
+    # heartbeat (route layer) keeps the connection alive meanwhile.
+    last_exc: Exception | None = None
+    for _ in range(2):
+        yielded = False
+        try:
+            stream = client.chat.completions.create(
+                model=model, messages=messages, stream=True, timeout=30.0
+            )
+            for chunk in stream:
+                if chunk.choices:
+                    delta = chunk.choices[0].delta.content
+                    if delta:
+                        yielded = True
+                        yield delta
+            if yielded:
+                return  # streamed ≥1 token and completed — success
+            # empty stream (rare FPT empty-response) → treat as failure, retry/fall back
+            last_exc = RuntimeError("empty_stream")
+        except Exception as stream_exc:  # noqa: BLE001 - transient FPT drop/stall
+            if yielded:
+                raise  # partial already streamed → caller tail-handler, don't dup the prefix
+            last_exc = stream_exc  # prefill failed (no token) → retry / fall back below
+
+    # Both streaming attempts failed/empty before any token → robust non-streaming fallback.
+    # Non-streaming (one full response) avoids the chunked-stream drops FPT is prone to; it
+    # yields the whole answer as a single delta so the user still gets a REAL answer (just
+    # without the typewriter effect) instead of the graceful apology.
+    try:
+        resp = client.chat.completions.create(
+            model=model, messages=messages, stream=False, timeout=45.0
+        )
+        content = (resp.choices[0].message.content if resp.choices else "") or ""
+        if content:
+            # Observability: without this log a successful recovery is invisible — operators
+            # can't see FPT streaming sickness, and the only user-facing signal (no warning,
+            # real answer) looks identical to the happy path. Log so prod health + the bench
+            # can distinguish "FPT was healthy" from "fix recovered a drop".
+            _LOG.warning(
+                "fpt_stream_recovered_via_nonstream: both stream attempts failed (%s), "
+                "non-stream fallback succeeded with a real answer",
+                type(last_exc).__name__,
+            )
+            yield content
+            return
+    except Exception as fallback_exc:  # noqa: BLE001 - last-resort call also failed
+        last_exc = fallback_exc
+
+    # Every path failed → re-raise so the caller emits the graceful apology + warning.
+    raise last_exc if last_exc is not None else RuntimeError("explanation_failed")
 
 
 # Singleton instance (kept for existing import sites).

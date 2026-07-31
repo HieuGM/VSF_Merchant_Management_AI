@@ -5,7 +5,10 @@ Sequential process: 3 specialists, no coordinator/manager. Hybrid LLM: gpt-oss-2
 """
 from __future__ import annotations
 
+import httpx
+import pytest
 from crewai import Process
+from types import SimpleNamespace
 
 from agents.customer.customer_crew import build_customer_crew
 from tools.registry import registry
@@ -231,4 +234,152 @@ def test_extract_search_keyword_picks_cuisine():
     assert kw("tìm chỗ ăn ngon") == "an"
     assert kw(None) is None
     assert kw("") is None
+
+
+# --- _stream_explanation_tokens reliability (retry + non-streaming fallback) ---
+# FPT drops ~10-30% of streams (RemoteProtocolError / ReadTimeout). These fake the OpenAI
+# client to prove the happy path streams untouched, prefill-failures retry then fall back,
+# partial drops are NOT retried (no prefix duplication), and total failure re-raises.
+
+class _DroppingStream:
+    """Yields each char of `prefix` as a delta chunk, then raises `exc` (mid-stream drop)."""
+
+    def __init__(self, prefix: str, exc: BaseException) -> None:
+        self._chars = list(prefix)
+        self._exc = exc
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        if self._chars:
+            return SimpleNamespace(
+                choices=[SimpleNamespace(delta=SimpleNamespace(content=self._chars.pop(0)))]
+            )
+        raise self._exc
+
+
+class _ScriptedOpenAI:
+    """OpenAI stand-in for _stream_explanation_tokens. Outcomes are FIFO per mode; each is:
+    an Exception (raise), a str (success: stream=per-char deltas, non-stream=full content),
+    or a (prefix, exc) tuple (stream yields prefix chars then drops). Records call history."""
+
+    def __init__(self, stream_outcomes, nonstream_outcomes):
+        self._sq = list(stream_outcomes)
+        self._nq = list(nonstream_outcomes)
+        self.history: list[tuple[str, float]] = []
+        self.chat = SimpleNamespace(completions=SimpleNamespace(create=self._create))
+
+    def _create(self, *, model, messages, stream, timeout, **kw):
+        self.history.append(("stream" if stream else "nonstream", float(timeout)))
+        if stream:
+            return self._stream_iter(self._sq.pop(0) if self._sq else "")
+        out = self._nq.pop(0) if self._nq else ""
+        if isinstance(out, Exception):
+            raise out
+        return SimpleNamespace(choices=[SimpleNamespace(message=SimpleNamespace(content=out))])
+
+    @staticmethod
+    def _stream_iter(out):
+        if isinstance(out, Exception):
+            raise out
+        if isinstance(out, tuple):  # (prefix, exc) → partial then mid-stream drop
+            return _DroppingStream(out[0], out[1])
+        return [  # full successful stream: one delta chunk per char
+            SimpleNamespace(choices=[SimpleNamespace(delta=SimpleNamespace(content=c))])
+            for c in out
+        ]
+
+
+def _wire_stream_fake(monkeypatch, client: _ScriptedOpenAI) -> None:
+    """Point _stream_explanation_tokens' lazy OpenAI + get_settings imports at `client`."""
+    monkeypatch.setattr("openai.OpenAI", lambda **kw: client)
+    monkeypatch.setattr(
+        "core.settings.get_settings",
+        lambda: SimpleNamespace(
+            fpt_configured=True, fpt_base_url="https://fpt.example", fpt_api_key="k",
+            fpt_model_deepseek="DeepSeek-V4-Flash",
+        ),
+    )
+
+
+def test_stream_succeeds_first_attempt(monkeypatch):
+    """Happy path: stream yields tokens on the first try — typewriter UX, no retry/fallback."""
+    from flows.customer_flow import _stream_explanation_tokens
+
+    client = _ScriptedOpenAI(stream_outcomes=["Xin chào"], nonstream_outcomes=[])
+    _wire_stream_fake(monkeypatch, client)
+
+    out = "".join(_stream_explanation_tokens([{"role": "user", "content": "hi"}]))
+    assert out == "Xin chào"
+    assert [h[0] for h in client.history] == ["stream"]   # exactly one stream call
+    assert client.history[0][1] == 30.0                    # stream read-timeout
+
+
+def test_stream_retry_then_nonstream_fallback(monkeypatch):
+    """Both stream attempts drop at prefill → non-stream fallback yields the REAL answer."""
+    from flows.customer_flow import _stream_explanation_tokens
+
+    drop = httpx.RemoteProtocolError("peer closed without complete message body")
+    client = _ScriptedOpenAI(
+        stream_outcomes=[drop, drop],
+        nonstream_outcomes=["Câu trả lời thật nè"],
+    )
+    _wire_stream_fake(monkeypatch, client)
+
+    out = "".join(_stream_explanation_tokens([{"role": "user", "content": "hi"}]))
+    assert out == "Câu trả lời thật nè"
+    assert [h[0] for h in client.history] == ["stream", "stream", "nonstream"]
+    assert client.history[-1][1] == 45.0                   # non-stream timeout
+
+
+def test_partial_stream_drop_is_not_retried(monkeypatch):
+    """Mid-stream drop AFTER partial tokens must NOT retry (would duplicate the prefix); it
+    re-raises so the caller appends a graceful tail to the partial answer instead."""
+    from flows.customer_flow import _stream_explanation_tokens
+
+    drop = httpx.ReadTimeout("stalled")
+    client = _ScriptedOpenAI(
+        stream_outcomes=[("phở", drop)],                  # yields "phở" then drops
+        nonstream_outcomes=["should-not-be-used"],
+    )
+    _wire_stream_fake(monkeypatch, client)
+
+    deltas: list[str] = []
+    with pytest.raises(httpx.ReadTimeout):
+        for d in _stream_explanation_tokens([{"role": "user", "content": "hi"}]):
+            deltas.append(d)
+    assert "".join(deltas) == "phở"                        # partial preserved
+    assert [h[0] for h in client.history] == ["stream"]    # no retry, no fallback
+
+
+def test_all_paths_fail_reraises(monkeypatch):
+    """Stream×2 + non-stream all fail → re-raise so the caller emits apology + warning."""
+    from flows.customer_flow import _stream_explanation_tokens
+
+    client = _ScriptedOpenAI(
+        stream_outcomes=[httpx.RemoteProtocolError("drop1"), httpx.ReadTimeout("drop2")],
+        nonstream_outcomes=[httpx.ConnectError("nope")],
+    )
+    _wire_stream_fake(monkeypatch, client)
+
+    with pytest.raises(httpx.ConnectError):               # last failure (non-stream) surfaces
+        list(_stream_explanation_tokens([{"role": "user", "content": "hi"}]))
+    assert [h[0] for h in client.history] == ["stream", "stream", "nonstream"]
+
+
+def test_empty_stream_falls_back_to_nonstream(monkeypatch):
+    """Stream CONNECTS but yields no tokens (rare FPT empty-response) → treated as failure,
+    retried, then non-stream fallback yields the real answer (not a silent empty success)."""
+    from flows.customer_flow import _stream_explanation_tokens
+
+    client = _ScriptedOpenAI(
+        stream_outcomes=["", ""],                         # both attempts: zero deltas, no exc
+        nonstream_outcomes=["Real answer"],
+    )
+    _wire_stream_fake(monkeypatch, client)
+
+    out = "".join(_stream_explanation_tokens([{"role": "user", "content": "hi"}]))
+    assert out == "Real answer"
+    assert [h[0] for h in client.history] == ["stream", "stream", "nonstream"]
 

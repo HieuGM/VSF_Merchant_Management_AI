@@ -83,6 +83,7 @@ class Timing:
     tools: dict[str, float] = field(default_factory=dict)  # tool_name -> server ms (sum)
     trace_id: str | None = None
     error: str | None = None
+    warnings: list[str] = field(default_factory=list)  # CustomerChatResponse.warnings
 
 
 def _server_durations(trace_id: str) -> tuple[float | None, float | None, dict[str, float]]:
@@ -168,6 +169,7 @@ def _consume(t: Timing, event: str | None, data: dict, t0: float) -> None:
         sugg = data.get("preference_suggestions") or []
         t.suggestions = len(sugg)
         t.suggestion_fields = [str(s.get("field")) for s in sugg[:4]]
+        t.warnings = list(data.get("warnings") or [])
     elif event == "error":
         t.error = str(data)
 
@@ -199,6 +201,8 @@ def main() -> None:
             print(f"   suggestions: {', '.join(t.suggestion_fields)}")
         if t.answer_text:
             print(f"   ANSWER: {t.answer_text[:280]}")
+        if t.warnings:
+            print(f"   WARNINGS: {t.warnings}")
         if t.tools:
             top = ", ".join(f"{k}={v:.0f}ms" for k, v in
                             sorted(t.tools.items(), key=lambda x: -x[1])[:4])
@@ -253,6 +257,13 @@ def _summarize(results: list[Timing]) -> None:
     pref_ran = sum(1 for r in ok if r.preference_ran)
     print(f"\n  preference ran on {pref_ran}/{len(ok)} queries "
           f"(skip-preference optimization active on the rest)")
+
+    # Stream-reliability: count queries where the FPT explanation stream dropped/timed out
+    # and surfaced the explanation_stream_interrupted warning (target: 0 after the fix).
+    interrupted = [r for r in results
+                   if any("explanation_stream_interrupted" in w for w in r.warnings)]
+    print(f"  explanation_stream_interrupted: {len(interrupted)}/{len(results)} queries "
+          f"(FPT stream drop) -> {sorted(r.case.id for r in interrupted) or 'NONE'}")
 
     # Slowest agent ranking (server-side medians across queries where it ran).
     print("\n  Slowest-agent ranking (server-side median per task):")

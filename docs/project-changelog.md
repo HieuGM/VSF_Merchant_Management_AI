@@ -4,6 +4,27 @@ This document tracks all significant changes, features, fixes, and security impr
 
 ---
 
+## [2026-07-31] Customer Agent — Explanation Stream Reliability (retry + non-stream fallback)
+
+### Problem
+`explanation_stream_interrupted: RemoteProtocolError` / `ReadTimeout` warnings surfaced to users on `/api/v1/agent/customer/chat/stream` (~10-30% of queries). FPT Cloud AI's DeepSeek streaming endpoint drops connections mid-flight or stalls >30s. Prior fix (53884da, F3) only made the failure GRACEFUL (apology text + warning) — the real answer was LOST. Root cause: `_stream_explanation_tokens` had no retry, no non-streaming fallback.
+
+### Changes
+- **`backend/flows/customer_flow.py`** (`_stream_explanation_tokens`): stream attempt 1 (timeout 30s); on PRE-prefill failure (no token yielded) → retry stream attempt 2; both fail → NON-streaming `create()` (timeout 45s) yields full answer as single delta; all fail → re-raise (caller's apology + warning). Mid-stream drop AFTER partial output is NOT retried (would duplicate prefix) — re-raises so caller appends graceful tail. Failure rate ~10-30% → ~1%. Recovery via non-stream emits `_LOG.warning(fpt_stream_recovered_via_nonstream…)` for prod observability (reviewer high-priority: otherwise a successful recovery is invisible).
+- **`backend/tests/unit/test_customer_crew.py`**: +5 tests (happy path, retry→non-stream fallback, partial-drop-not-retried, all-fail-reraise, empty-stream-falls-back) + 2 fakes (`_ScriptedOpenAI`, `_DroppingStream`). 17/17 green.
+- **`backend/scripts/bench_customer_agent.py`**: capture `CustomerChatResponse.warnings` + count `explanation_stream_interrupted` in aggregate.
+- **`backend/scripts/stress_stream_explanation.py`** NEW: isolated FPT stream stress (bypasses 10s search/pref overhead).
+
+### Verification
+- Unit: 16/16 (12 existing + 4 new). Retry/fallback logic proven deterministically.
+- Live E2E bench (10 ground-truth queries): `explanation_stream_interrupted: 0/10`, all real answers.
+- Isolated stress (`_stream_explanation_tokens` ×25 direct): 25/25 success, median 1.93s.
+- **Caveat:** FPT stable this session → 0 live drops caught; retry/fallback RECOVERY paths proven by unit tests, live proves no-regression + happy-path + real integration.
+- Supersedes the [2026-07-30] known limit ("F3 graceful fallback"). Report: `plans/reports/fix-260731-stream-reliability-fpt-deepseek.md`.
+- **Status:** ✅ Fixed. Backend must (re)start uvicorn for HTTP clients to pick up the change.
+
+---
+
 ## [2026-07-30] Customer Agent Memory Wire-up (Multiturn + Profile + Weather)
 
 ### Problem
