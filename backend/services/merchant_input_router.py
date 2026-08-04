@@ -57,22 +57,6 @@ def immutable_session_facts(snapshot: dict[str, Any]) -> dict[str, ImmutableSess
     return facts
 
 
-def conservative_fallback_request(
-    *, raw_query: str
-) -> PreparedRequest:
-    """Keep an unavailable/invalid small model from broadening execution.
-
-    A fallback always delegates; it never attempts a deterministic lookup.
-    """
-    return PreparedRequest(
-        rewritten_query=raw_query.strip() or "Yêu cầu merchant không hợp lệ",
-        resolved_references=[],
-        scope_candidate="unclear",
-        missing_context=[],
-        proposed_outcome="coordinate",
-    )
-
-
 def effective_query_policy(
     raw_policy: QueryPolicyDecision,
     rewritten_policy: QueryPolicyDecision,
@@ -96,6 +80,16 @@ def decide_route(
     """Select exactly one allowed route without planning or tool execution."""
     if not policy.allowed:
         return RoutingDecision("reject", "merchant_data_policy", reply=policy.reason)
+
+    # The analyzer's scope classification is an actual routing gate, not
+    # observability-only metadata. Ambiguous in-scope requests may still be
+    # resolved by the coordinator, but an explicit out-of-scope result stops.
+    if prepared.scope_candidate == "out_of_scope":
+        return RoutingDecision(
+            "reject",
+            "input_scope",
+            reply="Câu hỏi nằm ngoài phạm vi hỗ trợ merchant và tài liệu Green SM.",
+        )
 
     # Fast answers are deliberately narrower than the analyzer contract. No
     # mutable merchant information can enter this path.

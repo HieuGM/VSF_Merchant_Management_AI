@@ -39,7 +39,6 @@ from services.merchant_input_preparation import (
     InputPreparationService,
 )
 from services.merchant_input_router import (
-    conservative_fallback_request,
     decide_route,
     effective_query_policy,
     immutable_session_facts,
@@ -284,7 +283,7 @@ class MerchantFlowDispatcher:
                 },
             )
             analyzer_status = "ok"
-            analyzer_summary = "Đã chuẩn bị yêu cầu cho điều phối viên."
+            analyzer_summary = "Đã chuẩn bị yêu cầu để định tuyến."
             analyzer_debug: dict[str, Any] = {}
             analyzer_llm = (
                 get_configured_llm("small")
@@ -292,21 +291,33 @@ class MerchantFlowDispatcher:
                 else None
             )
             if analyzer_llm is None:
-                prepared_request = conservative_fallback_request(
-                    raw_query=message,
-                )
                 emit(
-                    "input_analyzer_fallback",
+                    "input_analyzer_failed",
                     {
                         "agent_name": "input_analyzer",
                         "task": "prepare_request",
-                        "status": "fallback",
+                        "status": "failed",
                         "reason": "small_llm_not_configured",
-                        "prepared_request": prepared_request.model_dump(),
                     },
                 )
-                analyzer_status = "fallback"
-                analyzer_summary = "Dùng tuyến dự phòng không gọi mô hình."
+                return self._finish_native_response(
+                    session_svc=session_svc,
+                    run_svc=run_svc,
+                    trace_id=trace_id,
+                    session_id=sid,
+                    merchant_id=merchant_id,
+                    query=message,
+                    reply=(
+                        "Không thể phân tích và định tuyến yêu cầu vì Input Analyzer "
+                        "chưa được cấu hình. Không có tuyến dự phòng nào được chạy."
+                    ),
+                    status="failed",
+                    capabilities=[],
+                    trace_summary=trace_summary,
+                    started_clock=started_clock,
+                    structured_outputs={"error_code": "input_analyzer_not_configured"},
+                    flush_trace_events=flush_trace_events,
+                )
             else:
                 try:
                     prepared_request = InputPreparationService(
@@ -331,22 +342,33 @@ class MerchantFlowDispatcher:
                         owner_context=owner_context,
                     )
                 except InputPreparationError as error:
-                    prepared_request = conservative_fallback_request(
-                        raw_query=message,
-                    )
                     emit(
-                        "input_analyzer_fallback",
+                        "input_analyzer_failed",
                         {
                             "agent_name": "input_analyzer",
                             "task": "prepare_request",
-                            "status": "fallback",
+                            "status": "failed",
                             "reason": str(error),
-                            "prepared_request": prepared_request.model_dump(),
                         },
                     )
-                    analyzer_status = "fallback"
-                    analyzer_summary = "Input analyzer không hợp lệ, dùng tuyến dự phòng."
-                    analyzer_debug = {"error": str(error)}
+                    return self._finish_native_response(
+                        session_svc=session_svc,
+                        run_svc=run_svc,
+                        trace_id=trace_id,
+                        session_id=sid,
+                        merchant_id=merchant_id,
+                        query=message,
+                        reply=(
+                            "Input Analyzer trả về kết quả không hợp lệ nên yêu cầu "
+                            "đã dừng; không có tuyến dự phòng nào được chạy."
+                        ),
+                        status="failed",
+                        capabilities=[],
+                        trace_summary=trace_summary,
+                        started_clock=started_clock,
+                        structured_outputs={"error_code": str(error)},
+                        flush_trace_events=flush_trace_events,
+                    )
 
             emit(
                 analyzer_summary,
@@ -491,8 +513,8 @@ class MerchantFlowDispatcher:
             if coordinator_llm is None:
                 reply = (
                     "Hiện chưa thể khởi chạy điều phối viên AI để xử lý yêu cầu này. "
-                    "Vui lòng cấu hình LLM rồi gửi lại câu hỏi; tôi sẽ không tự suy đoán "
-                    "hay chạy một kế hoạch cố định."
+                    "Vui lòng cấu hình LLM rồi gửi lại câu hỏi; tôi sẽ không tự suy "
+                    "đoán hay chạy một tuyến dự phòng."
                 )
                 emit(
                     "error",

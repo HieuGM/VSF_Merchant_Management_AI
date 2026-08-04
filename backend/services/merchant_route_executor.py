@@ -39,5 +39,4 @@ def execute_routing_decision(
             outcome=decision.outcome,
             crew_result=kickoff_coordinator(),
         )
-
     return RouteExecution(outcome=decision.outcome)
