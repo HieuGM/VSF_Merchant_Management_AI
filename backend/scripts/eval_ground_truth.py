@@ -170,11 +170,17 @@ def _ensure_prior_referent(engine, session_id: str, prior_turns: list[dict], cit
         "_seeded_referent": True,  # marker: this prior was eval-seeded (GT names absent from DB)
     }
     names = ", ".join(m["name"] for m in seeded)
+    # NOTE two latent harness bugs fixed here (this branch was dormant in the 39/39 baseline):
+    #   1) CAST(:p AS jsonb) — text() doesn't parse `::cast` glued to a `:param`.
+    #   2) message_id is NOT NULL with no default in the schema; must be generated
+    #      (production uses core.tracing.new_id("msg")).
+    from core.tracing import new_id
     with engine.begin() as c:
         c.execute(text(
-            "INSERT INTO chat_messages (session_id, sender, text, trace_id, structured_payload_json, timestamp) "
-            "VALUES (:s, 'agent', :t, NULL, :p::jsonb, now())"),
-            {"s": session_id, "t": f"Mình thấy có vài quán {kw} hợp bạn, ví dụ {names}.",
+            "INSERT INTO chat_messages (message_id, session_id, sender, text, trace_id, structured_payload_json, timestamp) "
+            "VALUES (:mid, :s, 'agent', :t, NULL, CAST(:p AS jsonb), now())"),
+            {"mid": new_id("msg"), "s": session_id,
+             "t": f"Mình thấy có vài quán {kw} hợp bạn, ví dụ {names}.",
              "p": json.dumps(payload, ensure_ascii=False)})
     return True
 
