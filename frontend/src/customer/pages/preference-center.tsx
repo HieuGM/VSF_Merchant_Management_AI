@@ -4,12 +4,12 @@
  * from it. Live geolocation fills lat/lng; manual entry remains as fallback.
  */
 import type { ReactNode } from "react";
-import { Ban, Database, Heart, LocateFixed, MapPin, Salad, Wallet } from "lucide-react";
+import { Ban, Database, Heart, LocateFixed, MapPin, Salad, StickyNote, Wallet } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useCustomerIdentity } from "../hooks/use-customer-identity";
 import { useGeolocation } from "../hooks/use-geolocation";
 import { usePreferences } from "../hooks/use-preferences";
-import type { Budget } from "../hooks/use-preferences";
+import type { Budget, SyncStatus } from "../hooks/use-preferences";
 import "./preference-center.css";
 
 const BUDGETS: Array<{ v: Budget; label: string; hint: string }> = [
@@ -20,9 +20,16 @@ const BUDGETS: Array<{ v: Budget; label: string; hint: string }> = [
 const DIETARY = ["Chay", "Ít cay", "Không hành", "Ít dầu mỡ", "Không đường", "Healthy"];
 const CUISINES = ["Việt", "Nhật", "Hàn", "Ý", "Thái", "Trung", "Đồ uống", "Ăn vặt"];
 
+const SYNC_LABEL: Record<SyncStatus, string> = {
+  idle: "Lưu cục bộ trên thiết bị",
+  loading: "Đang đồng bộ…",
+  synced: "Đã đồng bộ với máy chủ",
+  offline: "Ngoại tuyến — lưu tạm trên thiết bị",
+};
+
 export default function PreferenceCenter() {
   const { userId } = useCustomerIdentity();
-  const { prefs, update, toggleIn } = usePreferences();
+  const { prefs, notes, sync, update, toggleIn } = usePreferences();
   const geo = useGeolocation();
 
   const toggleUseLocation = async (checked: boolean) => {
@@ -175,9 +182,24 @@ export default function PreferenceCenter() {
           )}
         </section>
 
-        <p className="cpref__note">
-          <Database size={14} /> Lưu cục bộ trên thiết bị này (ID <code>{userId.slice(0, 14)}…</code>).
-          Sẽ đồng bộ với máy chủ khi API sẵn sàng.
+        {notes.length > 0 && (
+          <Section icon={StickyNote} label="Ghi nhớ của trợ lý">
+            <ul className="cpref__notes">
+              {notes.map((n, i) => (
+                <li key={`${i}-${n.slice(0, 12)}`} className="cpref__note-item">
+                  {n}
+                </li>
+              ))}
+            </ul>
+            <p className="cpref__notes-hint">
+              Các lưu ý dài hạn trợ lý rút ra từ hội thoại (vd: dị ứng, ăn kiêng).
+            </p>
+          </Section>
+        )}
+
+        <p className="cpref__note" data-sync={sync}>
+          <Database size={14} /> {SYNC_LABEL[sync]} (ID <code>{userId.slice(0, 14)}…</code>).
+          {sync === "offline" && " Sẽ tự đồng bộ khi có mạng."}
         </p>
       </div>
     </div>

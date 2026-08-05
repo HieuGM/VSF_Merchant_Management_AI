@@ -177,3 +177,53 @@ export async function rejectDelta(userId: string, deltaId: string): Promise<void
   );
   if (!resp.ok) throw new Error(`Reject delta failed: HTTP ${resp.status}`);
 }
+
+/** Canonical taste profile (mirrors backend UserProfilePublic §6.5). */
+export interface UserProfile {
+  user_id: string;
+  liked_cuisines: string[] | null;
+  disliked_cuisines: string[] | null;
+  spice_tolerance: string | null;
+  dietary: string[] | null;
+  budget_level: string | null;
+  distance_preference_km: number;
+  current_lat: number | null;
+  current_lng: number | null;
+  /** Long-term cross-session notes (phase-03). FE reads only `.notes`. */
+  context_memory: { notes?: string[] } | null;
+  updated_at: string | null;
+}
+
+/** Partial taste-profile patch (mirrors backend ProfilePatchRequest; snake_case). */
+export type ProfilePatch = Partial<{
+  liked_cuisines: string[];
+  disliked_cuisines: string[];
+  dietary: string[];
+  budget_level: string | null;
+  distance_preference_km: number;
+}>;
+
+/**
+ * Read the user's confirmed taste profile. Returns null on 404 (no profile yet — the user
+ * has never saved a preference); throws on other errors (caller falls back to cache).
+ */
+export async function getProfile(userId: string): Promise<UserProfile | null> {
+  const resp = await fetch(`${API_BASE}/api/v1/users/${encodeURIComponent(userId)}/profile`);
+  if (resp.status === 404) return null;
+  if (!resp.ok) throw new Error(`Get profile failed: HTTP ${resp.status}`);
+  return (await resp.json()) as UserProfile;
+}
+
+/**
+ * Partial update of the taste profile (explicit user edit). Returns the updated profile.
+ * Backend validates per-field (B5); unknown field → 422, bad value → 400.
+ */
+export async function patchProfile(userId: string, patch: ProfilePatch): Promise<UserProfile> {
+  const resp = await fetch(`${API_BASE}/api/v1/users/${encodeURIComponent(userId)}/profile`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(patch),
+  });
+  if (!resp.ok) throw new Error(`Patch profile failed: HTTP ${resp.status}`);
+  return (await resp.json()) as UserProfile;
+}

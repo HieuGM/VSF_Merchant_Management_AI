@@ -12,7 +12,7 @@ import { ChatMessageView } from "../components/chat-message";
 import { Composer } from "../components/composer";
 import { QuickPrompts } from "../components/quick-prompts";
 import { useChat } from "../context/chat-provider";
-import { preferencesToContext, usePreferences } from "../hooks/use-preferences";
+import { usePreferences } from "../hooks/use-preferences";
 import { useStickToBottom } from "../hooks/use-stick-to-bottom";
 import "./customer-chat.css";
 
@@ -43,7 +43,7 @@ export default function CustomerChat() {
     // (live geolocation or manual entry) — never the HCM placeholder default.
     const hasCoords = prefs.useLocation && prefs.locationReady;
     send({
-      message: text + preferencesToContext(prefs),
+      message: text,
       location: hasCoords ? { lat: prefs.lat, lng: prefs.lng } : null,
     });
   };
