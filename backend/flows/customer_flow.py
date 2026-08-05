@@ -27,6 +27,8 @@ from models.agent import AgentRunRecord, CustomerChatResponse
 from repositories.agent_run_repository import AgentRunRepository
 from tools.registry import registry
 
+from services import context_memory_service
+
 _CREW_NAME = "customer_discovery"
 _LOG = logging.getLogger(__name__)
 
@@ -503,7 +505,7 @@ class CustomerFlow:
         # Phase-01/02: load prior turns for anaphora context + persist the USER turn at
         # ENTRY so a client disconnect still leaves it for next-turn anaphora.
         prior_turns = _load_recent_turns(session_id)
-        _persist_user_turn(session_id, query or "")
+        _persist_user_turn(session_id, query or "", user_id=user_id)
 
         inputs = _build_inputs(
             query=query, cuisine=cuisine, city=city, budget=budget,
@@ -701,7 +703,7 @@ class CustomerFlow:
         # Phase-01/02: load prior turns for anaphora context + persist the USER turn at
         # ENTRY so a client disconnect still leaves it for next-turn anaphora.
         prior_turns = _load_recent_turns(session_id)
-        _persist_user_turn(session_id, query or "")
+        _persist_user_turn(session_id, query or "", user_id=user_id)
         inputs = _build_inputs(
             query=query, cuisine=cuisine, city=city, budget=budget,
             lat=lat, lng=lng, radius_km=radius_km,
@@ -1152,15 +1154,22 @@ def _append_turns(
         db.close()
 
 
-def _persist_user_turn(session_id: str | None, user_text: str) -> None:
-    """Persist the USER turn at flow ENTRY (phase-01 risk R3).
+def _persist_user_turn(
+    session_id: str | None, user_text: str, user_id: str | None = None
+) -> None:
+    """Persist the USER turn at flow ENTRY (phase-01 risk R3) + distill long-term memory.
 
     A client disconnect during the crew run still leaves the user side for next-turn
-    anaphora. No-op when session_id is None. This is the SINGLE write of the user turn —
-    _persist_turns (post-run) writes only the agent turn, so every user row appears once."""
-    if not session_id:
-        return
-    _append_turns(session_id, [("user", user_text, None, {"query": user_text})])
+    anaphora. This is the SINGLE write of the user turn — _persist_turns (post-run) writes
+    only the agent turn, so every user row appears once.
+
+    phase-03: also distills durable facts (allergy / persistent-diet) from the user message
+    into user_profiles.context_memory (cross-session; read by the get_user_profile tool).
+    Best-effort (F3) — a memory failure never breaks the flow."""
+    if session_id:
+        _append_turns(session_id, [("user", user_text, None, {"query": user_text})])
+    if user_id:
+        context_memory_service.maybe_persist(user_id, user_text)
 
 
 def _persist_turns(

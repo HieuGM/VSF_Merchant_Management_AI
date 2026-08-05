@@ -172,6 +172,28 @@ class UserProfileRepository:
         self._db.refresh(row)
         return self._to_public(row)
 
+    def append_context_notes(self, user_id: str, notes: list[str], cap: int = 8) -> None:
+        """Append durable-fact notes to ``context_memory["notes"]`` (JSONB, phase-03).
+
+        Dedupe (case-insensitive) + FIFO cap. Upserts a minimal row if the user has none.
+        One tx on the receiver's session. ``context_memory`` is the LONG-TERM cross-session
+        store — DISTINCT from the short-term ``prior_context`` (chat_messages)."""
+        if not notes:
+            return
+        row = self._get_or_create_row(self._db, user_id)
+        mem = dict(row.context_memory or {})
+        existing = list(mem.get("notes") or [])
+        seen = {n.lower() for n in existing}
+        for n in notes:
+            if n.lower() not in seen:
+                existing.append(n)
+                seen.add(n.lower())
+        if len(existing) > cap:
+            existing = existing[-cap:]  # FIFO: keep the most recent `cap`
+        mem["notes"] = existing
+        row.context_memory = mem  # reassign (not in-place) so SQLAlchemy detects the change
+        self._db.commit()
+
     @staticmethod
     def _to_public(row: UserProfile) -> UserProfilePublic:
         return UserProfilePublic(

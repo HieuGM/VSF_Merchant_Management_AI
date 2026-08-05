@@ -117,7 +117,9 @@ def register(reg: ToolRegistry) -> None:
             name="get_user_profile",
             description=(
                 "Lấy hồ sơ sở thích đã xác nhận của người dùng (cuisine thích/ghét, mức chi, "
-                "khẩu vị, ăn kiêng, vị trí, khoảng cách ưu tiên)."
+                "khẩu vị, ăn kiêng, vị trí, khoảng cách ưu tiên) VÀ context_memory — các ghi "
+                "nhớ dài hạn cross-session (vd: dị ứng, ăn chay trường, bệnh lý). Dùng "
+                "context_memory khi liên quan đến câu hỏi hiện tại."
             ),
             input_schema={"user_id": "str (required)"},
             output_schema={

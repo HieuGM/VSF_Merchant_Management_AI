@@ -445,3 +445,49 @@ def test_confirm_scalar_on_list_field_rejected_400():
             db.close()
     finally:
         _cleanup_user(uid)
+
+
+# --------------------------------------------------------------------------- #
+# phase-03: context_memory long-term distillation (extract -> persist -> read back).
+# --------------------------------------------------------------------------- #
+def test_context_memory_distills_allergy_and_reads_back():
+    _require_db()
+    from services.context_memory_service import maybe_persist
+
+    uid = _new_uid()
+    try:
+        # maybe_persist takes RAW user text (exactly as _persist_user_turn calls it in the flow).
+        maybe_persist(uid, "Mình dị ứng đậu phộng đấy. Hôm nay muốn ăn phở.")
+        db = SessionLocal()
+        try:
+            from repositories.user_profile_repository import UserProfileRepository
+
+            mem = UserProfileRepository(db).get_by_id(uid).context_memory
+        finally:
+            db.close()
+        # allergy sentence distilled into a note; read back via the get_user_profile path.
+        notes = mem.get("notes") or []
+        assert any("dị ứng" in n.lower() for n in notes)
+    finally:
+        _cleanup_user(uid)
+
+
+def test_context_memory_dedupe_on_repeat():
+    _require_db()
+    from services.context_memory_service import maybe_persist
+
+    uid = _new_uid()
+    try:
+        maybe_persist(uid, "Dị ứng đậu phộng")
+        maybe_persist(uid, "dị ứng đậu phộng")  # same fact, different case -> deduped
+        db = SessionLocal()
+        try:
+            from repositories.user_profile_repository import UserProfileRepository
+
+            mem = UserProfileRepository(db).get_by_id(uid).context_memory
+        finally:
+            db.close()
+        notes = mem.get("notes") or []
+        assert sum(1 for n in notes if "dị ứng" in n.lower()) == 1, "dedupe: no duplicate note"
+    finally:
+        _cleanup_user(uid)

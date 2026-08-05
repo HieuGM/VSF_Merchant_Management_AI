@@ -28,13 +28,14 @@ _DIETARY_CHAY: tuple[str, ...] = ("chay", "vegetarian")
 def _fold(s: str | None) -> str:
     """Diacritics-fold + lowercase + strip the ``món `` category prefix for cuisine matching.
 
-    Folding happens first (``Món`` → ``mon``), so the prefix is stripped post-fold as a
-    leading ``mon ``. Local copy kept here so this module stays independent of
-    ``repositories._norm_text`` (a private). Centralizing all normalizers into
-    ``core/text_norm.py`` is audit #15 — out of scope for phase-02."""
+    Handles ``đ``/``Đ`` → ``d`` explicitly (``encode('ascii','ignore')`` would DROP ``đ``).
+    Local copy kept here so this module stays independent of ``repositories._norm_text``
+    (a private). Centralizing all normalizers into ``core/text_norm.py`` is audit #15."""
     if not s:
         return ""
-    folded = unicodedata.normalize("NFD", s).encode("ascii", "ignore").decode().lower()
+    nfd = unicodedata.normalize("NFD", s)
+    no_mark = "".join(c for c in nfd if not unicodedata.combining(c))
+    folded = no_mark.replace("đ", "d").replace("Đ", "d").lower()
     if folded.startswith("mon "):
         folded = folded[4:]
     return folded.strip()
