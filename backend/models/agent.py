@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from models.api import Location
 
@@ -116,6 +116,28 @@ class ConfirmDeltaRequest(BaseModel):
     confidence: float | None = None
     rationale: str | None = None
     session_id: str | None = None
+
+
+class ProfilePatchRequest(BaseModel):
+    """Body for PATCH /api/v1/users/{user_id}/profile — explicit user edit (§11.6).
+
+    All fields optional (partial update — only sent fields are applied). Whitelisted taste
+    fields only; the repo re-validates type/enum/range (B5). List fields REPLACE on set.
+    ``user_id`` comes from the path, not the body. Unknown fields are REJECTED (422) so a
+    typo'd or spoofed body key cannot slip through silently."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    liked_cuisines: list[str] | None = None
+    disliked_cuisines: list[str] | None = None
+    spice_tolerance: str | None = None  # none | mild | medium | hot
+    dietary: list[str] | None = None
+    budget_level: str | None = None  # student | standard | premium
+    distance_preference_km: float | None = None
+
+    def changed_fields(self) -> dict[str, Any]:
+        """Only fields the client sent (non-None) → partial patch dict for apply_fields."""
+        return {k: v for k, v in self.model_dump().items() if v is not None}
 
 
 # --- Merchant chat (§11.5) ---

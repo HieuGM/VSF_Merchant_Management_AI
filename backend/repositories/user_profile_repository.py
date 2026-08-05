@@ -52,29 +52,19 @@ class UserProfileRepository:
             return None
         return self._to_public(row)
 
-    def apply_delta(
-        self,
-        field: str,
-        operation: str,
-        value: Any,
-        user_id: str | None = None,
-    ) -> UserProfilePublic:
-        """Apply ONE confirmed profile delta with per-field typed validation (B5) + upsert (R3).
+    @staticmethod
+    def _resolve_value(field: str, operation: str, value: Any) -> Any:
+        """Per-field typed validation + coercion (B5). Raises ValueError on a bad
+        operation/field/type/enum/range. Returns the resolved value to setattr.
 
-        Validation runs BEFORE any DB touch, so rejection-path callers (route 400, unit
-        tests) raise without supplying ``user_id``. Semantics: ``set`` replaces; ``add``
-        appends-if-absent; ``remove`` filters out. List fields accept a scalar (one element)
-        or a list; enum fields are ``set``-only with membership; the float field is
-        ``set``-only in [0, 50]. Raises ValueError on a bad operation/field/type/enum/range —
-        the route maps that to HTTP 400. Returns the updated public profile."""
+        Shared by ``apply_delta`` (single suggestion) and ``apply_fields`` (PATCH) so the
+        two write paths cannot drift on validation (DRY)."""
         if operation not in ("set", "add", "remove"):
             raise ValueError(f"operation must be set/add/remove, got {operation!r}")
         if (field not in _APPLY_LIST_FIELDS
                 and field not in _APPLY_ENUM_FIELDS
                 and field not in _APPLY_FLOAT_FIELDS):
             raise ValueError(f"field not allowed: {field!r}")
-
-        # --- per-field typed coercion (raises ValueError on mismatch; B5) ---
         if field in _APPLY_LIST_FIELDS:
             if operation == "set":
                 # set on a list field requires a real list — a scalar would corrupt the
@@ -83,39 +73,27 @@ class UserProfileRepository:
                     raise ValueError(
                         f"{field} is a list[str]; 'set' needs a list, got {type(value).__name__}"
                     )
-                resolved: Any = [str(v) for v in value]
-            else:  # add / remove accept a scalar (single element) or a list
-                resolved = _coerce_str_list(value)
-        elif field in _APPLY_ENUM_FIELDS:
+                return [str(v) for v in value]
+            return _coerce_str_list(value)  # add / remove: scalar (one element) or list
+        if field in _APPLY_ENUM_FIELDS:
             allowed = _APPLY_ENUM_FIELDS[field]
             if operation != "set":
                 raise ValueError(f"{field} is a scalar enum; only 'set' allowed, got {operation!r}")
             if not isinstance(value, str) or value not in allowed:
                 raise ValueError(f"{field} must be one of {sorted(allowed)}, got {value!r}")
-            resolved = value
-        else:  # scalar float
-            if operation != "set":
-                raise ValueError(f"{field} is a scalar; only 'set' allowed, got {operation!r}")
-            if isinstance(value, bool) or not isinstance(value, (int, float)):
-                raise ValueError(f"{field} must be a number, got {type(value).__name__}")
-            if not (0.0 <= float(value) <= 50.0):
-                raise ValueError(f"{field} must be in [0, 50], got {value!r}")
-            resolved = float(value)
+            return value
+        # scalar float — 'set' only
+        if operation != "set":
+            raise ValueError(f"{field} is a scalar; only 'set' allowed, got {operation!r}")
+        if isinstance(value, bool) or not isinstance(value, (int, float)):
+            raise ValueError(f"{field} must be a number, got {type(value).__name__}")
+        if not (0.0 <= float(value) <= 50.0):
+            raise ValueError(f"{field} must be in [0, 50], got {value!r}")
+        return float(value)
 
-        # --- apply (needs user_id; rejection paths raise above before reaching here) ---
-        if user_id is None:
-            raise ValueError("user_id is required to apply a delta")
-        row = self._db.get(UserProfile, user_id)
-        if row is None:  # R3 upsert: first-ever confirm creates a minimal row
-            row = UserProfile(
-                user_id=user_id,
-                liked_cuisines=[],
-                disliked_cuisines=[],
-                dietary=[],
-                distance_preference_km=5.0,
-            )
-            self._db.add(row)
-
+    @staticmethod
+    def _apply_resolved(row: UserProfile, field: str, operation: str, resolved: Any) -> None:
+        """Mutate the row in-place with an already-validated value (shared apply step)."""
         if field in _APPLY_LIST_FIELDS:
             current = list(getattr(row, field) or [])
             if operation == "set":
@@ -131,6 +109,65 @@ class UserProfileRepository:
         else:  # enum or scalar float — 'set' only, value already validated
             setattr(row, field, resolved)
 
+    @staticmethod
+    def _get_or_create_row(db: Session, user_id: str) -> UserProfile:
+        """R3 upsert helper: first-ever write creates a minimal row. Caller commits."""
+        row = db.get(UserProfile, user_id)
+        if row is None:
+            row = UserProfile(
+                user_id=user_id,
+                liked_cuisines=[],
+                disliked_cuisines=[],
+                dietary=[],
+                distance_preference_km=5.0,
+            )
+            db.add(row)
+        return row
+
+    def apply_delta(
+        self,
+        field: str,
+        operation: str,
+        value: Any,
+        user_id: str | None = None,
+    ) -> UserProfilePublic:
+        """Apply ONE confirmed profile delta with per-field typed validation (B5) + upsert (R3).
+
+        Validation runs BEFORE any DB touch, so rejection-path callers (route 400, unit
+        tests) raise without supplying ``user_id``. Semantics: ``set`` replaces; ``add``
+        appends-if-absent; ``remove`` filters out. List fields accept a scalar (one element)
+        or a list; enum fields are ``set``-only with membership; the float field is
+        ``set``-only in [0, 50]. Raises ValueError on a bad operation/field/type/enum/range —
+        the route maps that to HTTP 400. Returns the updated public profile."""
+        resolved = self._resolve_value(field, operation, value)  # B5 (raises ValueError)
+        if user_id is None:
+            raise ValueError("user_id is required to apply a delta")
+        row = self._get_or_create_row(self._db, user_id)
+        self._apply_resolved(row, field, operation, resolved)
+        self._db.commit()
+        self._db.refresh(row)
+        return self._to_public(row)
+
+    def apply_fields(self, patch: dict[str, Any], *, user_id: str) -> UserProfilePublic:
+        """Apply a PARTIAL explicit-edit patch (PATCH /profile) in ONE tx (phase-01).
+
+        All fields are validated + resolved BEFORE any DB write → atomic: a bad field
+        aborts with ValueError (→ route 400) with NO partial mutation. Every field uses
+        'set' semantics (list fields replace). Upserts the row (R3). Returns the updated
+        public profile. Caller owns the SessionLocal lifecycle.
+
+        This is the explicit-edit write path, DISTINCT from the suggestion confirm path
+        (apply_delta); both reuse _resolve_value so validation cannot drift (§7.1, B5)."""
+        if not patch:
+            raise ValueError("patch must contain at least one field")
+        # Resolve ALL first (raises on the first bad field) — atomic validation.
+        resolved_map = {
+            field: self._resolve_value(field, "set", value)
+            for field, value in patch.items()
+        }
+        row = self._get_or_create_row(self._db, user_id)
+        for field, resolved in resolved_map.items():
+            self._apply_resolved(row, field, "set", resolved)
         self._db.commit()
         self._db.refresh(row)
         return self._to_public(row)

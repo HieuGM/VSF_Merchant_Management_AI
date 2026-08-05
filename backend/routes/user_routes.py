@@ -1,20 +1,26 @@
-"""User profile, deltas, sessions (Dev A). FROZEN paths — design §11.6/§11.9."""
+"""User profile, deltas, sessions (Dev A). FROZEN paths — design §11.6/§11.9.
+
+phase-01: GET /profile + PATCH /profile un-stubbed (canonical taste profile read/write).
+Confirm/reject/PATCH are IDOR-guarded (require_dev_only) until real auth lands.
+"""
 from __future__ import annotations
 
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Request
 
+from core.dependencies import require_dev_only
 from core.logging import get_logger
-from models.agent import ConfirmDeltaRequest
+from models.agent import ConfirmDeltaRequest, ProfilePatchRequest
 from models.preference import UserProfilePublic
 from routes.stub_helpers import not_implemented
 from services.preference_confirm_service import preference_confirm_service
+from services.user_profile_service import user_profile_service
 
 logger = get_logger(__name__)
 
 router = APIRouter(prefix="/api/v1/users", tags=["user"])
 
 # Profile fields a user may explicitly confirm/reject (design §11.6, phase-04 F3).
-# Bounds WHAT gets mutated, not WHO — see the AUTH TODO on the delta routes below.
+# Bounds WHAT gets mutated, not WHO — the IDOR guard + (future) auth gate WHO.
 _PROFILE_FIELD_WHITELIST: frozenset[str] = frozenset(
     {
         "liked_cuisines",
@@ -48,9 +54,40 @@ def _validate_delta(body: ConfirmDeltaRequest) -> None:
         )
 
 
-@router.get("/{user_id}/profile")
-def get_user_profile(user_id: str) -> object:
-    return not_implemented(f"GET /api/v1/users/{user_id}/profile")
+@router.get("/{user_id}/profile", response_model=UserProfilePublic)
+def get_user_profile(user_id: str) -> UserProfilePublic:
+    """Return the user's confirmed preference profile (§6.5). 404 when absent.
+
+    Read-only — not IDOR-guarded (taste prefs carry no PII; the FE loads its own user_id).
+    The ``get_user_profile`` CrewAI tool reads the same row."""
+    return user_profile_service.get_profile(user_id)
+
+
+@router.patch("/{user_id}/profile", response_model=UserProfilePublic)
+def update_profile(
+    user_id: str,
+    body: ProfilePatchRequest,
+    request: Request,
+    _guard: bool = Depends(require_dev_only),
+) -> UserProfilePublic:
+    """Explicit user edit of the taste profile (§11.6).
+
+    Partial update — only fields in the body are applied (list fields replace). One tx:
+    atomic B5 validation + apply + audit (source=user_edit). IDOR-guarded (dev-only until
+    auth — see require_dev_only)."""
+    patch = body.changed_fields()
+    if not patch:
+        raise HTTPException(status_code=400, detail="No taste-profile fields to update.")
+    client_ip = request.client.host if request.client else "unknown"
+    logger.info(
+        "profile_patch user_id=%s fields=%s ip=%s",
+        user_id,
+        sorted(patch),
+        client_ip,
+    )
+    # TODO(AUTH): assert path user_id == authenticated principal (IDOR). require_dev_only
+    # blocks production until then; replace this guard with a real auth dependency.
+    return user_profile_service.update_profile(user_id, patch)
 
 
 @router.post(
@@ -62,6 +99,7 @@ def confirm_delta(
     delta_id: str,
     body: ConfirmDeltaRequest,
     request: Request,
+    _guard: bool = Depends(require_dev_only),
 ) -> UserProfilePublic:
     """Apply a proposed profile delta after explicit user confirmation (UC §11.6).
 
@@ -82,9 +120,7 @@ def confirm_delta(
         client_ip,
     )
     # P1 TODO(AUTH): assert path user_id == authenticated principal before apply_delta
-    # (IDOR). Currently path-only trust; gate behind real auth in prod. Without a real
-    # auth principal, anyone POSTing a user_id + fabricated delta_id mutates that user's
-    # profile. The field whitelist bounds WHAT, not WHO.
+    # (IDOR). require_dev_only blocks production until real auth lands.
     return preference_confirm_service.confirm(user_id, delta_id, body)
 
 
@@ -94,6 +130,7 @@ def reject_delta(
     delta_id: str,
     request: Request,
     body: ConfirmDeltaRequest | None = None,
+    _guard: bool = Depends(require_dev_only),
 ) -> dict[str, bool]:
     """Record an explicit rejection of a proposed delta (UC §11.6).
 
