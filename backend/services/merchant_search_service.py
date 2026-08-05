@@ -10,8 +10,12 @@ import math
 from dataclasses import dataclass, field
 from typing import Any
 
+from core.profile_context import get_current_profile
+from core.ranking_config import get_ranking_config
 from database.models import Merchant, MenuItem
+from models.preference import UserProfilePublic
 from repositories.merchant_repository import MerchantRepository, _norm_text
+from services.profile_ranking import profile_score, should_hard_filter
 
 
 def haversine_distance(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
@@ -102,6 +106,7 @@ class MerchantSearchService:
         radius_km: float | None = None,
         limit: int = 20,
         exclude_merchant_ids: list[str] | None = None,
+        profile: UserProfilePublic | None = None,
     ) -> list[SearchResult]:
         """Search merchants with filters and ranking (UC-04).
 
@@ -119,6 +124,12 @@ class MerchantSearchService:
             and min_rating is None and min_price is None and max_price is None
         ):
             return []
+
+        # phase-02: taste profile (explicit arg, else request ContextVar set by the flow
+        # around crew.kickoff) + ranking config. No profile -> ranking is a no-op.
+        profile = profile if profile is not None else get_current_profile()
+        cfg = get_ranking_config()
+        ranking_on = cfg.enabled and profile is not None
 
         merchants = self._repo.search_merchants(
             query=query, cuisine=cuisine, city=city,
@@ -165,6 +176,10 @@ class MerchantSearchService:
                 overall_score=overall,
                 matched_via_menu=matched_via_menu,
             )
+            if ranking_on:  # phase-02: taste-profile boost + optional hard-filter
+                if should_hard_filter(merchant, profile, cfg):
+                    continue
+                match_score += profile_score(merchant, profile, cfg)
 
             results.append(
                 SearchResult(
@@ -215,6 +230,7 @@ class MerchantSearchService:
         min_rating: float | None = None,
         limit: int = 20,
         exclude_merchant_ids: list[str] | None = None,
+        profile: UserProfilePublic | None = None,
     ) -> list[SearchResult]:
         """Find merchants near a location (Haversine-based).
 
@@ -228,6 +244,11 @@ class MerchantSearchService:
         which enforces them via EXISTS subqueries on menu prices / platform rating) — geo
         queries must respect explicit price/rating constraints instead of silently dropping
         them and surfacing the nearest merchants regardless."""
+        # phase-02: taste profile (explicit arg, else request ContextVar) + ranking config.
+        profile = profile if profile is not None else get_current_profile()
+        cfg = get_ranking_config()
+        ranking_on = cfg.enabled and profile is not None
+
         # 2000 > catalog size (~1681) → every query/cuisine/price/rating-matching merchant is
         # a geo candidate. Constraints are applied HERE so radius-widening below never relaxes
         # them (the candidate pool is already filtered before geo_filter runs).
@@ -253,12 +274,17 @@ class MerchantSearchService:
                     avg_rating = _platform_rating(merchant)
                     tier = merchant.profile.tier if merchant.profile else None
                     price_level = merchant.profile.price_level if merchant.profile else None
+                    match_score = _nearby_match_score(merchant, query)
+                    if ranking_on:  # phase-02: taste-profile boost + optional hard-filter
+                        if should_hard_filter(merchant, profile, cfg):
+                            continue
+                        match_score += profile_score(merchant, profile, cfg)
                     out.append(
                         SearchResult(
                             merchant=merchant,
                             distance_km=distance_km,
                             avg_rating=avg_rating,
-                            match_score=_nearby_match_score(merchant, query),
+                            match_score=match_score,
                             tier=tier,
                             price_level=price_level,
                         )

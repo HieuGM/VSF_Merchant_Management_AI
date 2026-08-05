@@ -63,6 +63,18 @@ class Settings(BaseSettings):
     # --- Cache ---
     cache_backend: str = "memory"  # "memory" | "redis"
 
+    # --- Profile-based ranking (phase-02). Additive taste-profile boost/hard-filter on
+    # merchant search. Default enabled but no-profile = no-op (behavior unchanged). Flip
+    # ranking_enabled=False to kill-switch. Weights are small (nudge, not dominate) the
+    # relevance scoring in docs/scoring-methodology.md. ---
+    ranking_enabled: bool = True
+    ranking_w_budget: float = 0.06
+    ranking_w_liked: float = 0.03
+    ranking_liked_cap: int = 2
+    ranking_w_disliked: float = 0.05
+    ranking_w_dietary: float = 0.04
+    ranking_hard_filter_disliked: bool = False
+
     # --- CORS (FE origins) — comma-separated. Default is the Vite dev server only;
     # do NOT use "*" together with credentials (reflects any origin). ---
     cors_origins: str = "http://localhost:5173"

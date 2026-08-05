@@ -9,6 +9,8 @@ from __future__ import annotations
 
 import concurrent.futures
 import contextvars
+
+from core.profile_context import profile_scope
 import logging
 import re
 import unicodedata
@@ -537,7 +539,8 @@ class CustomerFlow:
 
         # Pre-search safety guards (coordinator-light): emoji-only → clarify; dietary-conflict
         # (allergy) → confirm before searching. Fires after OOD, before building any crew.
-        guard = _pre_search_guard(query, prior_turns, _load_profile(user_id), has_location)
+        profile = _load_profile(user_id)
+        guard = _pre_search_guard(query, prior_turns, profile, has_location)
         if guard:
             g_answer, g_intent = guard
             response = CustomerChatResponse(
@@ -565,7 +568,7 @@ class CustomerFlow:
                 mode = "full" if run_pref else "search_explain"
                 crew = build_customer_crew(has_location=has_location, mode=mode)
 
-            with run_scope(trace_id, self._repo), tool_call_scope():
+            with run_scope(trace_id, self._repo), tool_call_scope(), profile_scope(profile):
                 crew_output = crew.kickoff(inputs=inputs)
 
             response = _to_chat_response(trace_id, session_id, crew_output)
@@ -573,7 +576,9 @@ class CustomerFlow:
             # If it returned none but we have a location, fetch nearby directly so the user
             # still gets real results (deterministic tool output — never fabricated).
             if not response.results and has_location:
-                response.results = _direct_nearby_results(inputs.get("query"), lat, lng)
+                response.results = _direct_nearby_results(
+                    inputs.get("query"), lat, lng, profile=profile,
+                )
             # TC-48: persistent diet declared this turn → filter results to that cuisine.
             pref_filter = _declared_persistent_preference(query)
             if pref_filter:
@@ -733,7 +738,8 @@ class CustomerFlow:
 
         # Pre-search safety guards (coordinator-light): emoji-only → clarify; dietary-conflict
         # (allergy) → confirm before searching. Mirrors the OOD short-circuit above.
-        guard = _pre_search_guard(query, prior_turns, _load_profile(user_id), has_location)
+        profile = _load_profile(user_id)
+        guard = _pre_search_guard(query, prior_turns, profile, has_location)
         if guard:
             g_answer, g_intent = guard
             yield {"event": "answer_delta", "data": {"answer_delta": g_answer}}
@@ -797,7 +803,7 @@ class CustomerFlow:
                 search_crew = build_customer_crew(has_location=has_location, mode="search")
 
                 def _run_one(crew: Any) -> Any:
-                    with run_scope(trace_id, self._repo), tool_call_scope():
+                    with run_scope(trace_id, self._repo), tool_call_scope(), profile_scope(profile):
                         return crew.kickoff(inputs=inputs)
 
                 pref_fut = None
@@ -821,7 +827,9 @@ class CustomerFlow:
                 # Reliability fallback: agent non-deterministically drops candidates. If empty
                 # and we have a location, fetch nearby directly (deterministic, truthful).
                 if not results and has_location:
-                    results = _direct_nearby_results(inputs.get("query"), lat, lng)
+                    results = _direct_nearby_results(
+                        inputs.get("query"), lat, lng, profile=profile,
+                    )
                 # Attach real merchant food photos (agent candidates carry no image field).
                 results = _enrich_with_images(results)[:3]
                 suggestions = (
@@ -1025,13 +1033,17 @@ def _extract_search_keyword(query: str | None) -> str | None:
 
 
 def _direct_nearby_results(
-    query: str | None, lat: float, lng: float, limit: int = 3
+    query: str | None, lat: float, lng: float, limit: int = 3, profile: Any = None
 ) -> list[dict[str, Any]]:
     """Distance-based last-resort fallback when the search agent drops its candidates.
 
     The gpt-oss-20b search agent non-deterministically returns candidates=[] even when the
     tool found matches. We then re-fetch nearby merchants directly — REAL tool results
     (truthful — never fabricated), same shape as SearchTaskOutput candidates.
+
+    ``profile`` (phase-02) is forwarded explicitly because this fallback fires AFTER
+    ``profile_scope`` has exited (the scope wraps only ``crew.kickoff``) — relying on the
+    ContextVar here would silently skip ranking. None → ranking no-op (unchanged behavior).
 
     Extracts a CLEAN cuisine keyword (NOT the full message). This matters: the full sentence
     as a text filter yields 0 candidates (verified 'Tìm quán ăn chay ở Hà Đông' → 0), and
@@ -1050,7 +1062,9 @@ def _direct_nearby_results(
         svc = MerchantSearchService(MerchantRepository(db))
         # keyword -> relevant same-cuisine shops + correct match tiers, or honest empty;
         # None (vague query) -> pure-distance nearest. Never the full message (filters to 0).
-        ranked = svc.nearby_search(lat, lng, radius_km=5.0, query=keyword, limit=limit)
+        ranked = svc.nearby_search(
+            lat, lng, radius_km=5.0, query=keyword, limit=limit, profile=profile,
+        )
         return [
             {
                 "merchant_id": r.merchant.merchant_id,
