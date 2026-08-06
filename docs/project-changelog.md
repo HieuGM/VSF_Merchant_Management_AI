@@ -4,6 +4,49 @@ This document tracks all significant changes, features, fixes, and security impr
 
 ---
 
+## [2026-08-06] Unify Customer Preference/Memory Store — Plan A, Phases 1–4 (canonical store + ranking + context_memory + FE cutover)
+
+Turned the "remember user preferences" promise into reality. One canonical taste store (`user_profiles`), deterministic additive ranking, live long-term `context_memory`, FE cutover off localStorage. 4 phases on branch `dev-a`; all GT-eval PARITY (39/39). Plan: `plans/260805-1005-unify-preference-memory-store/`. Architecture: `docs/system-architecture.md` (3-layer memory model).
+
+### Phase-1 — Backend profile REST + IDOR guard (commit `a4170d7`, 2026-08-05)
+- Un-stubbed `GET /api/v1/users/{user_id}/profile`; added `PATCH` (partial taste edit, list fields replace). `404` when profile absent.
+- `services/user_profile_service.py` (NEW thin service: `get_profile`, `update_profile` — owns 1 tx). `models/agent.py` +`ProfilePatchRequest` DTO.
+- `UserProfileRepository.apply_fields(patch, user_id)` — atomic per-field `set`, shares B5 typed validation with `apply_delta` (extracted `_validate_and_resolve`).
+- IDOR guard `require_dev_only` (`core/dependencies.py`) on PATCH + confirm + reject: dev/staging ok; **prod → 403 + warning log**. `TODO(AUTH)` markers for real auth.
+- Tests: pytest **107/0**. GT eval **PARITY** 39/39 (0 err/0 interrupt). Harness-only fix `a9530c0` to `eval_ground_truth.py` (`_ensure_prior_referent` seeding: `CAST(:p AS jsonb)` + `message_id`) — latent, not agent code.
+
+### Phase-2 — Deterministic profile-based ranking (commit `51520c5`, 2026-08-05)
+- Additive `profile_score` (±≤0.15) + optional hard-filter in `MerchantSearchService.search`/`nearby_search`. Default no-profile → behavior unchanged.
+- `services/profile_ranking.py` (NEW, pure: `profile_score`, `should_hard_filter`). `core/ranking_config.py` (NEW `RankingConfig`: `w_budget`/`w_liked`/`w_disliked`/`w_dietary`, `hard_filter_disliked`). Kill-switch `settings.ranking_enabled`.
+- Budget en↔vi map: `student↔rẻ`, `standard↔trung bình`, `premium↔cao cấp` vs `merchant.profile.price_level`. Disliked hard-filter ON; dietary=chay hard-filter OFF (soft-only — insufficient veg signal).
+- Profile propagated to CrewAI search tools via request-scoped ContextVar `profile_scope` (`core/profile_context.py`): flow sets it around `crew.kickoff` (blocking + stream); service reads via `get_current_profile()`. Fallback path now forwards profile (M nit fixed).
+- Tests: ranking unit **10/10**; pytest **119/0**. GT eval PARITY 39/39 (1 unrelated FPT flake on non-profiled TC-28). Review APPROVE-WITH-NITS. Capability live (conservative).
+
+### Phase-3 — Long-term `context_memory` (commit `dadda4b`, 2026-08-05)
+- `services/context_memory_service.py` (NEW): `extract_notes` (VN regex: "dị ứng"/"không ăn"/"thích…không"/persistent-diet/specific-medical) + `maybe_persist(user_id, user_text)` (F3-safe — never raises).
+- `UserProfileRepository.append_context_notes(user_id, notes, cap=8)` — read-modify-write `context_memory["notes"]` JSONB. PII redacted via `core/pii.py`; deduped (substring); FIFO cap 8 (~120 char each).
+- Boundary: only facts NOT expressible in structured schema (skips cuisine/budget already enumerable). Injected through the existing `get_user_profile` tool (no new injection path).
+- Wired at `customer_flow._persist_user_turn` (1 site, alongside chat_messages write). Tool description updated so crew knows it's long-term memory.
+- H1 fix: F3 wrap in `maybe_persist`. M1 fix: narrowed "dạ dày"→"đau/viêm" to avoid "đã đầy" false-positive. Live-verified: "tôi dị ứng đậu phộng" persists and is read back.
+- Tests: **10 unit + 2 integration**; pytest **127/0**. GT eval PARITY 39/39 (1 unrelated FPT flake TC-02).
+
+### Phase-4 — FE cutover localStorage → profile API (commit `9e72e7b`, 2026-08-05)
+- Preference Center taste edits persist to backend (`GET`/`PATCH` `/api/v1/users/{id}/profile`) instead of localStorage. Geolocation UI state stays local (device state, not portable).
+- `frontend/src/customer/api/profile-types.ts` (NEW) + `customer-agent-client.ts` +`getProfile`/`patchProfile`. `hooks/use-taste-profile.ts` (NEW): load on mount (API→localStorage cache), debounced PATCH (~400ms, optimistic + rollback), offline cache fallback.
+- One-time migration: existing localStorage taste → backend on first API success (race-safe vs StrictMode — H-1 fix; patchTimer cleared on unmount — H-2 fix).
+- `context_memory.notes` shown read-only in Preference Center. Dropped `preferencesToContext` query-append (M5 — no longer needed after phase-02 deterministic ranking). `confirmDelta` success merges profile into cache.
+- FE build clean (`tsc -b && vite build` 0 err, oxlint pass). **Live round-trip verified** (toggle → `user_profiles` row created, `liked_cuisines` persisted). No GT impact (eval POSTs raw messages).
+
+### Outcome
+3 backend phases + FE cutover make the unified profile **user-visible + cross-device**. pytest **127/0**; GT eval **39/39 PARITY** each phase (1 known FPT stream flake, unrelated). `context_memory` field that was always `{}` is now populated. Internal scores (`overall_score`, `profile_score`) never surfaced.
+
+### Caveats / known limits
+- `require_dev_only` is a placeholder IDOR guard — **TODO(AUTH)** real auth dependency before any prod exposure.
+- Ranking weights conservative; A/B vs baseline not yet run.
+- `context_memory` extractor is heuristic (auto); no user-edit UI yet (read-only in FE).
+
+---
+
 ## [2026-07-31] Customer Agent — Anaphora Evidence-Discipline + Mandatory-Clarify (final 5 fails closed → 39/39 measured)
 
 Closed the 5 remaining fails from the arch-seam baseline (TC-09/41/47/35/51), all coordinator-free. Live-probe + judge-confirmed **5/5 PASS**; no regressions (B1/B2 surgical: fire ONLY on TC-35/51; 0 errors/0 interruptions across 39).

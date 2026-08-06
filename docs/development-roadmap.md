@@ -10,11 +10,13 @@ This document tracks project phases, milestones, and overall progress.
 |-------|------|-------|--------|----------|-------------|
 | 0 | Shared Foundation & Seams | Owner (solo) → handoff | ✅ COMPLETE | 100% | None |
 | 0.5 | Walking Skeleton (UC-04) | Owner (solo) → handoff | 🔄 IN PROGRESS | 25% | Phase 0 |
-| 1 | Track A — Customer Vertical | Dev A | ☐ NOT STARTED | 0% | Phase 0.5 |
-| 2 | Track B — Merchant Vertical | Dev B | ☐ NOT STARTED | 0% | Phase 0.5 |
+| 1 | Track A — Customer Vertical | Dev A (HieuGM) | 🔄 IN PROGRESS | ~40% | Phase 0.5 |
+| 2 | Track B — Merchant Vertical | Dev B | 🔄 IN PROGRESS | ~30% | Phase 0.5 |
 | 3 | Integration & Evaluation | 2 dev pair | ☐ NOT STARTED | 0% | Phase 1 + 2 |
 
-**Overall Progress:** 20% (2 of 10 major milestones)
+**Overall Progress:** ~35%
+
+> **2026-08-06 update:** Customer vertical is live end-to-end (CrewAI agent + React FE + Postgres). Merchant vertical is relational-only at head `c2d3e4f5a6b7` (`dimensions_json` dropped → 4 child tables). Original 2-dev-parallel plan above is kept for history; real progress tracked per-milestone below + in `docs/project-changelog.md`.
 
 ---
 
@@ -90,10 +92,10 @@ Build one vertical slice of UC-04 (restaurant search) through entire stack to pr
 
 ---
 
-## Phase 1: Track A — Customer Discovery Vertical ☐ NOT STARTED
+## Phase 1: Track A — Customer Discovery Vertical 🔄 IN PROGRESS
 
-**Owner:** Dev A (full-stack BE + FE)
-**Status:** Not started
+**Owner:** Dev A (HieuGM, full-stack BE + FE)
+**Status:** In progress — agent + memory + ranking live (2026-08-06)
 **Estimated Effort:** 2-3 weeks
 
 ### Scope
@@ -178,10 +180,17 @@ frontend/src/merchant/*
 |---|-----------|-------------|--------|
 | M1 | Phase 0 foundation complete | 2026-07-22 | ✅ COMPLETE |
 | M2 | Phase 0.5 walking skeleton complete | TBD | 🔄 IN PROGRESS |
-| M3 | Track A (Customer) complete | TBD | ☐ NOT STARTED |
-| M4 | Track B (Merchant) complete | TBD | ☐ NOT STARTED |
+| M2.5 | Customer agent — memory wire-up (chat_messages + confirm-delta + weather) | 2026-07-30 | ✅ COMPLETE |
+| M2.6 | Customer agent — GT eval trustworthy baseline (34/39) → anaphora+clarify (39/39) | 2026-07-31 | ✅ COMPLETE |
+| M2.7 | **Unify preference/memory store (plan A, phases 1–4)** | 2026-08-05/06 | ✅ COMPLETE |
+| M3 | Track A (Customer) complete | TBD | 🔄 IN PROGRESS (~40%) |
+| M4 | Track B (Merchant) complete | TBD | 🔄 IN PROGRESS (~30%, relational cutover done) |
 | M5 | Integration complete | TBD | ☐ NOT STARTED |
 | M6 | Production deployment | TBD | ☐ NOT STARTED |
+
+### Milestone M2.7 — Unify preference/memory store (2026-08-05/06) ✅ COMPLETE
+
+Plan A (`plans/260805-1005-unify-preference-memory-store/`). 4 phases, all on branch `dev-a` (commits `a4170d7`, `51520c5`, `dadda4b`, `9e72e7b` + eval-fix `a9530c0`). One canonical taste store (`user_profiles`); deterministic additive ranking; live long-term `context_memory`; FE cutover from localStorage to backend profile API. 3-layer memory model documented in `docs/system-architecture.md`. Verification: pytest 127/0; GT eval 39/39 PARITY each phase (1 unrelated FPT stream flake); FE build clean; live round-trip verified. Phases 05 (full e2e test pass) + 06 (this docs sync) close the plan.
 
 ---
 
@@ -230,4 +239,4 @@ frontend/src/merchant/*
 
 ---
 
-*Last Updated: 2026-07-22*
+*Last Updated: 2026-08-06*

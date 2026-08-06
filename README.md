@@ -103,3 +103,16 @@ SELECT haversine(lat1, lon1, lat2, lon2);
    PYTHONPATH=. alembic upgrade head
    ```
 4. Always commit your migrations inside `backend/migrations/versions/` alongside your model updates.
+
+---
+
+## Customer AI Agent (CrewAI + React)
+
+Beyond the merchant DB backend above, the repo ships a **customer-facing restaurant-recommendation agent**:
+
+- **Backend (`backend/`):** CrewAI crew (`flows/customer_flow.py`) — restaurant search → preference reasoning → explanation. Tools: `merchant_search`, `nearby_merchant_search`, `get_user_profile`, `propose_profile_delta`. LLM provider: **FPT Cloud AI** (`FPT_API_KEY`, `FPT_BASE_URL`, `FPT_MODEL_QWEN`, `FPT_MODEL_DEEPSEEK` in `.env`). Endpoints: `POST /api/v1/agent/customer/chat` (+ `/chat/stream` SSE).
+- **Frontend (`frontend/src/customer/`):** React + Vite + TS — chat UI + Preference Center.
+- **Unified preference & memory store (`user_profiles`):** one canonical taste profile (liked/disliked cuisines, spice, dietary, budget, distance) written via `PATCH /api/v1/users/{id}/profile` (explicit edit) **or** chat-suggestion confirm; deterministic additive ranking (`profile_score`, `ranking_enabled` kill-switch); long-term `context_memory.notes` (allergies etc.) distilled from chat. 3-layer memory model (structured profile / context_memory / prior_context) documented in [`docs/system-architecture.md`](docs/system-architecture.md).
+
+Quickstart (1 command, env + data files needed): see [`docs/setup-guide.md`](docs/setup-guide.md). Testing the agent: [`docs/customer-agent-testing-guide.md`](docs/customer-agent-testing-guide.md). Changelog: [`docs/project-changelog.md`](docs/project-changelog.md).
+
