@@ -91,7 +91,7 @@ class CacheKeys:
         limit: int = 20,
     ) -> str:
         raw = f"{query}:{cuisine}:{city}:{budget}:{lat}:{lng}:{radius_km}:{limit}"
-        return f"agent:merchant_search:{_hash(raw)}"
+        return f"agent:merchant_search:{_hash(raw)}:v2"
 
     @staticmethod
     def merchant_search_filters(filters: dict[str, Any]) -> str:
@@ -103,7 +103,7 @@ class CacheKeys:
             separators=(",", ":"),
             default=str,
         )
-        return f"agent:merchant_search:{_hash(raw)}"
+        return f"agent:merchant_search:{_hash(raw)}:v2"
 
     @staticmethod
     def nearby_search(

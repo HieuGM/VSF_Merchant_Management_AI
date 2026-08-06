@@ -35,8 +35,6 @@ export interface CompetitorItem {
   rating?: number;
   address?: string;
   category?: string;
-  image_url?: string;
-  delivery_time_min?: number;
   review_quotes?: string[];
   dimensions?: DimensionHighlight[];
 }
@@ -46,13 +44,10 @@ export interface AnalyzedMerchant {
   merchant_id: string;
   name: string;
   cuisine?: string;
-  category?: string;
   distance_km?: number;
   rating?: number;
   score?: number;
   address?: string;
-  image_url?: string;
-  delivery_time_min?: number;
   /** Tool that surfaced this merchant, e.g. "search_merchants" */
   sourceToolName?: string;
 }

@@ -56,3 +56,32 @@ def test_public_merchant_detail_returns_hours_and_available_menu(db_session):
         }
     ]
 
+
+def test_public_merchant_detail_reuses_id_scoped_cache(db_session):
+    merchant = Merchant(
+        merchant_id="public-detail-cache",
+        name="Xôi Cache",
+        cuisine="Món Việt",
+        city="TP. HCM",
+        city_slug="tp_hcm",
+        is_active=True,
+    )
+    db_session.add(merchant)
+    db_session.commit()
+    cache = InMemoryCache()
+    events: list[dict] = []
+
+    get_public_merchant_detail(
+        merchant.merchant_id,
+        db=db_session,
+        cache=cache,
+        cache_event_callback=events.append,
+    )
+    get_public_merchant_detail(
+        merchant.merchant_id,
+        db=db_session,
+        cache=cache,
+        cache_event_callback=events.append,
+    )
+
+    assert [event["status"] for event in events] == ["miss", "store", "hit"]

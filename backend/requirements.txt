@@ -19,6 +19,8 @@ h3>=4.5.0,<5
 
 # Agents — pinned per plan decision (verify `pip show crewai` does NOT pull LangChain, doc §2)
 crewai==1.15.5
+# Structured HTML/PDF/DOCX extraction + native CrewAI knowledge source.
+docling>=2.60,<3
 
 # Test harness (A-04 — runs without Docker via in-memory cache + SQLite)
 pytest>=8.0.0

@@ -58,6 +58,15 @@ class AgentRunService:
         status: str = "ok",
         error_code: str | None = None,
         parent_event_id: str | None = None,
+        seq: int | None = None,
+        span_id: str | None = None,
+        parent_span_id: str | None = None,
+        phase: str | None = None,
+        kind: str | None = None,
+        actor_type: str | None = None,
+        actor_name: str | None = None,
+        metrics_json: dict[str, Any] | None = None,
+        debug_payload_json: dict[str, Any] | None = None,
     ) -> AgentEvent:
         """Record a sub-event (tool execution, task step, delegation) for a trace."""
         event_id = f"evt-{uuid.uuid4().hex[:12]}"
@@ -74,6 +83,15 @@ class AgentRunService:
             duration_ms=duration_ms,
             status=status,
             error_code=error_code,
+            seq=seq,
+            span_id=span_id,
+            parent_span_id=parent_span_id,
+            phase=phase,
+            kind=kind,
+            actor_type=actor_type,
+            actor_name=actor_name,
+            metrics_json=metrics_json,
+            debug_payload_json=debug_payload_json,
             created_at=datetime.utcnow(),
         )
         self._db.add(event)
@@ -135,6 +153,17 @@ class AgentRunService:
                 "status": e.status,
                 "error_code": e.error_code,
                 "created_at": str(e.created_at) if e.created_at else None,
+                "trace_id": e.trace_id,
+                "seq": e.seq,
+                "span_id": e.span_id,
+                "parent_span_id": e.parent_span_id,
+                "phase": e.phase,
+                "kind": e.kind,
+                "actor_type": e.actor_type,
+                "actor_name": e.actor_name,
+                "display": e.output_summary_json if e.event_type == "trace_span" else None,
+                "metrics": e.metrics_json,
+                "debug": e.debug_payload_json,
             }
             for e in events
         ]

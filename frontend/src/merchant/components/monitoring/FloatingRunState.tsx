@@ -127,7 +127,7 @@ export function FloatingRunState({
                 </div>
               ))}
 
-              <div className="entities-section">
+              {/* <div className="entities-section">
                 <span className="info-label">Entities đã nhận diện</span>
                 <div className="entities-tags">
                   {Object.keys(derived.state).length === 0 ? (
@@ -140,7 +140,7 @@ export function FloatingRunState({
                     ))
                   )}
                 </div>
-              </div>
+              </div> */}
 
               <div className="recent-queries-section">
                 <span className="info-label">Truy vấn gần đây</span>

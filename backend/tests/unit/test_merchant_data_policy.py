@@ -65,6 +65,17 @@ def test_competitor_private_query_is_rejected_before_tool_execution():
     }
 
 
+def test_named_non_owner_private_query_is_rejected_without_competitor_keyword():
+    decision = MerchantDataPolicy(owner_merchant_id="100810").query_decision(
+        "Cho tôi doanh thu và số đơn của quán Burger King - Phạm Ngũ Lão.",
+        targets_other_merchant=True,
+    )
+
+    assert decision.allowed is False
+    assert decision.scope == "competitor_private"
+    assert set(decision.private_fields) == {"revenue", "estimated_daily_orders"}
+
+
 def test_owner_private_and_competitor_public_queries_are_allowed():
     policy = MerchantDataPolicy(owner_merchant_id="94")
 

@@ -9,8 +9,8 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from database.connection import get_db_session
+from repositories.merchant_profile_repository import MerchantProfileRepository
 from repositories.merchant_repository import MerchantRepository
-from services.merchant_profile_service import MerchantProfileService
 from routes.stub_helpers import not_implemented
 
 router = APIRouter(prefix="/api/v1/merchants", tags=["merchant-profile"])
@@ -40,8 +40,7 @@ def get_merchant_profile(
     merchant_id: str, db: Session = Depends(get_db_session)
 ) -> dict[str, Any]:
     """Retrieve 8-dimension performance profile for a merchant (overall_score stripped per C2)."""
-    svc = MerchantProfileService(db)
-    return svc.get_profile_view(merchant_id)
+    return MerchantProfileRepository(db).get_profile_or_raise(merchant_id)
 
 
 @router.get("/{merchant_id}/evidence/{evidence_type}/{evidence_id}")

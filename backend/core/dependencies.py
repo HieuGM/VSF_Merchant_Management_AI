@@ -6,12 +6,15 @@ so the backend can swap adapters (memory/redis) without touching call sites.
 from __future__ import annotations
 
 from functools import lru_cache
+import logging
 
 from core.cache import CachePort
 from core.settings import Settings, get_settings
 from database.connection import get_db_session  # re-export for route deps
 
 __all__ = ["get_db_session", "get_settings", "get_cache", "settings_dependency"]
+
+logger = logging.getLogger(__name__)
 
 
 @lru_cache
@@ -22,9 +25,17 @@ def get_cache() -> CachePort:
     single sanctioned edit point for cache backend selection)."""
     settings = get_settings()
     if settings.cache_backend == "redis" and settings.redis_url:
-        from providers.cache.redis_adapter import RedisCache  # lazy: D-02 optional
+        try:
+            from providers.cache.redis_adapter import RedisCache
 
-        return RedisCache(settings.redis_url)
+            cache = RedisCache(settings.redis_url)
+            cache.ping()
+            return cache
+        except Exception as error:
+            logger.warning(
+                "Redis cache unavailable; using process-local in-memory cache: %s",
+                error,
+            )
     from providers.cache.memory_adapter import InMemoryCache
 
     return InMemoryCache()

@@ -144,7 +144,12 @@ class MerchantDataPolicy:
             }
         return projected
 
-    def query_decision(self, query: str) -> QueryPolicyDecision:
+    def query_decision(
+        self,
+        query: str,
+        *,
+        targets_other_merchant: bool = False,
+    ) -> QueryPolicyDecision:
         """Classify the requested data surface before planning any tool calls."""
         lowered = query.casefold()
         private_fields = [
@@ -157,7 +162,7 @@ class MerchantDataPolicy:
         )
         targets_owner = any(term in lowered for term in _OWNER_TARGET_TERMS)
 
-        if targets_competitor and private_fields:
+        if (targets_competitor or targets_other_merchant) and private_fields:
             return QueryPolicyDecision(
                 allowed=False,
                 scope="competitor_private",

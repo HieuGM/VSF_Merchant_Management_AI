@@ -4,12 +4,103 @@ from __future__ import annotations
 from types import SimpleNamespace
 
 import pytest
+from agents.merchant.native_crew import coordinator_task_description, specialist_prompts
+from agents.merchant.input_analyzer_prompt import SYSTEM_PROMPT
 from database.models import Merchant
+from models.merchant_input import PreparedRequest
 from relational_test_fixtures import seed_relational_profile
 import flows.merchant_flow as merchant_flow_module
 from core.dependencies import get_db_session
 from services.chat_session_service import ChatSessionService
 from app.main import app
+
+
+def test_final_synthesis_prompt_requires_friendly_scannable_grounded_answers():
+    prompt = specialist_prompts()["final_synthesis"]
+
+    assert "friendly Vietnamese answer" in prompt
+    assert "trusted merchant advisor" in prompt
+    assert "prioritized numbered list" in prompt
+    assert "short Markdown headings" in prompt
+    assert "approved claims" in prompt
+    assert "plain owner-facing language" in prompt
+
+
+def test_agent_prompts_define_general_turn_budgets_and_evidence_rules():
+    coordinator = coordinator_task_description()
+    prompts = specialist_prompts()
+
+    assert "At most 4 specialist delegations total" in coordinator
+    assert "At most 4 business tool calls total" in coordinator
+    assert "Each specialist appears at most once" in coordinator
+    assert "comparison requires comparable evidence for every side" in coordinator.lower()
+    assert "Specialist budget\nis 0 and tool-call budget is 0" in coordinator
+    assert "Maximum 1 tool call" in prompts["policy_document"]
+    assert "Maximum 4 tool calls" in prompts["market_search"]
+    assert "Maximum 4 tool calls" in prompts["cohort_analysis"]
+    assert "Maximum 4 tool calls" in prompts["self_analysis"]
+    assert "Maximum 1 verification pass" in prompts["evidence_verifier"]
+    assert "Maximum 1 synthesis pass" in prompts["final_synthesis"]
+
+
+def test_agent_prompts_use_affirmative_guidance():
+    prompts = [SYSTEM_PROMPT, coordinator_task_description(), *specialist_prompts().values()]
+    combined = "\n".join(prompts).casefold()
+
+    for prohibitive_form in ("never", "do not", "must not", "use no tools"):
+        assert prohibitive_form not in combined
+
+
+def test_public_merchant_selection_is_bounded_and_requires_one_match():
+    candidates = [
+        {"merchant_id": str(index), "name": f"Quán {index}"}
+        for index in range(7)
+    ]
+
+    update = merchant_flow_module._public_merchant_selection_update(
+        "Tôi chọn Quán 3",
+        candidates,
+    )
+
+    assert len(update["merchant_agentic.last_public_search"]) == 5
+    assert update["merchant_agentic.selected_public_merchant"]["merchant_id"] == "3"
+
+
+def test_exact_named_non_owner_merchant_is_detected(
+    db_session,
+    sample_merchant_for_flow,
+):
+    db_session.add(
+        Merchant(
+            merchant_id="m_named_competitor",
+            name="Burger King - Phạm Ngũ Lão",
+            cuisine="Châu Mỹ",
+            category="Fast Food",
+            city="TP. HCM",
+            city_slug="tp_hcm",
+            is_active=True,
+        )
+    )
+    db_session.flush()
+
+    detected = merchant_flow_module._named_other_merchant(
+        db_session,
+        "Cho tôi doanh thu của quán Burger King - Phạm Ngũ Lão.",
+        sample_merchant_for_flow.merchant_id,
+    )
+    assert detected is not None
+    assert detected.name == "Burger King - Phạm Ngũ Lão"
+    corrected = merchant_flow_module._correct_named_public_request(
+        PreparedRequest(
+            rewritten_query="Burger King (merchant_id: 100810)",
+            scope_candidate="out_of_scope",
+            proposed_outcome="coordinate",
+        ),
+        "Tìm quán Burger King - Phạm Ngũ Lão",
+        True,
+    )
+    assert corrected.scope_candidate == "allowed"
+    assert corrected.rewritten_query == "Tìm quán Burger King - Phạm Ngũ Lão"
 
 
 @pytest.fixture
@@ -232,7 +323,15 @@ def test_normal_search_answer_emits_single_selected_public_merchant(
     persisted_events = merchant_flow_module.AgentRunService(db_session).get_run_trace(
         coordinator_input["trace_id"]
     )["events"]
-    assert not any(event["event_type"] == "trace_span" for event in persisted_events)
+    persisted_spans = [
+        event for event in persisted_events if event["event_type"] == "trace_span"
+    ]
+    assert persisted_spans
+    assert any(
+        event["span_id"] == coordinator_input["span_id"]
+        and event["seq"] == coordinator_input["seq"]
+        for event in persisted_spans
+    )
 
 
 def test_merchant_chat_refuses_competitor_private_data_before_tools(

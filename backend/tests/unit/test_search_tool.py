@@ -73,6 +73,44 @@ def test_search_merchants_relaxes_a_multiword_natural_language_keyword(
     assert target.merchant_id in {merchant["merchant_id"] for merchant in result["merchants"]}
 
 
+def test_specific_merchant_name_does_not_return_loose_token_matches(db_session):
+    exact = Merchant(
+        merchant_id="named-search-exact",
+        name="Xôi Gà Mỹ Anh - Lũy Bán Bích",
+        cuisine="Món Việt",
+        city="TP. HCM",
+        city_slug="tp_hcm",
+        is_active=True,
+    )
+    unrelated = Merchant(
+        merchant_id="named-search-unrelated",
+        name="Gecko Cafe Restaurant",
+        cuisine="Món Việt",
+        city="TP. HCM",
+        city_slug="tp_hcm",
+        address="Đường Mỹ Anh",
+        is_active=True,
+    )
+    db_session.add_all([exact, unrelated])
+    db_session.add(
+        MenuItem(
+            item_id="named-search-unrelated-menu",
+            merchant_id=unrelated.merchant_id,
+            name="Xôi gà",
+            price=30_000,
+            is_available=True,
+        )
+    )
+    db_session.commit()
+
+    result = search_merchants(query="Xôi Gà Mỹ Anh", limit=10, db=db_session)
+
+    ids = {merchant["merchant_id"] for merchant in result["merchants"]}
+    assert exact.merchant_id in ids
+    assert unrelated.merchant_id not in ids
+    assert all("xôi gà mỹ anh" in merchant["name"].casefold() for merchant in result["merchants"])
+
+
 def test_search_merchants_cache_key_includes_all_result_affecting_filters(
     db_session,
 ):

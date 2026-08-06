@@ -133,3 +133,34 @@ def test_agent_run_service_record_run_and_events(db_session):
     completed_run = svc.finish_run(trace_id="tr-service-002", status="completed")
     assert completed_run.status == "completed"
     assert completed_run.finished_at is not None
+
+
+def test_agent_run_service_persists_semantic_span(db_session):
+    svc = AgentRunService(db_session)
+    svc.start_run(trace_id="tr-semantic-003", crew_name="merchant_advisor_crew")
+
+    svc.record_event(
+        trace_id="tr-semantic-003",
+        event_type="trace_span",
+        output_summary_json={
+            "title": "Gọi tool: search_policy_documents",
+            "summary": "Đang truy xuất chính sách.",
+            "status": "running",
+        },
+        status="running",
+        seq=1,
+        span_id="sp-policy-tool",
+        phase="tool",
+        kind="started",
+        actor_type="tool",
+        actor_name="search_policy_documents",
+        metrics_json={},
+        debug_payload_json={"args": {"query": "phí nền tảng"}},
+    )
+
+    event = svc.get_run_trace("tr-semantic-003")["events"][0]
+    assert event["event_type"] == "trace_span"
+    assert event["seq"] == 1
+    assert event["span_id"] == "sp-policy-tool"
+    assert event["display"]["status"] == "running"
+    assert event["debug"]["args"]["query"] == "phí nền tảng"

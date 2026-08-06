@@ -1,6 +1,7 @@
 """Deterministic, policy-first routing for one prepared merchant request."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any, Literal
 
@@ -16,6 +17,14 @@ class RoutingDecision:
     outcome: Literal["reject", "fast_answer", "coordinate"]
     reason: str
     reply: str | None = None
+
+
+@dataclass(frozen=True)
+class RouteExecution:
+    """Result of the work authorized by one routing decision."""
+
+    outcome: str
+    crew_result: Any | None = None
 
 
 @dataclass(frozen=True)
@@ -57,22 +66,6 @@ def immutable_session_facts(snapshot: dict[str, Any]) -> dict[str, ImmutableSess
     return facts
 
 
-def conservative_fallback_request(
-    *, raw_query: str
-) -> PreparedRequest:
-    """Keep an unavailable/invalid small model from broadening execution.
-
-    A fallback always delegates; it never attempts a deterministic lookup.
-    """
-    return PreparedRequest(
-        rewritten_query=raw_query.strip() or "Yêu cầu merchant không hợp lệ",
-        resolved_references=[],
-        scope_candidate="unclear",
-        missing_context=[],
-        proposed_outcome="coordinate",
-    )
-
-
 def effective_query_policy(
     raw_policy: QueryPolicyDecision,
     rewritten_policy: QueryPolicyDecision,
@@ -97,6 +90,16 @@ def decide_route(
     if not policy.allowed:
         return RoutingDecision("reject", "merchant_data_policy", reply=policy.reason)
 
+    # The analyzer's scope classification is an actual routing gate, not
+    # observability-only metadata. Ambiguous in-scope requests may still be
+    # resolved by the coordinator, but an explicit out-of-scope result stops.
+    if prepared.scope_candidate == "out_of_scope":
+        return RoutingDecision(
+            "reject",
+            "input_scope",
+            reply="Câu hỏi nằm ngoài phạm vi hỗ trợ merchant và tài liệu Green SM.",
+        )
+
     # Fast answers are deliberately narrower than the analyzer contract. No
     # mutable merchant information can enter this path.
     safe_fact = immutable_facts.get(normalize_text(prepared.rewritten_query))
@@ -109,3 +112,19 @@ def decide_route(
         )
 
     return RoutingDecision("coordinate", "coordinator_required")
+
+
+def execute_routing_decision(
+    decision: RoutingDecision,
+    *,
+    kickoff_coordinator: Callable[[], Any] | None = None,
+) -> RouteExecution:
+    """Start work only for the coordinate route."""
+    if decision.outcome != "coordinate":
+        return RouteExecution(outcome=decision.outcome)
+    if kickoff_coordinator is None:
+        raise ValueError("coordinate route requires a coordinator kickoff")
+    return RouteExecution(
+        outcome=decision.outcome,
+        crew_result=kickoff_coordinator(),
+    )

@@ -214,33 +214,3 @@ class EvidenceRepository:
                 "step_id": step_id,
             }
         return None
-
-    def get_dimension_evidence(
-        self, merchant_id: str, dimension: str
-    ) -> list[dict[str, Any]]:
-        rows = self._db.execute(
-            select(MerchantDimensionEvidence)
-            .where(
-                MerchantDimensionEvidence.merchant_id == merchant_id,
-                MerchantDimensionEvidence.dimension == dimension,
-            )
-            .order_by(MerchantDimensionEvidence.evidence_id)
-        ).scalars()
-        return [
-            {
-                "evidence_id": row.evidence_id,
-                "type": row.evidence_type,
-                "value": (
-                    float(row.value_numeric)
-                    if row.value_numeric is not None
-                    else row.value_text
-                    if row.value_text is not None
-                    else row.value_boolean
-                ),
-                "unit": row.unit,
-                "ref_type": row.reference_type,
-                "ref_ids": list(row.reference_ids or []),
-                "source_kind": row.source_kind,
-            }
-            for row in rows
-        ]

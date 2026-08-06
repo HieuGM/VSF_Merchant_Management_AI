@@ -9,7 +9,9 @@ import { getRunTrace, parseTraceSpanEvent } from '../api/traceApi';
  */
 export function reduceTraceEvents(events: TraceEvent[], incoming: TraceEvent): TraceEvent[] {
   if (isTraceSpanEvent(incoming)) {
-    if (events.some((event) => isTraceSpanEvent(event) && event.seq === incoming.seq)) {
+    if (events.some((event) => isTraceSpanEvent(event)
+      && event.traceId === incoming.traceId
+      && event.seq === incoming.seq)) {
       return events;
     }
   } else if (incoming.eventId && events.some((event) => event.eventId === incoming.eventId)) {
@@ -445,23 +447,12 @@ export function useMerchantChat(merchantId: string = '94') {
                     resultPayload?.results?.merchants;
                   const incomingMerchants: AnalyzedMerchant[] = (rawMerchants ?? []).map(
                     (m: any) => ({
-                      merchant_id: String(m.merchant_id ?? m.id ?? ''),
-                      name: String(m.name ?? m.merchant_name ?? 'Merchant'),
-                      cuisine: m.cuisine ?? m.category ?? m.cuisine_type ?? m.type,
-                      category: m.category ?? m.cuisine,
-                      distance_km: typeof m.distance_km === 'number'
-                        ? m.distance_km
-                        : typeof m.distance === 'number'
-                          ? m.distance
-                          : undefined,
-                      rating: typeof m.rating === 'number' ? m.rating : (typeof m.score === 'number' && m.score <= 5 ? m.score : undefined),
+                      merchant_id: String(m.merchant_id),
+                      name: m.name,
+                      cuisine: m.cuisine,
+                      distance_km: m.distance_km,
+                      rating: m.rating ?? m.score,
                       address: m.address,
-                      image_url: m.image_url ?? m.imageUrl ?? m.image ?? m.avatar ?? m.logo_url ?? m.photo_url ?? m.cover_image,
-                      delivery_time_min: typeof m.delivery_time_min === 'number'
-                        ? m.delivery_time_min
-                        : typeof m.prep_time === 'number'
-                          ? m.prep_time
-                          : undefined,
                       sourceToolName: data.tool_name || data.tool || data.name,
                     })
                   );

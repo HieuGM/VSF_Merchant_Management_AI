@@ -184,11 +184,7 @@ def search_merchants(
             )
             stmt = stmt.filter(Merchant.city_slug.in_(city_slugs))
 
-        # 2. General keyword query (matches name, cuisine, category, address, tags)
-        if query:
-            stmt = stmt.filter(_keyword_match_predicate(query))
-
-        # 3. Cuisine filter (matches cuisine OR name)
+        # 2. Cuisine filter (matches cuisine OR name)
         if cuisine:
             c_clean = f"%{cuisine.strip()}%"
             stmt = stmt.filter(
@@ -198,27 +194,27 @@ def search_merchants(
                 )
             )
 
-        # 4. Category filter
+        # 3. Category filter
         if category:
             stmt = stmt.filter(Merchant.category.ilike(f"%{category.strip()}%"))
 
-        # 5. Ingredient tag filter (bò, gà, hải sản, heo,...)
+        # 4. Ingredient tag filter (bò, gà, hải sản, heo,...)
         if ingredient:
             stmt = stmt.filter(cast(Merchant.ingredient_tags, String).ilike(f"%{ingredient.strip()}%"))
 
-        # 6. Diet tag filter (chay, eat clean, keto,...)
+        # 5. Diet tag filter (chay, eat clean, keto,...)
         if diet:
             stmt = stmt.filter(cast(Merchant.diet_tags, String).ilike(f"%{diet.strip()}%"))
 
-        # 7. Taste tag filter (cay, ngọt, mặn,...)
+        # 6. Taste tag filter (cay, ngọt, mặn,...)
         if taste:
             stmt = stmt.filter(cast(Merchant.taste_tags, String).ilike(f"%{taste.strip()}%"))
 
-        # 8. Customer segment tag filter (gia đình, học sinh, dân văn phòng,...)
+        # 7. Customer segment tag filter (gia đình, học sinh, dân văn phòng,...)
         if customer_segment:
             stmt = stmt.filter(cast(Merchant.customer_segments, String).ilike(f"%{customer_segment.strip()}%"))
 
-        # 9. District filter
+        # 8. District filter
         if district:
             d = district.strip()
             if d.lower().startswith("q") and d[1:].strip().isdigit():
@@ -233,13 +229,13 @@ def search_merchants(
             else:
                 stmt = stmt.filter(Merchant.address.ilike(f"%{d}%"))
 
-        # 10. Tier & Price level filter
+        # 9. Tier & Price level filter
         if tier:
             stmt = stmt.filter(MerchantProfile.tier == tier.strip())
         if price_level:
             stmt = stmt.filter(MerchantProfile.price_level == price_level.strip())
 
-        # 11. Min rating filter (ShopeeFood or Foody rating)
+        # 10. Min rating filter (ShopeeFood or Foody rating)
         if min_rating is not None:
             stmt = stmt.filter(
                 or_(
@@ -247,6 +243,20 @@ def search_merchants(
                     MerchantRating.foody_rating >= min_rating,
                 )
             )
+
+        # A multi-word phrase contained in a merchant name is an entity lookup,
+        # not a loose token search. Without this precision branch, common terms
+        # such as "gà", "mỹ", and "anh" can match unrelated menus/addresses.
+        if query:
+            phrase = query.strip()
+            meaningful_terms = [
+                term
+                for term in re.findall(r"[\wÀ-ỹ]+", phrase, flags=re.UNICODE)
+                if len(term) > 1 and term.casefold() not in {"quán", "quan", "nhà", "hàng"}
+            ]
+            name_phrase = Merchant.name.ilike(f"%{phrase}%")
+            has_named_match = len(meaningful_terms) >= 3 and stmt.filter(name_phrase).first() is not None
+            stmt = stmt.filter(name_phrase if has_named_match else _keyword_match_predicate(query))
 
         anchor: Merchant | None = None
         if anchor_merchant_id:

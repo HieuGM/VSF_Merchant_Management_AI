@@ -36,6 +36,15 @@ class Settings(BaseSettings):
     llm_model_large: str | None = None  # Model lớn / heavy (Synthesis, Audit, Diagnosis)
     llm_base_url: str | None = None
 
+    # --- Policy RAG ---
+    rag_embedding_api_key: str | None = None
+    rag_embedding_base_url: str | None = None
+    rag_embedding_model: str | None = None
+    rag_embedding_dimensions: int | None = None
+    rag_chroma_path: str = ".runtime/policy-rag"
+    rag_collection: str = "green-sm-policy"
+    rag_score_threshold: float = 0.6
+
     # --- Cache ---
     cache_backend: str = "redis"  # "memory" | "redis"
 
@@ -61,6 +70,10 @@ class Settings(BaseSettings):
     @property
     def llm_configured(self) -> bool:
         return bool(self.llm_api_key)
+
+    @property
+    def policy_rag_configured(self) -> bool:
+        return bool(self.rag_embedding_api_key and self.rag_embedding_model)
 
 
 @lru_cache

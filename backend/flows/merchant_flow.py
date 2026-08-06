@@ -11,6 +11,7 @@ import traceback
 import uuid
 from datetime import datetime, timezone
 from typing import Any, Callable, Generator
+from sqlalchemy import func, literal, select
 from sqlalchemy.orm import Session
 
 from crewai import LLM
@@ -29,22 +30,18 @@ from services.merchant_trace_collector import (
 )
 from models.merchant_orchestration import TokenUsage
 from services.merchant_data_policy import MerchantDataPolicy
-from services.merchant_followup import (
-    selected_public_merchant,
-    selected_public_merchant_update,
-)
-from models.merchant_agentic import AgenticRunContext, NativeCrewOutcome
+from models.merchant_agentic import AgenticRunContext, NativeCrewOutcome, normalize_text
+from models.merchant_input import PreparedRequest
 from services.merchant_input_preparation import (
     InputPreparationError,
     InputPreparationService,
 )
 from services.merchant_input_router import (
-    conservative_fallback_request,
     decide_route,
     effective_query_policy,
+    execute_routing_decision,
     immutable_session_facts,
 )
-from services.merchant_route_executor import execute_routing_decision
 from tools.merchant.gateway import RunScopedMerchantToolGateway
 from agents.merchant.native_crew import (
     NativeMerchantAdvisorCrew,
@@ -55,9 +52,90 @@ from agents.merchant.native_crew import (
 
 logger = get_logger(__name__)
 
+_SELECTED_PUBLIC_MERCHANT = "merchant_agentic.selected_public_merchant"
+_LAST_PUBLIC_SEARCH = "merchant_agentic.last_public_search"
+
 
 def _utc_now_iso() -> str:
     return datetime.now(timezone.utc).isoformat()
+
+
+def _selected_public_merchant(snapshot: dict[str, Any]) -> dict[str, Any] | None:
+    selected = snapshot.get(_SELECTED_PUBLIC_MERCHANT)
+    return selected if isinstance(selected, dict) and selected.get("merchant_id") else None
+
+
+def _public_merchant_selection_update(
+    answer: str,
+    candidates: list[dict[str, Any]],
+) -> dict[str, Any]:
+    public_candidates = [
+        {
+            key: candidate[key]
+            for key in (
+                "merchant_id",
+                "name",
+                "cuisine",
+                "address",
+                "ratings",
+                "distance_km",
+                "menu_price_min",
+                "menu_price_median",
+                "menu_price_max",
+            )
+            if candidate.get(key) is not None
+        }
+        for candidate in candidates[:5]
+        if candidate.get("merchant_id") and candidate.get("name")
+    ]
+    update: dict[str, Any] = {_LAST_PUBLIC_SEARCH: public_candidates}
+    normalized_answer = normalize_text(answer)
+    mentioned = [
+        candidate
+        for candidate in public_candidates
+        if str(candidate["merchant_id"]) in answer
+        or normalize_text(str(candidate["name"])) in normalized_answer
+    ]
+    if len(mentioned) == 1:
+        update[_SELECTED_PUBLIC_MERCHANT] = mentioned[0]
+    elif len(public_candidates) == 1:
+        update[_SELECTED_PUBLIC_MERCHANT] = public_candidates[0]
+    return update
+
+
+def _named_other_merchant(
+    session: Session,
+    query: str,
+    owner_id: str,
+) -> Merchant | None:
+    """Detect an exact known merchant name in raw text before an LLM can retarget it."""
+    statement = (
+        select(Merchant)
+        .where(
+            Merchant.merchant_id != str(owner_id),
+            Merchant.is_active.is_(True),
+            func.length(Merchant.name) >= 6,
+            func.strpos(func.lower(literal(query)), func.lower(Merchant.name)) > 0,
+        )
+        .limit(1)
+    )
+    return session.execute(statement).scalar_one_or_none()
+
+
+def _correct_named_public_request(
+    prepared: PreparedRequest,
+    raw_query: str,
+    names_other_merchant: bool,
+) -> PreparedRequest:
+    if not names_other_merchant:
+        return prepared
+    return prepared.model_copy(
+        update={
+            "rewritten_query": raw_query[:1200],
+            "scope_candidate": "allowed",
+            "resolved_references": [],
+        }
+    )
 
 
 def get_configured_llm(tier: str = "large") -> LLM | None:
@@ -136,9 +214,9 @@ class MerchantFlowDispatcher:
                     logger.debug("Merchant trace callback failed", exc_info=True)
 
         def on_semantic_span(span: dict[str, Any]) -> None:
-            # Semantic spans are a live developer signal only.  Do not couple
-            # the CrewAI callback path to a separate database writer.
-            notify("trace_span", span)
+            # The normal queue keeps worker-thread callbacks away from the
+            # flow-owned SQLAlchemy session while making live and replay equal.
+            emit("trace_span", span)
 
         trace_collector = TraceCollector(trace_id, on_semantic_span)
 
@@ -163,22 +241,52 @@ class MerchantFlowDispatcher:
 
         def flush_trace_events() -> None:
             nonlocal flushed_trace_count
-            with trace_lock:
-                queued = pending_trace_events[flushed_trace_count:]
-                flushed_trace_count = len(pending_trace_events)
-            for event_type, payload, notify_live in queued:
+            while True:
+                with trace_lock:
+                    if flushed_trace_count >= len(pending_trace_events):
+                        return
+                    event_type, payload, _notify_live = pending_trace_events[
+                        flushed_trace_count
+                    ]
                 clean_payload = RequestTelemetry.persistable_payload(payload)
+                semantic = event_type == "trace_span"
                 run_svc.record_event(
                     trace_id=trace_id,
                     event_type=event_type,
                     agent_name=payload.get("agent_name"),
                     task_name=payload.get("task") or payload.get("step_id"),
                     tool_name=payload.get("tool_name"),
-                    output_summary_json=clean_payload,
-                    duration_ms=payload.get("duration_ms"),
-                    status=payload.get("status", "ok"),
+                    output_summary_json=(
+                        clean_payload.get("display", {}) if semantic else clean_payload
+                    ),
+                    duration_ms=(
+                        clean_payload.get("metrics", {}).get("latency_ms")
+                        if semantic
+                        else payload.get("duration_ms")
+                    ),
+                    status=(
+                        clean_payload.get("display", {}).get("status", "completed")
+                        if semantic
+                        else payload.get(
+                            "status",
+                            "failed" if event_type == "error" else "started"
+                            if event_type.endswith(("_started", "_requested"))
+                            else "ok",
+                        )
+                    ),
                     error_code=payload.get("error_code"),
+                    seq=payload.get("seq") if semantic else None,
+                    span_id=payload.get("span_id") if semantic else None,
+                    parent_span_id=payload.get("parent_span_id") if semantic else None,
+                    phase=payload.get("phase") if semantic else None,
+                    kind=payload.get("kind") if semantic else None,
+                    actor_type=payload.get("actor_type") if semantic else None,
+                    actor_name=payload.get("actor_name") if semantic else None,
+                    metrics_json=clean_payload.get("metrics") if semantic else None,
+                    debug_payload_json=clean_payload.get("debug") if semantic else None,
                 )
+                with trace_lock:
+                    flushed_trace_count += 1
 
         try:
             context_started = time.perf_counter()
@@ -228,19 +336,6 @@ class MerchantFlowDispatcher:
                 },
             )
 
-            def update_session_state(
-                state: dict[str, Any],
-                task: str,
-                *,
-                replace: bool = False,
-            ) -> None:
-                session_svc.update_session_snapshot(
-                    sid,
-                    state,
-                    last_trace_id=trace_id,
-                    replace=replace,
-                )
-
             def gateway_emit(payload: dict[str, Any]) -> None:
                 event_type = str(payload.pop("event"))
                 emit(event_type, payload)
@@ -261,16 +356,23 @@ class MerchantFlowDispatcher:
                 trace_collector=trace_collector,
             )
 
-            selected_merchant = selected_public_merchant(snapshot)
+            selected_merchant = _selected_public_merchant(snapshot)
+            if selected_merchant:
+                gateway.allow_public_merchant_ids(
+                    [str(selected_merchant["merchant_id"])]
+                )
             owner = session.get(Merchant, merchant_id)
             owner_context = {
                 "merchant_id": merchant_id,
+                "name": owner.name if owner else None,
                 "city": owner.city if owner else None,
                 "city_slug": owner.city_slug if owner else None,
                 "has_stored_location": bool(
                     owner and owner.lat is not None and owner.lng is not None
                 ),
             }
+            named_public_target = _named_other_merchant(session, message, merchant_id)
+            names_other_merchant = named_public_target is not None
 
             settings = get_settings()
             emit(
@@ -283,30 +385,39 @@ class MerchantFlowDispatcher:
                     "has_selected_public_merchant": selected_merchant is not None,
                 },
             )
-            analyzer_status = "ok"
-            analyzer_summary = "Đã chuẩn bị yêu cầu cho điều phối viên."
-            analyzer_debug: dict[str, Any] = {}
             analyzer_llm = (
                 get_configured_llm("small")
                 if getattr(settings, "llm_configured", False)
                 else None
             )
             if analyzer_llm is None:
-                prepared_request = conservative_fallback_request(
-                    raw_query=message,
-                )
                 emit(
-                    "input_analyzer_fallback",
+                    "input_analyzer_failed",
                     {
                         "agent_name": "input_analyzer",
                         "task": "prepare_request",
-                        "status": "fallback",
+                        "status": "failed",
                         "reason": "small_llm_not_configured",
-                        "prepared_request": prepared_request.model_dump(),
                     },
                 )
-                analyzer_status = "fallback"
-                analyzer_summary = "Dùng tuyến dự phòng không gọi mô hình."
+                return self._finish_native_response(
+                    session_svc=session_svc,
+                    run_svc=run_svc,
+                    trace_id=trace_id,
+                    session_id=sid,
+                    merchant_id=merchant_id,
+                    query=message,
+                    reply=(
+                        "Không thể phân tích và định tuyến yêu cầu vì Input Analyzer "
+                        "chưa được cấu hình. Không có tuyến dự phòng nào được chạy."
+                    ),
+                    status="failed",
+                    capabilities=[],
+                    trace_summary=trace_summary,
+                    started_clock=started_clock,
+                    structured_outputs={"error_code": "input_analyzer_not_configured"},
+                    flush_trace_events=flush_trace_events,
+                )
             else:
                 try:
                     prepared_request = InputPreparationService(
@@ -331,39 +442,95 @@ class MerchantFlowDispatcher:
                         owner_context=owner_context,
                     )
                 except InputPreparationError as error:
-                    prepared_request = conservative_fallback_request(
-                        raw_query=message,
-                    )
                     emit(
-                        "input_analyzer_fallback",
+                        "input_analyzer_failed",
                         {
                             "agent_name": "input_analyzer",
                             "task": "prepare_request",
-                            "status": "fallback",
+                            "status": "failed",
                             "reason": str(error),
-                            "prepared_request": prepared_request.model_dump(),
                         },
                     )
-                    analyzer_status = "fallback"
-                    analyzer_summary = "Input analyzer không hợp lệ, dùng tuyến dự phòng."
-                    analyzer_debug = {"error": str(error)}
+                    return self._finish_native_response(
+                        session_svc=session_svc,
+                        run_svc=run_svc,
+                        trace_id=trace_id,
+                        session_id=sid,
+                        merchant_id=merchant_id,
+                        query=message,
+                        reply=(
+                            "Input Analyzer trả về kết quả không hợp lệ nên yêu cầu "
+                            "đã dừng; không có tuyến dự phòng nào được chạy."
+                        ),
+                        status="failed",
+                        capabilities=[],
+                        trace_summary=trace_summary,
+                        started_clock=started_clock,
+                        structured_outputs={"error_code": str(error)},
+                        flush_trace_events=flush_trace_events,
+                    )
 
+            if names_other_merchant:
+                # Exact catalog identity is stronger than an analyzer rewrite.
+                # Never let owner context retarget a separately named merchant.
+                prepared_request = _correct_named_public_request(
+                    prepared_request,
+                    message,
+                    names_other_merchant,
+                )
             emit(
-                analyzer_summary,
+                "input_analyzer_prepared",
                 {
-                    "status": analyzer_status,
+                    "status": "ok",
                     "prepared_request": prepared_request.model_dump(),
-                    **analyzer_debug,
+                },
+            )
+            trace_collector.record(
+                phase="input",
+                actor_type="analyzer",
+                actor_name="input_analyzer",
+                title="Hiểu yêu cầu người dùng",
+                summary=(
+                    f"Phạm vi {prepared_request.scope_candidate}; đề xuất tuyến "
+                    f"{prepared_request.proposed_outcome}."
+                ),
+                debug={
+                    "rewritten_query": prepared_request.rewritten_query,
+                    "scope_candidate": prepared_request.scope_candidate,
+                    "missing_context": prepared_request.missing_context,
+                    "proposed_outcome": prepared_request.proposed_outcome,
                 },
             )
 
-            raw_query_policy = MerchantDataPolicy(merchant_id).query_decision(message)
+            raw_query_policy = MerchantDataPolicy(merchant_id).query_decision(
+                message,
+                targets_other_merchant=names_other_merchant,
+            )
             rewritten_query_policy = MerchantDataPolicy(merchant_id).query_decision(
-                prepared_request.rewritten_query
+                prepared_request.rewritten_query,
+                targets_other_merchant=names_other_merchant,
             )
             query_policy, policy_authority = effective_query_policy(
                 raw_query_policy,
                 rewritten_query_policy,
+            )
+            trace_collector.record(
+                phase="route",
+                actor_type="system",
+                actor_name="merchant_data_policy",
+                title="Kiểm tra quyền truy cập dữ liệu",
+                summary=(
+                    "Yêu cầu tuân thủ phạm vi dữ liệu cho phép."
+                    if query_policy.allowed
+                    else "Yêu cầu bị chặn bởi chính sách dữ liệu merchant."
+                ),
+                status="allowed" if query_policy.allowed else "denied",
+                debug={
+                    "allowed": query_policy.allowed,
+                    "scope": query_policy.scope,
+                    "private_fields": query_policy.private_fields,
+                    "policy_authority": policy_authority,
+                },
             )
             route = decide_route(
                 prepared=prepared_request,
@@ -396,6 +563,9 @@ class MerchantFlowDispatcher:
                     "outcome": route.outcome,
                     "reason": route.reason,
                     "rewritten_query": prepared_request.rewritten_query,
+                    "scope_candidate": prepared_request.scope_candidate,
+                    "guardrail_allowed": query_policy.allowed,
+                    "policy_authority": policy_authority,
                 },
             )
 
@@ -447,6 +617,13 @@ class MerchantFlowDispatcher:
                     token_usage=TokenUsage(),
                     flush_trace_events=flush_trace_events,
                 )
+            gateway.allow_public_merchant_ids(
+                [
+                    str(reference.merchant_id)
+                    for reference in prepared_request.resolved_references
+                    if reference.kind == "public_merchant" and reference.merchant_id
+                ]
+            )
             coordinator_prompt = build_coordinator_prompt(
                 prepared_request,
                 history,
@@ -491,8 +668,8 @@ class MerchantFlowDispatcher:
             if coordinator_llm is None:
                 reply = (
                     "Hiện chưa thể khởi chạy điều phối viên AI để xử lý yêu cầu này. "
-                    "Vui lòng cấu hình LLM rồi gửi lại câu hỏi; tôi sẽ không tự suy đoán "
-                    "hay chạy một kế hoạch cố định."
+                    "Vui lòng cấu hình LLM rồi gửi lại câu hỏi; tôi sẽ không tự suy "
+                    "đoán hay chạy một tuyến dự phòng."
                 )
                 emit(
                     "error",
@@ -537,6 +714,8 @@ class MerchantFlowDispatcher:
                 kickoff_coordinator=lambda: NativeMerchantAdvisorCrew(
                     gateway=gateway,
                     llm=coordinator_llm,
+                    step_callback=step_callback,
+                    task_callback=task_callback,
                     native_event_callback=emit,
                     trace_collector=trace_collector,
                 ).kickoff(
@@ -603,12 +782,13 @@ class MerchantFlowDispatcher:
             )
             public_search_members = gateway.latest_public_search_members()
             if public_search_members:
-                update_session_state(
-                    selected_public_merchant_update(
+                session_svc.update_session_snapshot(
+                    sid,
+                    _public_merchant_selection_update(
                         reply,
                         public_search_members,
                     ),
-                    "update_public_merchant_selection",
+                    last_trace_id=trace_id,
                 )
             status = "completed"
             delegated_agents = list(
@@ -700,21 +880,12 @@ class MerchantFlowDispatcher:
 
     @staticmethod
     def _native_trace_token_usage(trace_summary: list[dict[str, Any]]) -> TokenUsage:
-        """Sum SDK LLM spans; CrewOutput can recursively double-count delegation."""
-        total = prompt = completion = 0
-        for step in trace_summary:
-            if step.get("event") != "crewai_llm_finished":
-                continue
-            usage = step.get("token_usage")
-            if not isinstance(usage, dict):
-                continue
-            total += int(usage.get("total_tokens", 0) or 0)
-            prompt += int(usage.get("prompt_tokens", 0) or 0)
-            completion += int(usage.get("completion_tokens", 0) or 0)
+        """Sum canonical per-call spans without CrewOutput delegation duplicates."""
+        usage = RequestTelemetry.sum_llm_usage(trace_summary)
         return TokenUsage(
-            total_tokens=total,
-            prompt_tokens=prompt,
-            completion_tokens=completion,
+            total_tokens=int(usage["total_tokens"] or 0),
+            prompt_tokens=int(usage["prompt_tokens"] or 0),
+            completion_tokens=int(usage["completion_tokens"] or 0),
         )
 
     @staticmethod
@@ -831,6 +1002,25 @@ class MerchantFlowDispatcher:
         usage = token_usage or TokenUsage()
         duration_ms = round((time.perf_counter() - started_clock) * 1000)
         token_dict = usage.model_dump()
+        query_summary = {
+            "event": "query_summary",
+            "agent_name": "native_merchant_advisor",
+            "task": "complete_query",
+            "status": status,
+            "duration_ms": duration_ms,
+            "token_usage": token_dict,
+            "tool_count": MerchantFlowDispatcher._trace_tool_count(trace_summary),
+        }
+        if flush_trace_events is not None:
+            run_svc.record_event(
+                trace_id=trace_id,
+                event_type="query_summary",
+                agent_name="native_merchant_advisor",
+                task_name="complete_query",
+                output_summary_json=query_summary,
+                duration_ms=duration_ms,
+                status=status,
+            )
         run_svc.finish_run(
             trace_id=trace_id,
             status=status,
@@ -848,17 +1038,7 @@ class MerchantFlowDispatcher:
                 "status": status,
             },
         )
-        trace_summary.append(
-            {
-                "event": "query_summary",
-                "agent_name": "native_merchant_advisor",
-                "task": "complete_query",
-                "status": status,
-                "duration_ms": duration_ms,
-                "token_usage": token_dict,
-                "tool_count": MerchantFlowDispatcher._trace_tool_count(trace_summary),
-            }
-        )
+        trace_summary.append(query_summary)
         return {
             "trace_id": trace_id,
             "session_id": session_id,
@@ -975,7 +1155,8 @@ class MerchantFlowDispatcher:
         thread = threading.Thread(target=worker, daemon=True)
         thread.start()
         start_time = time.time()
-        timeout_seconds = 300
+        # Coordinator gets five minutes; transport gets a short terminal grace.
+        timeout_seconds = 330
 
         while True:
             try:
@@ -990,7 +1171,7 @@ class MerchantFlowDispatcher:
             except queue.Empty:
                 if time.time() - start_time > timeout_seconds:
                     result_box["err"] = RuntimeError(
-                        "Hệ thống xử lý quá thời gian chờ 300 giây."
+                        f"Hệ thống xử lý quá thời gian chờ {timeout_seconds} giây."
                     )
                     break
                 if not thread.is_alive() and event_queue.empty():
@@ -1018,7 +1199,7 @@ class MerchantFlowDispatcher:
                 "token_usage": result.get("token_usage", {}),
                 "duration_ms": result.get("duration_ms"),
                 "merchants": result.get("merchants", []),
-                "competitors": result.get("merchants", []),
+                "competitors": result.get("competitors", []),
                 "evidence_status": result.get("evidence_status"),
             }
             yield (
@@ -1026,14 +1207,20 @@ class MerchantFlowDispatcher:
                 f"data: {json.dumps(finish, ensure_ascii=False, default=str)}\n\n"
             )
         else:
-            error_text = str(result_box.get("err", "Unknown execution error"))
+            error = result_box.get("err")
+            error_code = type(error).__name__ if isinstance(error, Exception) else "ExecutionError"
+            logger.error("Merchant agent stream failed (%s): %s", error_code, error)
+            error_text = (
+                "Không thể hoàn tất yêu cầu trong giới hạn thực thi hiện tại. "
+                "Vui lòng thử lại; hệ thống đã lưu mã lỗi để kiểm tra."
+            )
             yield (
                 "event: agent_error\n"
-                f"data: {json.dumps({'agent_name': 'MerchantFlow', 'detail': error_text, 'timestamp': _utc_now_iso()}, ensure_ascii=False)}\n\n"
+                f"data: {json.dumps({'agent_name': 'MerchantFlow', 'detail': error_text, 'error_code': error_code, 'timestamp': _utc_now_iso()}, ensure_ascii=False)}\n\n"
             )
             yield (
                 "event: execution_finish\n"
-                f"data: {json.dumps({'status': 'FAILED', 'error': error_text}, ensure_ascii=False)}\n\n"
+                f"data: {json.dumps({'status': 'FAILED', 'error': error_text, 'error_code': error_code}, ensure_ascii=False)}\n\n"
             )
 
 # Process-wide singleton instance

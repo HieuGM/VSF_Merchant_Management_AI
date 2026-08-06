@@ -99,14 +99,6 @@ class ChatSessionService:
 
     def get_recent_history(self, session_id: str, limit: int = 10) -> list[dict[str, Any]]:
         """Fetch recent message history formatted for Agent context injection."""
-        stmt = (
-            select(ChatMessage)
-            .where(ChatMessage.session_id == session_id)
-            .order_by(ChatMessage.timestamp.asc())
-        )
-        messages = list(self._db.execute(stmt).scalars().all())
-        messages = messages[-limit:]
-
         return [
             {
                 "message_id": m.message_id,
@@ -115,7 +107,7 @@ class ChatSessionService:
                 "trace_id": m.trace_id,
                 "timestamp": str(m.timestamp),
             }
-            for m in messages
+            for m in self._recent_messages(session_id, limit)
         ]
 
     def get_compact_history(self, session_id: str, max_turns: int = 3) -> list[dict[str, Any]]:
@@ -125,16 +117,8 @@ class ChatSessionService:
         like merchant names, ratings, and recommendations for multi-turn queries.
         """
         limit = max_turns * 2
-        stmt = (
-            select(ChatMessage)
-            .where(ChatMessage.session_id == session_id)
-            .order_by(ChatMessage.timestamp.asc())
-        )
-        messages = list(self._db.execute(stmt).scalars().all())
-        messages = messages[-limit:]
-
         compact_list = []
-        for m in messages:
+        for m in self._recent_messages(session_id, limit):
             text = m.text
             role = "assistant" if m.sender in ("agent", "assistant") else "user"
             if role == "assistant" and len(text) > 450:
@@ -144,6 +128,15 @@ class ChatSessionService:
                 "text": text,
             })
         return compact_list
+
+    def _recent_messages(self, session_id: str, limit: int) -> list[ChatMessage]:
+        rows = self._db.execute(
+            select(ChatMessage)
+            .where(ChatMessage.session_id == session_id)
+            .order_by(ChatMessage.timestamp.desc())
+            .limit(limit)
+        ).scalars()
+        return list(reversed(list(rows)))
 
     def get_session_snapshot(self, session_id: str) -> dict[str, Any]:
         """Fetch hot snapshot from Redis if present, falling back to DB."""

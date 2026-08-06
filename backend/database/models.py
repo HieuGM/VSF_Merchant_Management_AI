@@ -561,3 +561,48 @@ class AgentEvent(Base):
     metrics_json = Column(JSONB)
     debug_payload_json = Column(JSONB)
     created_at = Column(TIMESTAMP(timezone=False), server_default=sa_text("CURRENT_TIMESTAMP"))
+
+
+class PolicyDocument(Base):
+    """One authoritative policy document; vectors live in Chroma, not PostgreSQL."""
+
+    __tablename__ = "policy_documents"
+
+    document_id = Column(String, primary_key=True)
+    title = Column(String, nullable=False)
+    source_url = Column(String, nullable=False, unique=True)
+    category = Column(String, nullable=False, index=True)
+    policy_updated_at = Column(TIMESTAMP(timezone=True))
+    content_hash = Column(String, nullable=False)
+    created_at = Column(
+        TIMESTAMP(timezone=True), server_default=sa_text("CURRENT_TIMESTAMP")
+    )
+
+
+class PolicyDocumentChunk(Base):
+    """A structure-aware policy chunk and its minimal retrieval metadata."""
+
+    __tablename__ = "policy_document_chunks"
+    __table_args__ = (
+        Index(
+            "uq_policy_document_chunks_document_index",
+            "document_id",
+            "chunk_index",
+            unique=True,
+        ),
+    )
+
+    chunk_id = Column(String, primary_key=True)
+    document_id = Column(
+        String,
+        ForeignKey("policy_documents.document_id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    content = Column(Text, nullable=False)
+    section_path = Column(JSONB, nullable=False, default=list)
+    chunk_index = Column(Integer, nullable=False)
+    content_hash = Column(String, nullable=False)
+    created_at = Column(
+        TIMESTAMP(timezone=True), server_default=sa_text("CURRENT_TIMESTAMP")
+    )

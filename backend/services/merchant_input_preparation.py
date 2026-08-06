@@ -51,7 +51,6 @@ class InputPreparationService:
     ) -> None:
         self._llm = llm
         self._trace_callback = trace_callback
-        self._apply_output_limit_when_supported()
 
     def prepare(
         self,
@@ -81,19 +80,19 @@ class InputPreparationService:
             if usage is not None:
                 usages.append(usage)
             try:
-                parsed_request = PreparedRequest.model_validate_json(raw_output)
+                parsed_request = _parse_prepared_request(raw_output)
                 parse_result = "ok"
                 return parsed_request
-            except ValidationError:
+            except (ValidationError, ValueError):
                 repair_prompt = build_repair_prompt(raw_output)
                 repair_output, usage = self._call(repair_prompt)
                 if usage is not None:
                     usages.append(usage)
                 try:
-                    parsed_request = PreparedRequest.model_validate_json(repair_output)
+                    parsed_request = _parse_prepared_request(repair_output)
                     parse_result = "repaired"
                     return parsed_request
-                except ValidationError as error:
+                except (ValidationError, ValueError) as error:
                     parse_result = "schema_repair_failed"
                     raise InputPreparationError("schema_repair_failed") from error
         except InputPreparationError:
@@ -103,6 +102,8 @@ class InputPreparationService:
         finally:
             self._emit_trace(
                 raw_prompt=prompt,
+                raw_output=raw_output,
+                repair_output=repair_output,
                 parse_result=parse_result,
                 parsed_request=parsed_request,
                 duration_ms=round((time.perf_counter() - started_at) * 1000, 3),
@@ -113,22 +114,12 @@ class InputPreparationService:
         response = self._llm.call(prompt)
         return _response_text(response), _response_usage(response)
 
-    def _apply_output_limit_when_supported(self) -> None:
-        """Configure CrewAI-like adapters before their first provider call."""
-        try:
-            current = getattr(self._llm, "max_tokens")
-        except (AttributeError, TypeError):
-            return
-        if not isinstance(current, (int, float)) or current > INPUT_ANALYZER_BUDGET.output_limit:
-            try:
-                setattr(self._llm, "max_tokens", INPUT_ANALYZER_BUDGET.output_limit)
-            except (AttributeError, TypeError, ValueError):
-                return
-
     def _emit_trace(
         self,
         *,
         raw_prompt: str,
+        raw_output: str,
+        repair_output: str | None,
         parse_result: str,
         parsed_request: PreparedRequest | None,
         duration_ms: float,
@@ -140,6 +131,12 @@ class InputPreparationService:
             # The prompt is the exact, already-bounded provider input. Do not
             # pass it through RequestTelemetry's unrelated 1,500-char string cap.
             "raw_prompt": _trace_text(raw_prompt, TRACE_PROMPT_LIMIT),
+            "raw_model_output": _trace_text(raw_output, TRACE_MODEL_ARTIFACT_LIMIT),
+            "repair_model_output": (
+                _trace_text(repair_output, TRACE_MODEL_ARTIFACT_LIMIT)
+                if repair_output is not None
+                else None
+            ),
             "parse_result": parse_result,
             "parsed_request": _trace_value(parsed_request.model_dump())
             if parsed_request
@@ -167,6 +164,33 @@ def _response_text(response: str | Any) -> str:
             return candidate
         return json.dumps(candidate, ensure_ascii=False, default=str)
     return str(response)
+
+
+def _parse_prepared_request(raw_output: str) -> PreparedRequest:
+    """Parse bounded provider JSON while repairing known transport-level quirks.
+
+    Gemini-compatible endpoints sometimes escape apostrophes as ``\'``, which
+    JSON does not permit, or return the concise aliases used in repair prompts.
+    This normalizes only those representation defects; Pydantic still enforces
+    the complete request contract and rejects unknown fields.
+    """
+    normalized = raw_output.strip().replace("\\'", "'")
+    if normalized.startswith("```"):
+        lines = normalized.splitlines()
+        if lines and lines[0].startswith("```"):
+            lines = lines[1:]
+        if lines and lines[-1].strip() == "```":
+            lines = lines[:-1]
+        normalized = "\n".join(lines).strip()
+    payload = json.loads(normalized)
+    if not isinstance(payload, dict):
+        raise ValueError("Input Analyzer output must be a JSON object")
+    canonical = dict(payload)
+    if "scope_candidate" not in canonical and "scope" in canonical:
+        canonical["scope_candidate"] = canonical.pop("scope")
+    if "proposed_outcome" not in canonical and "outcome" in canonical:
+        canonical["proposed_outcome"] = canonical.pop("outcome")
+    return PreparedRequest.model_validate(canonical)
 
 
 def _response_usage(response: Any) -> dict[str, int] | None:

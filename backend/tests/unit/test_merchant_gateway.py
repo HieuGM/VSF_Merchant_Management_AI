@@ -14,6 +14,7 @@ def test_city_aliases_canonicalize_to_single_slug():
     assert normalize_city_slugs("Da Nang") == "da_nang"
     assert normalize_city_slugs("da-nang") == "da_nang"
     assert normalize_city_slugs("da_nang") == "da_nang"
+    assert normalize_city_slugs("TP. HCM") == "tp_hcm"
 
 
 def test_market_search_tool_emits_canonical_city_and_cache_events(monkeypatch):
@@ -106,7 +107,6 @@ def test_owner_profile_tool_ignores_model_supplied_merchant_id(monkeypatch):
         cache=InMemoryCache(),
         emit=lambda _event: None,
     )
-
     import tools.merchant.gateway as gateway_module
 
     monkeypatch.setattr(
@@ -436,6 +436,7 @@ def test_market_search_agent_can_fetch_public_merchant_detail(monkeypatch):
         cache=InMemoryCache(),
         emit=lambda _event: None,
     )
+    gateway.allow_public_merchant_ids(["78532"])
 
     tool = next(
         item
@@ -446,3 +447,30 @@ def test_market_search_agent_can_fetch_public_merchant_detail(monkeypatch):
 
     assert result["merchant_id"] == "78532"
     assert observed["merchant_id"] == "78532"
+
+
+def test_public_detail_rejects_owner_and_unresolved_ids():
+    import pytest
+
+    from models.merchant_agentic import AgenticRunContext
+    from tools.merchant.gateway import RunScopedMerchantToolGateway
+
+    gateway = RunScopedMerchantToolGateway(
+        context=AgenticRunContext(
+            trace_id="tr-public-detail-policy",
+            session_id="sess-public-detail-policy",
+            owner_merchant_id="100810",
+        ),
+        db=MagicMock(),
+        cache=None,
+        emit=lambda _event: None,
+    )
+
+    assert [tool.name for tool in gateway.tools_for("market_search")] == [
+        "search_merchants"
+    ]
+
+    with pytest.raises(ValueError, match="Owner merchant_id"):
+        gateway.run_public_detail(merchant_id="100810")
+    with pytest.raises(ValueError, match="not resolved"):
+        gateway.run_public_detail(merchant_id="10208")

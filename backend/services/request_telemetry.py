@@ -82,7 +82,7 @@ class RequestTelemetry:
             for event in normalized_events
             if event.get("event_type") == "sql_query"
         ]
-        span_usage = cls._sum_span_usage(normalized_events)
+        span_usage = cls.sum_llm_usage(normalized_events)
         llm_usage = span_usage if span_usage["total_tokens"] else cls._usage(run_token_usage)
         durations = [
             float(event["duration_ms"])
@@ -127,12 +127,33 @@ class RequestTelemetry:
         }
 
     @classmethod
-    def _sum_span_usage(cls, events: Iterable[dict[str, Any]]) -> dict[str, int | None]:
+    def sum_llm_usage(cls, events: Iterable[dict[str, Any]]) -> dict[str, int | None]:
+        """Sum canonical per-call spans, with legacy events as a compatibility fallback."""
+        event_list = list(events)
         prompt = completion = total = 0
-        for event in events:
-            if event.get("event_type") != "crewai_llm_finished":
+        for event in event_list:
+            event_type = event.get("event_type") or event.get("event")
+            display = event.get("display") or {}
+            if (
+                event_type != "trace_span"
+                or event.get("kind") != "finished"
+                or display.get("title") != "LLM response"
+            ):
                 continue
-            usage = cls._usage(event.get("output_summary", {}).get("token_usage"))
+            usage = cls._usage((event.get("metrics") or {}).get("token_usage"))
+            prompt += int(usage["prompt_tokens"] or 0)
+            completion += int(usage["completion_tokens"] or 0)
+            total += int(usage["total_tokens"] or 0)
+
+        legacy_types = {"input_analyzer_finished"}
+        if total == 0:
+            legacy_types.add("crewai_llm_finished")
+        for event in event_list:
+            event_type = event.get("event_type") or event.get("event")
+            if event_type not in legacy_types:
+                continue
+            output = event.get("output_summary") or event
+            usage = cls._usage(output.get("token_usage"))
             prompt += int(usage["prompt_tokens"] or 0)
             completion += int(usage["completion_tokens"] or 0)
             total += int(usage["total_tokens"] or 0)
