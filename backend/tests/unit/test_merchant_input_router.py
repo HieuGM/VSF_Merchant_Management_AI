@@ -76,8 +76,8 @@ def test_fast_answer_requires_an_exact_immutable_fact():
         prepared=prepared(outcome="fast_answer", query=query),
         policy=ALLOWED,
         immutable_facts={
-            "ten san pham co dinh la gi?": ImmutableSessionFact(
-                normalized_query="ten san pham co dinh la gi?",
+            "ten san pham co dinh la gi": ImmutableSessionFact(
+                normalized_query="ten san pham co dinh la gi",
                 value="Green SM Merchant",
             )
         },

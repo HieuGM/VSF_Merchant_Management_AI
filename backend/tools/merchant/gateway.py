@@ -19,6 +19,8 @@ from models.merchant_agentic import (
     normalize_city_slugs,
     normalize_text,
 )
+from models.policy_rag import PolicySearchInput
+from services.policy_rag_service import PolicyRagService
 from services.request_telemetry import SqlQueryMonitor
 from services.merchant_trace_collector import (
     GatewayToolInvocation,
@@ -205,7 +207,10 @@ class GatewayOwnerProfileTool(_GatewayTool):
     args_schema: Type[BaseModel] = OwnerProfileInput
 
     def _run(self, **kwargs: Any) -> str:
-        return self._invoke(kwargs, lambda: self.gateway.run_owner_profile(**kwargs))
+        return self._invoke(
+            kwargs,
+            lambda: self.gateway.run_owner_operation("profile", **kwargs),
+        )
 
 
 class GatewayOwnerMetricsTool(_GatewayTool):
@@ -307,6 +312,18 @@ class GatewayCompareOwnerCohortTool(_GatewayTool):
         )
 
 
+class GatewayPolicySearchTool(_GatewayTool):
+    name: str = "search_policy_documents"
+    description: str = (
+        "Search official Green SM policy chunks. Use for fees, incentives, terms, "
+        "procedures, privacy, and policy-aware merchant recommendations."
+    )
+    args_schema: Type[BaseModel] = PolicySearchInput
+
+    def _run(self, **kwargs: Any) -> str:
+        return self._invoke(kwargs, lambda: self.gateway.run_policy_search(**kwargs))
+
+
 class RunScopedMerchantToolGateway:
     """Creates tools whose data access is constrained by one merchant chat run."""
 
@@ -337,6 +354,10 @@ class RunScopedMerchantToolGateway:
         self._cohort_refs: dict[str, list[str]] = {}
         self._cohort_members: dict[str, list[dict[str, Any]]] = {}
         self._latest_public_search_members: list[dict[str, Any]] = []
+        self._known_public_merchant_ids: set[str] = set()
+
+    def allow_public_merchant_ids(self, merchant_ids: list[str]) -> None:
+        self._known_public_merchant_ids.update(str(value) for value in merchant_ids if value)
 
     def latest_public_search_members(self) -> list[dict[str, Any]]:
         """Return the public discovery evidence most recently observed this run."""
@@ -389,11 +410,15 @@ class RunScopedMerchantToolGateway:
             self._active_tool_invocation.reset(token)
 
     def tools_for(self, agent_name: str) -> list[BaseTool]:
+        market_tools: list[BaseTool] = [
+            GatewaySearchMerchantsTool(gateway=self, agent_name=agent_name),
+        ]
+        if self._known_public_merchant_ids:
+            market_tools.append(
+                GatewayPublicMerchantDetailTool(gateway=self, agent_name=agent_name)
+            )
         tools: dict[str, list[BaseTool]] = {
-            "market_search": [
-                GatewaySearchMerchantsTool(gateway=self, agent_name=agent_name),
-                GatewayPublicMerchantDetailTool(gateway=self, agent_name=agent_name),
-            ],
+            "market_search": market_tools,
             "cohort_analysis": [
                 GatewaySearchMerchantsTool(gateway=self, agent_name=agent_name),
                 GatewayAggregateCohortTool(gateway=self, agent_name=agent_name),
@@ -413,6 +438,9 @@ class RunScopedMerchantToolGateway:
             # The verifier evaluates the dossier supplied by the coordinator;
             # it must not expand scope by fetching independent data.
             "evidence_verifier": [],
+            "policy_document": [
+                GatewayPolicySearchTool(gateway=self, agent_name=agent_name),
+            ],
         }
         return tools.get(agent_name, [])
 
@@ -468,6 +496,7 @@ class RunScopedMerchantToolGateway:
                 if merchant.get("merchant_id")
             ]
             if merchant_ids:
+                self.allow_public_merchant_ids(merchant_ids)
                 cohort_ref = f"search_{len(self._cohort_refs) + 1}"
                 self._cohort_refs[cohort_ref] = merchant_ids
                 self._cohort_members[cohort_ref] = result["merchants"]
@@ -512,6 +541,16 @@ class RunScopedMerchantToolGateway:
 
     def run_public_detail(self, **raw_args: Any) -> str:
         args = PublicMerchantDetailInput.model_validate(raw_args).model_dump()
+        target = str(args["merchant_id"])
+        if target == self.context.owner_merchant_id:
+            raise ValueError(
+                "Owner merchant_id is not a public-search target; use an owner tool."
+            )
+        if target not in self._known_public_merchant_ids:
+            raise ValueError(
+                "Public merchant_id was not resolved or returned by search_merchants; "
+                "search for the named merchant first."
+            )
         return self._execute(
             tool_name="get_public_merchant_detail",
             agent_name="market_search",
@@ -526,6 +565,17 @@ class RunScopedMerchantToolGateway:
                         cache_event_callback=lambda event: self._emit("cache", **event),
                     )
                 )
+            ),
+        )
+
+    def run_policy_search(self, **raw_args: Any) -> str:
+        args = PolicySearchInput.model_validate(raw_args).model_dump()
+        return self._execute(
+            tool_name="search_policy_documents",
+            agent_name="policy_document",
+            args=args,
+            execute=lambda: self._with_tool_session(
+                lambda db: PolicyRagService(db).search(**args)
             ),
         )
 
@@ -613,9 +663,6 @@ class RunScopedMerchantToolGateway:
             normalized["sort_by"] = "relevance"
             removed.append("sort_by")
         return normalized, removed
-
-    def run_owner_profile(self, **raw_args: Any) -> str:
-        return self.run_owner_operation("profile", **raw_args)
 
     def run_owner_image_comparison(self, **raw_args: Any) -> str:
         """Compare owner image metadata with a public cohort from this run."""

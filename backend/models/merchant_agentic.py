@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import unicodedata
+import re
 from typing import Literal
 
 from pydantic import BaseModel, Field
@@ -30,9 +31,7 @@ def normalize_text(value: str) -> str:
         for character in normalized
         if unicodedata.category(character) != "Mn"
     )
-    return " ".join(
-        without_marks.replace("_", " ").replace("-", " ").split()
-    )
+    return " ".join(re.sub(r"[^a-z0-9]+", " ", without_marks).split())
 
 
 def normalize_city_slugs(value: str | None) -> str | None:

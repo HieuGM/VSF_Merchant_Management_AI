@@ -78,7 +78,12 @@ export function MessageItem({
 
       <div className="assistant-body">
         {/* Step-by-step thinking trace accordion */}
-        <AgentThinkingAccordion events={message.traceEvents} isStreaming={message.isStreaming} />
+        <AgentThinkingAccordion
+          events={message.traceEvents}
+          isStreaming={message.isStreaming}
+          durationMs={message.durationMs}
+          tokenUsage={message.tokenUsage}
+        />
 
         {/* AI Markdown response content */}
         {message.content && <Markdown>{message.content}</Markdown>}
@@ -176,4 +181,3 @@ export function MessageItem({
     </article>
   );
 }
-

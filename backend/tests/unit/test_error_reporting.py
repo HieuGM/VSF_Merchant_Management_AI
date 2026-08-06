@@ -24,3 +24,5 @@ def test_chat_stream_error_reporting_on_exception(monkeypatch):
 
     assert has_agent_error, "agent_error SSE event should be emitted on error"
     assert has_failed_finish, "execution_finish with status FAILED should be emitted on error"
+    assert all("Simulated 400 Bad Request error" not in event for event in events)
+    assert any("RuntimeError" in event for event in events)

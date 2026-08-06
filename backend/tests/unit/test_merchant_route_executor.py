@@ -1,6 +1,5 @@
 """Minimal contract for input-route execution."""
-from services.merchant_input_router import RoutingDecision
-from services.merchant_route_executor import execute_routing_decision
+from services.merchant_input_router import RoutingDecision, execute_routing_decision
 
 
 def test_coordinate_route_needs_only_a_coordinator_kickoff():

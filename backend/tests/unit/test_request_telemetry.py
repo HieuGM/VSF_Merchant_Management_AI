@@ -83,3 +83,41 @@ def test_envelope_tolerates_a_truncated_llm_usage_payload():
     )
 
     assert envelope["llm_usage"]["total_tokens"] == 0
+
+
+def test_envelope_prefers_semantic_llm_usage_over_recursive_run_total():
+    envelope = RequestTelemetry.build_envelope(
+        trace_id="tr-semantic-usage",
+        status="completed",
+        run_token_usage={"total_tokens": 999, "prompt_tokens": 900, "completion_tokens": 99},
+        events=[
+            {
+                "event_type": "trace_span",
+                "kind": "finished",
+                "display": {"title": "LLM response"},
+                "metrics": {
+                    "token_usage": {
+                        "total_tokens": 12,
+                        "prompt_tokens": 10,
+                        "completion_tokens": 2,
+                    }
+                },
+                "output_summary": {},
+            },
+            {
+                "event_type": "trace_span",
+                "kind": "finished",
+                "display": {"title": "Điều phối tác vụ"},
+                "metrics": {"token_usage": {"total_tokens": 999}},
+                "output_summary": {},
+            },
+        ],
+        session_state={},
+    )
+
+    assert envelope["llm_usage"] == {
+        "prompt_tokens": 10,
+        "completion_tokens": 2,
+        "total_tokens": 12,
+        "estimated_cost_usd": None,
+    }

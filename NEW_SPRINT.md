@@ -13,3 +13,5 @@
 1. On guardrails use external services to testing agents
 
 2. More QA cases on new features
+
+ opencode -s ses_03028d0b7ffeTr2HijgbJaIPwN

@@ -1,6 +1,7 @@
 """Deterministic, policy-first routing for one prepared merchant request."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any, Literal
 
@@ -16,6 +17,14 @@ class RoutingDecision:
     outcome: Literal["reject", "fast_answer", "coordinate"]
     reason: str
     reply: str | None = None
+
+
+@dataclass(frozen=True)
+class RouteExecution:
+    """Result of the work authorized by one routing decision."""
+
+    outcome: str
+    crew_result: Any | None = None
 
 
 @dataclass(frozen=True)
@@ -103,3 +112,19 @@ def decide_route(
         )
 
     return RoutingDecision("coordinate", "coordinator_required")
+
+
+def execute_routing_decision(
+    decision: RoutingDecision,
+    *,
+    kickoff_coordinator: Callable[[], Any] | None = None,
+) -> RouteExecution:
+    """Start work only for the coordinate route."""
+    if decision.outcome != "coordinate":
+        return RouteExecution(outcome=decision.outcome)
+    if kickoff_coordinator is None:
+        raise ValueError("coordinate route requires a coordinator kickoff")
+    return RouteExecution(
+        outcome=decision.outcome,
+        crew_result=kickoff_coordinator(),
+    )

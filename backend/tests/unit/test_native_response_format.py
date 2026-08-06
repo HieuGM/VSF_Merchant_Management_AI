@@ -58,25 +58,40 @@ def test_final_answer_restores_public_search_members_without_duplicate_section()
     assert "Phân tích nhóm quán" in empty_search_answer
 
 
-def test_native_token_usage_sums_sdk_llm_spans_not_crew_total():
+def test_native_token_usage_prefers_semantic_llm_spans_over_crew_total():
     usage = MerchantFlowDispatcher._native_trace_token_usage(
         [
             {
-                "event": "crewai_llm_finished",
-                "token_usage": {
-                    "prompt_tokens": 10,
-                    "completion_tokens": 2,
-                    "total_tokens": 12,
+                "event": "trace_span",
+                "kind": "finished",
+                "display": {"title": "LLM response"},
+                "metrics": {
+                    "token_usage": {
+                        "prompt_tokens": 10,
+                        "completion_tokens": 2,
+                        "total_tokens": 12,
+                    }
                 },
             },
             {
-                "event": "crewai_llm_finished",
-                "token_usage": {
-                    "prompt_tokens": 20,
-                    "completion_tokens": 3,
-                    "total_tokens": 23,
+                "event": "trace_span",
+                "kind": "finished",
+                "display": {"title": "LLM response"},
+                "metrics": {
+                    "token_usage": {
+                        "prompt_tokens": 20,
+                        "completion_tokens": 3,
+                        "total_tokens": 23,
+                    }
                 },
             },
+            {
+                "event": "trace_span",
+                "kind": "finished",
+                "display": {"title": "Điều phối tác vụ"},
+                "metrics": {"token_usage": {"total_tokens": 999}},
+            },
+            {"event": "crewai_llm_finished", "token_usage": "<redacted>"},
         ]
     )
 

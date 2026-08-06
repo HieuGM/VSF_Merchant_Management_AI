@@ -50,7 +50,7 @@ describe('response-scoped observability', () => {
 
     expect(screen.getByText('sess-live')).toBeInTheDocument();
     expect(screen.getByText(/cache miss/i)).toBeInTheDocument();
-    expect(screen.getByText('CrewAI trace')).toBeInTheDocument();
+    expect(screen.getByRole('region', { name: 'AI execution trace' })).toBeInTheDocument();
     expect(screen.getByText('1 kết quả từ backend')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Mở chi tiết run' }));
     expect(onOpenDetails).toHaveBeenCalledOnce();

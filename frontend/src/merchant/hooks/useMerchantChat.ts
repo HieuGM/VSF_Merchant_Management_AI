@@ -9,7 +9,9 @@ import { getRunTrace, parseTraceSpanEvent } from '../api/traceApi';
  */
 export function reduceTraceEvents(events: TraceEvent[], incoming: TraceEvent): TraceEvent[] {
   if (isTraceSpanEvent(incoming)) {
-    if (events.some((event) => isTraceSpanEvent(event) && event.seq === incoming.seq)) {
+    if (events.some((event) => isTraceSpanEvent(event)
+      && event.traceId === incoming.traceId
+      && event.seq === incoming.seq)) {
       return events;
     }
   } else if (incoming.eventId && events.some((event) => event.eventId === incoming.eventId)) {
