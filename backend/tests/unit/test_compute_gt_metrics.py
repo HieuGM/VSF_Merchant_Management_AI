@@ -37,18 +37,20 @@ def test_gt_action_canonicalization():
     assert cm.gt_action({"delegate_to": ["preference_agent"], "coordinator_intent": "profile_lookup"}) == "answer"
 
 
-# --- pred_action: snapshot-behavior → coarse action ---
+# --- pred_action: snapshot-behavior → coarse action (tools-presence signal) ---
 def test_pred_action_from_snapshot():
     # results returned → answer.
-    assert cm.pred_action({"results": [{"name": "Phở X"}], "answer": "đây nhé"}) == "answer"
-    # no results + refuse marker → refuse.
-    assert cm.pred_action({"results": [], "answer": "Mình chỉ hỗ trợ ẩm thực, không làm khác."}) == "refuse"
-    # no results + question → ask.
-    assert cm.pred_action({"results": [], "answer": "Bạn đang ở đâu nhỉ?"}) == "ask"
-    # no results + honest empty (no question, no refuse) → answer.
-    assert cm.pred_action({"results": [], "answer": "Mình chưa tìm thấy quán phù hợp."}) == "answer"
+    assert cm.pred_action({"results": [{"name": "Phở X"}], "tools": {"merchant_search": 1}, "answer": "đây"}) == "answer"
+    # tools empty (guard short-circuit) + refuse marker → refuse (OOD).
+    assert cm.pred_action({"results": [], "tools": {}, "answer": "Mình chỉ hỗ trợ ẩm thực."}) == "refuse"
+    # tools empty + no refuse → ask (a clarify/no-prior/dietary guard fired).
+    assert cm.pred_action({"results": [], "tools": {}, "answer": "Bạn kể thêm món nhé"}) == "ask"
+    # tools ran + results empty + no refuse → answer (honest empty / preference / explanation).
+    assert cm.pred_action({"results": [], "tools": {"merchant_search": 1}, "answer": "Chưa tìm thấy quán."}) == "answer"
+    # tools ran + results empty + grounding-refuse marker → refuse.
+    assert cm.pred_action({"results": [], "tools": {"merchant_search": 1}, "answer": "Chưa có dữ liệu thực tế để so sánh."}) == "refuse"
     # errored case → counted as a failed answer, not ask/refuse.
-    assert cm.pred_action({"error": "timeout", "results": [], "answer": ""}) == "answer"
+    assert cm.pred_action({"error": "timeout", "results": [], "tools": {}, "answer": ""}) == "answer"
 
 
 # --- classification_report: accuracy, macro/weighted F1, confusion matrix ---

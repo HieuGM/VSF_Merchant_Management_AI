@@ -46,8 +46,6 @@ _REFUSE_MARKERS = (
     "chi ho tro am thuc", "khong muon bia", "ngoai pham vi", "khong thuc hien",
     "khong tao du lieu", "khong tuan theo", "chua co du lieu thuc te de",
 )
-# Delegate-field names that mean "the agent should DO something (return/explain), not ask/refuse".
-_ANSWER_DELEGATES = {"search_agent", "explanation_agent", "preference_agent"}
 
 
 def gt_action(expected: dict) -> str:
@@ -67,20 +65,23 @@ def gt_action(expected: dict) -> str:
 def pred_action(case: dict) -> str:
     """Predicted coarse action from the snapshot behavior.
 
-    refuse — no results + a refuse marker in the answer (OOD / grounding / no-prior-refuse).
-    ask    — no results + no refuse marker + the answer poses a question ('?').
-    answer — results returned, OR an empty-result honest answer (no question, no refuse)."""
+    Deterministic signal — the pre-search guards (OOD / clarify / no-prior-referent / dietary)
+    short-circuit BEFORE any crew tool runs, so an EMPTY ``tools`` map means a guard fired:
+      results non-empty                 → answer (returned merchants).
+      tools empty (guard short-circuit) → refuse if a refuse marker, else ask.
+      tools ran but results empty       → refuse if a refuse marker (grounding guard), else answer
+                                         (honest empty search / preference proposal / explanation).
+    This tools-presence rule is exact for the guard-vs-crew split and avoids the noisy '?' detection
+    (a clarify/confirm answer need not contain '?', and an honest-empty answer often does)."""
     if case.get("error"):
         return "answer"  # an errored case is a failed answer, not an ask/refuse
-    results = case.get("results") or []
-    if results:
+    if case.get("results"):
         return "answer"
     ans = _fold(case.get("answer") or "")
-    if any(m in ans for m in _REFUSE_MARKERS):
-        return "refuse"
-    if "?" in ans:
-        return "ask"
-    return "answer"
+    is_refuse = any(m in ans for m in _REFUSE_MARKERS)
+    if not case.get("tools"):        # no crew tool ran → a pre-search guard short-circuited
+        return "refuse" if is_refuse else "ask"
+    return "refuse" if is_refuse else "answer"
 
 
 def _prf(tp: int, fp: int, fn: int) -> tuple[float, float, float]:
