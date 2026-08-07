@@ -190,6 +190,24 @@ Re-ran eval (0 errors) + qwen+deepseek after the `_pick_prior_merchants` starts-
 - TC-41 expected to move from stable-FAIL toward borderline on a future 3× re-run (resolution now
   correct; only elaboration + judge-variance remain).
 
+## TC-34 price-word normalizer (commit pending) — extraction FIXED
+The search agent understood "năm chục nghìn" conversationally ("dưới 50k") but didn't emit it as a
+numeric ``max_price`` — so the geo search returned proximity results unfiltered by price, even
+though ``nearby_search`` supports ``max_price`` as a hard filter.
+
+Fix: ``core/vi_numbers.py`` — Vietnamese number-word → int parser + ``normalize_price_words()``
+query rewriter (scoped: only phrases ending in a price unit nghìn/ngàn/triệu; "năm người"/"năm sao"
+untouched). Wired as ``query_search`` in ``_build_inputs`` (search-only; explanation keeps raw
+``{query}``). 12 unit tests.
+
+Verified: ``_build_inputs("…năm chục nghìn…")`` → ``query_search="…50000…"``. Re-ran eval (0 errors)
++ qwen+deepseek: TC-34 deepseek PASS (was stable-FAIL 0/6); no regression on the 22 stable-pass set.
+
+Remaining TC-34 gap = **budget-ENFORCEMENT** (separate, harder): the search ``max_price`` is a
+lenient per-item EXISTS (a merchant with one cheap item passes), so the agent still returns Popeyes
+(meal >50k) — it now correctly notes "giá hơi nhỉnh". Fixing = rank/filter by representative price,
+not min item (search-service change, regression risk) — deferred.
+
 ## Recommended fixes (prioritized)
 1. **GT fixture: TC-25/39/42/50** — add `prior_turns` so "quán này" has a referent (else unfair;
    these are the biggest false-fail cluster, 4/13). Requires re-running EVAL (not just judge) since

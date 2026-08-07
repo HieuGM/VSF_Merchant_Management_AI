@@ -8,7 +8,7 @@
 
 search_task:
   description: >
-    Tìm quán ăn phù hợp với yêu cầu: "{query}".
+    Tìm quán ăn phù hợp với yêu cầu: "{query_search}".
     Ràng buộc: cuisine={cuisine}, thành phố={city}, ngân sách={budget},
     vị trí=(lat={lat}, lng={lng}), bán kính={radius_km} km.
 

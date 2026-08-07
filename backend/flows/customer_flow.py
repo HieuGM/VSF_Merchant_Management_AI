@@ -23,6 +23,7 @@ from agents.listeners.persisting_listener import install_persisting_listener, ru
 from agents.tool_adapter import tool_call_scope
 from core.pii import redact_pii
 from core.tracing import new_id
+from core.vi_numbers import normalize_price_words
 from models.agent import AgentRunRecord, CustomerChatResponse
 from repositories.agent_run_repository import AgentRunRepository
 from tools.registry import registry
@@ -983,6 +984,9 @@ def _build_inputs(
     )
     return {
         "query": query or "",
+        # Price-word → digit (TC-34): the search agent gets "50000" for "năm chục nghìn" so it can
+        # pass max_price (the explanation keeps the original {query} — user-facing, unchanged).
+        "query_search": normalize_price_words(query) or "",
         "cuisine": cuisine or "",
         "city": city or "",
         "budget": budget or "",
