@@ -130,7 +130,14 @@ def _pick_prior_merchants(engine, cuisine_kw: str, prefer_city: str | None = Non
 
     def _key(row):
         same_city = 0 if (pref and pref in _norm_vi(row[2] or "")) else 1
-        return (same_city, _norm_vi(row[1] or ""))
+        name_n = _norm_vi(row[1] or "")
+        # Prefer merchants whose name STARTS with the dish keyword (e.g. "Phở Thìn") over those
+        # where it only appears mid-descriptor. Fixes the phở/phô-mai diacritic-fold collision
+        # (TC-41): "Bánh Mì ... Phô Mai" folds to "...pho mai", and \bpho\b matched the "pho"
+        # token — those bánh-mì merchants then sorted alphabetically BEFORE real phở places and
+        # got seeded as the anaphora referent, so the agent resolved "cái đầu tiên" to bánh mì.
+        starts_kw = 0 if name_n.startswith(kw) else 1
+        return (same_city, starts_kw, name_n)
 
     matches = [r for r in _POOL_CACHE if word_re.search(_norm_vi(r[1] or ""))]
     matches.sort(key=_key)
