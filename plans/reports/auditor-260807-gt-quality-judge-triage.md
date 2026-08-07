@@ -208,6 +208,44 @@ lenient per-item EXISTS (a merchant with one cheap item passes), so the agent st
 (meal >50k) — it now correctly notes "giá hơi nhỉnh". Fixing = rank/filter by representative price,
 not min item (search-service change, regression risk) — deferred.
 
+### TC-34 enforcement — DEFERRED (user decision 260807)
+GT already PASSES via the parse fix (deepseek PASS, was stable-FAIL 0/6). The remaining Popeyes
+gap is a quality nit, not a GT failure. Enforcement options + verdict:
+- Repository price filter (``merchant_repository.search_merchants``) = per-item EXISTS
+  (``MenuItem.price <= max_price``) → a merchant w/ one cheap drink passes though its meals >budget.
+- ``MenuItem.category`` is free-text promo garbage (not a clean main/drink taxonomy) → no safe
+  "main-item ≤ budget" filter exists.
+- ``MerchantProfile.price_level`` (rẻ/trung bình/cao cấp) is clean but mapping a numeric max_price
+  to a tier is fuzzy.
+- Tightening to avg/median item price would fix Popeyes BUT risks emptying TC-22 (Cầu Giấy <50k) /
+  TC-23 (Tây Hồ 100k) results in budget-tight areas — data-dependent, regression-prone.
+**Decision: defer.** Agent already handles it honestly ("giá hơi nhỉnh"). Strict enforcement =
+separate task w/ data analysis + dedicated eval. Re-open only if budget precision becomes a real
+user complaint.
+
+## TC-07 occasion-venue no-location clarify — FIXED (commit pending)
+All 4 multirun judges agreed on the failure mode: *"trả kết quả quán thay vì hỏi location"* — the
+agent ran a generic search ("quán nhậu" → returned bánh mì, wrong cuisine) AND asked location at the
+end. GT wants ask-only when a required slot (location) is missing.
+
+Fix: deterministic gate ``_occasion_venue_no_location_clarify`` in ``customer_flow.py``, wired into
+``_pre_search_guard`` after ``_sparse_food_clarify``. Fires iff ALL hold:
+- occasion word in query: ``nhậu/tiệc/nhóm/hẹn hò/sinh nhật``;
+- no coords (``has_location`` False);
+- no location keyword in text (curated ``_LOCATION_SIGNAL_RE``: cities + HN/HCMC districts + proximity
+  phrases) — so "nhậu ở Cầu Giấy" (no GPS) is NOT blocked.
+
+**Safety verified across all 51 cases**: gate fires on EXACTLY TC-07 (TC-40 phone-call is the sole
+collision, OOD-handled upstream + skipped). ``has_location`` is coords-only, so the text-signal
+check is mandatory to avoid blocking legitimate located-but-no-GPS occasion searches.
+
+Verified end-to-end (fresh eval, 0 errors, qwen+deepseek on the SAME snapshot):
+- TC-07: results 3→**0**, tools {} (no search), answer = warm location ask. qwen **PASS**
+  ("đã hỏi lại về vị trí"); deepseek **PASS** (not in fails). both-fail → **both-PASS**.
+- both-pass **22/39** = stable-pass baseline (TC-07 gained; TC-23/36 lost to single-run variance on
+  code paths the gate does NOT touch — verified ``gate_fires=False`` for both, agent gave real
+  answers, judges harsher this run). No code-caused regression. Clears "better, not worse" gate.
+
 ## Recommended fixes (prioritized)
 1. **GT fixture: TC-25/39/42/50** — add `prior_turns` so "quán này" has a referent (else unfair;
    these are the biggest false-fail cluster, 4/13). Requires re-running EVAL (not just judge) since

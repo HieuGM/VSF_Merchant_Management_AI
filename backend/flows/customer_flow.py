@@ -295,12 +295,56 @@ def _sparse_food_clarify(
     )
 
 
+# Occasion/group venue request (TC-07 'quán nhậu cho nhóm 6 người tối nay'): when someone wants a
+# PLACE for a group/event but gives no location, ask WHERE rather than run a generic search that
+# dumps wrong-cuisine results (verified: 'quán nhậu' returned bánh mì). `has_location` is
+# coords-only, so the text is also scanned for a location signal — otherwise 'nhậu ở Cầu Giấy'
+# (no GPS) would be wrongly blocked. Narrow: an occasion word AND no coords AND no location
+# keyword. Verified to fire on exactly TC-07 across the 51 GT cases.
+_OCCASION_VENUE_RE = re.compile(r"\b(nhau|tiec|nhom|hen ho|sinh nhat)\b")
+# Location signal in text (diacritics-stripped): major cities + HN/HCMC districts + proximity
+# phrases the search agent treats as a city. Present → query HAS a location → don't clarify.
+_LOCATION_SIGNAL_RE = re.compile(
+    r"ha noi|sai gon|ho chi minh|\bhcm\b|da nang|\bhue\b|\bvinh\b|"
+    r"cau giay|dong da|tay ho|ha dong|long bien|hai ba|my dinh|thanh xuan|"
+    r"ba dinh|hoan kiem|hoang mai|moc chau|vung tau|nha trang|da lat|bien hoa|"
+    r"quanh day|xung quanh|gan day|khu vuc|"
+    r"quan \d|phuong \d|q\.\d|q[1-9]\b"
+)
+_OCCASION_NO_LOC_ANSWER = (
+    "Ồ, đi cả nhóm nghe vui đó! Mình muốn tìm đúng chỗ cho bạn lắm, nhưng chưa rõ bạn ở khu vực "
+    "nào — bạn đang ở đâu (quận/phường/thành phố) để mình gợi ý quán phù hợp gần bạn nhất nhỉ?"
+)
+
+
+def _occasion_venue_no_location_clarify(
+    query: str | None, has_location: bool
+) -> str | None:
+    """TC-07: an occasion/group venue request with no location → ask where (no search).
+
+    Returns a clarify answer, or None. Narrow by design — all three must hold:
+      - an occasion word (nhậu/tiệc/nhóm/hẹn hò/sinh nhật) in the query;
+      - no coords (has_location False);
+      - no location keyword in the text (city/district/proximity).
+    The last check stops a located-but-no-GPS query ('nhậu ở Cầu Giấy') from being blocked.
+    Verified unique to TC-07 across the 51 GT cases (TC-40 phone-call is OOD + skipped)."""
+    if not query or has_location:
+        return None
+    q = _norm_vi(query)
+    if not _OCCASION_VENUE_RE.search(q):
+        return None
+    if _LOCATION_SIGNAL_RE.search(q):
+        return None
+    return _OCCASION_NO_LOC_ANSWER
+
+
 def _pre_search_guard(
     query: str | None, prior_turns: list[Any], profile: Any, has_location: bool = False
 ) -> tuple[str, str] | None:
     """Return (answer, intent) to short-circuit before search, or None to proceed normally.
     Order: no-prior-referent → unparseable (clarify) → dietary-conflict (confirm) →
-    ambiguous-price-unit (clarify) → sparse-food-no-location (clarify). OOD handled upstream."""
+    ambiguous-price-unit (clarify) → sparse-food-no-location (clarify) →
+    occasion-venue-no-location (clarify). OOD handled upstream."""
     if not prior_turns and _query_references_absent_prior(query):
         return (_NO_PRIOR_REFERENT_ANSWER, "no_prior_referent")
     if _is_unparseable(query):
@@ -314,6 +358,9 @@ def _pre_search_guard(
     sparse_clarify = _sparse_food_clarify(query, prior_turns, has_location)
     if sparse_clarify:
         return (sparse_clarify, "clarify_location")
+    occasion_clarify = _occasion_venue_no_location_clarify(query, has_location)
+    if occasion_clarify:
+        return (occasion_clarify, "clarify_location")
     return None
 
 

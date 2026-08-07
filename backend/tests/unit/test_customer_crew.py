@@ -520,6 +520,27 @@ def test_sparse_food_clarify_fires_only_on_bare_food_no_location():
     assert sfc("xin chào", None, False) is None
 
 
+def test_occasion_venue_no_location_clarify_fires_only_on_tc07_pattern():
+    """TC-07 'quán nhậu cho nhóm 6 người tối nay' → ask location (no search); located /
+    non-occasion / coords-present queries don't fire."""
+    from flows.customer_flow import _occasion_venue_no_location_clarify as occ
+
+    # TC-07 — occasion (nhậu + nhóm), no coords, no location word → clarify.
+    assert occ("Gợi ý quán nhậu cho nhóm 6 người tối nay", False) is not None
+    # Same occasion but WITH a city/district in text → has a location → search ok.
+    assert occ("Gợi ý quán nhậu cho nhóm 6 người tối nay ở Cầu Giấy", False) is None
+    assert occ("tìm quán tiệc sinh nhật khu Mỹ Đình", False) is None
+    # Coords present (has_location True) → never clarify.
+    assert occ("Gợi ý quán nhậu cho nhóm 6 người tối nay", True) is None
+    # Other occasion words.
+    assert occ("tìm chỗ hẹn hò lãng mạn", False) is not None
+    # No occasion word → not this gate's concern.
+    assert occ("ăn gì hợp thời tiết hôm nay", False) is None
+    assert occ("Chỉ lấy quán đúng 5.0 sao", False) is None
+    # Proximity phrase counts as a location signal.
+    assert occ("quán nhậu quanh đây", False) is None
+
+
 def test_attribute_absence_note_forbids_fabrication():
     """Price/spice/hours asked but profile lacks the field → hard absence note; else none."""
     from flows.customer_flow import _attribute_absence_note as note
@@ -559,4 +580,9 @@ def test_pre_search_guard_mandatory_clarify_branches():
     # Safety guards still take precedence: anaphor + no prior → no_prior_referent (not clarify).
     ans3 = guard("Quán đó giá bao nhiêu", [], None, False)
     assert ans3 is not None and ans3[1] == "no_prior_referent"
+    # TC-07 — occasion venue, no coords, no location word → ask location.
+    ans4 = guard("Gợi ý quán nhậu cho nhóm 6 người tối nay", [], None, False)
+    assert ans4 is not None and ans4[1] == "clarify_location"
+    # TC-07 suppressed when a location word is present (would search).
+    assert guard("Gợi ý quán nhậu cho nhóm 6 người tối nay ở Cầu Giấy", [], None, False) is None
 
