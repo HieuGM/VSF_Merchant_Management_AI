@@ -130,6 +130,66 @@ Prompt change only touched preference-overclaim wording → can't affect these s
   should it explain the first by default? (design call; currently defensible either way)
 - Commit GT-fix + prompt-fix + judge `--model` flag + this report now?
 
+## Tight multi-run measurement (3 eval × 2 judges = 6 verdicts/case) — DEFINITIVE
+
+Single runs too noisy (qwen −5pt vs deepseek +13pt). Ran eval 3× (run-1 TC-41 flaked, excluded
+there only) + judged each with qwen+deepseek. Aggregator: `scripts/aggregate-multirun-judgments.py`.
+
+**Per-run rates (6 measurements):** 63.2 / 73.7 / 71.8 / 82.1 / 64.1 / 71.8 → **mean ≈ 71%**,
+range 63–82%. Artifacts: `gt-eval-results-multirun-{1,2,3}.json` + `gt-quality-judge-multirun-*`.
+
+**Stable buckets (pass-frequency over 6 verdicts):**
+- STABLE-PASS (≥5/6): **22** — TC-01,08,09,15,16,17,18,19,20,21,23,24,26,35,36,38,42,43,45,46,49,51.
+  (TC-42 = **6/6** — prior_turns fix definitive.)
+- BORDERLINE (2-4/6): 11 — TC-10,14,22,25,27,28,29,39,47,48,50. (TC-48 0→4/6, TC-14/25/39/50
+  improved from stable-fail to borderline.)
+- STABLE-FAIL (≤1/6): 6 — TC-02,06,07,11,34,41.
+
+**True-quality band: 22–33/39 = 56–85%** (stable-pass floor .. +all-borderline). Midpoint ~70%.
+This is the honest measured number — the old "87.2%" was a lenient manual ceiling.
+
+### Stable-fail root cause (6) — split real-gap vs judge-miscalibration
+Inspecting run-2/3 answers:
+- **REAL agent gaps (4, actionable):**
+  - **TC-41** anaphora unreliable: run-2 "cái đầu tiên"→*Bánh Mì Chú Tiểu* (WRONG cuisine —
+    `_ensure_prior_referent` seeded bánh-mì merchants for a phở query = eval-seed bug); run-3→
+    *Phở Thìn+ Lò Đúc* (right cuisine, wrong branch; GT wants Bờ Hồ). Resolution + prior-seed both flaky.
+  - **TC-34** price filter: "giá 50k đổ lại" → returns Popeyes w/o price, admits "chưa có giá".
+    price_max=50000 not applied (search-extraction gap).
+  - **TC-07** location: GT wants ask-only (location missing); agent asks BUT also returns HN
+    results. Half-does both.
+  - **TC-06** under-delivers: GT wants results (should_ask_clarification=false); agent converses
+    + suggests instead of returning concrete merchants.
+- **JUDGE MISCALIBRATION (2, agent honest/correct):**
+  - **TC-02** honest no-match ("toàn Ba Đình/Hoàn Kiếm, chưa có ở Đống Đa") — no fabrication;
+    judges penalize the empty-result honesty.
+  - **TC-11** correctly recognizes no valid history + asks clarification (session_expired) —
+    exactly what GT wants; judges still fail.
+
+### Net effect of committed fix (f2dad9a)
+- TC-42 stable-fail→**6/6 stable-pass** (prior_turns). TC-48 0→4/6 (prompt). TC-14/25/39/50
+  stable-fail→borderline (now have referents).
+- No NEW stable-fail introduced (the 6 stable-fails are pre-existing — fix touched only
+  TC-14/25/39/42/48/50; TC-02/06/07/11/34/41 fixtures + anaphora/seed logic untouched).
+- **No rollback** (confirmed with tight data).
+
+### Open questions (updated)
+- Fix TC-41 `_ensure_prior_referent` wrong-cuisine seeding (bánh-mì for phở) — eval-fidelity bug,
+  unfairly fails the agent + the agent trusts bad referents.
+- Fix TC-34 price-filter extraction (noisy input → price_max not parsed).
+- TC-07: make Coordinator ask-only (no results) when a required slot is missing?
+- TC-02/11: judge rubric still penalizes honest no-match — refine judge prompt or accept as known?
+
+## TC-41 seed fix — VERIFIED end-to-end (commit d271770, new FPT key)
+Re-ran eval (0 errors) + qwen+deepseek after the `_pick_prior_merchants` starts-with-keyword fix:
+- **TC-41 now resolves correctly**: agent answer "chắc bạn đang nhắc tới **quán phở Thìn ở Bờ Hồ**
+  mà bạn vừa hỏi" (was *Bánh Mì Chú Tiểu* — wrong cuisine). deepseek PASS; qwen still FAIL but
+  only on elaboration depth ("chưa có thông tin chi tiết"), NOT on resolution — the seed fix's job
+  (correct referent) is done.
+- **No regression**: 22 stable-pass set → NONE fail both judges. both-pass 22/39 (≈ multirun mean).
+- TC-41 expected to move from stable-FAIL toward borderline on a future 3× re-run (resolution now
+  correct; only elaboration + judge-variance remain).
+
 ## Recommended fixes (prioritized)
 1. **GT fixture: TC-25/39/42/50** — add `prior_turns` so "quán này" has a referent (else unfair;
    these are the biggest false-fail cluster, 4/13). Requires re-running EVAL (not just judge) since
