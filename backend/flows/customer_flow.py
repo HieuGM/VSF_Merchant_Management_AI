@@ -59,6 +59,11 @@ _PREFERENCE_SIGNAL_KEYWORDS = (
     # weather / mood (phrases only — "trời X" avoids standalone false positives)
     "trời lạnh", "troi lanh", "trời nóng", "troi nong", "trời mưa", "troi mua",
     "trời mát", "troi mat", "trời nắng", "troi nang",
+    # generic weather ASK ("ăn gì hợp thời tiết hôm nay") — user references weather without naming
+    # a condition, so the agent must FETCH it (needs coords). Without this the weather path is
+    # skipped entirely → agent can't get weather → asks the user "thời tiết thế nào" (confusing).
+    # 2-word phrase is unambiguous (no Vietnamese false positive on "thoi tiet").
+    "thời tiết", "thoi tiet",
     # explicit preference ask
     "theo gu", "khẩu vị", "khau vi", "sở thích", "so thich", "hợp gu", "hop gu",
 )

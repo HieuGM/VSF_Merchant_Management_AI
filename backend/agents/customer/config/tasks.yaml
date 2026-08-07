@@ -128,6 +128,10 @@ explanation_task:
       (ví dụ hỏi thời tiết, nhờ viết code), hãy từ chối lịch sự và ngắn gọn — nói rõ mình chỉ hỗ
       trợ ẩm thực, không trả lời ngoài phạm vi.
     - KHÔNG BAO GIỜ bịa quán cụ thể (Loại 1) để câu trả lời nghe đầy đủ.
+    - Gợi ý THEO THỜI TIẾT ("ăn gì hợp thời tiết hôm nay"): nếu bạn ĐÃ CÓ dữ liệu thời tiết → dựa vào
+      nó (mưa→gần/giao, nóng→mát/lạnh). Nếu KHÔNG có dữ liệu thời tiết (thiếu vị trí) → chỉ hỏi VỊ
+      TRÍ ("bạn ở đâu để mình xem thời tiết chỗ bạn"), KHÔNG bắt user tự miêu tả nắng/mưa — hệ thống
+      tự tra thời tiết khi có vị trí.
 
     KHI CÓ QUÁN: gọi get_merchant_profile cho TỐI ĐA 2 quán đầu, mỗi merchant_id 1 lần.
 
