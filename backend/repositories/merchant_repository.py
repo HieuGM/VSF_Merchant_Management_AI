@@ -5,7 +5,7 @@ Optimized: eager-loads ratings + profile to eliminate N+1 query patterns.
 """
 from __future__ import annotations
 
-import unicodedata
+from core.text_norm import fold_diacritics as _norm_text
 from datetime import time
 from typing import Any
 
@@ -29,15 +29,8 @@ _VN_DIACRITICS = (
 _VN_ASCII = "a" * 17 + "e" * 11 + "i" * 5 + "o" * 17 + "u" * 11 + "y" * 5 + "d"
 
 
-def _norm_text(value: str) -> str:
-    """Normalize a Python string to lowercase ASCII (strip Vietnamese diacritics).
-
-    Must agree with `_norm_col` (SQL translate) so a no-diacritic query ("pho") matches
-    diacritic data ("phở"). NFD decomposes combining marks away; đ/Đ are handled explicitly
-    (they don't decompose)."""
-    nfd = unicodedata.normalize("NFD", value)
-    no_mark = "".join(ch for ch in nfd if not unicodedata.combining(ch))
-    return no_mark.replace("đ", "d").replace("Đ", "d").lower()
+# `_norm_text` is imported above from core.text_norm (audit #15). It MUST agree with the
+# SQL-side _norm_col translate() below so a no-diacritic query ("pho") matches "phở".
 
 
 def _norm_col(column: Any) -> Any:

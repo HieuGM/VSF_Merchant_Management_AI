@@ -8,7 +8,7 @@ to ``merchant_profiles.price_level`` (vi: ``rẻ`` / ``trung bình`` / ``cao c�
 constraint in database/models.py)."""
 from __future__ import annotations
 
-import unicodedata
+from core.text_norm import fold_diacritics
 from typing import Any
 
 from core.ranking_config import RankingConfig
@@ -26,16 +26,11 @@ _DIETARY_CHAY: tuple[str, ...] = ("chay", "vegetarian")
 
 
 def _fold(s: str | None) -> str:
-    """Diacritics-fold + lowercase + strip the ``món `` category prefix for cuisine matching.
+    """Diacritics-fold + strip the ``món `` category prefix for cuisine matching.
 
-    Handles ``đ``/``Đ`` → ``d`` explicitly (``encode('ascii','ignore')`` would DROP ``đ``).
-    Local copy kept here so this module stays independent of ``repositories._norm_text``
-    (a private). Centralizing all normalizers into ``core/text_norm.py`` is audit #15."""
-    if not s:
-        return ""
-    nfd = unicodedata.normalize("NFD", s)
-    no_mark = "".join(c for c in nfd if not unicodedata.combining(c))
-    folded = no_mark.replace("đ", "d").replace("Đ", "d").lower()
+    Delegates the fold to ``core.text_norm.fold_diacritics`` (audit #15 — single source of
+    truth) and adds the cuisine-specific ``món `` prefix strip ('Món Việt' → 'viet')."""
+    folded = fold_diacritics(s)
     if folded.startswith("mon "):
         folded = folded[4:]
     return folded.strip()

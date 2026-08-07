@@ -491,3 +491,121 @@ def test_context_memory_dedupe_on_repeat():
         assert sum(1 for n in notes if "dị ứng" in n.lower()) == 1, "dedupe: no duplicate note"
     finally:
         _cleanup_user(uid)
+
+
+# --------------------------------------------------------------------------- #
+# phase-01 carryover (L3): apply_fields repo-level (the PATCH path) — mirrors the
+# apply_delta tests above + adds the atomic validate-all-before-write guarantee.
+# --------------------------------------------------------------------------- #
+def _assert_apply_fields_exists():
+    from repositories.user_profile_repository import UserProfileRepository
+    assert hasattr(UserProfileRepository, "apply_fields"), (
+        "contract: UserProfileRepository.apply_fields must exist (phase-01 PATCH path)")
+
+
+def test_apply_fields_multi_field_patch():
+    _require_db()
+    _assert_apply_fields_exists()
+    from repositories.user_profile_repository import UserProfileRepository
+    uid = _new_uid()
+    _seed_user(uid)
+    try:
+        db = SessionLocal()
+        try:
+            repo = UserProfileRepository(db)
+            profile = repo.apply_fields(
+                {"liked_cuisines": ["Việt", "Nhật"], "budget_level": "student"},
+                user_id=uid,
+            )
+            assert profile.liked_cuisines == ["Việt", "Nhật"]
+            assert profile.budget_level == "student"
+        finally:
+            db.close()
+    finally:
+        _cleanup_user(uid)
+
+
+def test_apply_fields_bad_enum_rejected_400():
+    _require_db()
+    _assert_apply_fields_exists()
+    from repositories.user_profile_repository import UserProfileRepository
+    uid = _new_uid()
+    _seed_user(uid)
+    try:
+        db = SessionLocal()
+        try:
+            repo = UserProfileRepository(db)
+            with pytest.raises(Exception):
+                repo.apply_fields({"budget_level": "not-a-real-budget"}, user_id=uid)
+        finally:
+            db.close()
+    finally:
+        _cleanup_user(uid)
+
+
+def test_apply_fields_scalar_on_list_rejected_400():
+    _require_db()
+    _assert_apply_fields_exists()
+    from repositories.user_profile_repository import UserProfileRepository
+    uid = _new_uid()
+    _seed_user(uid)
+    try:
+        db = SessionLocal()
+        try:
+            repo = UserProfileRepository(db)
+            # 'set' on a list[str] field requires a list — a scalar must be rejected (B5).
+            with pytest.raises(Exception):
+                repo.apply_fields({"liked_cuisines": "Việt-scalar-not-list"}, user_id=uid)
+        finally:
+            db.close()
+    finally:
+        _cleanup_user(uid)
+
+
+def test_apply_fields_upsert_first_write():
+    _require_db()
+    _assert_apply_fields_exists()
+    from database.models import UserProfile
+    from repositories.user_profile_repository import UserProfileRepository
+    uid = _new_uid()
+    # NOTE: deliberately NO _seed_user — apply_fields must upsert a minimal row (R3).
+    try:
+        db = SessionLocal()
+        try:
+            repo = UserProfileRepository(db)
+            assert db.get(UserProfile, uid) is None, "precondition: user has no row"
+            profile = repo.apply_fields({"dietary": ["chay"]}, user_id=uid)
+            assert profile.dietary == ["chay"]
+            assert db.get(UserProfile, uid) is not None, "upsert created the row"
+        finally:
+            db.close()
+    finally:
+        _cleanup_user(uid)
+
+
+def test_apply_fields_atomic_bad_field_aborts():
+    """A bad field in a multi-field patch must abort the WHOLE patch — no partial mutation
+    (validate-all-before-write). liked_cuisines is valid but budget_level is not → the patch
+    raises AND liked_cuisines is NOT applied."""
+    _require_db()
+    _assert_apply_fields_exists()
+    from repositories.user_profile_repository import UserProfileRepository
+    uid = _new_uid()
+    _seed_user(uid)
+    try:
+        db = SessionLocal()
+        try:
+            repo = UserProfileRepository(db)
+            with pytest.raises(Exception):
+                repo.apply_fields(
+                    {"liked_cuisines": ["Việt"], "budget_level": "bad-budget"},
+                    user_id=uid,
+                )
+            after = repo.get_by_id(uid)
+            assert "Việt" not in (after.liked_cuisines or []), (
+                "atomic: a bad field must abort the whole patch (no partial write)"
+            )
+        finally:
+            db.close()
+    finally:
+        _cleanup_user(uid)

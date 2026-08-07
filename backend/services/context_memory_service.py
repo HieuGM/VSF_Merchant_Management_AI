@@ -19,7 +19,7 @@ no structured field (e.g. an allergen, or a declared persistent diet)."""
 from __future__ import annotations
 
 import re
-import unicodedata
+from core.text_norm import fold_diacritics as _fold
 
 from core.logging import get_logger
 from core.pii import redact_pii
@@ -47,18 +47,8 @@ _MAX_NOTE_LEN = 120
 _MAX_NOTES = 8
 
 
-def _fold(s: str | None) -> str:
-    """Diacritics-fold + lowercase for trigger matching only. (Notes themselves are stored
-    in original Vietnamese so the crew reads natural text.)
-
-    Handles ``đ``/``Đ`` → ``d`` explicitly — ``encode('ascii','ignore')`` would DROP ``đ``
-    (it is a single non-decomposable char), turning 'tiểu đường' into 'tieu uong' and
-    missing the 'tieu duong' trigger. (Same latent bug existed in profile_ranking._fold.)"""
-    if not s:
-        return ""
-    nfd = unicodedata.normalize("NFD", s)
-    no_mark = "".join(c for c in nfd if not unicodedata.combining(c))
-    return no_mark.replace("đ", "d").replace("Đ", "d").lower()
+# `_fold` is imported above from core.text_norm (audit #15). Notes are stored in original
+# Vietnamese; folding is for trigger matching only.
 
 
 def _sentences(text: str) -> list[str]:

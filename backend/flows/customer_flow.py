@@ -13,7 +13,7 @@ import contextvars
 from core.profile_context import profile_scope
 import logging
 import re
-import unicodedata
+from core.text_norm import fold_diacritics as _norm_vi
 from collections.abc import Iterator
 from datetime import datetime, timezone
 from typing import Any
@@ -63,11 +63,7 @@ _PREFERENCE_SIGNAL_KEYWORDS = (
 )
 
 
-def _norm_vi(value: str) -> str:
-    """Lowercase + strip Vietnamese diacritics (so 'cay' ≡ 'cay' ≡ 'CAY')."""
-    nfd = unicodedata.normalize("NFD", value)
-    no_mark = "".join(c for c in nfd if not unicodedata.combining(c))
-    return no_mark.replace("đ", "d").replace("Đ", "d").lower()
+# `_norm_vi` is imported above from core.text_norm (audit #15) — single fold source of truth.
 
 
 def _query_has_preference_signals(query: str | None) -> bool:

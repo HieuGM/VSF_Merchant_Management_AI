@@ -216,13 +216,19 @@ export async function getProfile(userId: string): Promise<UserProfile | null> {
 
 /**
  * Partial update of the taste profile (explicit user edit). Returns the updated profile.
- * Backend validates per-field (B5); unknown field → 422, bad value → 400.
+ * Backend validates per-field (B5); unknown field → 422, bad value → 400. Optional
+ * `signal` aborts the in-flight request (superseded by a newer edit or component unmount).
  */
-export async function patchProfile(userId: string, patch: ProfilePatch): Promise<UserProfile> {
+export async function patchProfile(
+  userId: string,
+  patch: ProfilePatch,
+  signal?: AbortSignal,
+): Promise<UserProfile> {
   const resp = await fetch(`${API_BASE}/api/v1/users/${encodeURIComponent(userId)}/profile`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(patch),
+    signal,
   });
   if (!resp.ok) throw new Error(`Patch profile failed: HTTP ${resp.status}`);
   return (await resp.json()) as UserProfile;

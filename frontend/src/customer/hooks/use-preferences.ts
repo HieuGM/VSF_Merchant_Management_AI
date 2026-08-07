@@ -9,7 +9,11 @@
  * GEO state (useLocation, locationReady, lat, lng, accuracy) stays localStorage-only — it is
  * ephemeral device state, not a portable preference.
  *
- * context_memory.notes (phase-03 long-term memory) are exposed read-only via `notes`.
+ * context_memory.notes (phase-03 long-term memory) are exposed read-only via `notes` and
+ * mirrored to localStorage so the cross-tab `storage` listener keeps them fresh too.
+ *
+ * In-flight PATCH is abortable (carryover M-1): a newer edit or unmount aborts the previous
+ * request via an AbortController instead of letting it fire setSync on a gone/superseded call.
  */
 import { useCallback, useEffect, useRef, useState } from "react";
 
@@ -34,6 +38,8 @@ export interface Preferences {
 export type SyncStatus = "idle" | "loading" | "synced" | "offline";
 
 const STORAGE_KEY = "cust_preferences";
+/** Mirror of context_memory.notes for cross-tab sync (carryover M-2). */
+const NOTES_KEY = "cust_context_notes";
 /** One-time migration flag: localStorage taste prefs pushed to the server. */
 const MIGRATED_KEY = "cust_preferences_migrated";
 
@@ -69,6 +75,14 @@ function persist(next: Preferences) {
   }
 }
 
+function persistNotes(notes: string[]) {
+  try {
+    localStorage.setItem(NOTES_KEY, JSON.stringify(notes));
+  } catch {
+    /* storage unavailable */
+  }
+}
+
 /** Backend profile (snake_case) → FE taste subset (camelCase). */
 function profileToTaste(p: UserProfile): Partial<Preferences> {
   return {
@@ -101,9 +115,16 @@ export interface UsePreferences {
 
 export function usePreferences(): UsePreferences {
   const [prefs, setPrefs] = useState<Preferences>(load);
-  const [notes, setNotes] = useState<string[]>([]);
+  const [notes, setNotes] = useState<string[]>(() => {
+    try {
+      return JSON.parse(localStorage.getItem(NOTES_KEY) ?? "[]") as string[];
+    } catch {
+      return [];
+    }
+  });
   const [sync, setSync] = useState<SyncStatus>("idle");
   const patchTimer = useRef<number | null>(null);
+  const patchAbort = useRef<AbortController | null>(null);
 
   // --- Load profile from backend on mount; fall back to localStorage cache offline ---
   useEffect(() => {
@@ -118,7 +139,9 @@ export function usePreferences(): UsePreferences {
         if (prof) {
           const taste = profileToTaste(prof);
           setPrefs((prev) => ({ ...prev, ...taste }));
-          setNotes(prof.context_memory?.notes ?? []);
+          const loadedNotes = prof.context_memory?.notes ?? [];
+          setNotes(loadedNotes);
+          persistNotes(loadedNotes);
           persist({ ...load(), ...taste });
           setSync("synced");
         } else {
@@ -158,25 +181,24 @@ export function usePreferences(): UsePreferences {
     };
   }, []);
 
-  // Clear any pending debounced PATCH on unmount — prevents a fetch + setSync firing
-  // after the component is gone (e.g. user toggles then navigates away within 500ms).
-  useEffect(() => {
-    return () => {
-      if (patchTimer.current) clearTimeout(patchTimer.current);
-    };
-  }, []);
-
   // --- Debounced PATCH for taste changes (geo changes do not hit the API) ---
   const schedulePatch = useCallback((next: Preferences) => {
     const userId = getCustomerUserId();
     if (!userId) return;
     if (patchTimer.current) clearTimeout(patchTimer.current);
     patchTimer.current = window.setTimeout(async () => {
+      // Abort any in-flight PATCH (a newer edit supersedes it). Carryover M-1.
+      patchAbort.current?.abort();
+      const ac = new AbortController();
+      patchAbort.current = ac;
       try {
-        await patchProfile(userId, tasteToPatch(next));
-        setSync("synced");
-      } catch {
+        await patchProfile(userId, tasteToPatch(next), ac.signal);
+        if (!ac.signal.aborted) setSync("synced");
+      } catch (err) {
+        if (ac.signal.aborted) return; // superseded/unmounted — don't flip sync
         setSync("offline"); // keep local; next change retries
+      } finally {
+        if (patchAbort.current === ac) patchAbort.current = null;
       }
     }, 500);
   }, []);
@@ -213,7 +235,7 @@ export function usePreferences(): UsePreferences {
     [schedulePatch],
   );
 
-  // Cross-tab sync (localStorage event) — another tab editing prefs updates this one.
+  // Cross-tab sync (localStorage event) — another tab editing prefs/notes updates this one.
   useEffect(() => {
     const onStorage = (e: StorageEvent) => {
       if (e.key === STORAGE_KEY && e.newValue) {
@@ -222,10 +244,25 @@ export function usePreferences(): UsePreferences {
         } catch {
           /* malformed — ignore */
         }
+      } else if (e.key === NOTES_KEY && e.newValue) {
+        try {
+          setNotes(JSON.parse(e.newValue) as string[]);
+        } catch {
+          /* malformed — ignore */
+        }
       }
     };
     window.addEventListener("storage", onStorage);
     return () => window.removeEventListener("storage", onStorage);
+  }, []);
+
+  // Clear any pending debounced PATCH + abort the in-flight request on unmount — prevents a
+  // fetch + setSync firing after the component is gone (e.g. toggle then navigate < 500ms).
+  useEffect(() => {
+    return () => {
+      if (patchTimer.current) clearTimeout(patchTimer.current);
+      patchAbort.current?.abort();
+    };
   }, []);
 
   return { prefs, notes, sync, update, toggleIn };
