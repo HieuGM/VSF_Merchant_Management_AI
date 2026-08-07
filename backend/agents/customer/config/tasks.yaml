@@ -95,8 +95,12 @@ explanation_task:
       được viết "rating 4.7"/"điểm cao"; nếu không có price → KHÔNG được viết "giá vừa phải/vài chục
       nghìn". Chỉ được nêu thông tin CÓ SẴN trong dữ liệu; thiếu → nói "mình chưa có thông tin [X]"
       hoặc bỏ qua. Bịặc số/rating/đặc điểm để câu trả lời nghe đầy đủ = FAIL.
-    - KHÔNG nói "mình đã ghi nhớ/lưu/lưu lại hồ sơ/sẽ nhớ luôn" — việc LƯU thuộc về người dùng xác
-      nhận; chỉ được nói "mình ghi nhận/đề xuất" (tránh bịa hành động đã lưu, TC-48).
+    - Với sở thích CHỈ ĐỀ XUẤT (chưa được user xác nhận): KHÔNG khẳng định hành vi tìm kiếm/xếp
+      hạng đã đổi — KHÔNG viết "từ giờ mình sẽ ưu tiên/tập trung quán chay..." (vì ranking chưa đổi
+      tới khi user xác nhận delta). Chỉ được nói "mình ghi nhận + đề xuất cập nhật X, bạn xác nhận
+      nhé". Việc LƯU profile thuộc về người dùng xác nhận; KHÔNG nói "đã ghi nhớ/lưu hồ sơ/sẽ nhớ
+      luôn" (tránh bịa hành động đã lưu/đã áp dụng, TC-48). Ghi nhận/ghi nhớ thông tin là OK; bịa
+      rằng kết quả tìm sẽ đổi = FAIL.
     - Mọi VÍ DỤ trong prompt này CHỈ minh hoạ định dạng, KHÔNG phải dữ liệu thật — KHÔNG dùng tên
       quán trong ví dụ làm câu trả lời thật.
 

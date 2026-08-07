@@ -100,6 +100,14 @@ def main() -> None:
     ap = argparse.ArgumentParser(description="GT quality judge (carryover #5).")
     ap.add_argument("--snapshot", default=str(DEFAULT_SNAPSHOT))
     ap.add_argument("--out", default=str(DEFAULT_OUT))
+    # Override the judge model (calibration: cross-check qwen with deepseek / gpt-oss). Default
+    # keeps the qwen cross-judge (a DIFFERENT model than the deepseek answer generator, to reduce
+    # self-judge bias). Pass e.g. --model DeepSeek-V4-Flash for a second opinion.
+    ap.add_argument(
+        "--model",
+        default=None,
+        help="Override judge model (e.g. DeepSeek-V4-Flash, gpt-oss-20b). Default = qwen cross-judge.",
+    )
     args = ap.parse_args()
 
     s = get_settings()
@@ -110,7 +118,7 @@ def main() -> None:
 
     client = OpenAI(base_url=s.fpt_base_url, api_key=s.fpt_api_key)
     # Prefer a DIFFERENT model than the answer generator (deepseek) to reduce self-judge bias.
-    model = s.fpt_model_qwen or s.fpt_model_deepseek or "DeepSeek-V4-Flash"
+    model = args.model or s.fpt_model_qwen or s.fpt_model_deepseek or "DeepSeek-V4-Flash"
 
     snapshot = _load(Path(args.snapshot))
     gt = {c["id"]: c for c in _load(GT_PATH)["test_cases"]}

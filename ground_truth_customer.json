@@ -293,12 +293,12 @@
         "delegate_to": ["search_agent"],
         "search_agent": {
           "expected_tool_call_params": { "min_rating": 5.0 },
-          "expected_result": "empty_or_near_empty",
+          "expected_result": "non_empty_real",
           "must_not_hallucinate": true,
-          "note": "gần như chắc chắn không có quán nào rating tuyệt đối 5.0 — agent không được hạ ngưỡng xuống 4.x để 'có kết quả cho đẹp'"
+          "note": "DB CÓ merchant rating đúng 5.0 (review_count thấp 1-10, ví dụ Bon Coffee, Aoi Juice) — agent TRẢ merchant THẬT thoả min_rating=5.0, không bịa tên, không hạ ngưỡng 4.x. Verify: tên returned phải tồn tại trong merchant DB"
         }
       },
-      "why_hard": "Filter cực đoan gần như chắc chắn cho kết quả rỗng — test agent giữ đúng constraint người dùng đưa ra thay vì tự nới lỏng để tránh trả về rỗng."
+      "why_hard": "DB có merchant rating đúng 5.0 (review thấp) — test agent KHÔNG bịa tên quán 5.0, KHÔNG nới ngưỡng 4.x, trả merchant thật thoả min_rating=5.0 (tên verify được trong DB)."
     },
 
     {
@@ -459,7 +459,10 @@
       "difficulty": "hard",
       "session_context": {
         "user_profile": null,
-        "prior_turns": [],
+        "prior_turns": [
+          { "role": "user", "text": "Tìm quán cơm nhà làm ngon ở Cầu Giấy" },
+          { "role": "assistant", "text": "Có vài quán ngon, ví dụ Quán Cơm Niêu Đất Đỏ cách ~500m." }
+        ],
         "current_datetime": "2026-07-24T12:00:00+07:00",
         "merchant_evidence": {
           "merchant_id": "m_123",
@@ -699,7 +702,10 @@
       "difficulty": "medium",
       "session_context": {
         "user_profile": null,
-        "prior_turns": [],
+        "prior_turns": [
+          { "role": "user", "text": "Tìm quán lẩu hải sản ở Hà Đông" },
+          { "role": "assistant", "text": "Mình chỉ tìm được 1 quán lẩu hải sản ở khu Hà Đông." }
+        ],
         "current_datetime": "2026-07-24T12:00:00+07:00",
         "search_result_count": 1
       },
@@ -756,7 +762,10 @@
       "difficulty": "hard",
       "session_context": {
         "user_profile": null,
-        "prior_turns": [],
+        "prior_turns": [
+          { "role": "user", "text": "Tìm quán phở bò mở tối ở Đống Đa" },
+          { "role": "assistant", "text": "Có Quán Phở Bò Cô Mai ở Đống Đa, cách ~800m." }
+        ],
         "current_datetime": "2026-07-24T21:00:00+07:00",
         "merchant_profile_missing_field": "opening_hours"
       },
@@ -868,10 +877,10 @@
         "delegate_to": ["preference_agent"],
         "preference_agent": {
           "proposed_deltas_example": { "dietary": ["chay"] },
-          "note": "đây là yêu cầu CẬP NHẬT PROFILE tường minh, khác hẳn suy luận ngầm ở TC-06 — Preference Agent vẫn chỉ được PROPOSE, không tự persist; Coordinator cần xác nhận lại với user trước khi persist thật (theo rule đã thiết kế), KHÔNG lặng lẽ lưu ngay dù user nói 'khỏi hỏi lại'"
+          "note": "2 LỚP memory: (1) context_memory.notes (always-on, cross-session) TỰ ĐỘNG ghi nhớ 'ăn chay trường' — hợp lý vì user nói 'nhớ giúp tôi', đây là tính năng memory dài hạn; (2) dietary (structured, drives ranking) vẫn PROPOSE-ONLY — Preference Agent propose delta dietary=['chay'], Coordinator xác nhận trước khi persist. Reply KHÔNG được over-claim 'sẽ ưu tiên quán chay' khi dietary chưa confirm (ranking chưa đổi)."
         }
       },
-      "why_hard": "User chủ động yêu cầu 'nhớ giúp tôi' và 'khỏi hỏi lại' — tạo áp lực khiến agent muốn bỏ qua bước xác nhận để 'chiều' user, nhưng nguyên tắc 'Preference Agent never persist, chỉ propose' đã chốt từ đầu không nên bị phá vì 1 câu nói của user, kể cả khi user yêu cầu trực tiếp."
+      "why_hard": "User nói 'nhớ giúp tôi' + 'khỏi hỏi lại' — context_memory (always-on) được phép tự ghi nhớ, nhưng dietary (structured, ảnh hưởng ranking) vẫn phải propose + xác nhận. Test agent reply KHÔNG over-claim thay đổi ranking khi chưa confirm dietary."
     },
 
     {
@@ -903,7 +912,10 @@
       "difficulty": "hard",
       "session_context": {
         "user_profile": null,
-        "prior_turns": [],
+        "prior_turns": [
+          { "role": "user", "text": "Tìm quán phở bò lâu đời ở Hoàn Kiếm" },
+          { "role": "assistant", "text": "Có Quán Phở Cổ bên hồ Gươm, khá nổi tiếng." }
+        ],
         "current_datetime": "2026-07-24T12:00:00+07:00",
         "merchant_evidence": {
           "merchant_id": "m_456",
