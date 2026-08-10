@@ -278,6 +278,20 @@ regressions.** Root cause = the system has no LLM coordinator/router (every non-
 the full search+explain crew). Closing these properly needs a real coordinator that reasons about
 slot-sufficiency — out of scope for the coordinator-light deterministic layer. Leave as known gaps.
 
+### LLM coordinator experiment — TRIED + REVERTED (260810)
+Built a minimal coordinator (1 gpt-oss-20b call, ~1-2s, ASK vs PROCEED) for no-location queries
+(runs only when no GPS — located users pay zero). Measured vs baseline on a fresh eval:
+- **Latency (acceptable)**: no-loc ttft 9.20→8.37s (ASK short-circuits faster), total +0.83s on
+  PROCEED; GPS users 0 (skip). But single-run variance ±8s (GPS cases swung with no coordinator)
+  → precise delta within noise. Coordinator's own cost (~1-2s) is small vs the ~10s crew.
+- **Quality (net-neutral → reverted)**: routing ask-F1 0.67→0.70 (+0.03, within noise). Fixed
+  TC-36 (ASK ✓) but OVER-ASKED another case (ask-precision 1.00→0.88) — fix 1, break 1. TC-08/46
+  still PROCEED (gpt-oss judged them search-worthy). TC-14/06/29 correctly PROCEED (no regression —
+  the semantic win over the deterministic gate).
+gpt-oss-20b's semantic routing is too inconsistent here. Net-positive would need qwen/deepseek
+(+latency) + prompt tuning (more cycles), ROI low (ceiling ~3 cases). Reverted; gap stays
+documented as needing a real coordinator. Re-open only if product demands ask-precision.
+
 Safe remaining options (not done): (a) TC-16 impossible-location via DB-validated city set (single
 edge case, marginal); (b) log response ``intent`` + ``has_suggestions`` to the eval snapshot +
 re-run → exact sub-action metrics (search/explain/preference split). Neither is a behavior fix.
