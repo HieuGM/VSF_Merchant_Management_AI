@@ -246,6 +246,42 @@ Verified end-to-end (fresh eval, 0 errors, qwen+deepseek on the SAME snapshot):
   code paths the gate does NOT touch — verified ``gate_fires=False`` for both, agent gave real
   answers, judges harsher this run). No code-caused regression. Clears "better, not worse" gate.
 
+## Metrics suite + the 6 remaining routing gaps (260807)
+Built ``compute_gt_metrics.py`` (stdlib-only, backend-free): ROUTING (gt_action vs pred_action —
+ask/answer/refuse) classification report + confusion matrix, CAPABILITY binaries, per-category, and
+QUALITY (judge pass-rate + ensemble). Initial ``pred_action`` used '?' detection → noisy; rewrote
+to the deterministic ``tools``-presence signal (empty tools = a pre-search guard short-circuited =
+ask/refuse; non-empty = crew ran = answer/grounding-refuse). Trustworthy now.
+
+Trustworthy ROUTING on the current snapshot: **acc 82%, macro-F1 0.81**. ask-precision 1.00 but
+**ask-recall 0.50** — 6 cases where GT wants ask but the agent searched (the real remaining gaps):
+
+| pattern | cases | note |
+|---|---|---|
+| missing-location venue search | TC-08, TC-36, TC-46 | same family as TC-07 |
+| impossible location | TC-16 ("Sao Hỏa") | searched → 0, should flag |
+| expired-session reference | TC-11 ("như lần trước") | searched nearby, ignored stale session |
+| (design) TC-38 | Highlands vs Coffee House | grounding-refuse vs compare |
+
+### Missing-location cluster — PROVEN unsafe to gate (do NOT attempt a deterministic gate)
+Hypothesized a place-seeking gate (``quán nào``/``có quán``/``mở cửa`` + no location → ask).
+Verified across all 51 cases: it fires on TC-08/36/46 (ask, desired) BUT ALSO on **TC-02/14/30/34/
+38/42** (search/explain — regressions). Root cause: the marker ``quán nào`` is shared by the
+ask-set (TC-36/46) AND the search-set (TC-02 best-in-area, TC-14 rating-filter, TC-30 refinement,
+TC-38 comparison). The GT's ask-vs-search boundary for no-location queries is **semantic** — it
+hinges on whether the constraint is GLOBALLY filterable (rating/cuisine work anywhere; hours/
+fast-service/calorie need proximity) — which a deterministic rule cannot capture. ``đóng cửa``/
+``mở cửa`` (hours) similarly collides with TC-42 (a prior-turn hours follow-up).
+
+**Conclusion: TC-08/36/46 are design tensions, not fixable by a deterministic gate without ≥6
+regressions.** Root cause = the system has no LLM coordinator/router (every non-guarded query runs
+the full search+explain crew). Closing these properly needs a real coordinator that reasons about
+slot-sufficiency — out of scope for the coordinator-light deterministic layer. Leave as known gaps.
+
+Safe remaining options (not done): (a) TC-16 impossible-location via DB-validated city set (single
+edge case, marginal); (b) log response ``intent`` + ``has_suggestions`` to the eval snapshot +
+re-run → exact sub-action metrics (search/explain/preference split). Neither is a behavior fix.
+
 ## Recommended fixes (prioritized)
 1. **GT fixture: TC-25/39/42/50** — add `prior_turns` so "quán này" has a referent (else unfair;
    these are the biggest false-fail cluster, 4/13). Requires re-running EVAL (not just judge) since
