@@ -407,6 +407,22 @@ class InteractionEvent(Base):
     created_at = Column(TIMESTAMP(timezone=False), server_default=sa_text("CURRENT_TIMESTAMP"))
 
 
+class UserLikedMerchant(Base):
+    """Episodic memory — a merchant the user explicitly liked (heart on the card).
+
+    The DURABLE CURRENT-STATE of likes (composite PK makes the toggle idempotent: re-liking is a
+    no-op). The append-only ``interaction_events`` log (event_type 'merchant_liked' /
+    'merchant_unliked') holds the full like/unlike history — the substrate for future time-decay.
+    A like is a strong explicit positive (memory.txt Test 5: explicit > implicit) — it does NOT
+    decay in v1; ranking boosts the liked merchant + merchants sharing its cuisine."""
+    __tablename__ = "user_liked_merchants"
+
+    user_id = Column(String, ForeignKey("user_profiles.user_id", ondelete="CASCADE"), nullable=False, primary_key=True)
+    merchant_id = Column(String, ForeignKey("merchants.merchant_id", ondelete="CASCADE"), nullable=False, primary_key=True)
+    liked_at = Column(_TZ, nullable=False, server_default=sa_text("now()"))
+
+
+
 class AgentRun(Base):
     """One record per CrewAI Flow run (§6.2 agent_runs)."""
     __tablename__ = "agent_runs"

@@ -27,6 +27,10 @@ from core.text_norm import fold_diacritics as fold
 _PLACE_NAME_TOKENS = frozenset({
     "phố", "đường", "quận", "phường", "ngõ", "ngách", "khu", "làng", "dốc",
     "thị trấn", "xã", "huyện", "thôn", "kv",
+    # Toneless place forms that collide with food words after folding (audited):
+    # 'ga' (train station) vs 'gà' (chicken); 'ca' (café 'cà phê') vs 'cá' (fish). Blocking the
+    # toneless place form lets the tone-bearing food form ('gà'/'cá') still name-match.
+    "ga", "ca",
 })
 
 _TOKEN_RE = re.compile(r"\w+", re.UNICODE)  # word chars incl. VN letters + digits, strips punctuation
@@ -57,8 +61,11 @@ def query_relevance(
     if not qtoks:
         return 0.0
     name_frac = sum(1 for t in qtoks if name_token_match(t, name)) / len(qtoks)
-    cuif = fold(cuisine or "")
-    tags = " ".join(fold(str(t)) for t in (taste_tags or []))
-    cui_frac = sum(1 for t in qtoks if t in cuif or t in tags) / len(qtoks)
+    # Cuisine/taste-tag match by WHOLE TOKEN (not substring): a 2-char folded food token ('ca',
+    # 'mi', 'bo') must not substring-match inside 'cay'/'miến'/'bò...'. Same token-boundary rule
+    # as name_token_match, applied to the cuisine + tag haystacks.
+    cui_toks = set(_TOKEN_RE.findall(fold(cuisine or "")))
+    tag_toks = set(_TOKEN_RE.findall(" ".join(fold(str(t)) for t in (taste_tags or []))))
+    cui_frac = sum(1 for t in qtoks if t in cui_toks or t in tag_toks) / len(qtoks)
     # NAME dominates; cuisine/tags secondary; menu is a weak last resort.
     return 0.65 * name_frac + 0.25 * cui_frac + 0.10 * (1.0 if menu_matched else 0.0)

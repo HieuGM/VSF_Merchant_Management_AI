@@ -36,7 +36,10 @@ export interface SearchResponse {
   cache_status: "hit" | "miss" | "disabled";
 }
 
-export async function searchMerchants(filters: SearchFilters): Promise<SearchResponse> {
+export async function searchMerchants(
+  filters: SearchFilters,
+  signal?: AbortSignal,
+): Promise<SearchResponse> {
   const params = new URLSearchParams();
   if (filters.query) params.set("query", filters.query);
   if (filters.cuisine) params.set("cuisine", filters.cuisine);
@@ -47,7 +50,9 @@ export async function searchMerchants(filters: SearchFilters): Promise<SearchRes
   if (filters.radius_km) params.set("radius_km", String(filters.radius_km));
   if (filters.limit) params.set("limit", String(filters.limit));
 
-  const resp = await fetch(`${API_BASE}/api/v1/merchants/search?${params}`);
+  // `signal` lets the caller abort a superseded search (rapid filter changes) so a slower
+  // earlier request can't resolve last and overwrite fresher results (stale-result race).
+  const resp = await fetch(`${API_BASE}/api/v1/merchants/search?${params}`, { signal });
   if (!resp.ok) throw new Error(`Tìm kiếm thất bại: ${resp.statusText}`);
   return resp.json();
 }

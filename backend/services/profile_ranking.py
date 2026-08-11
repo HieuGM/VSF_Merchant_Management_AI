@@ -63,11 +63,20 @@ def profile_score(merchant: Any, profile: Any, cfg: RankingConfig) -> float:
         if want and have and _fold(want) == _fold(have):
             score += cfg.w_budget
 
-    # --- Liked cuisines: overlap -> boost, capped at liked_cap hits ---
-    liked = getattr(profile, "liked_cuisines", None) or []
+    # --- Liked cuisines (explicit + derived from liked merchants): overlap -> boost ---
+    # Episodic (phase-05): a liked MERCHANT's cuisine counts as liked too, so a merchant sharing
+    # cuisine with one the user liked rises ('gợi ý giống quán từng thích'). Union of explicit
+    # liked_cuisines + the cuisines derived from liked merchants.
+    liked = set(getattr(profile, "liked_cuisines", None) or [])
+    liked |= set(getattr(profile, "liked_merchant_cuisines", None) or [])
     if liked and cuisine:
         hits = sum(1 for c in liked if _cuisines_overlap(c, cuisine))
         score += cfg.w_liked * min(hits, cfg.liked_cap)
+
+    # --- Episodic: this exact merchant was liked -> strong direct boost (explicit > cuisine) ---
+    liked_ids = set(getattr(profile, "liked_merchant_ids", None) or [])
+    if liked_ids and getattr(merchant, "merchant_id", None) in liked_ids:
+        score += cfg.w_liked_merchant
 
     # --- Disliked cuisines: overlap -> single penalty ---
     disliked = getattr(profile, "disliked_cuisines", None) or []

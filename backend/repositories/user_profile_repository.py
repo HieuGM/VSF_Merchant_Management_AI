@@ -13,6 +13,7 @@ from sqlalchemy.orm import Session
 
 from database.models import UserProfile
 from models.preference import UserProfilePublic
+from repositories.user_liked_merchant_repository import UserLikedMerchantRepository
 
 # --- phase-04 confirmed-delta application (B5 typed validation + B6 list semantics) ---
 # Fields a confirmed delta may touch (mirrors the route whitelist). Bounds WHAT mutates,
@@ -50,7 +51,14 @@ class UserProfileRepository:
         row = self._db.get(UserProfile, user_id)
         if row is None:
             return None
-        return self._to_public(row)
+        pub = self._to_public(row)
+        # Episodic memory (phase-05): enrich with the user's liked merchants (ids + cuisines),
+        # one indexed query, newest-first. Exposes likes to the crew (get_user_profile tool) +
+        # ranking (profile_score boosts liked merchants and same-cuisine ones).
+        rows = UserLikedMerchantRepository(self._db).list_details(user_id)
+        pub.liked_merchant_ids = [mid for mid, _, _ in rows]
+        pub.liked_merchant_cuisines = sorted({cui for _, _, cui in rows if cui})
+        return pub
 
     @staticmethod
     def _resolve_value(field: str, operation: str, value: Any) -> Any:

@@ -66,8 +66,9 @@ _PREFERENCE_SIGNAL_KEYWORDS = (
     # skipped entirely → agent can't get weather → asks the user "thời tiết thế nào" (confusing).
     # 2-word phrase is unambiguous (no Vietnamese false positive on "thoi tiet").
     "thời tiết", "thoi tiet",
-    # explicit preference ask
+    # explicit preference ask — incl. episodic recall ("gợi ý giống quán tôi từng thích")
     "theo gu", "khẩu vị", "khau vi", "sở thích", "so thich", "hợp gu", "hop gu",
+    "giống", "giong", "từng thích", "tung thich", "quán tôi thích", "quan toi thich",
 )
 
 
@@ -829,6 +830,12 @@ class CustomerFlow:
                     results = _direct_nearby_results(
                         inputs.get("query"), lat, lng, profile=profile,
                     )
+                # Unified active-constraints filter (allergies + diet) BEFORE slice/enrichment, so
+                # (a) a violating merchant can't consume a top-3 slot (leaving the user with <3
+                # cards), and (b) the streamed explanation built below never names a merchant that
+                # was just filtered out (the old order sliced at [:3] then dropped → prose named
+                # dropped places). Idempotent with the safety filter at the slice-and-explain stage.
+                results = apply_constraints(results, constraints)
                 # Attach real merchant food photos (agent candidates carry no image field).
                 results = _enrich_with_images(results)[:3]
                 suggestions = (

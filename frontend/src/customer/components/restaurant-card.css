@@ -1,6 +1,7 @@
 /* Restaurant result card — interactive, GSM emerald, smooth-scroll friendly. */
 .rcard {
   --hole: #ffffff;
+  position: relative; /* anchor for the absolute like-heart */
   display: block;
   width: 100%;
   padding: 0.85rem 0.9rem;
@@ -205,4 +206,54 @@
 }
 [data-theme="dark"] .customer-root .rcard__copy {
   color: var(--gsm-300);
+}
+
+/* ---- Like heart (episodic memory) — top-right corner, above the match badge ---- */
+.rcard__like {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.55rem;
+  z-index: 3;
+  display: grid;
+  place-items: center;
+  width: 1.8rem;
+  height: 1.8rem;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.72);
+  color: var(--ink-400);
+  cursor: pointer;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  transition: transform 0.15s var(--ease), background 0.18s var(--ease), color 0.18s var(--ease);
+}
+.rcard__like:hover {
+  background: rgba(255, 255, 255, 0.95);
+  color: var(--ink-600);
+  transform: scale(1.08);
+}
+.rcard__like:active {
+  transform: scale(0.92);
+}
+.rcard__like:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.4);
+}
+/* Liked = filled emerald heart (on-brand; distinct from the red 'disliked' chips). */
+.rcard__like.is-liked {
+  color: var(--gsm-600);
+  background: rgba(16, 185, 129, 0.14);
+}
+.rcard__like.is-liked:hover {
+  color: var(--gsm-700);
+  background: rgba(16, 185, 129, 0.2);
+}
+[data-theme="dark"] .customer-root .rcard__like {
+  background: rgba(15, 23, 42, 0.6);
+  color: var(--ink-500);
+}
+[data-theme="dark"] .customer-root .rcard__like.is-liked {
+  color: var(--gsm-400);
+  background: rgba(16, 185, 129, 0.22);
 }

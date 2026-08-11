@@ -1,10 +1,11 @@
 /**
- * Preference Center — the user's taste profile. Backend profile endpoints are still
- * stubbed, so this persists locally (use-preferences) and the chat query is enriched
- * from it. Live geolocation fills lat/lng; manual entry remains as fallback.
+ * Preference Center — the user's taste profile. Taste fields (budget, dietary, liked/disliked
+ * cuisines) are backed by the canonical backend profile (GET/PATCH /api/v1/users/{id}/profile)
+ * via use-preferences, with localStorage as an offline cache; the assistant's long-term notes
+ * come from context_memory. Live geolocation fills lat/lng; manual entry remains as fallback.
  */
 import { useState, type ReactNode } from "react";
-import { Ban, Database, Eraser, Heart, LocateFixed, MapPin, Salad, StickyNote, Wallet } from "lucide-react";
+import { Ban, Database, Eraser, Heart, LocateFixed, MapPin, Salad, Sparkles, StickyNote, Wallet } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useCustomerIdentity } from "../hooks/use-customer-identity";
 import { useGeolocation } from "../hooks/use-geolocation";
@@ -202,20 +203,41 @@ export default function PreferenceCenter() {
           )}
         </section>
 
-        {notes.length > 0 && (
-          <Section icon={StickyNote} label="Ghi nhớ của trợ lý">
+        <section className="cpref__card cust-glass cpref__notes-card">
+          <div className="cpref__card-head">
+            <span className="cpref__card-icon" aria-hidden="true">
+              <StickyNote size={18} />
+            </span>
+            <div className="cpref__notes-title">
+              <b>Ghi nhớ của trợ lý</b>
+              <p className="cpref__card-desc">Những điều lâu dài trợ lý ghi nhớ để gợi ý sát hơn.</p>
+            </div>
+            {notes.length > 0 && (
+              <span className="cpref__count" aria-label={`${notes.length} mục ghi nhớ`}>
+                {notes.length}
+              </span>
+            )}
+          </div>
+
+          {notes.length > 0 ? (
             <ul className="cpref__notes">
               {notes.map((n, i) => (
                 <li key={`${i}-${n.slice(0, 12)}`} className="cpref__note-item">
-                  {n}
+                  <span className="cpref__note-bar" aria-hidden="true" />
+                  <span className="cpref__note-text">{n}</span>
                 </li>
               ))}
             </ul>
-            <p className="cpref__notes-hint">
-              Các lưu ý dài hạn trợ lý rút ra từ hội thoại (vd: dị ứng, ăn kiêng).
-            </p>
-          </Section>
-        )}
+          ) : (
+            <div className="cpref__notes-empty">
+              <Sparkles size={22} />
+              <p>
+                Chưa có ghi nhớ nào. Khi bạn kể về dị ứng, chế độ ăn lâu dài hay sở thích đặc biệt,
+                trợ lý sẽ tự ghi lại để gợi ý chuẩn hơn lần sau.
+              </p>
+            </div>
+          )}
+        </section>
 
         <p className="cpref__note" data-sync={sync}>
           <Database size={14} /> {SYNC_LABEL[sync]} (ID <code>{userId.slice(0, 14)}…</code>).

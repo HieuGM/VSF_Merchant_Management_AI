@@ -30,6 +30,12 @@ class UserProfilePublic(BaseModel):
     current_lat: float | None = None
     current_lng: float | None = None
     context_memory: dict[str, Any] = Field(default_factory=dict)
+    # Episodic memory (phase-05) — merchants the user explicitly liked. Derived (not a stored
+    # column): populated by UserProfileRepository.get_by_id from user_liked_merchants. Exposed so
+    # the crew (get_user_profile tool) + ranking (profile_score) can recall "quán từng thích" and
+    # boost liked merchants + same-cuisine ones. Empty list when the user has no likes / no profile.
+    liked_merchant_ids: list[str] = Field(default_factory=list)
+    liked_merchant_cuisines: list[str] = Field(default_factory=list)
     updated_at: str | None = None
 
 

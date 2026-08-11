@@ -4,7 +4,7 @@
  * chips, budget, and "near me" (live geolocation). All filters hit
  * /api/v1/merchants/search via the in-vertical explore-client (no boundary leak).
  */
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { LocateFixed, SearchX } from "lucide-react";
 import { RestaurantCard } from "../components/restaurant-card";
 import { searchMerchants } from "../api/explore-client";
@@ -52,7 +52,14 @@ export default function CustomerResults() {
     setNearby(true);
   };
 
+  // Owns the in-flight Explore search so a rapid filter change can abort a slower earlier query
+  // (otherwise the earlier query resolves last and overwrites fresher results — stale-result race).
+  const searchAcRef = useRef<AbortController | null>(null);
+
   const run = useCallback(async () => {
+    searchAcRef.current?.abort(); // cancel any in-flight search before starting a new one
+    const ac = new AbortController();
+    searchAcRef.current = ac;
     setLoading(true);
     setError("");
     try {
@@ -67,19 +74,25 @@ export default function CustomerResults() {
         filters.lng = prefs.lng;
         filters.radius_km = 5;
       }
-      const res = await searchMerchants(filters);
-      setResults(res.merchants);
+      const res = await searchMerchants(filters, ac.signal);
+      if (!ac.signal.aborted) setResults(res.merchants);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Không tải được kết quả");
+      if ((err as { name?: string }).name === "AbortError") return; // superseded by a newer search
+      if (!ac.signal.aborted)
+        setError(err instanceof Error ? err.message : "Không tải được kết quả");
     } finally {
-      setLoading(false);
+      // Only the latest (non-aborted) search owns the loading flag.
+      if (!ac.signal.aborted) setLoading(false);
     }
   }, [query, cuisine, budget, nearby, prefs.lat, prefs.lng]);
 
   // Debounced reload on any filter change.
   useEffect(() => {
     const t = setTimeout(run, 300);
-    return () => clearTimeout(t);
+    return () => {
+      clearTimeout(t);
+      searchAcRef.current?.abort(); // cancel in-flight search on unmount / filter change
+    };
   }, [run]);
 
   return (

@@ -14,6 +14,7 @@ import { ThemeToggle } from "./components/theme-toggle";
 import { ChatProvider } from "./context/chat-provider";
 import { useCustomerChat } from "./hooks/use-customer-chat";
 import { useCustomerIdentity } from "./hooks/use-customer-identity";
+import { LikedMerchantsProvider } from "./hooks/use-liked-merchants";
 import { useTheme } from "./hooks/use-theme";
 import CustomerLanding from "./pages/customer-landing";
 import CustomerChat from "./pages/customer-chat";
@@ -36,40 +37,42 @@ export function CustomerHome() {
 
   return (
     <ChatProvider value={chat}>
-      <div className="customer-root customer-shell">
-        <AmbientBackground />
-        <AppSidebar
-          theme={theme}
-          onToggleTheme={toggle}
-          onNewChat={newChat}
-          identity={identity}
-          open={sidebarOpen}
-          onClose={() => setSidebarOpen(false)}
-        />
-        <main className="customer-main">
-          <div className="customer-mobile-bar">
-            <button
-              type="button"
-              className="cust-btn cust-btn-icon"
-              onClick={() => setSidebarOpen(true)}
-              aria-label="Mở menu"
-            >
-              <Menu size={18} />
-            </button>
-            <BrandMark />
-            <ThemeToggle theme={theme} onToggle={toggle} />
-          </div>
-          <div className="customer-viewport">
-            <Routes>
-              <Route path="/" element={<CustomerLanding />} />
-              <Route path="/chat" element={<CustomerChat />} />
-              <Route path="/explore" element={<CustomerResults />} />
-              <Route path="/preferences" element={<PreferenceCenter />} />
-              <Route path="*" element={<Navigate to="/customer" replace />} />
-            </Routes>
-          </div>
-        </main>
-      </div>
+      <LikedMerchantsProvider>
+        <div className="customer-root customer-shell">
+          <AmbientBackground />
+          <AppSidebar
+            theme={theme}
+            onToggleTheme={toggle}
+            onNewChat={newChat}
+            identity={identity}
+            open={sidebarOpen}
+            onClose={() => setSidebarOpen(false)}
+          />
+          <main className="customer-main">
+            <div className="customer-mobile-bar">
+              <button
+                type="button"
+                className="cust-btn cust-btn-icon"
+                onClick={() => setSidebarOpen(true)}
+                aria-label="Mở menu"
+              >
+                <Menu size={18} />
+              </button>
+              <BrandMark />
+              <ThemeToggle theme={theme} onToggle={toggle} />
+            </div>
+            <div className="customer-viewport">
+              <Routes>
+                <Route path="/" element={<CustomerLanding />} />
+                <Route path="/chat" element={<CustomerChat />} />
+                <Route path="/explore" element={<CustomerResults />} />
+                <Route path="/preferences" element={<PreferenceCenter />} />
+                <Route path="*" element={<Navigate to="/customer" replace />} />
+              </Routes>
+            </div>
+          </main>
+        </div>
+      </LikedMerchantsProvider>
     </ChatProvider>
   );
 }

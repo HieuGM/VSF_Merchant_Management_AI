@@ -15,6 +15,7 @@ import {
   Drumstick,
   Egg,
   Fish,
+  Heart,
   IceCreamCone,
   MapPin,
   Pizza,
@@ -26,6 +27,7 @@ import {
 import type { LucideIcon } from "lucide-react";
 import { StarRating } from "./star-rating";
 import type { RestaurantResult } from "../api/customer-agent-client";
+import { useLikedMerchants } from "../hooks/use-liked-merchants";
 import "./restaurant-card.css";
 
 /** Keyword → icon. Order matters: more specific first. Used as the photo fallback. */
@@ -59,6 +61,15 @@ export function RestaurantCard({ item, rank }: { item: RestaurantResult; rank?: 
   const showRank = rank != null && rank > 0 && rank <= 3;
   const showPhoto = !!item.image_url && !imgFailed;
 
+  // Episodic memory: the heart. Shared state from LikedMerchantsProvider (CustomerHome) —
+  // one load for all cards; toggle is optimistic + synced to the backend.
+  const { isLiked, toggle: toggleLike } = useLikedMerchants();
+  const liked = !!item.merchant_id && isLiked(item.merchant_id);
+  const onLike = (e: MouseEvent) => {
+    e.stopPropagation(); // don't toggle the card expand
+    if (item.merchant_id) void toggleLike(item.merchant_id);
+  };
+
   const toggle = () => setExpanded((v) => !v);
   const onKeyDown = (e: KeyboardEvent) => {
     if (e.key === "Enter" || e.key === " ") {
@@ -87,6 +98,18 @@ export function RestaurantCard({ item, rank }: { item: RestaurantResult; rank?: 
       onClick={toggle}
       onKeyDown={onKeyDown}
     >
+      {item.merchant_id && (
+        <button
+          type="button"
+          className={`rcard__like ${liked ? "is-liked" : ""}`}
+          onClick={onLike}
+          aria-label={liked ? "Bỏ thích quán này" : "Thích quán này"}
+          aria-pressed={liked}
+          title={liked ? "Đã thích" : "Thích quán này"}
+        >
+          <Heart size={15} fill={liked ? "currentColor" : "none"} />
+        </button>
+      )}
       <div className="rcard__main">
         <span className={`rcard__media ${showPhoto ? "has-photo" : ""}`} aria-hidden="true">
           {showPhoto ? (

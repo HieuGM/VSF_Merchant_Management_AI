@@ -43,6 +43,12 @@ _TRIGGERS: tuple[str, ...] = (
     "viem da day",      # viêm dạ dày — gastritis
 )
 
+# Transient time markers (folded, word-boundary). A bare 'ăn chay' carrying one is a ONE-OFF
+# ('hôm nay ăn chay'), not a durable habit — so it is not persisted (memory.txt Test 1 vs Test 2).
+# Scope is DIET ONLY: allergies/medical conditions are durable regardless of a 'hôm nay' mention
+# ('hôm nay đau dạ dày' is still a stomach fact), so the guard does not apply to those triggers.
+_TRANSIENT_RE = re.compile(r"\b(hom nay|hom qua|ngay mai|lan nay)\b")
+
 _MAX_NOTE_LEN = 120
 _MAX_NOTES = 8
 
@@ -63,7 +69,14 @@ def extract_notes(user_text: str | None) -> list[str]:
         return []
     notes: list[str] = []
     for sent in _sentences(user_text):
-        if any(t in _fold(sent) for t in _TRIGGERS):
+        sf = _fold(sent)
+        triggered = any(t in sf for t in _TRIGGERS)
+        # Bare 'ăn chay' (not the 'từ giờ'/'trường' forms above) is durable ONLY without a
+        # transient time marker — 'tôi ăn chay' (habit) persists, 'hôm nay ăn chay' (one-off) does
+        # not. Allergies/medical are durable regardless of 'hôm nay', so they skip this guard.
+        if not triggered and "an chay" in sf and not _TRANSIENT_RE.search(sf):
+            triggered = True
+        if triggered:
             note = redact_pii(sent)
             if len(note) > _MAX_NOTE_LEN:
                 note = note[: _MAX_NOTE_LEN - 3].rstrip() + "..."

@@ -13,6 +13,7 @@ from typing import Any
 from core.profile_context import get_current_profile
 from core.query_relevance import query_relevance
 from core.ranking_config import get_ranking_config
+from core.text_norm import fold_diacritics
 from database.models import Merchant, MenuItem
 from models.preference import UserProfilePublic
 from repositories.merchant_repository import MerchantRepository, _norm_text
@@ -160,11 +161,15 @@ class MerchantSearchService:
             if merchant.profile and merchant.profile.overall_score_internal is not None:
                 overall = float(merchant.profile.overall_score_internal)
 
-            # Track whether query matched via menu item (for scoring)
+            # Track whether query matched via menu item (for scoring). Fold BOTH sides so a toneless
+            # query ('pho') that genuinely matches the name when folded isn't misclassified as
+            # menu-only (which would stack a spurious +menu bonus on top of its real name score).
             matched_via_menu = False
-            if query and query.lower() not in (merchant.name or "").lower() \
-                    and query.lower() not in (merchant.cuisine or "").lower():
-                matched_via_menu = True  # must have matched via EXISTS menu subquery
+            if query:
+                fq = fold_diacritics(query)
+                if fq and fq not in fold_diacritics(merchant.name or "") \
+                        and fq not in fold_diacritics(merchant.cuisine or ""):
+                    matched_via_menu = True  # must have matched via EXISTS menu subquery
 
             match_score = self._calculate_match_score(
                 merchant, query, cuisine, city, avg_rating,
@@ -172,9 +177,13 @@ class MerchantSearchService:
                 overall_score=overall,
                 matched_via_menu=matched_via_menu,
             )
-            if ranking_on:  # phase-02: taste-profile boost + optional hard-filter
-                if should_hard_filter(merchant, profile, cfg):
-                    continue
+            # L1 allergy/diet safety filter is ALWAYS-ON (reads the constraints ContextVar set by
+            # the flow) — NOT gated on `ranking_on = cfg.enabled and profile is not None`. Anonymous
+            # users and ranking-disabled runs still get allergen protection (health safety > taste).
+            # Only the taste-profile BOOST stays behind ranking_on.
+            if should_hard_filter(merchant, profile, cfg):
+                continue
+            if ranking_on:
                 match_score += profile_score(merchant, profile, cfg)
 
             results.append(
@@ -190,8 +199,13 @@ class MerchantSearchService:
                 )
             )
 
+        # Name/cuisine matches ALWAYS rank above menu-only hits: a real 'phở' shop (name match)
+        # must outrank a chicken place that only has phở on the menu, regardless of rating/distance
+        # constants (which sum to ~0.30 and could otherwise flip the order — see query_relevance).
+        # _matched_via_menu is False for name/cuisine matches, True for menu-only.
         results.sort(
             key=lambda r: (
+                r._matched_via_menu,  # name/cuisine (False=0) rank before menu-only (True=1)
                 -r.match_score,
                 r.distance_km if r.distance_km is not None else 9999,
             )
@@ -271,9 +285,9 @@ class MerchantSearchService:
                     tier = merchant.profile.tier if merchant.profile else None
                     price_level = merchant.profile.price_level if merchant.profile else None
                     match_score = _nearby_match_score(merchant, query)
-                    if ranking_on:  # phase-02: taste-profile boost + optional hard-filter
-                        if should_hard_filter(merchant, profile, cfg):
-                            continue
+                    if should_hard_filter(merchant, profile, cfg):  # always-on L1 safety filter
+                        continue
+                    if ranking_on:  # phase-02: taste-profile boost (taste only; safety above)
                         match_score += profile_score(merchant, profile, cfg)
                     out.append(
                         SearchResult(

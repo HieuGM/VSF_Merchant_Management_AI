@@ -72,6 +72,9 @@ def test_classification_report_math():
     assert rep["confusion_matrix"]["refuse"]["refuse"] == 1
     # macro = mean of per-class F1 = (0.5 + 0.5 + 1.0)/3.
     assert abs(rep["macro_f1"] - (0.5 + 0.5 + 1.0) / 3) < 1e-9
+    # weighted = support-weighted F1 = (0.5*2 + 0.5*2 + 1.0*1)/5 = 0.6 (was unguarded → a broken
+    # weighted formula silently returning macro would pass every other assertion here).
+    assert abs(rep["weighted_f1"] - 0.6) < 1e-9
 
 
 # --- _binary: capability P/R/F1 ---

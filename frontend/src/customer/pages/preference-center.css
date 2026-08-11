@@ -101,6 +101,95 @@
   gap: 0.45rem;
 }
 
+/* --- Ghi nhớ (assistant memory) — the highlighted "smart" section ---
+ * Note cards: a brand-gradient accent bar + soft emerald tint, so long free-text facts
+ * (allergies, diets) read as distinct remembered items rather than a plain bullet list.
+ * An empty state guides the user (UX: empty states) instead of hiding the section. */
+.cpref__notes-title {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+.cpref__count {
+  margin-left: auto;
+  flex: none;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--gsm-700);
+  background: rgba(16, 185, 129, 0.14);
+  border-radius: var(--r-pill);
+  padding: 0.1rem 0.55rem;
+  min-width: 1.5rem;
+  text-align: center;
+}
+[data-theme="dark"] .customer-root .cpref__count {
+  color: var(--gsm-300);
+  background: rgba(16, 185, 129, 0.2);
+}
+.cpref__notes {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.cpref__note-item {
+  display: flex;
+  align-items: stretch;
+  gap: 0.6rem;
+  background: rgba(16, 185, 129, 0.06);
+  border: 1px solid rgba(16, 185, 129, 0.14);
+  border-radius: var(--r-sm);
+  padding: 0.55rem 0.8rem 0.55rem 0;
+  transition: background 0.2s var(--ease);
+}
+.cpref__note-item:hover {
+  background: rgba(16, 185, 129, 0.1);
+}
+[data-theme="dark"] .customer-root .cpref__note-item {
+  background: rgba(16, 185, 129, 0.09);
+  border-color: rgba(52, 211, 153, 0.2);
+}
+.cpref__note-bar {
+  flex: none;
+  width: 3px;
+  border-radius: 3px;
+  background: var(--grad-brand);
+}
+.cpref__note-text {
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: var(--ink-700);
+  word-break: break-word;
+}
+[data-theme="dark"] .customer-root .cpref__note-text {
+  color: var(--ink-800);
+}
+.cpref__notes-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  text-align: center;
+  padding: 0.85rem 0.5rem 0.35rem;
+}
+.cpref__notes-empty svg {
+  color: var(--gsm-500);
+  opacity: 0.85;
+}
+[data-theme="dark"] .customer-root .cpref__notes-empty svg {
+  color: var(--gsm-400);
+}
+.cpref__notes-empty p {
+  margin: 0;
+  font-size: 0.82rem;
+  line-height: 1.5;
+  color: var(--ink-500);
+  max-width: 26rem;
+}
+
 .cpref__toggle {
   display: flex;
   align-items: center;

@@ -129,3 +129,72 @@ def test_pre_search_guard_confirm_via_constraints():
     assert out is not None and out[1] == "dietary_conflict" and "hải sản" in out[0]
     # Generic query on the same allergy → NOT a confirm (proactive filter handles it downstream).
     assert guard("xin chào", prior, None, False) is None
+
+
+# --- COLLISION-SAFE MATCHER: homophones + substrings must not false-fire (audit group 1) ---
+# Vietnamese folds tones away, merging crab≈của, mud-crab≈chair, clam≈sauce, vegetarian≈run.
+# A bare substring matcher false-fired on all of these — dropping 'Cơm Của Mẹ' / 'Nhà hàng Ngọc'
+# for a seafood-allergic user, or force-vegetarian-filtering a jogger. These prove the fix.
+def test_cua_possessive_not_seafood_but_crab_is():
+    assert all(c.scope != "seafood" for c in build(None, [U("tôi không ăn được cơm của mẹ")], "ăn gì").hard)
+    assert any(c.scope == "seafood" for c in build(None, [U("tôi không ăn được cua")], "ăn gì").hard)
+
+
+def test_sot_sauce_not_seafood():
+    # 'sốt' (sauce) must not trip seafood; a sauce-named dish/merchant is not dropped.
+    assert all(c.scope != "seafood" for c in build(None, [U("tôi không ăn được nước sốt")], "ăn gì").hard)
+    cs = build(NS(dietary=[], disliked_cuisines=[], context_memory={"notes": ["dị ứng hải sản"]}), [], "ăn gì")
+    assert violates_hard(M("Bún Sốt Cay", "Việt", dishes=[{"name": "bún sốt"}]), cs) is None
+
+
+def test_ngoc_name_not_seafood():
+    cs = build(NS(dietary=[], disliked_cuisines=[], context_memory={"notes": ["dị ứng hải sản"]}), [], "ăn gì")
+    assert violates_hard(M("Nhà hàng Ngọc Su", "Ăn gia đình"), cs) is None  # 'ngọc' ⊃ 'oc' substring killed
+    assert violates_hard(M("Sushi Yuki", "Nhật", dishes=[{"name": "sashimi"}]), cs) is not None  # real seafood still drops
+
+
+def test_ghe_intensifier_not_seafood():
+    assert all(c.scope != "seafood" for c in build(None, [U("đồ cay ghê, không ăn được")], "ăn gì").hard)
+
+
+def test_chay_run_not_diet():
+    # 'chạy bộ' (jogging) must NOT impose a vegetarian filter for the rest of the session.
+    cs = build(None, [U("gợi ý quán gần nơi tôi hay chạy bộ")], "tìm phở")
+    assert all(c.scope != "chay" for c in cs.hard)
+    # but a real vegetarian declaration still registers
+    assert any(c.scope == "chay" for c in build(None, [U("hôm nay tôi ăn chay")], "tìm phở").hard)
+
+
+# --- MEMORY-RECALL GUARDS (audit group 2) ---
+def test_question_not_diet_declaration():
+    # ASKING 'có món chay không?' is not a vegetarian declaration.
+    assert all(c.scope != "chay" for c in build(None, [], "quán này có món chay không?").hard)
+
+
+def test_diet_negation_not_a_declaration():
+    assert all(c.scope != "chay" for c in build(None, [], "tôi không ăn chay").hard)
+
+
+def test_allergy_recovery_suppressed():
+    prof = NS(dietary=[], disliked_cuisines=[], context_memory={"notes": ["tôi không còn dị ứng hải sản nữa"]})
+    assert all(c.scope != "seafood" for c in build(prof, [], "tìm hải sản").hard)
+
+
+def test_diet_break_in_prior_turn_retires_durable_diet():
+    # durable note says chay, but a PRIOR user turn abandoned it → not enforced this turn.
+    prof = NS(dietary=[], disliked_cuisines=[], context_memory={"notes": ["từ giờ tôi ăn chay"]})
+    cs = build(prof, [U("tôi bỏ chay rồi"), A("ok")], "tìm phở")
+    assert all(c.scope != "chay" for c in cs.hard)
+
+
+def test_session_window_counts_user_turns_not_all():
+    # 9 agent turns + 1 user diet declaration → the user turn is still recalled because we filter
+    # to USER turns BEFORE the 8-slice (old code halved the window with interleaved agent turns).
+    turns = [U("nay tôi ăn chay")] + [A(f"gợi ý {i}") for i in range(9)]
+    assert any(c.scope == "chay" for c in build(None, turns, "tìm phở").hard)
+
+
+def test_durable_marker_in_session_turn_honored():
+    # 'từ giờ ... chay trường' in the current message → persistence durable (flag no longer discarded).
+    cs = build(None, [], "Từ giờ nhớ tôi ăn chay trường nhé")
+    assert any(c.scope == "chay" and c.persistence == "durable" for c in cs.hard)

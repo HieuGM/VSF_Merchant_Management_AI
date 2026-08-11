@@ -58,3 +58,19 @@ def test_relevance_cuisine_and_taste_tag_match():
 def test_relevance_empty_query():
     assert query_relevance("", "Phở", "Việt") == 0.0
     assert query_relevance(None, "Phở", "Việt") == 0.0
+
+
+# --- audited fixes: place-token stoplist (ga/ca) + tokenized cui_frac ---
+def test_ga_station_does_not_match_chicken_query():
+    # 'ga' (train station) folds identically to 'gà' (chicken); the station token is now stopped.
+    assert name_token_match("ga", "Quán Gần Ga Hà Nội") is False   # 'Ga' = station → blocked
+    assert name_token_match("ga", "Gà Rán 3 Râu") is True          # 'gà' = chicken (toned) → kept
+
+
+def test_cui_frac_uses_whole_token_not_substring():
+    # A 2-char folded food token must not substring-match inside an unrelated cuisine/tag word.
+    # 'ca' (from cá=fish) is a substring of 'cay'/'canh' but not a whole token → no cuisine credit.
+    assert query_relevance("cá", "Cơm Niêu", "Món Cay") == 0.0    # was 0.25 via 'ca'⊂'cay'
+    assert query_relevance("mì", "Bún Mộc", "Món Miến") == 0.0    # was 0.25 via 'mi'⊂'miến'
+    # sanity: a real token cuisine match still scores.
+    assert query_relevance("cay", "Quán Nước", "Món Cay") > 0.0

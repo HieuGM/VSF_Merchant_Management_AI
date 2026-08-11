@@ -20,6 +20,7 @@ class RankingConfig:
     liked_cap: int = 2
     w_disliked: float = 0.05
     w_dietary: float = 0.04
+    w_liked_merchant: float = 0.06  # episodic (phase-05): a directly-liked merchant — explicit > cuisine
     hard_filter_disliked: bool = False
 
 
@@ -34,5 +35,7 @@ def get_ranking_config() -> RankingConfig:
         liked_cap=s.ranking_liked_cap,
         w_disliked=s.ranking_w_disliked,
         w_dietary=s.ranking_w_dietary,
+        # Episodic weight is optional in settings (getattr default keeps it out of settings.py).
+        w_liked_merchant=getattr(s, "ranking_w_liked_merchant", 0.06),
         hard_filter_disliked=s.ranking_hard_filter_disliked,
     )

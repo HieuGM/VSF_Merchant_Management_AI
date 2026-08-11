@@ -6,12 +6,15 @@ Confirm/reject/PATCH are IDOR-guarded (require_dev_only) until real auth lands.
 from __future__ import annotations
 
 from fastapi import APIRouter, Depends, HTTPException, Request
+from pydantic import BaseModel
+from sqlalchemy.exc import IntegrityError
 
 from core.dependencies import require_dev_only
 from core.logging import get_logger
 from models.agent import ConfirmDeltaRequest, ProfilePatchRequest
 from models.preference import UserProfilePublic
 from routes.stub_helpers import not_implemented
+from services.liked_merchant_service import liked_merchant_service
 from services.preference_confirm_service import preference_confirm_service
 from services.user_profile_service import user_profile_service
 
@@ -165,6 +168,55 @@ def clear_memory(
     client_ip = request.client.host if request.client else "unknown"
     logger.info("memory_clear user_id=%s ip=%s", user_id, client_ip)
     return user_profile_service.clear_memory(user_id)
+
+
+class LikedMerchantRequest(BaseModel):
+    """Body for POST /liked-merchants — a single merchant_id to like."""
+
+    merchant_id: str
+
+
+@router.get("/{user_id}/liked-merchants")
+def list_liked_merchants(user_id: str) -> dict:
+    """List the user's liked merchants (episodic memory) — newest-first.
+
+    Read-only, not IDOR-guarded (the merchant list carries no PII; the FE loads its own user_id,
+    same as GET /profile). Powers the FE heart-state + the agent's 'quán từng thích' recall."""
+    return {"user_id": user_id, "liked_merchants": liked_merchant_service.list_liked(user_id)}
+
+
+@router.post("/{user_id}/liked-merchants", status_code=201)
+def like_merchant(
+    user_id: str,
+    body: LikedMerchantRequest,
+    request: Request,
+    _guard: bool = Depends(require_dev_only),
+) -> dict:
+    """Like a merchant (heart on the card) — durable episodic memory + audit log.
+
+    Idempotent (re-liking is a no-op). 404 when the merchant_id is unknown (merchants FK).
+    IDOR-guarded (dev-only until auth — matches PATCH /profile)."""
+    client_ip = request.client.host if request.client else "unknown"
+    logger.info("merchant_like user_id=%s merchant_id=%s ip=%s", user_id, body.merchant_id, client_ip)
+    try:
+        liked_merchant_service.like(user_id, body.merchant_id)
+    except IntegrityError:
+        raise HTTPException(status_code=404, detail=f"merchant not found: {body.merchant_id}")
+    return {"ok": True, "merchant_id": body.merchant_id}
+
+
+@router.delete("/{user_id}/liked-merchants/{merchant_id}")
+def unlike_merchant(
+    user_id: str,
+    merchant_id: str,
+    request: Request,
+    _guard: bool = Depends(require_dev_only),
+) -> dict:
+    """Remove a like. Idempotent (no-op if not liked). IDOR-guarded."""
+    client_ip = request.client.host if request.client else "unknown"
+    logger.info("merchant_unlike user_id=%s merchant_id=%s ip=%s", user_id, merchant_id, client_ip)
+    liked_merchant_service.unlike(user_id, merchant_id)
+    return {"ok": True, "merchant_id": merchant_id}
 
 
 @router.delete("/{user_id}/preferences/{field}")

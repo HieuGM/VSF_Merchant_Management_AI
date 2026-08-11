@@ -1,35 +1,47 @@
 """Active-constraints loader — derives a normalized constraint set from the 3 memory layers.
 
-Replaces the scattered, per-restriction readers in ``customer_flow.py``:
-  - ``_extract_excluded_foods`` (seafood, allergy-verb-gated)
-  - ``_declared_persistent_preference`` + ``_recalled_dietary_filter`` (chay, current-query only)
-  - the profile/notes/turn reads that ``_detect_dietary_conflict`` did ad-hoc.
-
-ONE pass over (profile + context_memory notes + recent session turns) → ``ActiveConstraints``
-consulted by every output step (DB hard-filter, post-search filter, explanation prompt). Adding a
-restriction type = adding a row to ``constraint_catalog.CATALOG``; this loader needs no change.
+ONE pass over (profile + context_memory notes + recent session turns + current message) →
+``ActiveConstraints`` consulted by every output step (DB hard-filter, post-search filter,
+explanation prompt). Adding a restriction type = adding a row to ``constraint_catalog.CATALOG``;
+this loader needs no change.
 
 Constraint provenance (origin/persistence) is preserved so the explanation can say WHY a result
 was dropped ("bỏ hải sản vì bạn dị ứng"). Pure functions, no DB — uses already-loaded data.
-"""
+
+Correctness guards (each closes a real recall failure found by audit):
+  - ASK vs DECLARE: a question ('quán này có món chay không?') is NOT a vegetarian declaration →
+    ``_QUESTION_RE`` suppresses diet scopes on interrogations.
+  - NEGATION/RECOVERY: 'không ăn chay' / 'không còn dị ứng hải sản nữa' must NOT (re)impose the
+    restriction → ``_WANT_NEGATION_RE`` + ``_RECOVERY_RE`` suppress.
+  - DIET-BREAK scope: 'tôi bỏ chay rồi' in a PRIOR user turn retires the diet for this turn too,
+    not only when the break is in the current query.
+  - SESSION WINDOW: the 8-turn window counts USER turns (agent turns no longer halve it).
+  - DURABLE marker: 'từ giờ ...' in a session/current turn now actually marks the constraint
+    durable (the flag was previously discarded)."""
 from __future__ import annotations
 
 import re
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Any
 
-from core.constraint_catalog import CATALOG
+from core.constraint_catalog import CATALOG, scope_present
 from core.text_norm import fold_diacritics
 
 # Allergy verbs (diacritics-folded). A food term counts as an AVOID restriction only when one of
 # these co-occurs — so a plain "tôm hồ" / "quán hải sản" mention (no allergy verb) is NOT treated
-# as an exclusion. Mirrors customer_flow._ALLERGY_VERB_RE (now consolidated here).
+# as an exclusion.
 _ALLERGY_VERB_RE = re.compile(r"di ung|khong an duoc|ko an duoc|kien|bi dau|benh")
 # Durable-declaration markers (folded). When present, a diet declaration persists cross-session;
-# otherwise it is session-scoped. Mirrors _declared_persistent_preference's durable test.
+# otherwise it is session-scoped.
 _DURABLE_RE = re.compile(r"tu gio|tu nay|luon luon|trong tuong lai|truong")
-# Diet-break (contradiction) markers — current query explicitly abandons the diet this turn.
+# Diet-break (contradiction) markers — a user turn explicitly abandons the diet this turn.
 _DIET_BREAK_RE = re.compile(r"\b(bo chay|khong an chay( nua)?|tro lai an (man|thit)|an thit|phap le|pha le)\b")
+# Interrogation markers (folded) — asking about a diet is NOT declaring it.
+_QUESTION_RE = re.compile(r"\?|khong\s*(\?|$)|\bco\b.{0,30}\bkhong\b|duoc khong|the nao|co phai|la gi")
+# Negation of a diet declaration (folded) — 'không ăn chay' must not impose vegetarian.
+_WANT_NEGATION_RE = re.compile(r"khong\s+(an\s+|thich\s+|muon\s+)?chay|khong\s+chay")
+# Allergy recovery / negation (folded) — 'không còn dị ứng ... nữa' / 'đã hết' must not impose it.
+_RECOVERY_RE = re.compile(r"khong con|da het|het roi|het benh|khoi\s*benh|mat di ung|khong\s*bi.{0,20}nua")
 
 _SESSION_WINDOW = 8  # recent USER turns scanned (covers transient "nay ăn chay" not in notes)
 
@@ -62,33 +74,40 @@ class ActiveConstraints:
         return [CATALOG[c.scope].label_vi for c in cs if c.scope in CATALOG]
 
 
-def _avoid_scopes(text: str) -> list[str]:
-    """Catalog 'avoid' scopes present in folded `text` (only when an allergy verb co-occurs)."""
-    if not text or not _ALLERGY_VERB_RE.search(text):
+def _avoid_scopes(text_raw: str, text_folded: str) -> list[str]:
+    """Catalog 'avoid' scopes present (only when an allergy verb co-occurs; recovery suppresses)."""
+    if not text_folded or not _ALLERGY_VERB_RE.search(text_folded):
         return []
-    return [s for s, d in CATALOG.items() if d.kind == "avoid" and any(t in text for t in d.terms)]
+    if _RECOVERY_RE.search(text_folded):
+        return []  # user recovered from the allergy — do not impose
+    return [s for s, d in CATALOG.items() if d.kind == "avoid" and scope_present(d, text_raw, text_folded)]
 
 
-def _want_scopes(text: str) -> list[tuple[str, bool]]:
-    """Catalog 'want' (diet) scopes in folded `text` → (scope, durable)."""
+def _want_scopes(text_raw: str, text_folded: str) -> list[tuple[str, bool]]:
+    """Catalog 'want' (diet) scopes → (scope, durable). Question/negation suppresses."""
     out: list[tuple[str, bool]] = []
-    if not text:
+    if not text_folded:
         return out
-    durable = bool(_DURABLE_RE.search(text))
+    if _QUESTION_RE.search(text_folded) or _WANT_NEGATION_RE.search(text_folded):
+        return out  # asking about / negating the diet → not a declaration
+    durable = bool(_DURABLE_RE.search(text_folded))
     for s, d in CATALOG.items():
-        if d.kind == "want" and any(t in text for t in d.terms):
+        if d.kind == "want" and scope_present(d, text_raw, text_folded):
             out.append((s, durable))
     return out
 
 
-def _from_text(text: str, origin: str, persistence: str) -> list[Constraint]:
-    """Extract constraints from one folded text blob with a known origin/persistence."""
+def _from_text(text_raw: str, origin: str, persistence: str) -> list[Constraint]:
+    """Extract constraints from one text blob (raw + its fold) with a known origin/persistence."""
+    text_folded = fold_diacritics(text_raw)
     out: list[Constraint] = []
-    for scope in _avoid_scopes(text):  # allergy → hard
+    for scope in _avoid_scopes(text_raw, text_folded):  # allergy → hard
         out.append(Constraint("allergy", scope, "hard_filter", origin, persistence,
                               f"dị ứng/không ăn được {CATALOG[scope].label_vi}"))
-    for scope, _durable in _want_scopes(text):  # diet → hard (want)
-        out.append(Constraint("diet", scope, "hard_filter", origin, persistence,
+    for scope, durable in _want_scopes(text_raw, text_folded):  # diet → hard (want)
+        # Honor an in-text durable marker ('từ giờ ...'): promote to durable regardless of layer.
+        pers = "durable" if durable else persistence
+        out.append(Constraint("diet", scope, "hard_filter", origin, pers,
                               f"ăn {CATALOG[scope].label_vi}"))
     return out
 
@@ -104,6 +123,13 @@ def _dedupe(cs: list[Constraint]) -> tuple[Constraint, ...]:
     return tuple(best.values())
 
 
+def _broke_diet(query_folded: str, prior_user_texts: list[str]) -> bool:
+    """True if the diet is abandoned in the CURRENT query OR a recent prior USER turn."""
+    if _DIET_BREAK_RE.search(query_folded or ""):
+        return True
+    return any(_DIET_BREAK_RE.search(fold_diacritics(t)) for t in prior_user_texts)
+
+
 def build_active_constraints(
     profile: Any, prior_turns: list[Any] | None, query: str | None
 ) -> ActiveConstraints:
@@ -111,10 +137,20 @@ def build_active_constraints(
 
     Hard: allergies (any origin) + diet declarations (durable note/profile OR recent session turn).
     Soft: structured disliked cuisines (ranking handles the penalty; included so the explanation
-    prompt can mention them). Contradiction (current query breaks the diet) drops diet constraints
-    for THIS turn so a changed mind isn't over-restricted."""
-    q = fold_diacritics(query or "")
-    broke_diet = bool(_DIET_BREAK_RE.search(q))
+    prompt can mention them). Contradiction (current query OR a prior user turn breaks the diet)
+    drops diet constraints for THIS turn so a changed mind isn't over-restricted."""
+    q_folded = fold_diacritics(query or "")
+
+    # Prior USER turns — filtered BEFORE the window slice so agent turns don't halve the window.
+    user_texts: list[str] = []
+    for turn in (prior_turns or []):
+        if not isinstance(turn, dict):
+            continue
+        role = (turn.get("role") or turn.get("sender") or "").lower()
+        if "user" in role:
+            user_texts.append(turn.get("text") or turn.get("content") or "")
+    recent_user_texts = user_texts[-_SESSION_WINDOW:]
+    broke_diet = _broke_diet(q_folded, recent_user_texts)
 
     hard: list[Constraint] = []
     soft: list[Constraint] = []
@@ -123,7 +159,8 @@ def build_active_constraints(
     if profile is not None:
         dietary = getattr(profile, "dietary", None) or []
         if isinstance(dietary, (list, tuple)):
-            for scope, _ in _want_scopes(fold_diacritics(" ".join(str(d) for d in dietary))):
+            joined = " ".join(str(d) for d in dietary)
+            for scope, _d in _want_scopes(joined, fold_diacritics(joined)):
                 if not broke_diet:
                     hard.append(Constraint("diet", scope, "hard_filter", "profile", "durable",
                                            f"profile.dietary = {CATALOG[scope].label_vi}"))
@@ -138,18 +175,12 @@ def build_active_constraints(
         cm = getattr(profile, "context_memory", None)
         notes = (cm.get("notes") or []) if isinstance(cm, dict) else []
         for note in notes:
-            for c in _from_text(fold_diacritics(str(note)), "context_memory", "durable"):
+            for c in _from_text(str(note), "context_memory", "durable"):
                 if not (c.type == "diet" and broke_diet):
                     hard.append(c)
 
     # Layer 3 — recent session USER turns (session-scoped; covers transient 'nay ăn chay').
-    for turn in (prior_turns or [])[-_SESSION_WINDOW:]:
-        if not isinstance(turn, dict):
-            continue
-        role = (turn.get("role") or turn.get("sender") or "").lower()
-        if "user" not in role:
-            continue
-        text = fold_diacritics(turn.get("text") or turn.get("content") or "")
+    for text in recent_user_texts:
         for c in _from_text(text, "session_turn", "session"):
             if not (c.type == "diet" and broke_diet):
                 hard.append(c)
@@ -157,7 +188,7 @@ def build_active_constraints(
     # The CURRENT message is also a declaration source (session) — covers a same-turn declaration
     # like TC-48 'từ giờ nhớ tôi ăn chay trường' (not yet in prior_turns). Diet-break markers in
     # the current query already set broke_diet above, which suppresses diet constraints here.
-    for c in _from_text(q, "session_turn", "session"):
+    for c in _from_text(query or "", "session_turn", "session"):
         if not (c.type == "diet" and broke_diet):
             hard.append(c)
 

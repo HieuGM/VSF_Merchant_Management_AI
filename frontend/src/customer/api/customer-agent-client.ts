@@ -244,3 +244,44 @@ export async function clearMemory(userId: string): Promise<UserProfile> {
   if (!resp.ok) throw new Error(`Clear memory failed: HTTP ${resp.status}`);
   return (await resp.json()) as UserProfile;
 }
+
+/** A liked merchant (episodic memory) — from GET /liked-merchants. */
+export interface LikedMerchant {
+  merchant_id: string;
+  name: string;
+  cuisine: string | null;
+}
+
+/** List the user's liked merchants (newest-first). Degrades to [] on error/offline so the FE
+ * heart-state stays usable without a backend (the likes just won't persist). */
+export async function getLikedMerchants(userId: string): Promise<LikedMerchant[]> {
+  try {
+    const resp = await fetch(
+      `${API_BASE}/api/v1/users/${encodeURIComponent(userId)}/liked-merchants`,
+    );
+    if (!resp.ok) return [];
+    const data = (await resp.json()) as { liked_merchants: LikedMerchant[] };
+    return data.liked_merchants ?? [];
+  } catch {
+    return [];
+  }
+}
+
+/** Like a merchant (heart on the card) — idempotent. Throws on non-2xx (caller rolls back). */
+export async function likeMerchant(userId: string, merchantId: string): Promise<void> {
+  const resp = await fetch(`${API_BASE}/api/v1/users/${encodeURIComponent(userId)}/liked-merchants`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ merchant_id: merchantId }),
+  });
+  if (!resp.ok) throw new Error(`Like merchant failed: HTTP ${resp.status}`);
+}
+
+/** Remove a like — idempotent. Throws on non-2xx (caller rolls back). */
+export async function unlikeMerchant(userId: string, merchantId: string): Promise<void> {
+  const resp = await fetch(
+    `${API_BASE}/api/v1/users/${encodeURIComponent(userId)}/liked-merchants/${encodeURIComponent(merchantId)}`,
+    { method: "DELETE" },
+  );
+  if (!resp.ok) throw new Error(`Unlike merchant failed: HTTP ${resp.status}`);
+}
