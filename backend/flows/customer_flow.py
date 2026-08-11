@@ -24,6 +24,7 @@ from agents.tool_adapter import tool_call_scope
 from core.pii import redact_pii
 from core.tracing import new_id
 from core.vi_numbers import normalize_price_words
+from core.vn_food_descriptors import expand_vague_descriptors
 from models.agent import AgentRunRecord, CustomerChatResponse
 from repositories.agent_run_repository import AgentRunRepository
 from tools.registry import registry
@@ -958,6 +959,24 @@ class CustomerFlow:
             }
 
 
+_NO_DESCRIPTOR_HINT = "(không có)"
+
+
+def _descriptor_hints(query: str | None) -> str:
+    """Vague-descriptor → query/cuisine hint for the search_task prompt.
+
+    Gated by ``settings.coordinator_descriptor_expansion_enabled`` (default OFF): when off
+    (or on settings failure) returns ``_NO_DESCRIPTOR_HINT`` so the prompt line renders
+    "(không có)" = no-op (byte-identical to baseline). See ``core/vn_food_descriptors.py``."""
+    try:
+        from core.settings import get_settings  # lazy (mirrors line ~1835 pattern)
+        if not get_settings().coordinator_descriptor_expansion_enabled:
+            return _NO_DESCRIPTOR_HINT
+    except Exception:  # noqa: BLE001 — settings failure must never break the search flow
+        return _NO_DESCRIPTOR_HINT
+    return expand_vague_descriptors(query) or _NO_DESCRIPTOR_HINT
+
+
 def _build_inputs(
     *,
     query: str | None,
@@ -1001,6 +1020,7 @@ def _build_inputs(
         "session_id": session_id or "",
         "prior_context": prior_ctx,
         "weather_hint": _format_weather_hint(weather_override),
+        "descriptor_hints": _descriptor_hints(query),
     }
 
 

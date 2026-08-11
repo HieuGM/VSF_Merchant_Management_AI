@@ -75,6 +75,19 @@ class Settings(BaseSettings):
     ranking_w_dietary: float = 0.04
     ranking_hard_filter_disliked: bool = False
 
+    # --- Coordinator vague-descriptor → search-arg expansion (Path A / phase-01). When
+    # True, the search_task prompt gets a deterministic hint mapping descriptors like
+    # "đỡ ngán"/"thanh đạm"/"trời lạnh"/"chill" to concrete query/cuisine args (see
+    # core/vn_food_descriptors.py). Default OFF — when off the prompt is byte-identical to
+    # baseline (no behavior change). Flip via COORDINATOR_DESCRIPTOR_EXPANSION_ENABLED=true. ---
+    coordinator_descriptor_expansion_enabled: bool = False
+
+    # --- Search-call instrumentation (Path A / phase-02). When True (default), append one
+    # JSONL row per merchant_search/nearby_merchant_search call to logs/search_queries.jsonl
+    # (LLM-decomposed args + result count). Pure telemetry — no behavior change, GT-neutral.
+    # Purpose: surface REAL recall gaps the GT suite is structurally blind to. Flip False to mute. ---
+    search_call_logging_enabled: bool = True
+
     # --- CORS (FE origins) — comma-separated. Default is the Vite dev server only;
     # do NOT use "*" together with credentials (reflects any origin). ---
     cors_origins: str = "http://localhost:5173"

@@ -12,6 +12,7 @@ from pydantic import BaseModel, Field
 from database.connection import SessionLocal
 from repositories.merchant_repository import MerchantRepository
 from services.merchant_search_service import MerchantSearchService
+from services.search_call_logger import log_search_call
 from tools.allow_list import agents_allowed_for
 from tools.registry import ToolRegistry, ToolSpec
 
@@ -112,6 +113,16 @@ def merchant_search(
             exclude_merchant_ids=exclude_merchant_ids,
         )
 
+        log_search_call(
+            "merchant_search",
+            {
+                "query": query, "cuisine": cuisine, "city": city,
+                "min_price": min_price, "max_price": max_price, "min_rating": min_rating,
+                "lat": lat, "lng": lng, "radius_km": radius_km,
+                "exclude_merchant_ids": exclude_merchant_ids,
+            },
+            len(results),
+        )
         return {
             "merchants": [r.to_dict() for r in results],
             "total": len(results),
@@ -179,6 +190,16 @@ def nearby_merchant_search(
             limit=limit, exclude_merchant_ids=exclude_merchant_ids,
         )
 
+        log_search_call(
+            "nearby_merchant_search",
+            {
+                "query": query, "cuisine": cuisine,
+                "min_price": min_price, "max_price": max_price, "min_rating": min_rating,
+                "lat": lat, "lng": lng, "radius_km": radius_km,
+                "exclude_merchant_ids": exclude_merchant_ids,
+            },
+            len(results),
+        )
         return {
             "merchants": [r.to_dict() for r in results],
             "total": len(results),
