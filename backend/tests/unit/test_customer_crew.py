@@ -148,6 +148,10 @@ def test_query_has_preference_signals_detects_taste():
     assert _query_has_preference_signals("quán chay gần đây") is True
     assert _query_has_preference_signals("món ít cay cho người lớn tuổi") is True
     assert _query_has_preference_signals("trời nóng, muốn ăn nhẹ") is True
+    # Generic weather ASK (commit 583b778): user references weather without naming a condition —
+    # "thời tiết" / "thoi tiet" must trigger preference so the weather path runs (needs coords).
+    assert _query_has_preference_signals("ăn gì hợp thời tiết hôm nay") is True
+    assert _query_has_preference_signals("goi y mon theo thoi tiet") is True
     # Diacritics-insensitive
     assert _query_has_preference_signals("quan chay gan day") is True
 
@@ -399,24 +403,6 @@ def test_is_unparseable_flags_emoji_only():
     assert _is_unparseable(None) is False
 
 
-def test_detect_dietary_conflict_catches_allergy():
-    """Current request for a food the user just declared an allergy against → confirm (TC-49 health risk)."""
-    from flows.customer_flow import _detect_dietary_conflict as conflict
-
-    prior = [{"role": "user", "text": "Tôi không ăn được hải sản, bị dị ứng"},
-             {"role": "assistant", "text": "Đã ghi nhận"}]
-    # Asking for seafood after a seafood-allergy declaration → conflict
-    ans = conflict("Tìm quán hải sản ngon ở Cầu Giấy", prior, profile=None)
-    assert ans is not None and "hải sản" in ans
-    # Asking for a different food → no conflict
-    assert conflict("Tìm quán phở gần đây", prior, profile=None) is None
-    # No allergy declaration in history → never conflicts
-    plain = [{"role": "user", "text": "Tìm quán lẩu ở Hai Bà Trưng"}]
-    assert conflict("Tìm quán hải sản", plain, profile=None) is None
-    # Plain food mention without allergy verb doesn't register as an exclusion
-    assert conflict("Tìm quán tôm", [{"role": "user", "text": "hôm nay muốn ăn tôm"}], None) is None
-
-
 def test_grounding_guard_refuses_ungrounded_comparison():
     """No results + comparison/claim query → truthful refuse instead of hallucinating (TC-38/50)."""
     from flows.customer_flow import _grounding_guard_answer as guard
@@ -431,19 +417,6 @@ def test_grounding_guard_refuses_ungrounded_comparison():
     assert guard("quán này có ổn không", [], "QUÁN ĐƯỢC HỎI: Phở Y") is None
     # Empty result but NOT a comparison/claim (e.g. zero-result search) → no guard (normal 'not found')
     assert guard("Tìm quán sushi ở Mộc Châu", [], "") is None
-
-
-def test_declared_persistent_preference_filters_chay():
-    """'Từ giờ nhớ tôi ăn chay' → chay filter; transient mentions don't trigger (TC-48)."""
-    from flows.customer_flow import _declared_persistent_preference as pref
-
-    assert pref("Từ giờ nhớ giúp tôi là tôi ăn chay trường nhé") == "chay"
-    assert pref("từ nay mình ăn chay nhé") == "chay"
-    # No durable marker → None (transient 'ăn chay hôm nay' shouldn't permanently filter)
-    assert pref("hôm nay ăn chay thôi") is None
-    # Durable marker but no diet keyword → None
-    assert pref("từ giờ nhớ tôi thích đi ăn sáng") is None
-    assert pref(None) is None
 
 
 def test_query_references_absent_prior():

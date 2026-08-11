@@ -11,7 +11,9 @@ from __future__ import annotations
 from core.text_norm import fold_diacritics
 from typing import Any
 
+from core.profile_context import get_active_constraints
 from core.ranking_config import RankingConfig
+from services.active_constraints_enforcer import hard_filter_l1
 
 # user budget_level (en) -> merchant_profiles.price_level (vi). The DB CHECK constraint
 # (models.py MerchantProfile) restricts price_level to these three Vietnamese values.
@@ -84,10 +86,19 @@ def profile_score(merchant: Any, profile: Any, cfg: RankingConfig) -> float:
 
 
 def should_hard_filter(merchant: Any, profile: Any, cfg: RankingConfig) -> bool:
-    """True only when ``hard_filter_disliked`` is on AND the merchant's cuisine is disliked.
+    """Drop a merchant when it violates a HARD constraint.
 
-    Default off (soft penalty only) — conservative: avoids nuking whole result sets when a
-    disliked cuisine is common. Flip the flag to make dislikes a hard exclude."""
+    Two independent layers:
+      1. Unified active-constraints (allergies / durable diet) — read via the request ContextVar.
+         SAFETY, not taste → fires even when ``cfg.enabled`` (ranking kill-switch) is False. This
+         is the always-on path that closes the "sushi-on-hello" gap (allergy enforced on EVERY
+         turn regardless of the query).
+      2. Legacy disliked-cuisine hard-filter — taste, default off. Conservative: avoids nuking
+         whole result sets when a disliked cuisine is common. Flip ``hard_filter_disliked`` to
+         make dislikes a hard exclude."""
+    cs = get_active_constraints()
+    if cs is not None and cs.hard and hard_filter_l1(merchant, cs) is not None:
+        return True
     if not cfg.hard_filter_disliked or profile is None:
         return False
     disliked = getattr(profile, "disliked_cuisines", None) or []

@@ -43,6 +43,17 @@ The "remember user preferences" promise is backed by **one canonical taste store
 
 **Boundary rule (phase-03):** context_memory MUST NOT duplicate structured fields — extractor skips cuisine/budget keywords already enumerable in the schema. It only captures free-text facts. PII redacted via `core/pii.py` before persist; F3-safe (swallow + log on DB failure — never breaks the chat flow).
 
+### Active-Constraints Enforcement (unified layer)
+
+The 3 layers STORE facts; this layer ENFORCES them on every output. It replaced a scattered set of per-restriction filters (`_detect_dietary_conflict`, `_declared_persistent_preference`, `_recalled_dietary_filter`, `_EXCLUDED_FOODS`) that each read one layer for one restriction and fired only REACTIVELY (when the query matched the restriction) — so "không ăn được hải sản" → "xin chào" still suggested sushi. Now enforcement is PROACTIVE (keyed off the constraint set, not the query) and DATA-DRIVEN (a new restriction type = one row in the catalog, not a new filter).
+
+- **Catalog:** `core/constraint_catalog.py` — `ConstraintDef(scope, terms, kind avoid|want)`. Currently seafood (allergy) + chay (diet). Extensible.
+- **Loader:** `services/active_constraints_loader.py` — `build_active_constraints(profile, prior_turns, query) → ActiveConstraints`. ONE pass over all 3 layers + the current message → `{hard, soft}` constraints with provenance (origin/persistence). Contradiction (diet-break in current query) suppresses diet constraints.
+- **Enforcer:** `services/active_constraints_enforcer.py` — `apply_constraints` (post-search hard-filter, L1 cuisine/name + dish-level L2 partial-overlap: keep a mixed merchant with ≥1 safe dish), `hard_filter_l1` (DB-result level, no dishes loaded), `query_requests_restriction` (confirm-gate when the user explicitly requests an allergen).
+- **Propagation:** `constraints_scope` ContextVar in `core/profile_context.py` (mirrors `profile_scope`) — `should_hard_filter` reads it at the merchant loop so allergies filter even with `ranking_enabled=False` (safety > taste).
+- **Defense-in-depth:** L1 DB pre-filter (`should_hard_filter`) → L2 post-search filter (`apply_constraints`) → L3 prompt block (`active_constraints_block` in `_build_explanation_messages`).
+- **Hard vs soft:** allergies + durable/session diet = `hard_filter` (safety, always-on, every turn incl. "xin chào"); disliked cuisines = `soft_penalty` (ranking). The propose-only invariant is preserved — enforcement is a READ projection of existing data, never a new write.
+
 ### Write Paths to `user_profiles`
 
 Three distinct paths share one repo (`UserProfileRepository`) and the same B5 typed-validation:
@@ -96,4 +107,4 @@ All profile **writes** (PATCH, confirm, reject) are wrapped in `Depends(require_
 
 ---
 
-*Last Updated: 2026-08-06*
+*Last Updated: 2026-08-10*

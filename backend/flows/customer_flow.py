@@ -10,7 +10,7 @@ from __future__ import annotations
 import concurrent.futures
 import contextvars
 
-from core.profile_context import profile_scope
+from core.profile_context import constraints_scope, profile_scope
 import logging
 import re
 from core.text_norm import fold_diacritics as _norm_vi
@@ -29,6 +29,8 @@ from repositories.agent_run_repository import AgentRunRepository
 from tools.registry import registry
 
 from services import context_memory_service
+from services.active_constraints_enforcer import apply_constraints, query_requests_restriction
+from services.active_constraints_loader import active_constraints_block, build_active_constraints
 
 _CREW_NAME = "customer_discovery"
 _LOG = logging.getLogger(__name__)
@@ -148,62 +150,12 @@ def _is_unparseable(query: str | None) -> bool:
     return not re.search(r"[a-z0-9]", _norm_vi(query))
 
 
-# Dietary-conflict safety (TC-49, HEALTH RISK). A recent USER turn declares an allergy /
-# restriction against a food; the current query requests the SAME food → confirm before
-# searching. Catches in-session declarations (durable allergen persistence is a separate
-# coordinator dependency — see eval report "needs_real_coordinator").
-_ALLERGY_VERB_RE = re.compile(
-    r"di ung|khong an duoc|ko an duoc|kien|bi dau|benh"
-)
-# excluded-food key (display label) -> ASCII synonyms matched against _norm_vi text.
-_EXCLUDED_FOODS = {
-    "hải sản": ("hai san", "tom", "cua", "ghe", "muc", "ngao", "ngheu", "oc", "so"),
-}
-
-
-def _turn_text(turn: Any) -> str:
-    """Defensive text extraction from a prior-turn dict (shape varies by loader)."""
-    return (turn.get("text") or turn.get("content") or turn.get("message") or "") if isinstance(turn, dict) else ""
-
-
-def _extract_excluded_foods(text: str) -> set[str]:
-    """Foods the user declared an allergy/restriction against in `text`. Only counts when an
-    allergy verb co-occurs (so 'tôm hồ' / plain food mentions don't register as exclusions)."""
-    if not text:
-        return set()
-    t = _norm_vi(text)
-    if not _ALLERGY_VERB_RE.search(t):
-        return set()
-    return {key for key, syns in _EXCLUDED_FOODS.items() if any(s in t for s in syns)}
-
-
-def _detect_dietary_conflict(
-    query: str | None, prior_turns: list[Any], profile: Any
-) -> str | None:
-    """Return a confirm-answer if the current query requests a food the user just declared an
-    allergy/restriction against (in prior USER turns or profile); else None."""
-    excluded: set[str] = set()
-    for turn in prior_turns or []:
-        role = ((turn.get("role") or turn.get("sender") or "") if isinstance(turn, dict) else "").lower()
-        if "user" in role:
-            excluded |= _extract_excluded_foods(_turn_text(turn))
-    if profile is not None:
-        for attr in ("dietary", "disliked_cuisines"):
-            val = getattr(profile, attr, None) or []
-            if isinstance(val, (list, tuple)):
-                excluded |= _extract_excluded_foods(" ".join(str(x) for x in val))
-    if not excluded:
-        return None
-    q = _norm_vi(query or "")
-    requested = {key for key, syns in _EXCLUDED_FOODS.items() if any(s in q for s in syns)}
-    hit = excluded & requested
-    if not hit:
-        return None
-    names = "/".join(sorted(hit))
-    return (
-        f"Khoan, ở lượt trước bạn có vẻ đang kiêng/dị ứng {names} — mình muốn chắc chắn trước khi "
-        f"gợi ý. Bạn vẫn muốn tìm quán {names} nhé, hay mình gợi ý món khác an toàn hơn?"
-    )
+# Dietary-conflict + allergen/diet enforcement CONSOLIDATED into the unified active-constraints
+# layer (services/active_constraints_loader.py + active_constraints_enforcer.py +
+# core/constraint_catalog.py). The scattered regex/filters that lived here (_ALLERGY_VERB_RE,
+# _EXCLUDED_FOODS, _extract_excluded_foods, _detect_dietary_conflict, _declared_persistent_preference,
+# _recalled_dietary_filter) were removed — adding a restriction type now = one catalog row, not a
+# new filter. See docs/system-architecture.md "Customer Preference & Memory" + the loader docstring.
 
 
 # --- Mandatory-clarify gates (coordinator-light) ---
@@ -339,17 +291,24 @@ def _occasion_venue_no_location_clarify(
 
 
 def _pre_search_guard(
-    query: str | None, prior_turns: list[Any], profile: Any, has_location: bool = False
+    query: str | None, prior_turns: list[Any], profile: Any, has_location: bool = False,
+    constraints: Any = None,
 ) -> tuple[str, str] | None:
     """Return (answer, intent) to short-circuit before search, or None to proceed normally.
-    Order: no-prior-referent → unparseable (clarify) → dietary-conflict (confirm) →
-    ambiguous-price-unit (clarify) → sparse-food-no-location (clarify) →
-    occasion-venue-no-location (clarify). OOD handled upstream."""
+    Order: no-prior-referent → unparseable (clarify) → restriction-confirm (user requests an
+    allergen) → ambiguous-price-unit (clarify) → sparse-food-no-location (clarify) →
+    occasion-venue-no-location (clarify). OOD handled upstream.
+
+    ``constraints`` is the unified ActiveConstraints set (built once in the flow). When None
+    (standalone/test calls) it is built here from profile + prior_turns so the restriction-confirm
+    gate still works. Proactive enforcement (filter on every turn) happens downstream, not here."""
     if not prior_turns and _query_references_absent_prior(query):
         return (_NO_PRIOR_REFERENT_ANSWER, "no_prior_referent")
     if _is_unparseable(query):
         return (_UNPARSEABLE_ANSWER, "clarify")
-    conflict = _detect_dietary_conflict(query, prior_turns, profile)
+    if constraints is None:
+        constraints = build_active_constraints(profile, prior_turns, query)
+    conflict = query_requests_restriction(query, constraints)
     if conflict:
         return (conflict, "dietary_conflict")
     price_clarify = _ambiguous_price_clarify(query)
@@ -394,19 +353,10 @@ def _grounding_guard_answer(
     return _GROUNDING_REFUSE_ANSWER if _COMPARISON_CLAIM_RE.search(_norm_vi(query)) else None
 
 
-# Persistent-preference declaration (TC-48 'từ giờ nhớ tôi ăn chay trường'): the user states a
-# durable diet THIS turn. Filter results to match so we never recommend the opposite cuisine.
-# Narrow: requires a durable marker (từ giờ / từ nay / luôn) AND a diet keyword. None otherwise.
-def _declared_persistent_preference(query: str | None) -> str | None:
-    if not query:
-        return None
-    q = _norm_vi(query)
-    if not re.search(r"tu gio|tu nay|luon luon|trong tuong lai", q):
-        return None
-    if "chay" in q:
-        return "chay"
-    return None
-
+# Persistent-preference declaration + cross-turn chay recall CONSOLIDATED into the unified
+# active-constraints layer (see note above). _declared_persistent_preference + _recalled_dietary_filter
+# removed — the loader builds all hard constraints (allergies + durable + session diet) in one pass,
+# and the enforcer filters/confirm-gates from that set.
 
 # Prior-referent confabulation backstop (TC-01/26/47/50). The no-prior-note prompt rule is
 # ignored often enough that a deterministic layer is required. Two prongs:
@@ -591,7 +541,8 @@ class CustomerFlow:
         # Pre-search safety guards (coordinator-light): emoji-only → clarify; dietary-conflict
         # (allergy) → confirm before searching. Fires after OOD, before building any crew.
         profile = _load_profile(user_id)
-        guard = _pre_search_guard(query, prior_turns, profile, has_location)
+        constraints = build_active_constraints(profile, prior_turns, query)
+        guard = _pre_search_guard(query, prior_turns, profile, has_location, constraints)
         if guard:
             g_answer, g_intent = guard
             response = CustomerChatResponse(
@@ -619,7 +570,7 @@ class CustomerFlow:
                 mode = "full" if run_pref else "search_explain"
                 crew = build_customer_crew(has_location=has_location, mode=mode)
 
-            with run_scope(trace_id, self._repo), tool_call_scope(), profile_scope(profile):
+            with run_scope(trace_id, self._repo), tool_call_scope(), profile_scope(profile), constraints_scope(constraints):
                 crew_output = crew.kickoff(inputs=inputs)
 
             response = _to_chat_response(trace_id, session_id, crew_output)
@@ -630,13 +581,9 @@ class CustomerFlow:
                 response.results = _direct_nearby_results(
                     inputs.get("query"), lat, lng, profile=profile,
                 )
-            # TC-48: persistent diet declared this turn → filter results to that cuisine.
-            pref_filter = _declared_persistent_preference(query)
-            if pref_filter:
-                response.results = [
-                    r for r in response.results
-                    if pref_filter in _norm_vi(str(r.get("cuisine") or ""))
-                ]
+            # Unified active-constraints filter (allergies + diet, all origins): drop any result
+            # violating a hard constraint (cuisine/name L1 + dish-level L2 partial-overlap).
+            response.results = apply_constraints(response.results, constraints)
             response.answer = _strip_prior_claims(response.answer, prior_turns)
 
             # Phase-03 B3: server-side weather short-circuit — deterministic rain delta
@@ -790,7 +737,8 @@ class CustomerFlow:
         # Pre-search safety guards (coordinator-light): emoji-only → clarify; dietary-conflict
         # (allergy) → confirm before searching. Mirrors the OOD short-circuit above.
         profile = _load_profile(user_id)
-        guard = _pre_search_guard(query, prior_turns, profile, has_location)
+        constraints = build_active_constraints(profile, prior_turns, query)
+        guard = _pre_search_guard(query, prior_turns, profile, has_location, constraints)
         if guard:
             g_answer, g_intent = guard
             yield {"event": "answer_delta", "data": {"answer_delta": g_answer}}
@@ -854,7 +802,7 @@ class CustomerFlow:
                 search_crew = build_customer_crew(has_location=has_location, mode="search")
 
                 def _run_one(crew: Any) -> Any:
-                    with run_scope(trace_id, self._repo), tool_call_scope(), profile_scope(profile):
+                    with run_scope(trace_id, self._repo), tool_call_scope(), profile_scope(profile), constraints_scope(constraints):
                         return crew.kickoff(inputs=inputs)
 
                 pref_fut = None
@@ -896,12 +844,9 @@ class CustomerFlow:
 
             # 2) Stream the explanation answer token-by-token via a DIRECT DeepSeek call
             #    (plain-text streaming is reliable on FPT, unlike CrewAI's crew-streaming).
-            # TC-48: persistent diet declared this turn ('từ giờ nhớ tôi ăn chay') → filter results
-            # to that cuisine so we never recommend the opposite.
-            pref_filter = _declared_persistent_preference(query)
-            if pref_filter:
-                results = [r for r in results
-                           if pref_filter in _norm_vi(str(r.get("cuisine") or ""))]
+            # Unified active-constraints filter (allergies + diet, all origins): drop any result
+            # violating a hard constraint (cuisine/name L1 + dish-level L2 partial-overlap).
+            results = apply_constraints(results, constraints)
             # Grounding guard: no results AND a comparison/claim/origin query → DeepSeek would
             # answer from general knowledge (hallucination). Refuse truthfully + ask specifics.
             guard_answer = _grounding_guard_answer(query, results, profile_hints)
@@ -925,7 +870,7 @@ class CustomerFlow:
 
             messages = _build_explanation_messages(
                 explanation_prompt_pieces(), inputs, results, suggestions, preference,
-                weather_override, profile_hints,
+                weather_override, profile_hints, constraints,
             )
             answer_parts: list[str] = []
             stream_warnings: list[str] = []  # surfaced via CustomerChatResponse.warnings (FE renders)
@@ -1794,6 +1739,7 @@ def _build_explanation_messages(
     preference: Any,
     weather_override: dict | None = None,
     profile_hints: str = "",
+    constraints: Any = None,
 ) -> list[dict[str, str]]:
     """Build chat messages for the direct streaming explanation call.
 
@@ -1842,6 +1788,12 @@ def _build_explanation_messages(
     lines.append(
         "Tín hiệu sở thích/bối cảnh: " + ("; ".join(sig_bits) if sig_bits else "(không có)")
     )
+    # L3 — active hard constraints (allergies/diet). Belt-and-suspenders for the deterministic
+    # filter: tells the LLM what was excluded + forbids recommending a violating place in prose
+    # (covers the proactive-suggestion case where the filter already dropped results).
+    block = active_constraints_block(constraints)
+    if block:
+        lines.append(block)
     return [
         {"role": "system", "content": pieces["system"]},
         {"role": "user", "content": instruction + "\n".join(lines)},
