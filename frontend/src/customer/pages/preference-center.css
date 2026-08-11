@@ -18,9 +18,34 @@
 
 .cpref__head {
   display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.2rem;
+}
+/* The title+sub wrapper sits left of the clear-memory button. */
+.cpref__head > div:first-child {
+  display: flex;
   flex-direction: column;
   gap: 0.2rem;
-  margin-bottom: 0.2rem;
+}
+.cpref__clear {
+  flex-shrink: 0;
+  font-size: 0.78rem;
+  gap: 0.35rem;
+  padding: 0.4rem 0.7rem;
+  color: #c0392b;
+  border-color: rgba(192, 57, 43, 0.25);
+}
+.cpref__clear:hover:not(:disabled) {
+  background: rgba(192, 57, 43, 0.08);
+}
+/* Disliked cuisines get a RED selected state (distinct from the green 'liked' chips). */
+.cpref__chips--danger .cust-chip.is-selected {
+  background: linear-gradient(135deg, #e74c3c, #c0392b);
+  border-color: transparent;
+  box-shadow: 0 2px 8px rgba(192, 57, 43, 0.25);
 }
 .cpref__title {
   font-size: 1.5rem;

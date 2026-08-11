@@ -25,7 +25,10 @@ export default function CustomerResults() {
   const { prefs, update } = usePreferences();
   const geo = useGeolocation();
   const [query, setQuery] = useState("");
-  const [cuisine, setCuisine] = useState("");
+  // Default to a populated cuisine so Explore loads with results (not an empty grid). The
+  // backend truth-first guard returns [] when NO filter signal is present, so an empty default
+  // would show a broken-empty page on first load. Việt is the home/most-populous cuisine.
+  const [cuisine, setCuisine] = useState("Việt");
   const [budget, setBudget] = useState("");
   const [nearby, setNearby] = useState(false);
   const [results, setResults] = useState<Merchant[]>([]);
@@ -155,7 +158,7 @@ export default function CustomerResults() {
           !error && (
             <div className="cres__empty">
               <SearchX size={30} />
-              <p>Không có quán khớp bộ lọc. Thử nới lỏng điều kiện nhé.</p>
+              <p>Không có quán khớp. Chọn món, ngân sách hoặc bật “Gần tôi” để xem thêm.</p>
             </div>
           )
         )}

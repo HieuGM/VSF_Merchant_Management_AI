@@ -153,6 +153,20 @@ def reject_delta(
     return {"ok": True}
 
 
+@router.post("/{user_id}/memory/clear", response_model=UserProfilePublic)
+def clear_memory(
+    user_id: str,
+    request: Request,
+    _guard: bool = Depends(require_dev_only),
+) -> UserProfilePublic:
+    """Clear remembered memory — context_memory notes (allergy/diet declarations) + the taste
+    fields the constraint layer reads (dietary, liked/disliked cuisines, budget). The FE 'clear
+    memory' test control resets the user to a clean slate. IDOR-guarded (dev-only until auth)."""
+    client_ip = request.client.host if request.client else "unknown"
+    logger.info("memory_clear user_id=%s ip=%s", user_id, client_ip)
+    return user_profile_service.clear_memory(user_id)
+
+
 @router.delete("/{user_id}/preferences/{field}")
 def delete_preference(user_id: str, field: str) -> object:
     return not_implemented(f"DELETE /api/v1/users/{{user_id}}/preferences/{field}")

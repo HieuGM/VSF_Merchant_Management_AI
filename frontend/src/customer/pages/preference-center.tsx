@@ -3,8 +3,8 @@
  * stubbed, so this persists locally (use-preferences) and the chat query is enriched
  * from it. Live geolocation fills lat/lng; manual entry remains as fallback.
  */
-import type { ReactNode } from "react";
-import { Ban, Database, Heart, LocateFixed, MapPin, Salad, StickyNote, Wallet } from "lucide-react";
+import { useState, type ReactNode } from "react";
+import { Ban, Database, Eraser, Heart, LocateFixed, MapPin, Salad, StickyNote, Wallet } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useCustomerIdentity } from "../hooks/use-customer-identity";
 import { useGeolocation } from "../hooks/use-geolocation";
@@ -29,8 +29,16 @@ const SYNC_LABEL: Record<SyncStatus, string> = {
 
 export default function PreferenceCenter() {
   const { userId } = useCustomerIdentity();
-  const { prefs, notes, sync, update, toggleIn } = usePreferences();
+  const { prefs, notes, sync, update, toggleIn, clearAll } = usePreferences();
   const geo = useGeolocation();
+
+  const [clearing, setClearing] = useState(false);
+  const onClear = async () => {
+    if (!window.confirm("Xóa hết ghi nhớ (dị ứng, ăn kiêng, sở thích) để test lại từ đầu?")) return;
+    setClearing(true);
+    await clearAll();
+    setClearing(false);
+  };
 
   const toggleUseLocation = async (checked: boolean) => {
     if (!checked) {
@@ -56,8 +64,20 @@ export default function PreferenceCenter() {
     <div className="cpref cust-scroll">
       <div className="cpref__inner">
         <header className="cpref__head">
-          <h2 className="cpref__title">Khẩu vị của bạn</h2>
-          <p className="cpref__sub">Trợ lý dùng những lựa chọn này để gợi ý sát hơn.</p>
+          <div>
+            <h2 className="cpref__title">Khẩu vị của bạn</h2>
+            <p className="cpref__sub">Trợ lý dùng những lựa chọn này để gợi ý sát hơn.</p>
+          </div>
+          <button
+            type="button"
+            className="cust-btn cust-btn-ghost cpref__clear"
+            onClick={onClear}
+            disabled={clearing || sync === "loading"}
+            title="Xóa ghi nhớ + sở thích để test lại"
+          >
+            <Eraser size={15} />
+            {clearing ? "Đang xóa…" : "Xóa ghi nhớ"}
+          </button>
         </header>
 
         <Section icon={Wallet} label="Ngân sách ưa thích">
@@ -106,7 +126,7 @@ export default function PreferenceCenter() {
         </Section>
 
         <Section icon={Ban} label="Không thích">
-          <div className="cpref__chips">
+          <div className="cpref__chips cpref__chips--danger">
             {CUISINES.map((c) => (
               <button
                 key={c}

@@ -17,7 +17,7 @@
  */
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { getProfile, patchProfile, type UserProfile } from "../api/customer-agent-client";
+import { getProfile, patchProfile, clearMemory, type UserProfile } from "../api/customer-agent-client";
 import { getCustomerUserId } from "./use-customer-identity";
 
 export type Budget = "" | "student" | "standard" | "premium";
@@ -111,6 +111,8 @@ export interface UsePreferences {
   sync: SyncStatus;
   update: (patch: Partial<Preferences>) => void;
   toggleIn: (key: "dietary" | "likedCuisines" | "dislikedCuisines", value: string) => void;
+  /** Clear remembered memory (notes + taste) server-side + locally. Keeps geo. For testing. */
+  clearAll: () => Promise<void>;
 }
 
 export function usePreferences(): UsePreferences {
@@ -265,5 +267,34 @@ export function usePreferences(): UsePreferences {
     };
   }, []);
 
-  return { prefs, notes, sync, update, toggleIn };
+  // Clear remembered memory (context_memory notes + taste) — server-side + local. Geo survives.
+  const clearAll = useCallback(async () => {
+    const userId = getCustomerUserId();
+    if (!userId) return;
+    setSync("loading");
+    try {
+      await clearMemory(userId);
+      setPrefs((prev) => ({
+        ...prev,
+        budget: "",
+        dietary: [],
+        likedCuisines: [],
+        dislikedCuisines: [],
+      }));
+      setNotes([]);
+      persistNotes([]);
+      persist({
+        ...load(),
+        budget: "",
+        dietary: [],
+        likedCuisines: [],
+        dislikedCuisines: [],
+      });
+      setSync("synced");
+    } catch {
+      setSync("offline");
+    }
+  }, []);
+
+  return { prefs, notes, sync, update, toggleIn, clearAll };
 }

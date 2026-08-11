@@ -194,6 +194,21 @@ class UserProfileRepository:
         row.context_memory = mem  # reassign (not in-place) so SQLAlchemy detects the change
         self._db.commit()
 
+    def clear_memory(self, user_id: str) -> None:
+        """Wipe the user's remembered memory: context_memory notes (allergy/diet declarations)
+        + the taste fields the constraint layer reads (dietary, liked/disliked cuisines, budget).
+        Used by the FE 'clear memory' test control to reset to a clean slate. No-op (upserts an
+        empty row) when the user has no profile yet. One tx."""
+        row = self._get_or_create_row(self._db, user_id)
+        mem = dict(row.context_memory or {})
+        mem["notes"] = []
+        row.context_memory = mem
+        row.dietary = []
+        row.liked_cuisines = []
+        row.disliked_cuisines = []
+        row.budget_level = None
+        self._db.commit()
+
     @staticmethod
     def _to_public(row: UserProfile) -> UserProfilePublic:
         return UserProfilePublic(

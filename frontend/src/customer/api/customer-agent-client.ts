@@ -233,3 +233,14 @@ export async function patchProfile(
   if (!resp.ok) throw new Error(`Patch profile failed: HTTP ${resp.status}`);
   return (await resp.json()) as UserProfile;
 }
+
+/** Clear remembered memory (context_memory notes + taste fields) — the FE 'clear memory' test
+ * control. Returns the reset profile. */
+export async function clearMemory(userId: string): Promise<UserProfile> {
+  const resp = await fetch(
+    `${API_BASE}/api/v1/users/${encodeURIComponent(userId)}/memory/clear`,
+    { method: "POST", headers: { "Content-Type": "application/json" } },
+  );
+  if (!resp.ok) throw new Error(`Clear memory failed: HTTP ${resp.status}`);
+  return (await resp.json()) as UserProfile;
+}

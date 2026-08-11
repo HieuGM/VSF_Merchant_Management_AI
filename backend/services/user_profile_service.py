@@ -36,6 +36,24 @@ class UserProfileService:
         finally:
             db.close()
 
+    def clear_memory(self, user_id: str) -> UserProfilePublic:
+        """Wipe remembered memory (context_memory notes + taste fields the constraint layer
+        reads) — the FE 'clear memory' test control. Returns the reset profile (or 404 if the
+        user has no row, matching get_profile)."""
+        db = SessionLocal()
+        try:
+            repo = UserProfileRepository(db)
+            repo.clear_memory(user_id)
+            profile = repo.get_by_id(user_id)
+            if profile is None:
+                raise HTTPException(
+                    status_code=404,
+                    detail=f"Không tìm thấy hồ sơ user '{user_id}'.",
+                )
+            return profile
+        finally:
+            db.close()
+
     def update_profile(self, user_id: str, patch: dict) -> UserProfilePublic:
         """Apply a partial taste-profile patch (PATCH /profile) + audit it.
 
