@@ -5,7 +5,8 @@
 # `{var}` interpolation filled by customer_flow._build_inputs: query, cuisine, city, budget,
 # lat, lng, radius_km, user_id, session_id, prior_context (anaphora, "" turn-1),
 # weather_hint (client weather override, "" when absent),
-# descriptor_hints (vague-descriptor gloss, "(không có)" when flag off / no match).
+# descriptor_hints (vague-descriptor gloss, "(không có)" when flag off / no match),
+# cross_conv_context (past-conversation recall, "" when flag off / no match — memory P2b).
 
 search_task:
   description: >
@@ -44,7 +45,7 @@ search_task:
     "trời lạnh", "chill", "ăn kiêng"... DÙNG để chọn `query`/`cuisine` rõ hơn; BỎ QUA nếu
     "(không có)"): {descriptor_hints}
 
-    {prior_context}
+    {prior_context}{cross_conv_context}
   expected_output: >
     Danh sách quán ứng viên (tối đa 3) LẤY TỪ kết quả công cụ — mỗi quán: merchant_id, name,
     cuisine, address, distance_km (nếu có toạ độ), avg_rating, match_score. Kèm applied_filters
@@ -140,7 +141,7 @@ explanation_task:
 
     KHI CÓ QUÁN: gọi get_merchant_profile cho TỐI ĐA 2 quán đầu, mỗi merchant_id 1 lần.
 
-    {prior_context}
+    {prior_context}{cross_conv_context}
   expected_output: >
     Câu trả lời tiếng Việt tự nhiên, ấm áp (2-4 câu) như trò chuyện với bạn — KHÔNG cứng nhắc.
     Chỉ viết lời thoại trực tiếp: KHÔNG bọc JSON, KHÔNG dán nhãn trường (như "answer:"/"reasons:"),

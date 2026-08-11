@@ -88,6 +88,25 @@ class Settings(BaseSettings):
     # Purpose: surface REAL recall gaps the GT suite is structurally blind to. Flip False to mute. ---
     search_call_logging_enabled: bool = True
 
+    # --- Conversation memory (memory system). P1 = within-conversation recall:
+    # how many recent turns to load + the TTL window + a char budget on the injected
+    # prior-context block (so a wider window can't bloat the prompt). Routing-neutral
+    # (injection is downstream of the coordinator action). Was hardcode limit=4/ttl=24h. ---
+    memory_window_turns: int = 16           # MEMORY_WINDOW_TURNS
+    memory_turn_ttl_hours: int = 72         # MEMORY_TURN_TTL_HOURS
+    memory_prior_char_budget: int = 2000    # MEMORY_PRIOR_CHAR_BUDGET
+    # --- Cross-conversation memory (memory system). Master switch for P2: when ON a
+    # per-conversation distillate is written incrementally + cross-conv recall is injected.
+    # Default OFF = byte-identical to baseline. GT-gate (routing_accuracy>=0.82) before flip. ---
+    memory_cross_conv_enabled: bool = False  # MEMORY_CROSS_CONV_ENABLED
+    memory_cross_conv_recall_k: int = 5      # MEMORY_CROSS_CONV_RECALL_K
+    # --- Storage purge (memory system). Lazy-on-write delete of chat_messages older than
+    # the retention window (pg_cron is NOT available on postgres:18-alpine, so the purge
+    # runs inline, time-gated). Routing-neutral: rows >window are outside the recall window. ---
+    memory_purge_enabled: bool = True            # MEMORY_PURGE_ENABLED
+    memory_purge_max_age_days: int = 90          # MEMORY_PURGE_MAX_AGE_DAYS
+    memory_purge_min_interval_hours: int = 1     # MEMORY_PURGE_MIN_INTERVAL_HOURS
+
     # --- CORS (FE origins) — comma-separated. Default is the Vite dev server only;
     # do NOT use "*" together with credentials (reflects any origin). ---
     cors_origins: str = "http://localhost:5173"

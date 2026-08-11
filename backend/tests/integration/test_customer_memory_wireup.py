@@ -609,3 +609,177 @@ def test_apply_fields_atomic_bad_field_aborts():
             db.close()
     finally:
         _cleanup_user(uid)
+
+
+# --------------------------------------------------------------------------- #
+# memory-system P2a: user_id binding + per-conversation distillate (RMW).
+# --------------------------------------------------------------------------- #
+def test_session_binds_user_id_on_create():
+    _require_db()
+    uid = _new_uid()
+    sid = _new_sid()
+    _seed_user(uid)
+    try:
+        db = SessionLocal()
+        try:
+            ChatMessageRepository(db).append_turn(sid, "user", "tìm phở", user_id=uid)
+            parent = db.get(ChatSession, sid)
+        finally:
+            db.close()
+        assert parent is not None, "parent session auto-created"
+        assert parent.user_id == uid, "P2: session must bind the caller's user_id on create"
+    finally:
+        _cleanup_session(sid)
+        _cleanup_user(uid)
+
+
+def test_session_backfills_user_id_when_first_seen_anon():
+    _require_db()
+    uid = _new_uid()
+    sid = _new_sid()
+    _seed_user(uid)
+    try:
+        db = SessionLocal()
+        try:
+            ChatMessageRepository(db).append_turn(sid, "user", "tìm phở")  # anon first
+            assert db.get(ChatSession, sid).user_id is None
+            ChatMessageRepository(db).append_turn(sid, "agent", "gợi ý", user_id=uid)
+            db.commit()
+            assert db.get(ChatSession, sid).user_id == uid, (
+                "P2: backfill user_id when an existing anon session later sees a user_id")
+        finally:
+            db.close()
+    finally:
+        _cleanup_session(sid)
+        _cleanup_user(uid)
+
+
+def test_distillate_accumulates_and_preserves_sibling_keys():
+    _require_db()
+    from services.conversation_distillate_service import get_distillate, update_distillate
+
+    uid = _new_uid()
+    sid = _new_sid()
+    _seed_user(uid)
+    try:
+        db = SessionLocal()
+        try:
+            ChatMessageRepository(db).append_turn(sid, "user", "tìm phở", user_id=uid)
+            # Simulate a pre-existing sibling key (candidates is read by session_repository).
+            row = db.get(ChatSession, sid)
+            row.context_snapshot_json = {"candidates": [{"x": 1}]}
+            db.commit()
+        finally:
+            db.close()
+
+        update_distillate(sid, "tìm phở cầu giấy",
+                          [{"merchant_id": "m1", "cuisine": "Món Việt"}])
+        update_distillate(sid, "rẻ hơn nữa",
+                          [{"merchant_id": "m2", "cuisine": "Món Việt"}])
+
+        dist = get_distillate(sid)
+        assert dist is not None
+        assert dist["intent"] == "tìm phở cầu giấy"   # frozen at first turn
+        assert dist["last_query"] == "rẻ hơn nữa"
+        assert dist["shown"] == ["m1", "m2"]           # accumulated, deduped
+        assert dist["cuisines"] == ["Món Việt"]
+        assert dist["turn_count"] == 2
+
+        db = SessionLocal()
+        try:
+            snap = db.get(ChatSession, sid).context_snapshot_json or {}
+        finally:
+            db.close()
+        assert snap.get("candidates") == [{"x": 1}], "RMW must preserve sibling keys"
+        assert "distillate" in snap
+    finally:
+        _cleanup_session(sid)
+        _cleanup_user(uid)
+
+
+# --------------------------------------------------------------------------- #
+# memory-system storage: lazy-on-write purge of stale chat_messages.
+# --------------------------------------------------------------------------- #
+def test_purge_deletes_stale_rows():
+    _require_db()
+    from services.chat_message_purge_service import purge_now
+
+    sid = _new_sid()
+    db = SessionLocal()
+    try:
+        repo = ChatMessageRepository(db)
+        repo.append_turn(sid, "user", "cũ")
+        repo.append_turn(sid, "agent", "gợi ý cũ")
+        # Backdate both rows to 48h ago — beyond a 1-day retention window.
+        db.query(ChatMessage).filter(ChatMessage.session_id == sid).update(
+            {ChatMessage.timestamp: text("now() - interval '48 hours'")},
+            synchronize_session=False,
+        )
+        db.commit()
+        assert db.query(ChatMessage).filter(ChatMessage.session_id == sid).count() == 2
+
+        deleted = purge_now(max_age_days=1)  # 1-day retention → the 48h rows are purged
+        db.expire_all()
+        assert deleted >= 2, "purge must delete the backdated rows"
+        assert db.query(ChatMessage).filter(ChatMessage.session_id == sid).count() == 0
+    finally:
+        db.close()
+        _cleanup_session(sid)
+
+
+def test_purge_keeps_rows_within_retention():
+    _require_db()
+    from services.chat_message_purge_service import purge_now
+
+    sid = _new_sid()
+    db = SessionLocal()
+    try:
+        ChatMessageRepository(db).append_turn(sid, "user", "giữ")  # fresh (now)
+        db.commit()
+        purge_now(max_age_days=90)  # 90-day retention → a fresh row survives
+        db.expire_all()
+        assert db.query(ChatMessage).filter(ChatMessage.session_id == sid).count() == 1
+    finally:
+        db.close()
+        _cleanup_session(sid)
+
+
+# --------------------------------------------------------------------------- #
+# memory-system P2b: list_recent_distillates exclude_session_id (code-review M4).
+# --------------------------------------------------------------------------- #
+def test_list_recent_distillates_excludes_current_session():
+    _require_db()
+    from repositories.session_repository import SessionRepository
+    from services.conversation_distillate_service import update_distillate
+
+    uid = _new_uid()
+    sid1, sid2 = _new_sid(), _new_sid()
+    _seed_user(uid)
+    try:
+        db = SessionLocal()
+        try:
+            for sid in (sid1, sid2):
+                ChatMessageRepository(db).append_turn(sid, "user", "tìm phở", user_id=uid)
+            db.commit()
+        finally:
+            db.close()
+        update_distillate(sid1, "tìm phở", [{"merchant_id": "m1", "cuisine": "Món Việt"}])
+        update_distillate(sid2, "tìm bún", [{"merchant_id": "m2", "cuisine": "Món Việt"}])
+
+        db = SessionLocal()
+        try:
+            all_d = SessionRepository(db).list_recent_distillates(uid, limit=20)
+            excl = SessionRepository(db).list_recent_distillates(
+                uid, limit=20, exclude_session_id=sid1
+            )
+        finally:
+            db.close()
+        assert len(all_d) == 2, "both conversations have a distillate for this user"
+        assert len(excl) == 1, "exclude_session_id drops the current conversation"
+        intents_excl = {d.get("intent") for d in excl}
+        assert "tìm phở" not in intents_excl   # sid1 (the excluded one) gone
+        assert "tìm bún" in intents_excl        # sid2 kept
+    finally:
+        _cleanup_session(sid1)
+        _cleanup_session(sid2)
+        _cleanup_user(uid)

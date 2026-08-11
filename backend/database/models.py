@@ -350,7 +350,13 @@ class ChatSession(Base):
     context_snapshot_json = Column(JSONB)
     last_trace_id = Column(String)
     created_at = Column(TIMESTAMP(timezone=False), server_default=sa_text("CURRENT_TIMESTAMP"))
-    updated_at = Column(TIMESTAMP(timezone=False), server_default=sa_text("CURRENT_TIMESTAMP"))
+    # onupdate (ORM-level, no migration): refreshes on any UPDATE so list_recent_distillates
+    # orders by last activity (distillate writes), not just insert time (memory-system P2b).
+    updated_at = Column(
+        TIMESTAMP(timezone=False),
+        server_default=sa_text("CURRENT_TIMESTAMP"),
+        onupdate=sa_text("now()"),
+    )
     
     user = relationship("UserProfile", back_populates="chat_sessions")
     chat_messages = relationship("ChatMessage", back_populates="session", cascade="all, delete-orphan")

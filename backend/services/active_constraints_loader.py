@@ -43,7 +43,18 @@ _WANT_NEGATION_RE = re.compile(r"khong\s+(an\s+|thich\s+|muon\s+)?chay|khong\s+c
 # Allergy recovery / negation (folded) — 'không còn dị ứng ... nữa' / 'đã hết' must not impose it.
 _RECOVERY_RE = re.compile(r"khong con|da het|het roi|het benh|khoi\s*benh|mat di ung|khong\s*bi.{0,20}nua")
 
-_SESSION_WINDOW = 8  # recent USER turns scanned (covers transient "nay ăn chay" not in notes)
+_SESSION_WINDOW = 8  # floor: recent USER turns scanned (covers transient "nay ăn chay" not in notes)
+
+
+def _session_window() -> int:
+    """Constraint-scan window — tracks the within-conversation recall window
+    (memory_window_turns) so a constraint declared in ANY recalled turn is seen.
+    Floored at _SESSION_WINDOW; settings failure falls back to the floor."""
+    try:
+        from core.settings import get_settings
+        return max(_SESSION_WINDOW, int(get_settings().memory_window_turns))
+    except Exception:  # noqa: BLE001
+        return _SESSION_WINDOW
 
 
 @dataclass(frozen=True)
@@ -149,7 +160,7 @@ def build_active_constraints(
         role = (turn.get("role") or turn.get("sender") or "").lower()
         if "user" in role:
             user_texts.append(turn.get("text") or turn.get("content") or "")
-    recent_user_texts = user_texts[-_SESSION_WINDOW:]
+    recent_user_texts = user_texts[-_session_window():]
     broke_diet = _broke_diet(q_folded, recent_user_texts)
 
     hard: list[Constraint] = []

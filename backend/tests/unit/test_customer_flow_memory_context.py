@@ -7,7 +7,12 @@ forwarding). (Allergen/diet restriction extraction moved to the unified active-c
 layer — see test_active_constraints.py.)"""
 from __future__ import annotations
 
-from flows.customer_flow import _collect_exclude_ids, _format_prior_context, _NO_PRIOR_NOTE
+from flows.customer_flow import (
+    _collect_exclude_ids,
+    _format_prior_context,
+    _NO_PRIOR_NOTE,
+    _prior_recall_level,
+)
 
 
 # --- _collect_exclude_ids: order-stable, deduped merchant-id harvest ---
@@ -86,3 +91,74 @@ def test_prior_context_drops_prompt_injection_bait():
 def test_prior_context_redacts_pii_in_user_text():
     out = _format_prior_context([_u("gọi mình 0912345678 nhé"), _a([{"name": "Q", "merchant_id": "m1"}])])
     assert "0912345678" not in out
+
+
+# --- memory-system P1: tiered recall gate ----------------------------------------------
+def test_recall_level_none_when_no_history():
+    assert _prior_recall_level("anything", None) == "none"
+    assert _prior_recall_level("anything", []) == "none"
+
+
+def test_recall_level_strong_when_anaphor_or_refinement():
+    turns = [_u("tìm phở"), _a([{"name": "Phở X", "merchant_id": "m1", "cuisine": "V"}])]
+    assert _prior_recall_level("quán đó cay không", turns) == "strong"   # anaphor
+    assert _prior_recall_level("rẻ hơn nữa", turns) == "strong"          # refinement
+
+
+def test_recall_level_base_when_fresh_query_with_history():
+    # Fresh search + history exists, no anaphor/refinement/name-match → base (always-on recent).
+    turns = [_u("tìm phở"), _a([{"name": "Phở X", "merchant_id": "m1", "cuisine": "V"}])]
+    assert _prior_recall_level("ăn gì dưới 1k", turns) == "base"
+    assert _prior_recall_level("", turns) == "base"
+    assert _prior_recall_level(None, turns) == "base"
+
+
+def test_recall_level_strong_when_name_match():
+    turns = [_u("tìm trà sữa"), _a([{"name": "Tocotoco Long Biên", "merchant_id": "m9", "cuisine": "Café"}])]
+    # 'tocotoco' is a distinctive single token (len>=5) of a prior merchant name → name-match.
+    assert _prior_recall_level("tocotoco có cay không", turns) == "strong"
+
+
+# --- memory-system P1: recent_pairs (base-tier always-on recent recall) ----------------
+def test_prior_context_recent_pairs_keeps_newest_only():
+    turns = [
+        _u("tìm phở"), _a([{"name": "Phở A", "merchant_id": "m1", "cuisine": "V"}]),
+        _u("tìm bún"), _a([{"name": "Bún B", "merchant_id": "m2", "cuisine": "V"}]),
+        _u("tìm cơm"), _a([{"name": "Cơm C", "merchant_id": "m3", "cuisine": "V"}]),
+    ]
+    full = _format_prior_context(turns)
+    trimmed = _format_prior_context(turns, recent_pairs=1)
+    assert "Phở A" in full and "Phở A" not in trimmed   # oldest gone when capped to newest 1
+    assert "Bún B" not in trimmed
+    assert "Cơm C" in trimmed                            # newest kept
+
+
+# --- memory-system P1: char budget (oldest pairs dropped first; header/footer survive) --
+def test_prior_context_char_budget_drops_oldest_first():
+    turns = [
+        _u("tìm phở cầu giấy rẻ"), _a([{"name": "Phở A Lộc", "merchant_id": "m1", "cuisine": "Món Việt"}]),
+        _u("tìm bún bò huế"),      _a([{"name": "Bún B Đệ", "merchant_id": "m2", "cuisine": "Món Việt"}]),
+        _u("tìm cơm tấm sài gòn"), _a([{"name": "Cơm C Vàng", "merchant_id": "m3", "cuisine": "Ăn vặt"}]),
+    ]
+    big = _format_prior_context(turns, max_chars=5000)
+    small = _format_prior_context(turns, max_chars=700)
+    assert "Phở A Lộc" in big                # big budget keeps oldest
+    assert "Phở A Lộc" not in small          # small budget drops oldest first
+    assert "Cơm C Vàng" in small             # newest always kept
+    assert "DỮ LIỆU LỊCH SỬ" in small        # header kept
+    assert "LƯU Ý ĐA LƯỢT" in small           # footer kept
+
+
+def test_prior_context_char_budget_keeps_exclude_line():
+    turns = [_u("quán"), _a(ids=["m1", "m2"])]
+    out = _format_prior_context(turns, max_chars=800)
+    assert "LOẠI TRỪ" in out and "m1, m2" in out   # exclude line survives the budget
+
+
+def test_prior_context_default_args_unchanged():
+    # No optional args → byte-identical behavior to before the P1 knobs.
+    turns = [_u("tìm phở"), _a([{"name": "Phở X", "merchant_id": "m1", "cuisine": "V"}])]
+    out = _format_prior_context(turns)
+    assert "Phở X(m1" in out
+    assert "DỮ LIỆU LỊCH SỬ" in out
+    assert "LƯU Ý ĐA LƯỢT" in out

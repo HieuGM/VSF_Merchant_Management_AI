@@ -40,12 +40,17 @@ class ChatMessageRepository:
         text: str,
         trace_id: str | None = None,
         payload: dict | None = None,
+        user_id: str | None = None,
     ) -> None:
-        """Persist one turn. No-op when session_id is None; never raises (phase-01 F3)."""
+        """Persist one turn. No-op when session_id is None; never raises (phase-01 F3).
+
+        `user_id` (memory-system P2) binds the parent ChatSession to its user so
+        conversations become queryable per-user (prerequisite for cross-conv recall).
+        Anonymous-safe when None."""
         if not session_id:
             return
         try:
-            self._ensure_session(session_id)
+            self._ensure_session(session_id, user_id=user_id)
             self._db.add(
                 ChatMessage(
                     message_id=new_id("msg"),
@@ -57,6 +62,14 @@ class ChatMessageRepository:
                 )
             )
             self._db.commit()
+            # memory-system storage: lazy-on-write purge of stale chat_messages
+            # (time-gated + best-effort; runs in its own session). Routing-neutral.
+            try:
+                from services.chat_message_purge_service import maybe_purge_stale_messages
+
+                maybe_purge_stale_messages()
+            except Exception:  # noqa: BLE001 — purge must never break the chat write
+                pass
         except Exception as exc:  # noqa: BLE001 — persistence must never break the flow.
             self._db.rollback()
             logger.warning(
@@ -66,8 +79,8 @@ class ChatMessageRepository:
     def get_recent_turns(
         self,
         session_id: str | None,
-        limit: int = 4,
-        ttl_hours: int = 24,
+        limit: int = 16,
+        ttl_hours: int = 72,
     ) -> list[dict]:
         """Last `limit` turns newer than the TTL cutoff, chronological (oldest first).
 
@@ -100,14 +113,22 @@ class ChatMessageRepository:
         ]
         return self._collapse_duplicates(turns)
 
-    def _ensure_session(self, session_id: str) -> None:
-        """B1: get-or-create parent ChatSession (anonymous-safe) before the FK insert."""
-        if self._db.get(ChatSession, session_id) is not None:
+    def _ensure_session(self, session_id: str, user_id: str | None = None) -> None:
+        """B1: get-or-create parent ChatSession before the FK insert.
+
+        memory-system P2: binds `user_id` so conversations are queryable per-user. If the
+        row is absent → create WITH user_id (when given); if it exists with user_id=None
+        and a user_id is now provided → backfill (covers a session first seen anonymously).
+        Anonymous-safe when user_id is None (chat_sessions.user_id is nullable / ON DELETE
+        SET NULL, so no FK violation when no user_profiles row exists)."""
+        existing = self._db.get(ChatSession, session_id)
+        if existing is None:
+            self._db.add(ChatSession(session_id=session_id, user_id=user_id or None))
+            self._db.flush()  # make the parent PK visible for the child FK.
             return
-        # user_id=None: chat_sessions.user_id is nullable / ON DELETE SET NULL, so an
-        # anonymous session avoids a second FK violation when no user_profiles row exists.
-        self._db.add(ChatSession(session_id=session_id, user_id=None))
-        self._db.flush()  # make the parent PK visible for the child FK.
+        if user_id and existing.user_id is None:
+            existing.user_id = user_id
+            self._db.flush()
 
     @staticmethod
     def _collapse_duplicates(turns: list[dict]) -> list[dict]:
