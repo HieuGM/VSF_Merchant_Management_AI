@@ -11,6 +11,7 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from core.profile_context import get_current_profile
+from core.query_relevance import query_relevance
 from core.ranking_config import get_ranking_config
 from database.models import Merchant, MenuItem
 from models.preference import UserProfilePublic
@@ -33,19 +34,14 @@ def haversine_distance(lat1: float, lon1: float, lat2: float, lon2: float) -> fl
 
 
 def _nearby_match_score(merchant: Merchant, query: str | None) -> float:
-    """Relevance score for nearby ranking: name match (1.0) > cuisine match (0.7) > menu-only
-    (0.4). Diacritics-insensitive ("trà sữa" ≡ "tra sua"). Stops a Pizza Hut that only matched
-    "tra sua" via menu items from outranking a real "Trà Sữa TocoToco" shop on distance."""
+    """Graded query relevance (name > cuisine > menu) for nearby ranking. 0 when no query → ranks
+    purely by distance. Tone-aware (a 'phở' query no longer rides on 'Phố Cổ' in a name). Replaces
+    the old 3-step 1.0/0.7/0.4 which capped everything at 1.0 and gave no differentiation."""
     if not query:
-        return 1.0
-    q = _norm_text(query)
-    if not q:
-        return 1.0
-    if q in _norm_text(merchant.name or ""):
-        return 1.0
-    if q in _norm_text(merchant.cuisine or ""):
-        return 0.7
-    return 0.4
+        return 0.0
+    return query_relevance(
+        query, merchant.name, merchant.cuisine, getattr(merchant, "taste_tags", None)
+    )
 
 
 @dataclass
@@ -343,33 +339,30 @@ class MerchantSearchService:
         """
         score = 0.0
 
-        # Query match
-        if query:
-            q = query.lower()
-            if q in (merchant.name or "").lower():
-                score += 0.20
-            elif matched_via_menu:
-                score += 0.15
+        # Query relevance (name > cuisine > menu, tone-aware) is the PRIMARY driver (~70%). The
+        # old scorer gave a name match (+0.20) barely more than a menu match (+0.15) and let
+        # constant signals dominate → a chicken place with phở on the menu ranked ~equal to a real
+        # phở shop. Now a name match scores well above a menu-only hit.
+        rel = query_relevance(
+            query, merchant.name, merchant.cuisine,
+            getattr(merchant, "taste_tags", None), matched_via_menu,
+        )
+        score += rel * 0.70
 
-        # Cuisine match (fuzzy)
-        if cuisine:
-            mc = (merchant.cuisine or "").lower()
-            if cuisine.lower() == mc:
-                score += 0.20
-            elif cuisine.lower() in mc or mc in cuisine.lower():
-                score += 0.10
+        # `cuisine` is the explicit cuisine FILTER (already enforced by the repo) → constant across
+        # the filtered set, so it is not re-scored here.
 
-        # City match
+        # City match (small tiebreaker)
         if city and (merchant.city or "").lower() == city.lower():
-            score += 0.10
+            score += 0.05
 
         # Platform rating bonus
         if avg_rating is not None and avg_rating >= 4.0:
-            score += 0.10
+            score += 0.05
 
         # Overall dimension score contribution
         if overall_score is not None:
-            score += overall_score * 0.15
+            score += overall_score * 0.10
 
         # Distance bonus (closer = better, caps at 2km = full bonus, 0 at 10km+)
         if distance_km is not None and distance_km < 10:
