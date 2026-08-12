@@ -4,9 +4,6 @@ import json
 from unittest.mock import MagicMock
 
 from providers.cache.memory_adapter import InMemoryCache
-from services.merchant_trace_collector import TraceCollector
-
-
 def test_city_aliases_canonicalize_to_single_slug():
     from models.merchant_agentic import normalize_city_slugs
 
@@ -22,7 +19,6 @@ def test_market_search_tool_emits_canonical_city_and_cache_events(monkeypatch):
     from tools.merchant.gateway import RunScopedMerchantToolGateway
 
     events: list[dict] = []
-    semantic_events: list[dict] = []
     context = AgenticRunContext(
         trace_id="tr-gateway",
         session_id="sess-gateway",
@@ -33,7 +29,6 @@ def test_market_search_tool_emits_canonical_city_and_cache_events(monkeypatch):
         db=MagicMock(),
         cache=InMemoryCache(),
         emit=events.append,
-        trace_collector=TraceCollector("tr-gateway", semantic_events.append),
     )
 
     import tools.merchant.gateway as gateway_module
@@ -60,24 +55,6 @@ def test_market_search_tool_emits_canonical_city_and_cache_events(monkeypatch):
         if item.name == "search_merchants"
     )
 
-    collector = gateway._trace_collector
-    assert collector is not None
-    sdk_args = {"query": "tôm", "city": "Đà Nẵng"}
-    resolution = gateway.tool_correlation_bridge.observe_sdk_event(
-        "Public Market Search Specialist",
-        "search_merchants",
-        sdk_args,
-        "sdk-market-search",
-        is_start=True,
-    )
-    assert resolution.state == "pending"
-    sdk_span = collector.observe_crewai_tool_started(
-        "Public Market Search Specialist",
-        "search_merchants",
-        sdk_args,
-        correlation_id="sdk-market-search",
-    )
-
     result = json.loads(tool._run(query="tôm", city="Đà Nẵng"))
 
     assert result["status"] == "ok"
@@ -86,11 +63,7 @@ def test_market_search_tool_emits_canonical_city_and_cache_events(monkeypatch):
     finished = next(event for event in events if event["event"] == "tool_finished")
     assert started["args"]["city"] == "da_nang"
     assert started["tool_name"] == "search_merchants"
-    assert finished["correlation_id"] == "sdk-market-search"
-    assert [event["kind"] for event in semantic_events] == ["started", "finished"]
-    assert {event["span_id"] for event in semantic_events} == {sdk_span}
-    assert semantic_events[-1]["debug"]["args"]["city"] == "da_nang"
-    assert semantic_events[-1]["debug"]["result"]["status"] == "ok"
+    assert finished["status"] == "ok"
 
 
 def test_owner_profile_tool_ignores_model_supplied_merchant_id(monkeypatch):

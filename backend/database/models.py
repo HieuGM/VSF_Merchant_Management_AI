@@ -508,59 +508,6 @@ class InteractionEvent(Base):
     created_at = Column(TIMESTAMP(timezone=False), server_default=sa_text("CURRENT_TIMESTAMP"))
 
 
-class AgentRun(Base):
-    """One record per CrewAI Flow run (§6.2 agent_runs)."""
-    __tablename__ = "agent_runs"
-
-    trace_id = Column(String, primary_key=True)
-    session_id = Column(String)
-    user_id = Column(String)
-    crew_name = Column(String, nullable=False)
-    intent = Column(String)
-    status = Column(String, default="running")
-    started_at = Column(TIMESTAMP(timezone=False), server_default=sa_text("CURRENT_TIMESTAMP"))
-    finished_at = Column(TIMESTAMP(timezone=False))
-    error_code = Column(String)
-    token_usage_json = Column(JSONB)
-
-
-class AgentEvent(Base):
-    """Task/tool/delegation trace (§6.2 agent_events). Listener contract."""
-    __tablename__ = "agent_events"
-    __table_args__ = (
-        Index(
-            "uq_agent_events_trace_semantic_seq",
-            "trace_id",
-            "seq",
-            unique=True,
-            postgresql_where=sa_text("seq IS NOT NULL"),
-        ),
-    )
-
-    event_id = Column(String, primary_key=True)
-    trace_id = Column(String, ForeignKey("agent_runs.trace_id", ondelete="CASCADE"), nullable=False)
-    parent_event_id = Column(String)
-    event_type = Column(String, nullable=False)
-    agent_name = Column(String)
-    task_name = Column(String)
-    tool_name = Column(String)
-    input_hash = Column(String)
-    output_summary_json = Column(JSONB)
-    duration_ms = Column(Integer)
-    status = Column(String, default="ok")
-    error_code = Column(String)
-    # Semantic timeline v2.  These remain nullable so existing legacy trace
-    # events and already-running deployments continue to be readable.
-    seq = Column(Integer)
-    span_id = Column(String)
-    parent_span_id = Column(String)
-    phase = Column(String)
-    kind = Column(String)
-    actor_type = Column(String)
-    actor_name = Column(String)
-    metrics_json = Column(JSONB)
-    debug_payload_json = Column(JSONB)
-    created_at = Column(TIMESTAMP(timezone=False), server_default=sa_text("CURRENT_TIMESTAMP"))
 
 
 class PolicyDocument(Base):

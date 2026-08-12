@@ -2,20 +2,25 @@
 from __future__ import annotations
 
 import json
+import logging
 import time
 from collections.abc import Callable, Mapping
 from typing import Any, Protocol
 
 from pydantic import ValidationError
 
+from core.logging import safe_exception_trace
 from agents.merchant.input_analyzer_prompt import (
     TRUNCATION_MARKER,
-    build_bounded_prompt,
-    build_repair_prompt,
+    compile_bounded_prompt,
     redact_sensitive_content,
     redact_sensitive_text,
 )
+from langfuse import propagate_attributes
 from models.merchant_input import PreparedRequest
+
+
+logger = logging.getLogger(__name__)
 
 
 TraceCallback = Callable[[str, dict[str, Any]], None]
@@ -61,7 +66,7 @@ class InputPreparationService:
     ) -> PreparedRequest:
         """Call the analyzer once, with exactly one schema-repair attempt."""
         started_at = time.perf_counter()
-        prompt = build_bounded_prompt(
+        prompt, analyzer_prompt = compile_bounded_prompt(
             raw_query=raw_query,
             history=history,
             session_state=session_state,
@@ -75,28 +80,20 @@ class InputPreparationService:
         parsed_request: PreparedRequest | None = None
 
         try:
-            raw_output, usage = self._call(prompt)
+            with propagate_attributes(prompt=analyzer_prompt):
+                raw_output, usage = self._call(prompt)
             if usage is not None:
                 usages.append(usage)
-            try:
-                parsed_request = _parse_prepared_request(raw_output)
-                parse_result = "ok"
-                return parsed_request
-            except (ValidationError, ValueError):
-                repair_prompt = build_repair_prompt(raw_output)
-                repair_output, usage = self._call(repair_prompt)
-                if usage is not None:
-                    usages.append(usage)
-                try:
-                    parsed_request = _parse_prepared_request(repair_output)
-                    parse_result = "repaired"
-                    return parsed_request
-                except (ValidationError, ValueError) as error:
-                    parse_result = "schema_repair_failed"
-                    raise InputPreparationError("schema_repair_failed") from error
-        except InputPreparationError:
-            raise
+            parsed_request = _parse_prepared_request(raw_output)
+            parse_result = "ok"
+            return parsed_request
+        except (ValidationError, ValueError):
+            parse_result = "schema_repair_failed"
+            raise InputPreparationError("schema_repair_failed") from error
         except Exception as error:
+            if _exception_has_error_code(error, "prompt_injection_detected"):
+                parse_result = "prompt_injection_blocked"
+                raise InputPreparationError("prompt_injection_blocked") from error
             raise InputPreparationError("provider_call_failed") from error
         finally:
             self._emit_trace(
@@ -127,8 +124,7 @@ class InputPreparationService:
         if self._trace_callback is None:
             return
         payload: dict[str, Any] = {
-            # The prompt is the exact, already-bounded provider input. Do not
-            # pass it through RequestTelemetry's unrelated 1,500-char string cap.
+            # The prompt is the exact, already-bounded provider input.
             "raw_prompt": _trace_text(raw_prompt, TRACE_PROMPT_LIMIT),
             "raw_model_output": _trace_text(raw_output, TRACE_MODEL_ARTIFACT_LIMIT),
             "repair_model_output": (
@@ -146,14 +142,20 @@ class InputPreparationService:
         }
         try:
             self._trace_callback("input_analyzer", payload)
-        except Exception:
+        except Exception as error:
             # Observability must not turn a valid chat request into a failure.
+            logger.warning(
+                "input_analyzer_trace_callback_failed\n%s",
+                safe_exception_trace(error),
+            )
             return
 
 
 def _response_text(response: str | Any) -> str:
     if isinstance(response, str):
         return response
+    if isinstance(response, PreparedRequest):
+        return response.model_dump_json()
     content = getattr(response, "content", None)
     if isinstance(content, str):
         return content
@@ -165,30 +167,69 @@ def _response_text(response: str | Any) -> str:
     return str(response)
 
 
-def _parse_prepared_request(raw_output: str) -> PreparedRequest:
-    """Parse bounded provider JSON while repairing known transport-level quirks.
+def _exception_has_error_code(error: BaseException, code: str) -> bool:
+    """Inspect wrapped provider errors without depending on one provider SDK."""
+    seen: set[int] = set()
+    current: BaseException | None = error
+    while current is not None and id(current) not in seen:
+        seen.add(id(current))
+        values = (getattr(current, "body", None), *current.args)
+        if any(_mapping_has_error_code(value, code) for value in values):
+            return True
+        current = current.__cause__ or current.__context__
+    return False
 
-    Gemini-compatible endpoints sometimes escape apostrophes as ``\'``, which
-    JSON does not permit, or return the concise aliases used in repair prompts.
-    This normalizes only those representation defects; Pydantic still enforces
-    the complete request contract and rejects unknown fields.
-    """
+
+def _mapping_has_error_code(value: Any, code: str) -> bool:
+    if not isinstance(value, Mapping):
+        return False
+    if value.get("error") == code:
+        return True
+    return any(_mapping_has_error_code(nested, code) for nested in value.values())
+
+
+def _parse_prepared_request(raw_output: str) -> PreparedRequest:
+    """Parse Input Analyzer JSON and normalize minor format variations."""
     normalized = raw_output.strip().replace("\\'", "'")
+    # Strip optional markdown code fence.
     if normalized.startswith("```"):
         lines = normalized.splitlines()
-        if lines and lines[0].startswith("```"):
+
+        if lines and lines[0].strip().startswith("```"):
             lines = lines[1:]
+
         if lines and lines[-1].strip() == "```":
             lines = lines[:-1]
+
         normalized = "\n".join(lines).strip()
+
     payload = json.loads(normalized)
+
     if not isinstance(payload, dict):
         raise ValueError("Input Analyzer output must be a JSON object")
+
     canonical = dict(payload)
+
+    # Backward-compatible aliases.
     if "scope_candidate" not in canonical and "scope" in canonical:
         canonical["scope_candidate"] = canonical.pop("scope")
+
     if "proposed_outcome" not in canonical and "outcome" in canonical:
         canonical["proposed_outcome"] = canonical.pop("outcome")
+
+    # Minor structural repair: LLM may emit {} instead of [].
+    refs = canonical.get("resolved_references")
+    if refs is None or refs == {}:
+        canonical["resolved_references"] = []
+    elif isinstance(refs, dict):
+        canonical["resolved_references"] = [refs]
+
+    missing = canonical.get("missing_context")
+    if missing is None:
+        canonical["missing_context"] = []
+    elif isinstance(missing, str):
+        canonical["missing_context"] = [missing]
+
     return PreparedRequest.model_validate(canonical)
 
 

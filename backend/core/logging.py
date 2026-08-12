@@ -6,6 +6,7 @@ FROZEN SEAM: call `configure_logging()` once from the app factory; use
 from __future__ import annotations
 
 import logging
+import traceback
 
 from core.tracing import get_request_id
 
@@ -39,3 +40,14 @@ def configure_logging(level: int = logging.INFO) -> None:
 
 def get_logger(name: str) -> logging.Logger:
     return logging.getLogger(name)
+
+
+def safe_exception_trace(error: BaseException) -> str:
+    """Render traceback locations and exception type without untrusted messages."""
+    frames = traceback.extract_tb(error.__traceback__)
+    locations = "\n".join(
+        f'  File "{frame.filename}", line {frame.lineno}, in {frame.name}'
+        for frame in frames
+    )
+    prefix = f"Traceback (most recent call last):\n{locations}\n" if locations else ""
+    return f"{prefix}{type(error).__name__}: <message redacted>"

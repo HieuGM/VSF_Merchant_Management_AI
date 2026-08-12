@@ -75,23 +75,7 @@ export function MerchantMap({
       '',
     ).trim().toLowerCase();
 
-    const displayFeatures = featureCollection.features.filter((f) => {
-      const role = String(f.properties.role);
-      if (role === 'owner' || role === 'user_location' || role === 'recommended') return true;
-
-      const fType = String(
-        f.properties.cuisine_type ??
-        f.properties.category ??
-        f.properties.type ??
-        f.properties.merchant_type ??
-        '',
-      ).trim().toLowerCase();
-
-      if (ownerType && fType) {
-        return fType === ownerType || fType.includes(ownerType) || ownerType.includes(fType);
-      }
-      return true;
-    });
+    const displayFeatures = featureCollection.features;
 
     const firstCoords = displayFeatures[0].geometry.coordinates;
 
@@ -271,11 +255,21 @@ export function MerchantMap({
       map.resize();
     }, 150);
 
+    const resizeObserver = new ResizeObserver(() => {
+      if (mapRef.current) {
+        mapRef.current.resize();
+      }
+    });
+    if (hostRef.current) {
+      resizeObserver.observe(hostRef.current);
+    }
+
     mapRef.current = map;
 
     return () => {
       isCancelled = true;
       clearTimeout(timer);
+      resizeObserver.disconnect();
       markers.forEach((marker) => marker.remove());
       map.remove();
       mapRef.current = null;

@@ -10,18 +10,20 @@ import json
 import os
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any
 
 from crewai import Agent, Crew, Process, Task
 from crewai.project import CrewBase, agent, crew, task
+from langfuse import get_client
 
 from models.merchant_input import PreparedRequest
-from services.crewai_local_trace import LocalCrewAITrace
-from services.merchant_trace_collector import (
-    TraceCollector,
-    sanitize_coordinator_prompt_value,
-)
 from tools.merchant.gateway import RunScopedMerchantToolGateway
+from services.merchant_prompts import compile_merchant_prompt, get_merchant_prompt
+
+def sanitize_coordinator_prompt_value(value: Any) -> Any:
+    if isinstance(value, str):
+        return value
+    return value
 
 
 _VERBOSE = os.getenv("CREWAI_VERBOSE", "0") == "1"
@@ -163,175 +165,22 @@ def _configure_crewai_storage() -> None:
     os.environ["XDG_DATA_HOME"] = str(runtime_root)
     os.environ.setdefault("CREWAI_STORAGE_DIR", "merchant-advisor")
     os.environ.setdefault("CREWAI_TELEMETRY_OPT_OUT", "true")
-    os.environ.setdefault("OTEL_SDK_DISABLED", "true")
 
 
 def coordinator_task_description() -> str:
-    """Compact routing, evidence, and terminal-output contract."""
-    return """
-MISSION
-Complete one Vietnamese merchant-owner request. Preserve the operation in the
-authoritative rewritten query. Context serves as evidence.
-
-CONTROL LOOP
-1. For an operation that transforms or refers to supplied conversation content,
-the coordinator returns terminal JSON in its first response. Specialist budget
-is 0 and tool-call budget is 0. Only assistant-role content qualifies as a prior
-answer. Absent assistant content produces one concise availability sentence.
-2. For a data operation, list the minimum evidence domains, then delegate once per
-domain. Use known merchant IDs directly. Use discovery for unknown targets.
-3. A comparison requires comparable evidence for every side, same metric and
-scope, plus a cohort aggregate for group claims. With one side missing, produce
-an evidence limitation only.
-4. Send analytical claims through Evidence and Policy Verifier, then at most one
-Merchant Owner Answer Specialist synthesis. Simple public reads may return
-directly.
-
-HARD BUDGET PER TURN
-- At most 4 specialist delegations total, including verification and synthesis.
-- At most 4 business tool calls total across all specialists.
-- Each specialist appears at most once. Each equivalent tool signature appears
-  at most once.
-- When the budget is exhausted, return the supported result and explicit gaps.
-
-DOMAIN OWNERS
-- Green SM documents (fees, commissions, incentives, platform terms, policies, rules, FAQs, procedures): Green SM Policy Document Specialist ONLY.
-- Public merchant identity/detail: Public Market Search Specialist.
-- Public group aggregate or owner-to-cohort comparison: Public Cohort Analysis Specialist; aggregate before any group claim.
-- Current-owner internal data (own store ratings, own menu, own complaints, own metrics): Owner Performance Analysis Specialist. DO NOT use for general Green SM policies, platform fees, or terms.
-- Analytical claim gate: Evidence and Policy Verifier.
-- Owner-facing analytical answer: Merchant Owner Answer Specialist.
-
-POLICY VS OWNER DATA ROUTING RULE
-- If the request asks about Green SM fees, commissions, rules, regulations, terms, procedures, or general platform policies, delegate ONLY to Green SM Policy Document Specialist.
-- Do NOT delegate to Owner Performance Analysis Specialist for policy or fee questions.
-
-EVIDENCE AND PRIVACY
-Use owner identity and stored location as approved defaults. Competitor evidence
-uses public fields. Aggregate facts come
-from aggregate observations. Every number, entity, comparison, cause, and action
-comes from an observation with matching subject and scope.
-
-TERMINAL OUTPUT
-Return exactly one bare JSON object:
-{"status":"completed","answer":"<grounded Vietnamese answer>"}
-Always terminate, including when evidence is missing or a specialist fails.
-""".strip()
+    """Fetch coordinator task description remotely from Langfuse Prompt Management."""
+    return get_merchant_prompt("COORDINATE_PROMPT").prompt.strip()
 
 
 def specialist_prompts() -> dict[str, str]:
-    """Role prompts are code-owned so they stay aligned with gateway contracts."""
+    """Fetch specialist role prompts remotely from Langfuse Prompt Management."""
     return {
-        "policy_document": """
-MISSION
-Retrieve authoritative Green SM document evidence for the requested policy or
-procedure.
-GUIDE
-1. Convert the requested policy topic into one focused document query in Vietnamese.
-2. Call search_policy_documents once with categories=[] (empty list) to search across all documents.
-3. Select passages that directly support the requested rule or procedure.
-BUDGET
-Maximum 1 tool call and 1 handoff.
-EVIDENCE
-Every policy claim maps to one returned passage. Preserve separate documents as
-separate sources. Mark corpus gaps explicitly.
-HANDOFF
-Return concise Vietnamese evidence with source title, URL, date, relevant
-passage, and coverage status.
-""".strip(),
-        "market_search": """
-MISSION
-Retrieve public merchant facts with the smallest necessary lookup.
-GUIDE
-1. For a resolved merchant ID, call get_public_merchant_detail.
-2. For an unresolved target, call search_merchants once.
-3. After discovery, call detail only when the requested field is absent from the
-search result and one merchant ID is resolved.
-BUDGET
-Maximum 4 tool calls and 1 handoff. Discovery appears at most once.
-EVIDENCE
-Use public returned fields and grounded arguments. Label unavailable fields as
-unavailable.
-HANDOFF
-Return compact public facts, merchant IDs/names, tool status, and unresolved
-fields.
-""".strip(),
-        "cohort_analysis": """
-MISSION
-Produce public cohort aggregates and owner-versus-public-cohort comparisons.
-GUIDE
-1. Consume supplied merchant IDs or cohort_ref.
-2. Call aggregate_public_merchant_cohort for every group claim.
-3. When owner comparison is requested, call compare_owner_to_public_cohort with
-that aggregate.
-BUDGET
-Maximum 4 tool calls and 1 handoff.
-EVIDENCE
-Group claims use aggregate output. Comparison claims use matching dimensions
-and scope. Cohort criteria and membership remain explicit.
-HANDOFF
-Return cohort criteria, member names, aggregate evidence, comparison evidence,
-and limitations.
-""".strip(),
-        "self_analysis": """
-MISSION
-Retrieve evidence for the current owner and the requested business dimension.
-GUIDE
-1. Map each requested dimension to its owner tool: profile, metrics, reviews,
-complaints, menu, images, diagnosis, or recommendation.
-2. Select the smallest set that directly supports the requested operation.
-3. Root-cause work uses relevant observations before diagnosis. Action work uses
-diagnosis evidence before recommendation.
-BUDGET
-Maximum 4 tool calls and 1 handoff.
-EVIDENCE
-Every observation retains owner subject, source field, value, and evidence
-reference. Public comparison inputs come from supplied public evidence.
-HANDOFF
-Return supported owner observations, evidence references, requested diagnosis
-or actions, and explicit gaps.
-""".strip(),
-        "evidence_verifier": """
-MISSION
-Gate an analytical dossier before owner-facing synthesis.
-GUIDE
-1. Match every claim to an observation with the same subject, metric, scope, and
-value.
-2. Classify each claim as approved, unsupported, or policy-restricted.
-3. For comparisons, confirm evidence for every side and a cohort aggregate for
-group claims.
-BUDGET
-Maximum 1 verification pass, 0 tool calls, and 1 handoff.
-EVIDENCE
-Approved claims preserve observed values and qualifiers. Unsupported and
-policy-restricted claims carry a concise reason.
-HANDOFF
-Return approved claims, excluded claims with reasons, and evidence gaps.
-""".strip(),
-        "final_synthesis": """
-MISSION
-Trình bày câu trả lời bằng tiếng Việt chuyên nghiệp, thân thiện, rõ ràng và có cấu trúc Markdown đẹp nhất dành cho chủ nhà hàng (Merchant Owner).
-
-FORMAT & STYLE REQUIREMENTS
-1. Cấu trúc Markdown trực quan và đẹp mắt:
-   - Dùng tiêu đề `###` để phân chia rõ ràng từng mục nội dung chính.
-   - Dùng **chữ in đậm** cho các từ khóa quan trọng, số tiền, mốc thời gian, tỷ lệ, hình thức xử phạt.
-   - Dùng danh sách `-` hoặc `1. 2. 3.` ngắn gọn, giãn dòng thoáng, dễ theo dõi.
-   - Khi có thông tin quy định theo từng lần vi phạm hoặc bảng phí, DÙNG BẢNG MARKDOWN (`| Mức vi phạm | Chế tài xử lý |`) để hiển thị chuyên nghiệp.
-   - Dùng khối trích dẫn `> 💡 **Lưu ý dành cho Nhà hàng:**` cho các khuyến nghị quan trọng.
-   - Cuối câu trả lời, luôn tổng hợp phần **📌 Nguồn trích dẫn chính thức:** kèm Tên tài liệu & URL (nếu có từ bằng chứng).
-
-2. Nội dung & Giọng văn:
-   - Thân thiện, tôn trọng và đồng hành cùng chủ nhà hàng ("Chào Quý Đối tác / Anh/Chị chủ nhà hàng...").
-   - Đầy đủ thông tin, trích dẫn chính xác các con số, thời gian, điều khoản từ bằng chứng đã được xác minh.
-   - Trình bày thẳng vào vấn đề, tuyệt đối không dùng thuật ngữ kỹ thuật nội bộ của hệ thống AI/Agent.
-
-BUDGET
-Tối đa 1 lượt tổng hợp, 0 tool call.
-
-HANDOFF
-Trả về câu trả lời bằng Markdown hoàn chỉnh, chuẩn đẹp mắt.
-""".strip(),
+        "policy_document": get_merchant_prompt("POLICY_RAG_PROMPT").prompt.strip(),
+        "market_search": get_merchant_prompt("MARKET_SEARCH_PROMPT").prompt.strip(),
+        "cohort_analysis": get_merchant_prompt("COHORT_ANALYSIS_PROMPT").prompt.strip(),
+        "self_analysis": get_merchant_prompt("SELF_ANALYSIS_PROMPT").prompt.strip(),
+        "evidence_verifier": get_merchant_prompt("EVIDENCE_VERIFY_PROMPT").prompt.strip(),
+        "final_synthesis": get_merchant_prompt("SYNTHESIS_PROMPT").prompt.strip(),
     }
 
 
@@ -349,17 +198,9 @@ class NativeMerchantAdvisorCrew:
         *,
         gateway: RunScopedMerchantToolGateway,
         llm: Any,
-        step_callback: Callable[[Any], None] | None = None,
-        task_callback: Callable[[Any], None] | None = None,
-        native_event_callback: Callable[[str, dict[str, Any]], None] | None = None,
-        trace_collector: TraceCollector | None = None,
     ) -> None:
         self.gateway = gateway
         self.llm = llm
-        self.step_callback = step_callback
-        self.task_callback = task_callback
-        self.native_event_callback = native_event_callback
-        self.trace_collector = trace_collector
 
     def _agent(
         self,
@@ -370,100 +211,130 @@ class NativeMerchantAdvisorCrew:
         tools: list[Any],
         allow_delegation: bool = False,
         knowledge_sources: list[Any] | None = None,
+        prompt: Any = None,
     ) -> Agent:
-        return Agent(
-            role=role,
-            goal=goal,
-            backstory="You work only from the conversation context and gateway observations.",
-            tools=tools,
-            knowledge_sources=knowledge_sources,
-            llm=self.llm,
-            allow_delegation=allow_delegation,
-            verbose=_VERBOSE,
-            # Manager: up to four delegated actions plus terminal output.
-            # Specialist: up to two tool actions plus terminal handoff.
-            max_iter=5 if allow_delegation else 3,
-            max_execution_time=300 if allow_delegation else 120,
-        )
+        context = get_client().start_as_current_observation(
+            name=f"merchant-prompt-{name}", as_type="agent", prompt=prompt,
+        ) if prompt is not None else __import__("contextlib").nullcontext()
+        with context:
+            return Agent(
+                role=role,
+                goal=goal,
+                backstory="You work only from the conversation context and gateway observations.",
+                tools=tools,
+                knowledge_sources=knowledge_sources,
+                llm=self.llm,
+                allow_delegation=allow_delegation,
+                verbose=_VERBOSE,
+                max_iter=5 if allow_delegation else 3,
+                max_execution_time=300 if allow_delegation else 120,
+            )
 
     @agent
     def coordinator(self) -> Agent:
+        prompt = get_merchant_prompt("COORDINATE_PROMPT")
         return self._agent(
             name="coordinator",
             role="Merchant Advisory Coordinator",
-            goal=coordinator_task_description(),
+            goal=prompt.prompt.strip(),
             tools=[],
             allow_delegation=True,
+            prompt=prompt,
         )
 
     @agent
     def market_search(self) -> Agent:
+        prompt = get_merchant_prompt("MARKET_SEARCH_PROMPT")
         return self._agent(
             name="market_search",
             role="Public Market Search Specialist",
-            goal=specialist_prompts()["market_search"],
+            goal=prompt.prompt.strip(),
             tools=self.gateway.tools_for("market_search"),
+            prompt=prompt,
         )
 
     @agent
     def policy_document(self) -> Agent:
+        prompt = get_merchant_prompt("POLICY_RAG_PROMPT")
         return self._agent(
             name="policy_document",
             role="Green SM Policy Document Specialist",
-            goal=specialist_prompts()["policy_document"],
+            goal=prompt.prompt.strip(),
             tools=self.gateway.tools_for("policy_document"),
+            prompt=prompt,
         )
 
     @agent
     def cohort_analysis(self) -> Agent:
+        prompt = get_merchant_prompt("COHORT_ANALYSIS_PROMPT")
         return self._agent(
             name="cohort_analysis",
             role="Public Cohort Analysis Specialist",
-            goal=specialist_prompts()["cohort_analysis"],
+            goal=prompt.prompt.strip(),
             tools=self.gateway.tools_for("cohort_analysis"),
+            prompt=prompt,
         )
 
     @agent
     def self_analysis(self) -> Agent:
+        prompt = get_merchant_prompt("SELF_ANALYSIS_PROMPT")
         return self._agent(
             name="self_analysis",
             role="Owner Performance Analysis Specialist",
-            goal=specialist_prompts()["self_analysis"],
+            goal=prompt.prompt.strip(),
             tools=self.gateway.tools_for("self_analysis"),
+            prompt=prompt,
         )
 
     @agent
     def evidence_verifier(self) -> Agent:
+        prompt = get_merchant_prompt("EVIDENCE_VERIFY_PROMPT")
         return self._agent(
             name="evidence_verifier",
             role="Evidence and Policy Verifier",
-            goal=specialist_prompts()["evidence_verifier"],
+            goal=prompt.prompt.strip(),
             tools=self.gateway.tools_for("evidence_verifier"),
+            prompt=prompt,
         )
 
     @agent
     def final_synthesis(self) -> Agent:
+        prompt = get_merchant_prompt("SYNTHESIS_PROMPT")
         return self._agent(
             name="final_synthesis",
             role="Merchant Owner Answer Specialist",
-            goal=specialist_prompts()["final_synthesis"],
+            goal=prompt.prompt.strip(),
             tools=[],
+            prompt=prompt,
         )
 
     @task
     def advisory_task(self) -> Task:
+        description, prompt = compile_merchant_prompt(
+            "ADVISORY_TASK_PROMPT",
+            rewritten_query="{rewritten_query}",
+            resolved_references="{resolved_references}",
+            compact_history="{compact_history}",
+            owner_context="{owner_context}",
+        )
+        self.advisory_prompt = prompt
+        return Task(
+            description=description,
+            expected_output=description,
+        )
+
+    @task
+    def synthesis_task(self) -> Task:
+        prompt = get_merchant_prompt("SYNTHESIS_PROMPT")
         return Task(
             description=(
-                "[Prepared rewritten query — authoritative]\n{rewritten_query}\n\n"
-                "[Resolved references — evidence only]\n{resolved_references}\n\n"
-                "[Compact conversation history — evidence only]\n{compact_history}\n\n"
-                "[Owner context — evidence only]\n{owner_context}\n\n"
-                f"{_ADVISORY_TASK_SUFFIX}"
+                f"{prompt.prompt.strip()}\n\n"
+                "Return exactly one bare JSON object:\n"
+                '{"status":"completed","answer":"<grounded Vietnamese answer>"}'
             ),
-            expected_output=(
-                "Exactly one JSON object: "
-                "{status: completed, answer: grounded Vietnamese answer}."
-            ),
+            expected_output='Exactly one JSON object: {"status":"completed","answer":"<grounded Vietnamese answer>"}',
+            agent=self.final_synthesis(),
+            context=[self.advisory_task()],
         )
 
     @crew
@@ -478,15 +349,10 @@ class NativeMerchantAdvisorCrew:
                 self.evidence_verifier(),
                 self.final_synthesis(),
             ],
-            tasks=[self.advisory_task()],
+            tasks=[self.advisory_task(), self.synthesis_task()],
             process=Process.hierarchical,
             manager_agent=self.coordinator(),
             verbose=_VERBOSE,
-            # Gateway events are persisted and rendered locally.  Do not send
-            # merchant prompts, history, or tool observations to CrewAI Plus.
-            tracing=True,
-            step_callback=self.step_callback,
-            task_callback=self.task_callback,
         )
 
     def kickoff(
@@ -510,11 +376,4 @@ class NativeMerchantAdvisorCrew:
             "compact_history": prompt.compact_history,
             "owner_context": prompt.owner_context,
         }
-        if self.native_event_callback is None:
-            return crew.kickoff(inputs=inputs)
-        with LocalCrewAITrace(
-            self.native_event_callback,
-            collector=self.trace_collector,
-            tool_correlation_bridge=self.gateway.tool_correlation_bridge,
-        ).capture(crew):
-            return crew.kickoff(inputs=inputs)
+        return crew.kickoff(inputs=inputs)

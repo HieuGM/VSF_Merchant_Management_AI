@@ -51,9 +51,7 @@ def test_schema_tables():
         "chat_messages",
         # §6.2 runtime records
         "preference_events",
-        "interaction_events",
-        "agent_runs",
-        "agent_events",
+        "interaction_events"
     }
     
     print(f"Existing tables in database: {existing_tables}")

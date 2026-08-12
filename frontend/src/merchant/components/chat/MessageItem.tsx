@@ -1,39 +1,6 @@
 import type { ChatMessage, AnalyzedMerchant } from '../../types/merchantChat';
-import type { TraceEvent } from '../../types/monitoring';
 import { Markdown } from '../common/Markdown';
 import { AgentThinkingAccordion } from './AgentThinkingAccordion';
-
-function merchantsFromEvents(events?: TraceEvent[]): AnalyzedMerchant[] {
-  if (!events || !Array.isArray(events)) return [];
-  const collected = new Map<string, AnalyzedMerchant>();
-  for (const event of events) {
-    const result = event.outputSummary?.result;
-    if (!result || typeof result !== 'object' || Array.isArray(result)) continue;
-    const payload = result as Record<string, unknown>;
-    const rows = Array.isArray(payload.merchants)
-      ? payload.merchants
-      : Array.isArray(payload.competitors)
-        ? payload.competitors
-        : Array.isArray(payload.cohort_members)
-          ? payload.cohort_members
-          : [];
-    for (const raw of rows) {
-      if (!raw || typeof raw !== 'object' || Array.isArray(raw)) continue;
-      const item = raw as Record<string, unknown>;
-      if (!item.merchant_id || !item.name) continue;
-      collected.set(String(item.merchant_id), {
-        merchant_id: String(item.merchant_id),
-        name: String(item.name),
-        cuisine: typeof item.cuisine === 'string' ? item.cuisine : undefined,
-        address: typeof item.address === 'string' ? item.address : undefined,
-        rating: typeof item.rating === 'number' ? item.rating : undefined,
-        distance_km: typeof item.distance_km === 'number' ? item.distance_km : undefined,
-        sourceToolName: event.toolName ?? undefined,
-      });
-    }
-  }
-  return [...collected.values()];
-}
 
 export function MessageItem({
   message,
@@ -41,7 +8,7 @@ export function MessageItem({
   onOpenMerchantDetail,
 }: {
   message: ChatMessage;
-  onOpenDetails: (message: ChatMessage) => void;
+  onOpenDetails: (message: ChatMessage, tab?: 'results' | 'map' | 'trace') => void;
   onOpenMerchantDetail?: (merchant: AnalyzedMerchant) => void;
 }) {
   if (message.sender === 'user') {
@@ -64,10 +31,7 @@ export function MessageItem({
     );
   }
 
-  const merchantsToDisplay = (message.analyzedMerchants && message.analyzedMerchants.length > 0)
-    ? message.analyzedMerchants
-    : merchantsFromEvents(message.traceEvents);
-
+  const merchantsToDisplay = message.analyzedMerchants ?? [];
   const resultCount = merchantsToDisplay.length;
 
   return (
@@ -79,10 +43,9 @@ export function MessageItem({
       <div className="assistant-body">
         {/* Step-by-step thinking trace accordion */}
         <AgentThinkingAccordion
-          events={message.traceEvents}
+          trace={message.trace}
+          status={message.traceStatus}
           isStreaming={message.isStreaming}
-          durationMs={message.durationMs}
-          tokenUsage={message.tokenUsage}
         />
 
         {/* AI Markdown response content */}
@@ -129,7 +92,7 @@ export function MessageItem({
                           if (onOpenMerchantDetail) {
                             onOpenMerchantDetail(item);
                           } else {
-                            onOpenDetails(message);
+                            onOpenDetails(message, 'map');
                           }
                         }}
                         aria-label="Xem chi tiết"
@@ -154,12 +117,11 @@ export function MessageItem({
               <button
                 type="button"
                 className="btn-show-map"
-                onClick={() => onOpenDetails(message)}
-                aria-label="Mở chi tiết run"
+                onClick={() => onOpenDetails(message, 'map')}
+                aria-label="Mở chi tiết bản đồ"
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
                 <span>Xem trên bản đồ</span>
-                <span style={{ display: 'none' }}>{`${resultCount} kết quả từ backend`}</span>
               </button>
             )}
             {resultCount > 0 && <span className="recommended-count">{resultCount} quán được đề xuất</span>}

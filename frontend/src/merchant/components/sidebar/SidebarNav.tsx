@@ -13,22 +13,26 @@ export function SidebarNav({
   sessions,
   activeSessionId,
   mobileOpen,
+  activePage = 'chatbot',
   onMerchantChange,
   onSelectSession,
   onDeleteSession,
   onNewChat,
   onClose,
+  onNavigate,
 }: {
   merchants: MerchantOption[];
   selectedMerchantId: string;
   sessions: ChatSessionItem[];
   activeSessionId: string;
   mobileOpen: boolean;
+  activePage?: 'chatbot' | 'reviews' | 'info' | 'policies';
   onMerchantChange: (id: string) => void;
   onSelectSession: (id: string) => void;
   onDeleteSession: (id: string) => void;
   onNewChat: () => void;
   onClose: () => void;
+  onNavigate?: (page: 'chatbot' | 'reviews' | 'info' | 'policies') => void;
 }) {
   const selectedMerchant = merchants.find((m) => m.id === selectedMerchantId) || merchants[0];
 
@@ -46,7 +50,7 @@ export function SidebarNav({
 
         {/* Prominent New Chat Button */}
         <div className="new-chat-btn-wrap">
-          <button type="button" className="btn-primary-new-chat" onClick={onNewChat} aria-label="Cuộc trò chuyện mới">
+          <button type="button" className="btn-primary-new-chat" onClick={() => { onNavigate?.('chatbot'); onNewChat(); }} aria-label="Cuộc trò chuyện mới">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             <span>Cuộc trò chuyện mới</span>
           </button>
@@ -54,37 +58,45 @@ export function SidebarNav({
 
         {/* Main Navigation Menu */}
         <nav className="nav-menu">
-          <button type="button" className="nav-item">
-            <svg className="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
-            <span>Overview</span>
-          </button>
-
-          <button type="button" className="nav-item">
-            <svg className="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
-            <span>Review Analysis</span>
-          </button>
-
-          <button type="button" className="nav-item">
-            <svg className="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-            <span>Competitors</span>
-          </button>
-
-          <button type="button" className="nav-item">
-            <svg className="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="12" cy="5" r="2"/><path d="M12 7v4"/><circle cx="8" cy="16" r="1" fill="currentColor"/><circle cx="16" cy="16" r="1" fill="currentColor"/></svg>
-            <span>AI Advisor</span>
-          </button>
-
-          <button type="button" className="nav-item">
-            <svg className="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>
-            <span>Discovery</span>
-          </button>
-
-          {/* Active Chatbot Item */}
-          <button type="button" className="nav-item is-active" onClick={onNewChat}>
+          <button
+            type="button"
+            className={`nav-item ${activePage === 'chatbot' ? 'is-active' : ''}`}
+            onClick={() => { onNavigate?.('chatbot'); onClose(); }}
+          >
             <svg className="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
             <span>AI Chatbot</span>
             <span className="nav-badge">Beta</span>
-            <div className="active-indicator" />
+            {activePage === 'chatbot' && <div className="active-indicator" />}
+          </button>
+
+          <button
+            type="button"
+            className={`nav-item ${activePage === 'reviews' ? 'is-active' : ''}`}
+            onClick={() => { onNavigate?.('reviews'); onClose(); }}
+          >
+            <svg className="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
+            <span>Review Analysis</span>
+            {activePage === 'reviews' && <div className="active-indicator" />}
+          </button>
+
+          <button
+            type="button"
+            className={`nav-item ${activePage === 'info' ? 'is-active' : ''}`}
+            onClick={() => { onNavigate?.('info'); onClose(); }}
+          >
+            <svg className="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
+            <span>Thông tin & Menu</span>
+            {activePage === 'info' && <div className="active-indicator" />}
+          </button>
+
+          <button
+            type="button"
+            className={`nav-item ${activePage === 'policies' ? 'is-active' : ''}`}
+            onClick={() => { onNavigate?.('policies'); onClose(); }}
+          >
+            <svg className="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+            <span>Tài liệu Chính sách</span>
+            {activePage === 'policies' && <div className="active-indicator" />}
           </button>
         </nav>
 

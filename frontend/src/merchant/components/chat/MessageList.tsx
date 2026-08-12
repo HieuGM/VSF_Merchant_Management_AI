@@ -2,6 +2,40 @@ import type { RefObject } from 'react';
 import type { ChatMessage, AnalyzedMerchant } from '../../types/merchantChat';
 import { MessageItem } from './MessageItem';
 
+interface SuggestionItem {
+  icon: string;
+  category: string;
+  title: string;
+  prompt: string;
+}
+
+const SUGGESTIONS: SuggestionItem[] = [
+  {
+    icon: '📍',
+    category: 'Cạnh tranh & Địa điểm',
+    title: 'Tìm đối thủ khu vực xung quanh',
+    prompt: 'Những quán poke bowl ngon gần tôi ở Quận 1?',
+  },
+  {
+    icon: '📊',
+    category: 'Phân tích Hiệu suất',
+    title: 'Đánh giá chất lượng nhà hàng',
+    prompt: 'Đánh giá hiệu suất và chất lượng quán của tôi',
+  },
+  {
+    icon: '🔍',
+    category: 'Bán kính Cạnh tranh',
+    title: 'Quét đối thủ bán kính 5 km',
+    prompt: 'Tìm các đối thủ cạnh tranh trong bán kính 5 km',
+  },
+  {
+    icon: '💬',
+    category: 'Lắng nghe Khách hàng',
+    title: 'Tổng hợp đánh giá Review',
+    prompt: 'Khách hàng đang nói gì về nhà hàng trong review?',
+  },
+];
+
 export function MessageList({
   messages,
   endRef,
@@ -11,33 +45,39 @@ export function MessageList({
 }: {
   messages: ChatMessage[];
   endRef: RefObject<HTMLDivElement>;
-  onOpenDetails: (message: ChatMessage) => void;
+  onOpenDetails: (message: ChatMessage, tab?: 'results' | 'map' | 'trace') => void;
   onPrompt?: (prompt: string) => void;
   onOpenMerchantDetail?: (merchant: AnalyzedMerchant) => void;
 }) {
   if (messages.length === 0) {
     return (
       <div className="conversation-scroll chat-scrollbar">
-        <div className="empty-conversation">
-          <div className="empty-conversation__mark">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polygon points="12 8 16 12 12 16 8 12 12 8"/></svg>
+        <div className="hero-empty-state">
+          <div className="hero-badge">
+            <span className="hero-sparkle">✨</span>
+            <span>MERCHANT AI ASSISTANT</span>
           </div>
-          <p>MERCHANT AI ASSISTANT</p>
-          <h2>Hôm nay bạn muốn phân tích điều gì?</h2>
-          <span>Đặt câu hỏi để phân tích đối thủ, tìm kiếm địa điểm, xem review và nhận gợi ý chiến lược.</span>
-          <div className="empty-prompts">
-            {[
-              'Những quán poke bowl ngon gần tôi ở Quận 1?',
-              'Đánh giá chất lượng quán của tôi',
-              'Tìm đối thủ trong bán kính 5 km',
-              'Khách đang nói gì trong review?',
-            ].map((prompt) => (
+
+          <h2 className="hero-headline">Hôm nay bạn muốn phân tích điều gì?</h2>
+          <p className="hero-description">
+            Đặt câu hỏi để phân tích đối thủ cạnh tranh, tìm kiếm vị trí địa lý, xem tổng hợp review và nhận gợi ý chiến lược tăng trưởng.
+          </p>
+
+          <div className="suggestions-grid">
+            {SUGGESTIONS.map((item) => (
               <button
                 type="button"
-                key={prompt}
-                onClick={() => onPrompt?.(prompt)}
+                key={item.title}
+                className="suggestion-prompt-card"
+                onClick={() => onPrompt?.(item.prompt)}
               >
-                {prompt}
+                <div className="card-top-row">
+                  <span className="suggestion-icon">{item.icon}</span>
+                  <span className="suggestion-category">{item.category}</span>
+                  <span className="arrow-icon">→</span>
+                </div>
+                <strong className="suggestion-title">{item.title}</strong>
+                <p className="suggestion-prompt-text">"{item.prompt}"</p>
               </button>
             ))}
           </div>
@@ -62,5 +102,3 @@ export function MessageList({
     </div>
   );
 }
-
-

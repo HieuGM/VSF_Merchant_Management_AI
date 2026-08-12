@@ -1,9 +1,11 @@
 export function ChatHeader({
   merchantName,
   onOpenMenu,
+  onOpenMobileMap,
 }: {
   merchantName: string;
   onOpenMenu: () => void;
+  onOpenMobileMap?: () => void;
 }) {
   return (
     <header className="chat-header">
@@ -16,6 +18,16 @@ export function ChatHeader({
 
       {/* Right User Controls */}
       <div className="header-actions">
+        {onOpenMobileMap && (
+          <button
+            type="button"
+            className="mobile-map-toggle-header-btn"
+            onClick={onOpenMobileMap}
+            aria-label="Mở bản đồ"
+          >
+            Map
+          </button>
+        )}
         <div className="user-profile-avatar" title={merchantName}>
           <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
             <circle cx="18" cy="18" r="18" fill="#E0F2FE" />
@@ -27,4 +39,3 @@ export function ChatHeader({
     </header>
   );
 }
-

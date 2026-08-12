@@ -39,11 +39,18 @@ class Settings(BaseSettings):
     # --- Policy RAG ---
     rag_embedding_api_key: str | None = None
     rag_embedding_base_url: str | None = None
-    rag_embedding_model: str | None = None
-    rag_embedding_dimensions: int | None = None
+    rag_embedding_model: str = "BAAI/bge-small-en-v1.5"
+    rag_embedding_dimensions: int = 384
     rag_chroma_path: str = ".runtime/policy-rag"
     rag_collection: str = "green-sm-policy"
     rag_score_threshold: float = 0.6
+
+    # Langfuse 
+    langfuse_secret_key: str = ""
+    langfuse_public_key: str = ""
+    langfuse_base_url: str = ""
+    langfuse_prompt_label: str = "production"
+    langfuse_prompt_cache_ttl_seconds: int = 60
 
     # --- Cache ---
     cache_backend: str = "redis"  # "memory" | "redis"
@@ -73,10 +80,25 @@ class Settings(BaseSettings):
 
     @property
     def policy_rag_configured(self) -> bool:
-        return bool(self.rag_embedding_api_key and self.rag_embedding_model)
+        return True
+
+
+def sync_langfuse_env(settings: Settings) -> None:
+    """Export Langfuse settings to os.environ for OpenTelemetry & Langfuse SDK."""
+    import os
+
+    if settings.langfuse_secret_key:
+        os.environ["LANGFUSE_SECRET_KEY"] = settings.langfuse_secret_key
+    if settings.langfuse_public_key:
+        os.environ["LANGFUSE_PUBLIC_KEY"] = settings.langfuse_public_key
+    if settings.langfuse_base_url:
+        os.environ["LANGFUSE_BASE_URL"] = settings.langfuse_base_url
+    os.environ["LANGFUSE_TRACING_ENVIRONMENT"] = settings.environment
 
 
 @lru_cache
 def get_settings() -> Settings:
     """Cached accessor so config is parsed once per process."""
-    return Settings()
+    s = Settings()
+    sync_langfuse_env(s)
+    return s

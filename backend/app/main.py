@@ -8,16 +8,17 @@ from __future__ import annotations
 
 import os
 os.environ["CREWAI_TELEMETRY_OPT_OUT"] = "true"
-os.environ["OTEL_SDK_DISABLED"] = "true"
-os.environ["OTEL_TRACES_EXPORTER"] = "none"
 
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
+from langfuse import get_client
+from openinference.instrumentation.crewai import CrewAIInstrumentor
 
 from app import extensions
 from core.logging import configure_logging, get_logger
-from core.settings import get_settings
+from core.settings import get_settings, sync_langfuse_env
+
 
 # --- Base routers (frozen include list; owners edit only their own router file) ---
 from routes import (
@@ -47,19 +48,38 @@ _BASE_ROUTERS = [
 ]
 
 
+def initialize_langfuse():
+    sync_langfuse_env(get_settings())
+    client = get_client()
+    if not client.auth_check():
+        raise RuntimeError("Langfuse authentication failed")
+    CrewAIInstrumentor().instrument(skip_dep_check=True)
+    return client
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    for hook in extensions.STARTUP_HOOKS:
-        result = hook(app)
-        if hasattr(result, "__await__"):
-            await result
-    logger.info("app_startup_complete")
-    yield
-    for hook in extensions.SHUTDOWN_HOOKS:
-        result = hook(app)
-        if hasattr(result, "__await__"):
-            await result
-    logger.info("app_shutdown_complete")
+    langfuse = initialize_langfuse()
+    try:
+        for hook in extensions.STARTUP_HOOKS:
+            result = hook(app)
+            if hasattr(result, "__await__"):
+                await result
+        logger.info("app_startup_complete")
+        yield
+    finally:
+        for hook in extensions.SHUTDOWN_HOOKS:
+            try:
+                result = hook(app)
+                if hasattr(result, "__await__"):
+                    await result
+            except Exception:
+                logger.exception("app_shutdown_hook_failed")
+        try:
+            langfuse.shutdown()
+        except Exception:
+            logger.exception("langfuse_shutdown_failed")
+        logger.info("app_shutdown_complete")
 
 
 def create_app() -> FastAPI:

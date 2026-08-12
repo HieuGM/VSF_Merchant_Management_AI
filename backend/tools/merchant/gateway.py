@@ -6,7 +6,6 @@ import re
 import time
 from collections.abc import Callable, Iterator
 from contextlib import contextmanager
-from contextvars import ContextVar
 from typing import Any, Literal, Type
 
 from crewai.tools import BaseTool
@@ -21,13 +20,6 @@ from models.merchant_agentic import (
 )
 from models.policy_rag import PolicySearchInput
 from services.policy_rag_service import PolicyRagService
-from services.request_telemetry import SqlQueryMonitor
-from services.merchant_trace_collector import (
-    GatewayToolInvocation,
-    ToolCorrelationBridge,
-    TraceCollector,
-    sanitize_developer_trace,
-)
 from services.merchant_data_policy import MerchantDataPolicy, PUBLIC_DIMENSIONS
 from tools.merchant.profile_tool import (
     GetMerchantProfileSummaryInput,
@@ -335,21 +327,12 @@ class RunScopedMerchantToolGateway:
         cache: CachePort | None,
         emit: Any,
         db_factory: Callable[[], Session] | None = None,
-        sql_event_callback: Callable[[dict[str, Any]], None] | None = None,
-        trace_collector: TraceCollector | None = None,
-        tool_correlation_bridge: ToolCorrelationBridge | None = None,
     ) -> None:
         self.context = context
         self._db = db
         self._db_factory = db_factory
         self._cache = cache
         self._emit_callback = emit
-        self._sql_event_callback = sql_event_callback
-        self._trace_collector = trace_collector
-        self.tool_correlation_bridge = tool_correlation_bridge or ToolCorrelationBridge()
-        self._active_tool_invocation: ContextVar[GatewayToolInvocation | None] = ContextVar(
-            f"merchant_tool_invocation_{id(self)}", default=None
-        )
         self._policy = MerchantDataPolicy(context.owner_merchant_id)
         self._cohort_refs: dict[str, list[str]] = {}
         self._cohort_members: dict[str, list[dict[str, Any]]] = {}
@@ -376,38 +359,19 @@ class RunScopedMerchantToolGateway:
             return
         tool_db = self._db_factory()
         try:
-            if self._sql_event_callback is None:
-                yield tool_db
-            else:
-                with SqlQueryMonitor(self._sql_event_callback).capture(tool_db):
-                    yield tool_db
+            yield tool_db
         finally:
             tool_db.close()
 
     def _emit(self, event: str, **payload: Any) -> None:
-        self._emit_callback(
-            sanitize_developer_trace(
-                {
-                    "event": event,
-                    "trace_id": self.context.trace_id,
-                    **payload,
-                }
-            )
-        )
+        self._emit_callback({"event": event, "trace_id": self.context.trace_id, **payload})
 
     @contextmanager
     def trace_tool_invocation(
         self, agent_name: str, tool_name: str, raw_args: dict[str, Any]
     ) -> Iterator[None]:
         """Bind a run-local SDK correlation record to this concrete invocation."""
-        invocation = self.tool_correlation_bridge.begin_gateway_call(
-            agent_name, tool_name, raw_args
-        )
-        token = self._active_tool_invocation.set(invocation)
-        try:
-            yield
-        finally:
-            self._active_tool_invocation.reset(token)
+        yield
 
     def tools_for(self, agent_name: str) -> list[BaseTool]:
         market_tools: list[BaseTool] = [
@@ -457,23 +421,11 @@ class RunScopedMerchantToolGateway:
                 reason="not_grounded_in_owner_request",
             )
         started = time.perf_counter()
-        tool_span_id: str | None = None
-        invocation = self._active_tool_invocation.get()
-        if self._trace_collector:
-            tool_span_id = self._trace_collector.observe_gateway_tool_started(
-                "market_search",
-                "search_merchants",
-                args,
-                correlation_id=invocation.correlation_id if invocation else None,
-            )
-        if invocation:
-            self.tool_correlation_bridge.register_gateway_span(invocation, tool_span_id)
         self._emit(
             "tool_started",
             tool_name="search_merchants",
             agent_name="market_search",
             args=args,
-            correlation_id=invocation.correlation_id if invocation else None,
         )
         try:
             with self._tool_session() as tool_db:
@@ -502,14 +454,6 @@ class RunScopedMerchantToolGateway:
                 self._cohort_members[cohort_ref] = result["merchants"]
                 result["cohort_ref"] = cohort_ref
         except Exception as error:
-            if self._trace_collector:
-                self._trace_collector.observe_gateway_tool_failed(
-                    "market_search",
-                    "search_merchants",
-                    error=error,
-                    latency_ms=round((time.perf_counter() - started) * 1000, 3),
-                    span_id=tool_span_id,
-                )
             self._emit(
                 "error",
                 tool_name="search_merchants",
@@ -526,17 +470,7 @@ class RunScopedMerchantToolGateway:
             count=result.get("count", 0),
             result=result,
             duration_ms=round((time.perf_counter() - started) * 1000, 3),
-            correlation_id=invocation.correlation_id if invocation else None,
         )
-        if self._trace_collector:
-            self._trace_collector.observe_gateway_tool_finished(
-                "market_search",
-                "search_merchants",
-                result=result,
-                status=result.get("status", "ok"),
-                latency_ms=round((time.perf_counter() - started) * 1000, 3),
-                span_id=tool_span_id,
-            )
         return json.dumps(result, ensure_ascii=False)
 
     def run_public_detail(self, **raw_args: Any) -> str:
@@ -867,35 +801,15 @@ class RunScopedMerchantToolGateway:
         execute: Any,
     ) -> str:
         started = time.perf_counter()
-        tool_span_id: str | None = None
-        invocation = self._active_tool_invocation.get()
-        if self._trace_collector:
-            tool_span_id = self._trace_collector.observe_gateway_tool_started(
-                agent_name,
-                tool_name,
-                args,
-                correlation_id=invocation.correlation_id if invocation else None,
-            )
-        if invocation:
-            self.tool_correlation_bridge.register_gateway_span(invocation, tool_span_id)
         self._emit(
             "tool_started",
             tool_name=tool_name,
             agent_name=agent_name,
             args=args,
-            correlation_id=invocation.correlation_id if invocation else None,
         )
         try:
             result = execute()
         except Exception as error:
-            if self._trace_collector:
-                self._trace_collector.observe_gateway_tool_failed(
-                    agent_name,
-                    tool_name,
-                    error=error,
-                    latency_ms=round((time.perf_counter() - started) * 1000, 3),
-                    span_id=tool_span_id,
-                )
             self._emit(
                 "error",
                 tool_name=tool_name,
@@ -911,15 +825,5 @@ class RunScopedMerchantToolGateway:
             status=result.get("status", "ok"),
             result=result,
             duration_ms=round((time.perf_counter() - started) * 1000, 3),
-            correlation_id=invocation.correlation_id if invocation else None,
         )
-        if self._trace_collector:
-            self._trace_collector.observe_gateway_tool_finished(
-                agent_name,
-                tool_name,
-                result=result,
-                status=result.get("status", "ok"),
-                latency_ms=round((time.perf_counter() - started) * 1000, 3),
-                span_id=tool_span_id,
-            )
         return json.dumps(result, ensure_ascii=False)

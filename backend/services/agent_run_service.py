@@ -1,221 +1,176 @@
-"""Agent Run Service (J-01, J-02, J-03) — Management layer for trace execution persistence.
-
-Manages agent_runs and agent_events records in PostgreSQL.
-"""
+"""Safe Langfuse observation projection for the application UI."""
 from __future__ import annotations
 
-import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any
+
+from langfuse import get_client
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from database.models import AgentRun, AgentEvent, ChatMessage, ChatSession
-from core.errors import NotFoundError
-from services.request_telemetry import RequestTelemetry
+from database.models import ChatMessage
+
+OBSERVATION_FIELDS = "core,basic,time,model,usage,prompt,metrics"
+
+
+class TracePending(Exception):
+    pass
+
+
+class TraceNotFound(Exception):
+    pass
+
+
+class TraceUpstreamError(Exception):
+    pass
+
+
+def _dump(value: Any) -> dict[str, Any]:
+    if hasattr(value, "model_dump"):
+        return value.model_dump(mode="json", by_alias=True)
+    return dict(value)
+
+
+def _value(data: dict[str, Any], camel: str, snake: str | None = None) -> Any:
+    return data.get(camel, data.get(snake or camel))
+
+
+def _milliseconds(value: Any) -> float | None:
+    return round(float(value) * 1000, 3) if isinstance(value, (int, float)) else None
 
 
 class AgentRunService:
-    """Service layer for recording and retrieving Agent run traces and events."""
-
     def __init__(self, db: Session) -> None:
         self._db = db
 
-    def start_run(
-        self,
-        trace_id: str | None = None,
-        crew_name: str = "merchant_advisor_crew",
-        session_id: str | None = None,
-        user_id: str | None = None,
-        intent: str | None = None,
-    ) -> AgentRun:
-        """Start a new agent run trace."""
-        tid = trace_id or f"tr-{uuid.uuid4().hex[:12]}"
-        run = AgentRun(
-            trace_id=tid,
-            session_id=session_id,
-            user_id=user_id,
-            crew_name=crew_name,
-            intent=intent,
-            status="running",
-            started_at=datetime.utcnow(),
-        )
-        self._db.add(run)
-        self._db.commit()
-        self._db.refresh(run)
-        return run
-
-    def record_event(
-        self,
-        trace_id: str,
-        event_type: str,
-        agent_name: str | None = None,
-        task_name: str | None = None,
-        tool_name: str | None = None,
-        input_hash: str | None = None,
-        output_summary_json: dict[str, Any] | None = None,
-        duration_ms: int | None = None,
-        status: str = "ok",
-        error_code: str | None = None,
-        parent_event_id: str | None = None,
-        seq: int | None = None,
-        span_id: str | None = None,
-        parent_span_id: str | None = None,
-        phase: str | None = None,
-        kind: str | None = None,
-        actor_type: str | None = None,
-        actor_name: str | None = None,
-        metrics_json: dict[str, Any] | None = None,
-        debug_payload_json: dict[str, Any] | None = None,
-    ) -> AgentEvent:
-        """Record a sub-event (tool execution, task step, delegation) for a trace."""
-        event_id = f"evt-{uuid.uuid4().hex[:12]}"
-        event = AgentEvent(
-            event_id=event_id,
-            trace_id=trace_id,
-            parent_event_id=parent_event_id,
-            event_type=event_type,
-            agent_name=agent_name,
-            task_name=task_name,
-            tool_name=tool_name,
-            input_hash=input_hash,
-            output_summary_json=output_summary_json,
-            duration_ms=duration_ms,
-            status=status,
-            error_code=error_code,
-            seq=seq,
-            span_id=span_id,
-            parent_span_id=parent_span_id,
-            phase=phase,
-            kind=kind,
-            actor_type=actor_type,
-            actor_name=actor_name,
-            metrics_json=metrics_json,
-            debug_payload_json=debug_payload_json,
-            created_at=datetime.utcnow(),
-        )
-        self._db.add(event)
-        self._db.commit()
-        self._db.refresh(event)
-        return event
-
-    def finish_run(
-        self,
-        trace_id: str,
-        status: str = "completed",
-        error_code: str | None = None,
-        token_usage_json: dict[str, Any] | None = None,
-    ) -> AgentRun:
-        """Mark an agent run as finished."""
-        run = self._db.get(AgentRun, trace_id)
-        if not run:
-            raise NotFoundError(
-                f"Không tìm thấy trace '{trace_id}'.",
-                details={"trace_id": trace_id},
-            )
-        run.status = status
-        run.finished_at = datetime.utcnow()
-        if error_code:
-            run.error_code = error_code
-        if token_usage_json:
-            run.token_usage_json = token_usage_json
-
-        self._db.commit()
-        self._db.refresh(run)
-        return run
-
     def get_run_trace(self, trace_id: str) -> dict[str, Any]:
-        """Retrieve full trace details and ordered event list for J-03 API."""
-        run = self._db.get(AgentRun, trace_id)
-        if not run:
-            raise NotFoundError(
-                f"Không tìm thấy trace '{trace_id}'.",
-                details={"trace_id": trace_id},
+        message = self._db.execute(
+            select(ChatMessage)
+            .where(ChatMessage.trace_id == trace_id)
+            .order_by(ChatMessage.timestamp.desc())
+            .limit(1)
+        ).scalar_one_or_none()
+        if message is None:
+            raise TraceNotFound
+
+        try:
+            observations = self._fetch_observations(trace_id)
+        except (TraceUpstreamError, TracePending, TraceNotFound):
+            raise
+        except Exception as error:
+            raise TraceUpstreamError from error
+        if not observations:
+            timestamp = message.timestamp
+            if timestamp is not None:
+                if timestamp.tzinfo is None:
+                    timestamp = timestamp.replace(tzinfo=timezone.utc)
+                if (datetime.now(timezone.utc) - timestamp).total_seconds() <= 60:
+                    raise TracePending
+            raise TraceNotFound
+        projected = self._project(trace_id, observations)
+        if projected["status"] == "running" or not any(
+            item["parent_id"] is None for item in projected["observations"]
+        ):
+            raise TracePending
+        return projected
+
+    @staticmethod
+    def _fetch_observations(trace_id: str) -> list[dict[str, Any]]:
+        client = get_client()
+        cursor: str | None = None
+        rows: dict[str, dict[str, Any]] = {}
+        for _page in range(5):
+            response = client.api.observations.get_many(
+                trace_id=trace_id,
+                fields=OBSERVATION_FIELDS,
+                limit=1000,
+                cursor=cursor,
             )
+            for item in response.data:
+                row = _dump(item)
+                identifier = str(_value(row, "id"))
+                rows[identifier] = row
+            meta = _dump(response.meta) if hasattr(response.meta, "model_dump") else vars(response.meta)
+            cursor = meta.get("cursor")
+            if not cursor:
+                return list(rows.values())
+        raise TraceUpstreamError
 
-        stmt = (
-            select(AgentEvent)
-            .where(AgentEvent.trace_id == trace_id)
-            .order_by(AgentEvent.created_at.asc())
-        )
-        events = list(self._db.execute(stmt).scalars().all())
-
-        event_records = [
-            {
-                "event_id": e.event_id,
-                "event_type": e.event_type,
-                "agent_name": e.agent_name,
-                "task_name": e.task_name,
-                "tool_name": e.tool_name,
-                "input_hash": e.input_hash,
-                "output_summary": e.output_summary_json,
-                "duration_ms": e.duration_ms,
-                "status": e.status,
-                "error_code": e.error_code,
-                "created_at": str(e.created_at) if e.created_at else None,
-                "trace_id": e.trace_id,
-                "seq": e.seq,
-                "span_id": e.span_id,
-                "parent_span_id": e.parent_span_id,
-                "phase": e.phase,
-                "kind": e.kind,
-                "actor_type": e.actor_type,
-                "actor_name": e.actor_name,
-                "display": e.output_summary_json if e.event_type == "trace_span" else None,
-                "metrics": e.metrics_json,
-                "debug": e.debug_payload_json,
-            }
-            for e in events
-        ]
-        session = self._db.get(ChatSession, run.session_id) if run.session_id else None
-        messages = list(
-            self._db.execute(
-                select(ChatMessage)
-                .where(ChatMessage.trace_id == trace_id)
-                .order_by(ChatMessage.timestamp.asc())
-            ).scalars().all()
-        )
-        user_query = next(
-            (message.text for message in messages if message.sender == "user"),
-            None,
-        )
-        final_answer = next(
-            (message.text for message in reversed(messages) if message.sender == "agent"),
-            None,
-        )
-        rewritten_query = next(
-            (
-                event["output_summary"].get("rewritten_query")
-                for event in event_records
-                if isinstance(event["output_summary"], dict)
-                and event["output_summary"].get("rewritten_query")
-            ),
-            user_query,
-        )
-        envelope = RequestTelemetry.build_envelope(
-            trace_id=run.trace_id,
-            status=run.status,
-            run_token_usage=run.token_usage_json,
-            events=event_records,
-            session_state=session.context_snapshot_json if session else {},
-        )
-        return {
-            "trace_id": run.trace_id,
-            "session_id": run.session_id,
-            "user_id": run.user_id,
-            "crew_name": run.crew_name,
-            "intent": run.intent,
-            "status": run.status,
-            "started_at": str(run.started_at) if run.started_at else None,
-            "finished_at": str(run.finished_at) if run.finished_at else None,
-            "error_code": run.error_code,
-            "token_usage": run.token_usage_json,
-            "chat": RequestTelemetry.sanitize(
+    @staticmethod
+    def _project(trace_id: str, rows: list[dict[str, Any]]) -> dict[str, Any]:
+        projected: list[dict[str, Any]] = []
+        input_tokens: int | None = None
+        output_tokens: int | None = None
+        total_tokens: int | None = None
+        total_cost: float | None = None
+        starts: list[str] = []
+        ends: list[str] = []
+        failed = running = False
+        for row in rows:
+            usage = _value(row, "usageDetails", "usage_details") or {}
+            costs = _value(row, "costDetails", "cost_details") or {}
+            observation_type = str(_value(row, "type") or "SPAN").upper()
+            level = str(_value(row, "level") or "DEFAULT").upper()
+            start = _value(row, "startTime", "start_time")
+            end = _value(row, "endTime", "end_time")
+            if start:
+                starts.append(str(start))
+            if end:
+                ends.append(str(end))
+            else:
+                running = True
+            failed = failed or level == "ERROR"
+            if observation_type in {"GENERATION", "EMBEDDING"}:
+                if isinstance(usage.get("input"), (int, float)):
+                    input_tokens = (input_tokens or 0) + int(usage["input"])
+                if isinstance(usage.get("output"), (int, float)):
+                    output_tokens = (output_tokens or 0) + int(usage["output"])
+                if isinstance(usage.get("total"), (int, float)):
+                    total_tokens = (total_tokens or 0) + int(usage["total"])
+                if isinstance(costs.get("total"), (int, float)):
+                    total_cost = (total_cost or 0) + float(costs["total"])
+            projected.append(
                 {
-                    "user_query": user_query,
-                    "rewritten_query": rewritten_query,
-                    "final_answer": final_answer,
+                    "id": str(_value(row, "id")),
+                    "parent_id": None if _value(row, "isRootObservation", "is_root_observation")
+                    else _value(row, "parentObservationId", "parent_observation_id"),
+                    "name": str(_value(row, "name") or "observation"),
+                    "type": observation_type,
+                    "status": "failed" if level == "ERROR" else ("running" if not end else "completed"),
+                    "model": _value(row, "providedModelName", "provided_model_name"),
+                    "prompt_name": _value(row, "promptName", "prompt_name"),
+                    "prompt_version": _value(row, "promptVersion", "prompt_version"),
+                    "started_at": start,
+                    "finished_at": end,
+                    "latency_ms": _milliseconds(_value(row, "latency")),
+                    "time_to_first_token_ms": _milliseconds(
+                        _value(row, "timeToFirstToken", "time_to_first_token")
+                    ),
+                    "input_tokens": int(usage["input"]) if isinstance(usage.get("input"), (int, float)) else None,
+                    "output_tokens": int(usage["output"]) if isinstance(usage.get("output"), (int, float)) else None,
+                    "total_tokens": int(usage["total"]) if isinstance(usage.get("total"), (int, float)) else None,
+                    "cost_usd": costs.get("total") if isinstance(costs.get("total"), (int, float)) else None,
                 }
-            ),
-            **envelope,
+            )
+        latency_ms = None
+        if starts and ends:
+            latency_ms = round(
+                (datetime.fromisoformat(max(ends).replace("Z", "+00:00"))
+                 - datetime.fromisoformat(min(starts).replace("Z", "+00:00"))).total_seconds()
+                * 1000,
+                3,
+            )
+        return {
+            "trace_id": trace_id,
+            "status": "failed" if failed else ("running" if running else "completed"),
+            "started_at": min(starts) if starts else None,
+            "finished_at": max(ends) if ends else None,
+            "totals": {
+                "latency_ms": latency_ms,
+                "input_tokens": input_tokens,
+                "output_tokens": output_tokens,
+                "total_tokens": total_tokens,
+                "total_cost_usd": total_cost,
+            },
+            "observations": sorted(projected, key=lambda item: item["started_at"] or ""),
         }

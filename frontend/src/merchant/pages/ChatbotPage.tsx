@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   fetchDemoTargetMerchants,
   fetchMerchantProfile,
@@ -7,12 +7,16 @@ import { ChatHeader } from '../components/chat/ChatHeader';
 import { ChatInput } from '../components/chat/ChatInput';
 import { MessageList } from '../components/chat/MessageList';
 import { DetailSlideOver } from '../components/drawer/DetailSlideOver';
-import { FloatingRunState } from '../components/monitoring/FloatingRunState';
 import { SidebarNav } from '../components/sidebar/SidebarNav';
 import { MerchantDetailModal } from '../components/modal/MerchantDetailModal';
+import { RightSideMapPanel } from '../components/map/RightSideMapPanel';
 import { useMerchantChat } from '../hooks/useMerchantChat';
 import type { MerchantOption } from '../components/sidebar/SidebarNav';
 import type { ChatMessage, AnalyzedMerchant } from '../types/merchantChat';
+
+import { ReviewAnalysisPage } from './ReviewAnalysisPage';
+import { MerchantInfoMenuPage } from './MerchantInfoMenuPage';
+import { PolicyDocumentsPage } from './PolicyDocumentsPage';
 
 export const ChatbotPage = () => {
   const [bootstrap, setBootstrap] = useState<{
@@ -75,7 +79,10 @@ function ChatbotWorkspace({
   const [merchantId, setMerchantId] = useState(initialMerchantId);
   const [merchantName, setMerchantName] = useState(`Merchant #${initialMerchantId}`);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const [mobileMapOpen, setMobileMapOpen] = useState(false);
+  const [activePage, setActivePage] = useState<'chatbot' | 'reviews' | 'info' | 'policies'>('chatbot');
   const [inspectedMessage, setInspectedMessage] = useState<ChatMessage | null>(null);
+  const [inspectedTab, setInspectedTab] = useState<'results' | 'map' | 'trace'>('results');
   const [selectedDetailMerchant, setSelectedDetailMerchant] = useState<AnalyzedMerchant | null>(null);
   const endRef = useRef<HTMLDivElement>(null);
   const {
@@ -87,7 +94,6 @@ function ChatbotWorkspace({
     createNewSession,
     deleteSession,
     activeSessionId,
-    liveTraceEvents = [],
   } = useMerchantChat(merchantId);
 
   useEffect(() => {
@@ -104,11 +110,6 @@ function ChatbotWorkspace({
     endRef.current?.scrollIntoView?.({ behavior: 'smooth', block: 'end' });
   }, [messages]);
 
-  const activeEvents = useMemo(() => {
-    const responseEvents = [...messages].reverse().find((message) => message.sender === 'assistant')?.traceEvents;
-    return isThinking ? liveTraceEvents : responseEvents ?? liveTraceEvents;
-  }, [messages, isThinking, liveTraceEvents]);
-
   const changeMerchant = (id: string) => {
     localStorage.setItem('merchant_dev_context', id);
     setMerchantId(id);
@@ -116,56 +117,102 @@ function ChatbotWorkspace({
     setSelectedDetailMerchant(null);
   };
 
+  const handleOpenDetails = (msg: ChatMessage, tab: 'results' | 'map' | 'trace' = 'results') => {
+    setInspectedMessage(msg);
+    setInspectedTab(tab);
+  };
+
+  const latestMessageWithMerchants =
+    messages.filter((m) => m.sender === 'assistant' && (m.analyzedMerchants?.length ?? 0) > 0).slice(-1)[0] ??
+    messages.slice(-1)[0] ??
+    null;
+
   return (
     <div className="merchant-observability-shell">
-      {/* Left Sidebar Navigation */}
+      {/* Column 1: Left Sidebar Navigation */}
       <SidebarNav
         merchants={merchants}
         selectedMerchantId={merchantId}
         sessions={sessions}
         activeSessionId={activeSessionId}
         mobileOpen={mobileNavOpen}
+        activePage={activePage}
+        onNavigate={setActivePage}
         onMerchantChange={changeMerchant}
-        onSelectSession={(id) => { switchSession(id); setMobileNavOpen(false); }}
+        onSelectSession={(id) => { switchSession(id); setActivePage('chatbot'); setMobileNavOpen(false); }}
         onDeleteSession={deleteSession}
-        onNewChat={() => { createNewSession(); setMobileNavOpen(false); setInspectedMessage(null); setSelectedDetailMerchant(null); }}
+        onNewChat={() => { createNewSession(); setActivePage('chatbot'); setMobileNavOpen(false); setInspectedMessage(null); setSelectedDetailMerchant(null); }}
         onClose={() => setMobileNavOpen(false)}
       />
 
-      {/* Center Main Workspace */}
-      <main className="chat-main-workspace">
-        <ChatHeader merchantName={merchantName} onOpenMenu={() => setMobileNavOpen(true)} />
-
-        <div className="page-header-banner">
-          <h1 className="page-title">AI Chatbot</h1>
-          <p className="page-subtitle">Trợ lý AI giúp bạn phân tích và đưa ra gợi ý chiến lược cho nhà hàng của bạn.</p>
-        </div>
-
-        <MessageList
-          messages={messages}
-          endRef={endRef}
-          onOpenDetails={setInspectedMessage}
-          onPrompt={sendMessage}
-          onOpenMerchantDetail={(m) => setSelectedDetailMerchant(m)}
+      {/* Column 2: Center Main Workspace */}
+      <main className="chat-main-workspace overflow-y-auto">
+        <ChatHeader
+          merchantName={merchantName}
+          onOpenMenu={() => setMobileNavOpen(true)}
+          onOpenMobileMap={() => setMobileMapOpen(true)}
         />
 
-        <ChatInput isThinking={isThinking} onSend={sendMessage} />
+        {activePage === 'reviews' ? (
+          <ReviewAnalysisPage merchantId={merchantId} />
+        ) : activePage === 'info' ? (
+          <MerchantInfoMenuPage merchantId={merchantId} />
+        ) : activePage === 'policies' ? (
+          <PolicyDocumentsPage />
+        ) : (
+          <>
+            {messages.length > 0 && (
+              <div className="page-header-banner">
+                <h1 className="page-title">AI Chatbot</h1>
+                <p className="page-subtitle">Trợ lý AI giúp bạn phân tích và đưa ra gợi ý chiến lược cho nhà hàng của bạn.</p>
+              </div>
+            )}
+
+            <MessageList
+              messages={messages}
+              endRef={endRef}
+              onOpenDetails={handleOpenDetails}
+              onPrompt={sendMessage}
+              onOpenMerchantDetail={(m) => setSelectedDetailMerchant(m)}
+            />
+
+            <ChatInput isThinking={isThinking} onSend={sendMessage} />
+          </>
+        )}
       </main>
 
-      {/* Right Column: Session State & Map Panel */}
-      <FloatingRunState
-        sessionId={activeSessionId}
-        events={activeEvents}
-        isLive={isThinking}
-        merchantId={merchantId}
-        messages={messages}
-        sessions={sessions}
-        onDeleteSession={deleteSession}
-        onOpenDetails={setInspectedMessage}
-      />
+      {/* Column 3: Fixed Right-Side Map Panel (ALWAYS DISPLAYED ON DESKTOP) */}
+      <aside className="right-panel-container">
+        <RightSideMapPanel
+          merchantId={merchantId}
+          latestMessage={latestMessageWithMerchants}
+          selectedMerchant={selectedDetailMerchant}
+          onSelectMerchant={(m) => setSelectedDetailMerchant(m)}
+        />
+      </aside>
+
+      {/* Responsive Mobile Map Drawer/Sheet */}
+      {mobileMapOpen && (
+        <div className="mobile-map-modal-backdrop" onClick={() => setMobileMapOpen(false)}>
+          <div className="mobile-map-modal-container" onClick={(e) => e.stopPropagation()}>
+            <RightSideMapPanel
+              merchantId={merchantId}
+              latestMessage={latestMessageWithMerchants}
+              selectedMerchant={selectedDetailMerchant}
+              onSelectMerchant={(m) => setSelectedDetailMerchant(m)}
+              onCloseMobileMap={() => setMobileMapOpen(false)}
+            />
+          </div>
+        </div>
+      )}
 
       {/* Drawer overlay when inspected */}
-      <DetailSlideOver message={inspectedMessage} merchantId={merchantId} onClose={() => setInspectedMessage(null)} />
+      <DetailSlideOver
+        message={inspectedMessage}
+        merchantId={merchantId}
+        initialTab={inspectedTab}
+        onClose={() => setInspectedMessage(null)}
+      />
 
       {/* Full Merchant Profile Detail Modal */}
       {selectedDetailMerchant && (

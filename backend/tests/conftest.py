@@ -25,6 +25,7 @@ if "tools.customer.merchant_tools" not in sys.modules:
 import pytest
 from fastapi.testclient import TestClient
 from app.main import app
+import app.main as app_main
 from core.dependencies import get_db_session
 from database.connection import engine, SessionLocal
 
@@ -72,10 +73,16 @@ def _override_db():
 
 @pytest.fixture
 def client() -> TestClient:
+    langfuse = MagicMock()
+    original_initialize = app_main.initialize_langfuse
+    app_main.initialize_langfuse = lambda: langfuse
     app.dependency_overrides[get_db_session] = _override_db
-    with TestClient(app) as c:
-        yield c
-    app.dependency_overrides.clear()
+    try:
+        with TestClient(app) as c:
+            yield c
+    finally:
+        app.dependency_overrides.clear()
+        app_main.initialize_langfuse = original_initialize
 
 
 @pytest.fixture

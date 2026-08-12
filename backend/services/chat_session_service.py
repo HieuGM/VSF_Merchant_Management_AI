@@ -37,6 +37,10 @@ class ChatSessionService:
 
         if session_obj:
             if context_snapshot:
+                existing_merchant = (session_obj.context_snapshot_json or {}).get("merchant_id")
+                requested_merchant = context_snapshot.get("merchant_id")
+                if existing_merchant and requested_merchant and str(existing_merchant) != str(requested_merchant):
+                    raise ValueError("Session belongs to a different merchant")
                 merged = {**(session_obj.context_snapshot_json or {}), **context_snapshot}
                 session_obj.context_snapshot_json = merged
                 session_obj.updated_at = datetime.utcnow()

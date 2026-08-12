@@ -5,6 +5,7 @@ from database.models import Merchant
 from providers.cache.memory_adapter import InMemoryCache
 from relational_test_fixtures import seed_relational_profile
 from services.chat_session_service import ChatSessionService
+import pytest
 from tools.merchant.profile_tool import get_merchant_profile_summary
 from tools.merchant.metrics_tool import get_merchant_operational_metrics
 
@@ -105,3 +106,15 @@ def test_replacing_session_snapshot_removes_stale_keys(db_session):
     assert session_svc.get_session_snapshot("sess_replace_snapshot") == {
         "merchant_id": "94"
     }
+def test_session_rejects_a_different_merchant_context(db_session):
+    service = ChatSessionService(db_session)
+    service.get_or_create_session(
+        session_id="sess-merchant-bound",
+        context_snapshot={"merchant_id": "merchant-a"},
+    )
+
+    with pytest.raises(ValueError, match="different merchant"):
+        service.get_or_create_session(
+            session_id="sess-merchant-bound",
+            context_snapshot={"merchant_id": "merchant-b"},
+        )

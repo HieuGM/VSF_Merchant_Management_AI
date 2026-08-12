@@ -128,7 +128,8 @@ export interface ChatMessage {
   evidenceStatus?: string;
   durationMs?: number;
   telemetryLogs?: AgentStepLog[];
-  traceEvents?: import('./monitoring').TraceEvent[];
+  trace?: import('./monitoring').RunTrace;
+  traceStatus?: 'processing' | 'ready' | 'unavailable';
   runStatus?: string;
   competitors?: CompetitorItem[];
   /** Structured merchants observed in backend tool results for this response. */

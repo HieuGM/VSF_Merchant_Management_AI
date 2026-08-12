@@ -1,9 +1,9 @@
-"""Strict contracts between request preparation, routing, and trace rendering."""
+"""Strict contracts between request preparation and routing."""
 from __future__ import annotations
 
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field
 
 
 ProposedOutcome = Literal["fast_answer", "coordinate"]
@@ -48,30 +48,3 @@ class PromptBudget(BaseModel):
 
     dynamic_input_limit: int = Field(gt=0)
     output_limit: int = Field(gt=0)
-
-
-class TraceSpan(BaseModel):
-    """Compact semantic trace event sent to the live developer timeline."""
-
-    model_config = ConfigDict(extra="forbid")
-
-    trace_id: str = Field(min_length=1)
-    seq: int = Field(ge=1)
-    span_id: str = Field(min_length=1)
-    parent_span_id: str | None = Field(default=None, min_length=1)
-    phase: Literal["input", "route", "coordinator", "agent", "tool", "synthesis"]
-    kind: Literal["started", "finished", "failed", "cancelled"]
-    actor_type: Literal["system", "analyzer", "coordinator", "agent", "tool"]
-    actor_name: str = Field(min_length=1)
-    display: dict[str, str] = Field(min_length=3)
-    metrics: dict[str, object] = Field(default_factory=dict)
-    debug: dict[str, object] = Field(default_factory=dict)
-
-    @field_validator("display")
-    @classmethod
-    def display_must_be_renderable(cls, value: dict[str, str]) -> dict[str, str]:
-        """Require the concise fields that the live timeline always renders."""
-        required = ("title", "summary", "status")
-        if any(not value.get(field, "").strip() for field in required):
-            raise ValueError("display requires non-empty title, summary, and status")
-        return value
