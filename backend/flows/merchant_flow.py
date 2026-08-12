@@ -601,6 +601,27 @@ class MerchantFlowDispatcher:
                     flush_trace_events=flush_trace_events,
                 )
             if route.outcome == "fast_answer":
+                fast_reply = route.reply
+                if not fast_reply:
+                    # Greeting / farewell / capability query — generate a short polite reply
+                    try:
+                        greeting_llm = (
+                            get_configured_llm("small")
+                            if getattr(settings, "llm_configured", False)
+                            else None
+                        )
+                        if greeting_llm:
+                            fast_reply = greeting_llm.call(
+                                f"Bạn là trợ lý AI cho đối tác nhà hàng Xanh SM. "
+                                f"Hãy trả lời ngắn gọn, thân thiện bằng tiếng Việt cho tin nhắn: '{prepared_request.rewritten_query}'. "
+                                f"Không hỏi lại, không đề xuất, chỉ phản hồi trực tiếp."
+                            )
+                            if not isinstance(fast_reply, str):
+                                fast_reply = getattr(fast_reply, "text", None) or str(fast_reply)
+                    except Exception:
+                        pass
+                    if not fast_reply:
+                        fast_reply = "Xin chào Quý Đối tác! Tôi có thể hỗ trợ gì cho bạn hôm nay?"
                 return self._finish_native_response(
                     session_svc=session_svc,
                     run_svc=run_svc,
@@ -608,9 +629,9 @@ class MerchantFlowDispatcher:
                     session_id=sid,
                     merchant_id=merchant_id,
                     query=prepared_request.rewritten_query,
-                    reply=route.reply or "",
+                    reply=fast_reply,
                     status="completed",
-                    capabilities=["immutable_session_fast_answer"],
+                    capabilities=["fast_answer"],
                     trace_summary=trace_summary,
                     started_clock=started_clock,
                     structured_outputs={},

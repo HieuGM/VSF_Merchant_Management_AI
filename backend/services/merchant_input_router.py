@@ -100,15 +100,15 @@ def decide_route(
             reply="Câu hỏi nằm ngoài phạm vi hỗ trợ merchant và tài liệu Green SM.",
         )
 
-    # Fast answers are deliberately narrower than the analyzer contract. No
-    # mutable merchant information can enter this path.
-    safe_fact = immutable_facts.get(normalize_text(prepared.rewritten_query))
-    if (
-        prepared.proposed_outcome == "fast_answer"
-        and safe_fact is not None
-    ):
+    # Fast answers: greetings, farewells, capability questions, or cached immutable facts.
+    # The analyzer signals fast_answer when no data retrieval is needed.
+    # If there is a cached immutable fact for this exact query, use it as the reply.
+    if prepared.proposed_outcome == "fast_answer":
+        safe_fact = immutable_facts.get(normalize_text(prepared.rewritten_query))
         return RoutingDecision(
-            "fast_answer", "immutable_session_fact", reply=safe_fact.value
+            "fast_answer",
+            "analyzer_fast_answer",
+            reply=safe_fact.value if safe_fact is not None else None,
         )
 
     return RoutingDecision("coordinate", "coordinator_required")

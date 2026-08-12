@@ -9,7 +9,6 @@ from typing import Any, Protocol
 from pydantic import ValidationError
 
 from agents.merchant.input_analyzer_prompt import (
-    INPUT_ANALYZER_BUDGET,
     TRUNCATION_MARKER,
     build_bounded_prompt,
     build_repair_prompt,

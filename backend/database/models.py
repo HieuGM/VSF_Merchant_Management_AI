@@ -564,7 +564,7 @@ class AgentEvent(Base):
 
 
 class PolicyDocument(Base):
-    """One authoritative policy document; vectors live in Chroma, not PostgreSQL."""
+    """One authoritative policy document; vectors live in PGVectorStore/Chroma."""
 
     __tablename__ = "policy_documents"
 
@@ -572,6 +572,7 @@ class PolicyDocument(Base):
     title = Column(String, nullable=False)
     source_url = Column(String, nullable=False, unique=True)
     category = Column(String, nullable=False, index=True)
+    document_text = Column(Text, nullable=False, server_default="")
     policy_updated_at = Column(TIMESTAMP(timezone=True))
     content_hash = Column(String, nullable=False)
     created_at = Column(
@@ -601,6 +602,9 @@ class PolicyDocumentChunk(Base):
     )
     content = Column(Text, nullable=False)
     section_path = Column(JSONB, nullable=False, default=list)
+    section_title = Column(String, nullable=True)
+    section_level = Column(Integer, nullable=True)
+    token_count = Column(Integer, nullable=False, server_default="0")
     chunk_index = Column(Integer, nullable=False)
     content_hash = Column(String, nullable=False)
     created_at = Column(

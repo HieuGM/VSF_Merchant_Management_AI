@@ -1,0 +1,53 @@
+sources:
+  # ── General terms ─────────────────────────────────────────────────────────
+  - id: gsm-general-terms-vi
+    canonical_url: https://www.greensm.com/vn-vi/terms-policies/general?terms=1
+    title: Điều khoản sử dụng và quy định chung Green SM
+    category: general_terms
+
+  # ── General terms ─────────────────────────────────────────────────────────
+  - id: gsm-general-terms-vi
+    canonical_url: https://www.greensm.com/vn-vi/terms-policies/general?terms=6
+    title: QUY CHẾ SỬ DỤNG SẢN PHẨM GREEN SM FOOD
+    category: general_terms
+
+  # ── General terms ─────────────────────────────────────────────────────────
+  - id: gsm-general-terms-vi
+    canonical_url: https://www.greensm.com/vn-vi/terms-policies/general?terms=14
+    title: Điều khoản MIỄN TRỪ TRÁCH NHIỆM
+    category: general_terms
+
+  # ── General terms ─────────────────────────────────────────────────────────
+  - id: gsm-general-terms-vi
+    canonical_url: https://www.greensm.com/vn-vi/terms-policies/general?terms=16
+    title: QUY TRÌNH GIẢI QUYẾT TRANH CHẤP, KHIẾU NẠI
+    category: general_terms
+
+
+  # ── Privacy notice ────────────────────────────────────────────────────────
+  - id: gsm-privacy-notice-vi
+    canonical_url: https://www.greensm.com/vn-vi/terms-policies/privacy-notice
+    title: Chính sách bảo vệ dữ liệu cá nhân Green SM
+    category: privacy
+
+  # ── Service agreement ─────────────────────────────────────────────────────
+  - id: gsm-service-agreement-vi
+    canonical_url: https://www.greensm.com/vn-vi/terms-policies/service-agreement
+    title: Điều khoản chung hợp đồng dịch vụ Green SM
+    category: service_agreement
+
+  # ── Merchant-specific sources (nhấn mạnh: dành cho chủ nhà hàng) ─────────
+  - id: gsm-merchant-code-vi
+    canonical_url: https://www.greensm.com/vn-vi/news/bo-quy-tac-ung-xu-danh-cho-thuong-nhan-nha-hang
+    title: Bộ quy tắc ứng xử dành cho Thương Nhân Nhà Hàng Green SM
+    category: merchant_code_of_conduct
+
+  - id: gsm-merchant-landing-vi
+    canonical_url: https://www.greensm.com/vn-vi/greensm-merchant
+    title: Giới thiệu Đối tác Nhà hàng Green SM Merchant
+    category: merchant_landing
+
+  - id: gsm-merchant-helps-vi
+    canonical_url: https://www.greensm.com/vn-vi/helps
+    title: Hướng dẫn và Hỗ trợ Đối tác Nhà hàng Green SM
+    category: merchant_faq
