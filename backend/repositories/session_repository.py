@@ -20,6 +20,21 @@ from database.models import ChatSession
 from repositories.chat_message_repository import make_title
 
 
+def _iso(dt) -> str | None:
+    """ISO 8601 string for a ChatSession timestamp, annotated as UTC.
+
+    The columns are TIMESTAMP WITHOUT TIME ZONE and Postgres stores UTC (server tz=UTC), so
+    the naive datetime is really UTC. A bare isoformat() has no offset → the browser's
+    new Date() treats it as LOCAL time → in UTC+7 a session updated moments ago reads ~7h
+    old ("7 giờ trước"). Appending 'Z' makes the FE parse it as UTC. A tz-aware dt passes
+    through unchanged (isoformat already carries +00:00)."""
+    if dt is None:
+        return None
+    if dt.tzinfo is None:
+        return dt.isoformat() + "Z"
+    return dt.isoformat()
+
+
 class SessionRepository:
     """Read access to session context snapshots + distillates."""
 
@@ -110,8 +125,8 @@ class SessionRepository:
             {
                 "session_id": r.session_id,
                 "title": r.title or first_msg.get(r.session_id),
-                "updated_at": r.updated_at.isoformat() if r.updated_at else None,
-                "created_at": r.created_at.isoformat() if r.created_at else None,
+                "updated_at": _iso(r.updated_at),
+                "created_at": _iso(r.created_at),
             }
             for r in rows
         ]
@@ -140,8 +155,8 @@ class SessionRepository:
         return {
             "session_id": row.session_id,
             "title": title,
-            "updated_at": row.updated_at.isoformat() if row.updated_at else None,
-            "created_at": row.created_at.isoformat() if row.created_at else None,
+            "updated_at": _iso(row.updated_at),
+            "created_at": _iso(row.created_at),
         }
 
     def delete_session(self, session_id: str, user_id: str) -> bool:
@@ -171,5 +186,5 @@ class SessionRepository:
         return {
             "session_id": row.session_id,
             "title": row.title,
-            "updated_at": row.updated_at.isoformat() if row.updated_at else None,
+            "updated_at": _iso(row.updated_at),
         }
