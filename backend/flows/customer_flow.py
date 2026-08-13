@@ -1030,6 +1030,26 @@ def _cross_conv_hint(
     return _format_cross_conv_block(hits)
 
 
+def _location_hint(lat: float | None, lng: float | None) -> str:
+    """Directive for the explanation agent when the user has shared coords.
+
+    The explanation agent only sees the search CANDIDATES (via task context), not the raw
+    lat/lng — so when results are weak/unmatching it falls into the empty-results fallback
+    ("chưa nắm rõ bạn đang ở đâu… HN hay SG?") and asks for an area it ALREADY has. This hint
+    tells it coords are present (candidate distances are real) and forbids re-asking the area;
+    instead it should say plainly that nothing nearby matches and offer to widen the radius /
+    suggest an alternative dish. Empty when no coords (the 'ask where' fallback then applies)."""
+    if lat is None or lng is None:
+        return ""
+    return (
+        "VỊ TRÍ ĐÃ CÓ: người dùng đã chia sẻ toạ độ — mọi 'dist=…km' trong Ứng viên quán là khoảng "
+        "cách THẬT, mình ĐÃ biết khu vực của user. KHÔNG bao giờ hỏi lại 'bạn ở đâu / khu nào / "
+        "HN hay SG'. Nếu ứng viên không khớp món user xin (vd xin đồ thuần Việt mà chỉ có sushi / "
+        "KFC), nói thẳng 'quanh bạn chưa thấy quán [món đó], mình mở rộng bán kính hay gợi ý [món "
+        "thay thế] gần đây nhé?' — tuyệt đối không hỏi lại khu vực."
+    )
+
+
 def _build_inputs(
     *,
     query: str | None,
@@ -1084,6 +1104,9 @@ def _build_inputs(
         "weather_hint": _format_weather_hint(weather_override),
         "descriptor_hints": _descriptor_hints(query),
         "cross_conv_context": _cross_conv_hint(user_id, query, session_id),
+        # Explanation-agent directive: don't re-ask the area when coords are present (see
+        # _location_hint). Empty when no location.
+        "location_hint": _location_hint(lat, lng),
         # Default empty — the blocking search path overrides this with the rendered constraints
         # block after building `constraints`. Lets the {constraints_block} YAML placeholder format
         # safely on both paths (streaming injects the real block separately).

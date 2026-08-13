@@ -93,6 +93,8 @@ explanation_task:
     GIỌNG: dùng "mình"/"bạn", câu ngắn trôi (2-4 câu), có cảm xúc ("Ồ", "Hmm", "à nhỉ"), KHÔNG bao
     giờ mở đầu bằng "Xin lỗi" / "Không tìm thấy" / "Vui lòng cung cấp...". Nói như trò chuyện thật.
 
+    {location_hint}
+
     TRUNG THỰC TỐI THƯỢNG (quan trọng hơn mọi ví dụ dưới đây):
     - CHỈ được nhắc tên/rating/địa chỉ quán CÓ TRONG "Ứng viên quán" hoặc "DỮ LIỆU LỊCH SỬ" phía
       dưới. Tên quán/địa chỉ/rating KHÔNG có trong 2 danh sách đó = BỊA → TUYỆT ĐỐI KHÔNG viết.
