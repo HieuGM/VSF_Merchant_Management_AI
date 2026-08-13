@@ -50,12 +50,14 @@ export interface CustomerIdentity {
   sessionId: string;
   /** Mint a fresh session_id + persist it (called by "New chat"). */
   regenerate: () => void;
+  /** Adopt an EXISTING session_id + persist it (called when reopening a past conversation). */
+  setSessionId: (id: string) => void;
 }
 
 export function useCustomerIdentity(): CustomerIdentity {
   // session_id is reactive so consumers (useCustomerChat) pick up the new id after
-  // regenerate(). Initialized from localStorage so a reload keeps the same session.
-  const [sessionId, setSessionId] = useState<string>(() => {
+  // regenerate()/setSessionId(). Initialized from localStorage so a reload keeps the same session.
+  const [sessionId, setSessionIdState] = useState<string>(() => {
     const stored = readKey(CUSTOMER_SESSION_ID_KEY);
     if (stored) return stored;
     const id = makeId("session");
@@ -70,17 +72,24 @@ export function useCustomerIdentity(): CustomerIdentity {
   // user_id never changes within a browser identity — compute once.
   const userId = useMemo(() => ensureUserId(), []);
 
-  const regenerate = useCallback(() => {
-    const id = makeId("session");
+  // Persist + adopt any session_id (used by reopen). regenerate() mints a fresh one via this.
+  const setSessionId = useCallback((id: string) => {
     try {
       localStorage.setItem(CUSTOMER_SESSION_ID_KEY, id);
     } catch {
-      /* storage unavailable — in-memory rotation still applies */
+      /* storage unavailable — in-memory switch still applies */
     }
-    setSessionId(id);
+    setSessionIdState(id);
   }, []);
 
+  const regenerate = useCallback(() => {
+    setSessionId(makeId("session"));
+  }, [setSessionId]);
+
   // Stable object reference between renders unless sessionId actually changes — keeps
-  // useCustomerChat's `send`/`reset` memo from churning every render.
-  return useMemo(() => ({ userId, sessionId, regenerate }), [userId, sessionId, regenerate]);
+  // useCustomerChat's `send`/`reset`/`openSession` memo from churning every render.
+  return useMemo(
+    () => ({ userId, sessionId, regenerate, setSessionId }),
+    [userId, sessionId, regenerate, setSessionId],
+  );
 }

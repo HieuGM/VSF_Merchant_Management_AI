@@ -7,8 +7,10 @@ import { useState } from "react";
 import { NavLink } from "react-router-dom";
 import { Check, Compass, Copy, House, MessageCircle, Plus, SlidersHorizontal, X } from "lucide-react";
 import { BrandMark } from "./brand-mark";
+import { SessionHistoryList } from "./session-history-list";
 import { ThemeToggle } from "./theme-toggle";
 import type { Theme } from "../hooks/use-theme";
+import type { SessionSummary } from "../api/customer-agent-client";
 import "./app-sidebar.css";
 
 interface Props {
@@ -18,6 +20,12 @@ interface Props {
   identity: { userId: string };
   open: boolean;
   onClose: () => void;
+  sessions: SessionSummary[];
+  activeSessionId: string;
+  historyLoading: boolean;
+  onOpenSession: (sessionId: string) => void;
+  onDeleteSession: (sessionId: string) => void;
+  onRenameSession: (sessionId: string, title: string) => void;
 }
 
 const NAV = [
@@ -27,7 +35,20 @@ const NAV = [
   { to: "/customer/preferences", label: "Sở thích", icon: SlidersHorizontal, end: false },
 ];
 
-export function AppSidebar({ theme, onToggleTheme, onNewChat, identity, open, onClose }: Props) {
+export function AppSidebar({
+  theme,
+  onToggleTheme,
+  onNewChat,
+  identity,
+  open,
+  onClose,
+  sessions,
+  activeSessionId,
+  historyLoading,
+  onOpenSession,
+  onDeleteSession,
+  onRenameSession,
+}: Props) {
   const [copied, setCopied] = useState(false);
 
   const copyId = async () => {
@@ -42,6 +63,11 @@ export function AppSidebar({ theme, onToggleTheme, onNewChat, identity, open, on
 
   const handleNew = () => {
     onNewChat();
+    onClose();
+  };
+
+  const handleOpen = (sessionId: string) => {
+    onOpenSession(sessionId);
     onClose();
   };
 
@@ -65,6 +91,15 @@ export function AppSidebar({ theme, onToggleTheme, onNewChat, identity, open, on
           <Plus size={18} strokeWidth={2.4} />
           Trò chuyện mới
         </button>
+
+        <SessionHistoryList
+          sessions={sessions}
+          activeSessionId={activeSessionId}
+          loading={historyLoading}
+          onOpen={handleOpen}
+          onDelete={onDeleteSession}
+          onRename={onRenameSession}
+        />
 
         <nav className="app-sidebar__nav">
           {NAV.map(({ to, label, icon: Icon, end }) => (

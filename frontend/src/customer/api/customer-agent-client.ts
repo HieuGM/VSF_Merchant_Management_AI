@@ -285,3 +285,77 @@ export async function unlikeMerchant(userId: string, merchantId: string): Promis
   );
   if (!resp.ok) throw new Error(`Unlike merchant failed: HTTP ${resp.status}`);
 }
+
+// --- Conversation history (ChatGPT-style list / reopen / rename / delete) ---
+
+/** One past conversation in the sidebar history list (GET /users/{id}/sessions). */
+export interface SessionSummary {
+  session_id: string;
+  title: string | null;
+  updated_at: string | null;
+  created_at: string | null;
+}
+
+/** One turn inside a reopened conversation (GET /sessions/{id}). Agent turns carry stored cards. */
+export interface SessionMessage {
+  sender: "user" | "agent";
+  text: string;
+  ts: string | null;
+  results?: RestaurantResult[];
+}
+
+/** A reopened conversation: meta + full message history. */
+export interface SessionDetail {
+  session_id: string;
+  title: string | null;
+  updated_at: string | null;
+  messages: SessionMessage[];
+}
+
+/** List the user's past conversations (newest-first). Degrades to [] on error/offline so the
+ * sidebar stays usable without a backend (like getLikedMerchants). */
+export async function listSessions(userId: string): Promise<SessionSummary[]> {
+  try {
+    const resp = await fetch(`${API_BASE}/api/v1/users/${encodeURIComponent(userId)}/sessions`);
+    if (!resp.ok) return [];
+    const data = (await resp.json()) as { sessions: SessionSummary[] };
+    return data.sessions ?? [];
+  } catch {
+    return [];
+  }
+}
+
+/** Reopen a conversation: its meta + all messages. null on 404 (unknown / just-deleted id). */
+export async function getSession(sessionId: string): Promise<SessionDetail | null> {
+  const resp = await fetch(`${API_BASE}/api/v1/sessions/${encodeURIComponent(sessionId)}`);
+  if (resp.status === 404) return null;
+  if (!resp.ok) throw new Error(`Get session failed: HTTP ${resp.status}`);
+  return (await resp.json()) as SessionDetail;
+}
+
+/** Delete a conversation + its messages. Throws on non-2xx (caller rolls back the list). */
+export async function deleteSession(userId: string, sessionId: string): Promise<void> {
+  const resp = await fetch(
+    `${API_BASE}/api/v1/users/${encodeURIComponent(userId)}/sessions/${encodeURIComponent(sessionId)}`,
+    { method: "DELETE" },
+  );
+  if (!resp.ok) throw new Error(`Delete session failed: HTTP ${resp.status}`);
+}
+
+/** Rename a conversation. Returns the updated summary. Throws on non-2xx / empty title (400). */
+export async function renameSession(
+  userId: string,
+  sessionId: string,
+  title: string,
+): Promise<SessionSummary> {
+  const resp = await fetch(
+    `${API_BASE}/api/v1/users/${encodeURIComponent(userId)}/sessions/${encodeURIComponent(sessionId)}`,
+    {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ title }),
+    },
+  );
+  if (!resp.ok) throw new Error(`Rename session failed: HTTP ${resp.status}`);
+  return (await resp.json()) as SessionSummary;
+}

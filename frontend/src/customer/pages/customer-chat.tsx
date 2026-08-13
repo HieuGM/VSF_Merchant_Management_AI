@@ -25,7 +25,7 @@ function accuracyLabel(m: number | null): { text: string; poor: boolean } | null
 }
 
 export default function CustomerChat() {
-  const { messages, sending, send, stop } = useChat();
+  const { messages, sending, send, stop, openSession, sessionId } = useChat();
   const { prefs } = usePreferences();
   const navigate = useNavigate();
   const [draft, setDraft] = useState("");
@@ -33,6 +33,8 @@ export default function CustomerChat() {
   // Ref-guard for the seed effect: React StrictMode double-invokes mount effects in dev,
   // so without this the landing-page prompt fires twice and the query is sent duplicated.
   const seededRef = useRef(false);
+  // Ref-guard for the reload-restore effect (same StrictMode reason).
+  const restoredRef = useRef(false);
   const routeState = useLocation().state as { prompt?: string } | null;
 
   const submit = (raw: string) => {
@@ -54,6 +56,22 @@ export default function CustomerChat() {
     if (routeState?.prompt && !seededRef.current) {
       seededRef.current = true;
       submit(routeState.prompt);
+      // Clear the prompt from history state so a page reload does NOT re-seed (which would
+      // append a duplicate turn to the persisted session). Keeps the URL, drops the state.
+      window.history.replaceState({}, "", window.location.pathname);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Reload-restore: after a page reload the in-memory messages are gone but the backend still
+  // has them under sessionId → reload the conversation so the user doesn't see a blank chat.
+  // Skipped when a landing prompt will seed instead, or for a brand-new session (no DB rows →
+  // getSession returns null → stays blank). Idempotent via restoredRef (StrictMode).
+  useEffect(() => {
+    if (restoredRef.current) return;
+    if (messages.length === 0 && sessionId && !routeState?.prompt) {
+      restoredRef.current = true;
+      void openSession(sessionId);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

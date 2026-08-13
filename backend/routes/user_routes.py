@@ -8,11 +8,13 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import Session
 
-from core.dependencies import require_dev_only
+from core.dependencies import get_db_session, require_dev_only
 from core.logging import get_logger
 from models.agent import ConfirmDeltaRequest, ProfilePatchRequest
 from models.preference import UserProfilePublic
+from repositories.session_repository import SessionRepository
 from routes.stub_helpers import not_implemented
 from services.liked_merchant_service import liked_merchant_service
 from services.preference_confirm_service import preference_confirm_service
@@ -225,6 +227,59 @@ def delete_preference(user_id: str, field: str) -> object:
     return not_implemented(f"DELETE /api/v1/users/{{user_id}}/preferences/{field}")
 
 
+class RenameSessionRequest(BaseModel):
+    """Body for PATCH .../sessions/{session_id} — a new conversation title (non-empty)."""
+
+    title: str
+
+
 @router.get("/{user_id}/sessions")
-def list_sessions(user_id: str) -> object:
-    return not_implemented(f"GET /api/v1/users/{user_id}/sessions")
+def list_sessions(user_id: str, db: Session = Depends(get_db_session)) -> dict:
+    """List the user's past conversations (ChatGPT-style history) — newest-first, each with an
+    auto-derived title (from its first user message; editable). Read-only, not IDOR-guarded
+    (titles carry no PII; the FE loads its own user_id — same as GET /profile,
+    GET /liked-merchants)."""
+    sessions = SessionRepository(db).list_sessions_for_user(user_id)
+    return {"user_id": user_id, "sessions": sessions}
+
+
+@router.delete("/{user_id}/sessions/{session_id}")
+def delete_session(
+    user_id: str,
+    session_id: str,
+    request: Request,
+    db: Session = Depends(get_db_session),
+    _guard: bool = Depends(require_dev_only),
+) -> dict:
+    """Delete a conversation + its messages (cascade). Ownership-guarded in the repo: the
+    session must belong to user_id, else 404 (a caller can't delete another user's chat by
+    guessing an unguessable id). IDOR-guarded (dev-only until auth)."""
+    client_ip = request.client.host if request.client else "unknown"
+    logger.info("session_delete user_id=%s session_id=%s ip=%s", user_id, session_id, client_ip)
+    deleted = SessionRepository(db).delete_session(session_id, user_id)
+    if not deleted:
+        raise HTTPException(status_code=404, detail="session not found for this user")
+    return {"ok": True, "session_id": session_id}
+
+
+@router.patch("/{user_id}/sessions/{session_id}")
+def rename_session(
+    user_id: str,
+    session_id: str,
+    body: RenameSessionRequest,
+    request: Request,
+    db: Session = Depends(get_db_session),
+    _guard: bool = Depends(require_dev_only),
+) -> dict:
+    """Rename a conversation. Empty/whitespace title → 400; over-long titles are truncated to
+    120 chars. Ownership-guarded in the repo; 404 when absent or not owned. IDOR-guarded."""
+    title = body.title.strip()
+    if not title:
+        raise HTTPException(status_code=400, detail="title must not be empty")
+    title = title[:120]
+    client_ip = request.client.host if request.client else "unknown"
+    logger.info("session_rename user_id=%s session_id=%s ip=%s", user_id, session_id, client_ip)
+    updated = SessionRepository(db).rename_session(session_id, user_id, title)
+    if updated is None:
+        raise HTTPException(status_code=404, detail="session not found for this user")
+    return updated

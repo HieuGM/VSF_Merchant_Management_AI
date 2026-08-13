@@ -10,6 +10,7 @@
  */
 import { useCallback, useRef, useState } from "react";
 import {
+  getSession,
   streamChat,
   type CustomerChatRequest,
   type Location,
@@ -63,6 +64,9 @@ export function useCustomerChat(identity: CustomerIdentity) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [sending, setSending] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
+  // Sequence guard for openSession: the session_id of the MOST RECENT reopen in flight.
+  // A slow earlier getSession must NOT overwrite the view of a newer open (H1).
+  const latestOpenRef = useRef<string | null>(null);
 
   const patchAgent = useCallback((agentId: string, patch: (m: ChatMessage) => ChatMessage) => {
     setMessages((prev) => prev.map((m) => (m.id === agentId ? patch(m) : m)));
@@ -71,7 +75,10 @@ export function useCustomerChat(identity: CustomerIdentity) {
   const send = useCallback(
     async ({ message, location }: SendArgs) => {
       const text = message.trim();
-      if (!text || sending) return;
+      // Bail while a conversation reopen is in flight (H2): the open's setMessages would
+      // otherwise overwrite this turn's just-appended bubble. latestOpenRef clears on open
+      // completion, so this only blocks during the brief getSession window.
+      if (!text || sending || latestOpenRef.current) return;
 
       const agentId = uid();
       setMessages((prev) => [
@@ -174,7 +181,46 @@ export function useCustomerChat(identity: CustomerIdentity) {
     identity.regenerate();
   }, [identity]);
 
-  return { messages, sending, send, stop, reset };
+  const openSession = useCallback(
+    async (sessionId: string) => {
+      abortRef.current?.abort(); // cancel any in-flight stream
+      // Adopt the reopened session so subsequent turns append to it (not the old one).
+      identity.setSessionId(sessionId);
+      // Sequence guard: rapid session switches can leave multiple getSession fetches in
+      // flight; only the MOST RECENT open may apply its result (else a slow earlier one
+      // would overwrite the latest view with stale messages — H1).
+      latestOpenRef.current = sessionId;
+      setSending(true);
+      try {
+        const detail = await getSession(sessionId);
+        if (latestOpenRef.current !== sessionId) return; // superseded by a newer open
+        setMessages(
+          detail
+            ? detail.messages.map((m) => ({
+                id: uid(),
+                role: m.sender,
+                text: m.text,
+                results: m.results ?? [],
+                suggestions: [],
+                warnings: [],
+              }))
+            : [],
+        );
+      } catch {
+        if (latestOpenRef.current !== sessionId) return;
+        // Network error → blank rather than a stuck partial state (the session is adopted).
+        setMessages([]);
+      } finally {
+        if (latestOpenRef.current === sessionId) {
+          latestOpenRef.current = null; // open complete — send may proceed again (H2)
+          setSending(false);
+        }
+      }
+    },
+    [identity],
+  );
+
+  return { messages, sending, send, stop, reset, openSession, sessionId: identity.sessionId };
 }
 
 /** Mark a step done — by tool name if given (parallel-safe), else the oldest pending. */

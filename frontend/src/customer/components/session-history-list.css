@@ -1,0 +1,137 @@
+/* Conversation-history list inside the sidebar (ChatGPT-style). */
+
+.session-history {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-height: 0; /* lets the list scroll while the section flexes inside the sidebar */
+  margin-top: 0.25rem;
+}
+
+.session-history__search {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.session-history__search-icon {
+  position: absolute;
+  left: 0.6rem;
+  color: var(--ink-400);
+  pointer-events: none;
+}
+.session-history__search-input {
+  width: 100%;
+  padding: 0.5rem 0.7rem 0.5rem 1.9rem;
+  font-size: 0.85rem;
+  color: var(--ink-800);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--r-sm);
+  outline: none;
+  transition: border-color 0.18s var(--ease), background 0.18s var(--ease);
+}
+.session-history__search-input::placeholder {
+  color: var(--ink-400);
+}
+.session-history__search-input:focus {
+  border-color: var(--gsm-500);
+  background: var(--glass-bg-strong);
+}
+
+.session-history__list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  overflow-y: auto;
+  max-height: 40vh;
+  padding-right: 0.1rem;
+}
+
+.session-history__empty {
+  padding: 0.6rem 0.5rem;
+  font-size: 0.82rem;
+  color: var(--ink-400);
+  text-align: center;
+}
+
+.session-history__item {
+  display: flex;
+  align-items: center;
+  gap: 0.1rem;
+  padding: 0 0.25rem 0 0;
+  border-radius: var(--r-sm);
+  transition: background 0.16s var(--ease);
+}
+.session-history__item:hover {
+  background: var(--glass-bg);
+}
+.session-history__item.is-active {
+  background: rgba(16, 185, 129, 0.12);
+}
+[data-theme="dark"] .customer-root .session-history__item.is-active {
+  background: rgba(16, 185, 129, 0.16);
+}
+
+.session-history__open {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 0.5rem 0.6rem;
+  border: none;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+.session-history__title {
+  font-size: 0.86rem;
+  font-weight: 500;
+  color: var(--ink-700);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.session-history__item.is-active .session-history__title {
+  color: var(--gsm-700);
+  font-weight: 600;
+}
+[data-theme="dark"] .customer-root .session-history__item.is-active .session-history__title {
+  color: var(--gsm-300);
+}
+.session-history__time {
+  font-size: 0.7rem;
+  color: var(--ink-400);
+}
+
+/* Action buttons (rename/delete) hidden until row hover/focus; always shown on the active row. */
+.session-history__actions {
+  display: flex;
+  gap: 0.1rem;
+  opacity: 0;
+  transition: opacity 0.16s var(--ease);
+}
+.session-history__item:hover .session-history__actions,
+.session-history__item.is-active .session-history__actions,
+.session-history__actions:focus-within {
+  opacity: 1;
+}
+
+.session-history__rename {
+  display: flex;
+  align-items: center;
+  gap: 0.1rem;
+  flex: 1 1 auto;
+  padding: 0.25rem 0.3rem;
+}
+.session-history__rename-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 0.35rem 0.5rem;
+  font-size: 0.85rem;
+  color: var(--ink-800);
+  background: var(--glass-bg-strong);
+  border: 1px solid var(--gsm-500);
+  border-radius: var(--r-sm);
+  outline: none;
+}
