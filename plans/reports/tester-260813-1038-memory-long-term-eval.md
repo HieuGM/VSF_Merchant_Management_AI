@@ -2,6 +2,48 @@
 
 > Test retention xuyên session (15-20) của customer agent. Harness deterministic dùng **code production thật** (`extract_notes` + `build_active_constraints` + FIFO mirror). Date: 2026-08-13.
 
+## 📊 METRICS (sau 4 fix + Phase 2) — `scripts/memory_metrics.py`
+
+Sim full pipeline (retraction + TTL + allergens + FIFO) per case, enforce bằng `build_active_constraints` thật, chấm theo pass_criteria. Base clock `2026-01-01` (+2d/session) để TTL (6.3) chạy được không cần wall-clock.
+
+```
+OVERALL:  PASS 16 · PARTIAL 2 · FAIL 0 · LLM-dep 10   (of 28)
+deterministic coverage: 18/28 (64%)        ← 10 case sống ở Layer-1/LLM (cuisine/spice/budget/ranking)
+deterministic pass rate:  16/18 (88% PASS + 2 PARTIAL, 0 FAIL)
+
+BY DIMENSION:                PASS  PARTIAL  FAIL  LLM
+  correctness (persistence)    8      0       0    5   [100% PASS]
+  isolation                    2      0       0    1   [100% PASS]
+  transparency                 2      0       0    1   [100% PASS]
+  safety                       3      1       0    0   [75% PASS, +1 PARTIAL]
+  precedence                   1      1       0    3   [50% PASS, +1 PARTIAL]
+```
+
+- **2 PARTIAL** = catalog-granularity limits (không phải bug): **2.2** (dị ứng tôm nhưng thích hải sản → bucket `seafood` over-exclude, không tách riêng tôm); **3.2** (spice không có scope riêng → không hard-filter, chỉ warn). Cả 2 cần catalog chi tiết hơn (separate enhancement).
+- **10 LLM-dep**: sống ở Layer-1 preference agent / ranking / explanation LLM (spice override, multi-hop conjunction, implicit pattern, location, self-correction, graceful fallback, enumerate-memory) — deterministic engine không verdict được, cần live LLM+DB.
+- **Metrics tìm + fix 1 bug thật**: `"mấy ngày"` trong "mấy ngày khác bình thường" bị `_DURATIONS` hiểu nhầm là duration 3 ngày → note chay thứ-Hai bị TTL prune sai. Đã bỏ marker mơ hồ (`mấy ngày`/`vài ngày`/bare `tuần`) khỏi `_DURATIONS`. → full unit suite 245 pass.
+
+Detail JSON: `plans/reports/memory-metrics-260813-results.json`.
+
+## 📈 GT-eval trước/sau (regression check) — `eval_ground_truth.py` + `judge_gt_quality.py`
+
+Re-run GT-eval (39 case, `/chat/stream`) trên code mới + judge Qwen3.6-27B cả 2 snapshot (Aug-11 baseline vs sau hardening). Eval có sẵn FK-race ở seeding đa lượt → fix (upsert `chat_sessions` + try/except) để chạy hết.
+
+```
+BEFORE (Aug-11 baseline): 25/39 = 64.1% PASS
+AFTER  (memory hardening): 23/39 = 59.0% PASS     net -2
+```
+
+**Net -2 = NOISE, KHÔNG phải regression do memory changes:**
+- 4 verdict flips (TC-01/14/22/29/39/43) — **0/6 case liên quan memory** (happy_path/rating/noisy/spice-conflict/explanation/data-integrity, không case nào allergy/diet).
+- TC-01, TC-22 (pass→fail): **FPT-error transient** (2 case errored trong run after do FPT, không phải code).
+- TC-14, TC-39 (fail→pass) + TC-29, TC-43 (pass→fail): LLM-agent + LLM-judge non-determinism (eval vốn noisy run-to-run — có sẵn multirun-1/2/3 file chứng minh).
+- **Không case memory/allergy GT nào regress.** Memory-domain changes verify improve riêng (3.1/7.2 live E2E PASS + 245 unit).
+
+Structural diff: gained errors TC-01/22 (FPT); TC-39 results 3→1 (search non-determinism). Timing median 15.0s→16.4s (within noise).
+
+Artifacts: `gt-eval-results.json` (after), `.bak_before-memory-hardening.json` (before), `gt-quality-judge-{before,after}-memory.json`.
+
 ## ✅ UPDATE 2026-08-13 — Phase 1 fix IMPLEMENTED + verified
 
 **3.1 (peanut safety): FAIL → PASS.** Fix generalize (không hard-code catalog): surface **mọi** allergy note cho explanation LLM (`ActiveConstraints.health_notes` → block "CẢNH BÁO SỨC KHOẺ"), LLM dùng world-knowledge cảnh báo. Fix thêm blocking-path asymmetry (block `/chat` vốn inject 0 constraint). Verify: 22/22 unit test PASS + live E2E 3.1 warn đúng (*"sốt satay hay trộn đậu phộng, mình dặn trước cho an tâm"*). Còn lại chưa fix: **7.2/3.4** (stale contradictory-note bug) + **6.3** (no TTL) — separate. Chi tiết + plan: `~/.claude/plans/glittery-mixing-thompson.md`.

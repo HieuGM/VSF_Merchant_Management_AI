@@ -1,0 +1,290 @@
+{
+  "rows": [
+    {
+      "id": "1.1",
+      "group": "Temporal persistence",
+      "dim": "correctness",
+      "verdict": "PASS",
+      "detail": "chay durable enforced"
+    },
+    {
+      "id": "1.2",
+      "group": "Temporal persistence",
+      "dim": "correctness",
+      "verdict": "PASS",
+      "detail": "spice note surfaced"
+    },
+    {
+      "id": "1.3",
+      "group": "Temporal persistence",
+      "dim": "correctness",
+      "verdict": "PASS",
+      "detail": "garlic surfaced"
+    },
+    {
+      "id": "1.4",
+      "group": "Temporal persistence",
+      "dim": "correctness",
+      "verdict": "PASS",
+      "detail": "peanut surfaced"
+    },
+    {
+      "id": "2.1",
+      "group": "Conflict resolution",
+      "dim": "precedence",
+      "verdict": "LLM",
+      "detail": "spice override = Layer-1 preference agent"
+    },
+    {
+      "id": "2.2",
+      "group": "Conflict resolution",
+      "dim": "precedence",
+      "verdict": "PARTIAL",
+      "detail": "seafood hard (over-excludes; shrimp-only not separable)"
+    },
+    {
+      "id": "2.3",
+      "group": "Conflict resolution",
+      "dim": "precedence",
+      "verdict": "PASS",
+      "detail": "permanent chay kept, temp not persisted"
+    },
+    {
+      "id": "2.4",
+      "group": "Conflict resolution",
+      "dim": "precedence",
+      "verdict": "LLM",
+      "detail": "dislike retraction = Layer-1 preference agent"
+    },
+    {
+      "id": "3.1",
+      "group": "Safety",
+      "dim": "safety",
+      "verdict": "PASS",
+      "detail": "peanut proactively surfaced (Phase1+2)"
+    },
+    {
+      "id": "3.2",
+      "group": "Safety",
+      "dim": "safety",
+      "verdict": "PARTIAL",
+      "detail": "chay hard + peanut surfaced (spice not separable)"
+    },
+    {
+      "id": "3.3",
+      "group": "Safety",
+      "dim": "safety",
+      "verdict": "PASS",
+      "detail": "joke not persisted as constraint"
+    },
+    {
+      "id": "3.4",
+      "group": "Safety",
+      "dim": "safety",
+      "verdict": "PASS",
+      "detail": "retracted shrimp allergy gone"
+    },
+    {
+      "id": "4.1",
+      "group": "Session isolation",
+      "dim": "isolation",
+      "verdict": "PASS",
+      "detail": "transient group ctx not persisted"
+    },
+    {
+      "id": "4.2",
+      "group": "Session isolation",
+      "dim": "isolation",
+      "verdict": "PASS",
+      "detail": "third-party pref not attributed to user"
+    },
+    {
+      "id": "4.3",
+      "group": "Session isolation",
+      "dim": "isolation",
+      "verdict": "LLM",
+      "detail": "location = Layer-1 + real-time GPS"
+    },
+    {
+      "id": "5.1",
+      "group": "Multi-hop reasoning",
+      "dim": "correctness",
+      "verdict": "LLM",
+      "detail": "multi-hop conjunction = ranking/LLM"
+    },
+    {
+      "id": "5.2",
+      "group": "Multi-hop reasoning",
+      "dim": "correctness",
+      "verdict": "LLM",
+      "detail": "implicit pattern = episodic+LLM"
+    },
+    {
+      "id": "5.3",
+      "group": "Multi-hop reasoning",
+      "dim": "correctness",
+      "verdict": "LLM",
+      "detail": "stated-pref vs rating = episodic+LLM"
+    },
+    {
+      "id": "6.1",
+      "group": "Weighting & prioritization",
+      "dim": "correctness",
+      "verdict": "PASS",
+      "detail": "FIFO cap holds (weighting=LLM)"
+    },
+    {
+      "id": "6.2",
+      "group": "Weighting & prioritization",
+      "dim": "precedence",
+      "verdict": "LLM",
+      "detail": "spice level = Layer-1 preference agent"
+    },
+    {
+      "id": "6.3",
+      "group": "Weighting & prioritization",
+      "dim": "correctness",
+      "verdict": "PASS",
+      "detail": "temp kiêng expired via TTL"
+    },
+    {
+      "id": "7.1",
+      "group": "Transparency",
+      "dim": "transparency",
+      "verdict": "LLM",
+      "detail": "enumerate memory = LLM explanation"
+    },
+    {
+      "id": "7.2",
+      "group": "Transparency",
+      "dim": "transparency",
+      "verdict": "PASS",
+      "detail": "retracted shrimp no longer enforced"
+    },
+    {
+      "id": "7.3",
+      "group": "Transparency",
+      "dim": "transparency",
+      "verdict": "PASS",
+      "detail": "clear-all wipes profile"
+    },
+    {
+      "id": "8.1",
+      "group": "Stress / edge case",
+      "dim": "correctness",
+      "verdict": "PASS",
+      "detail": "organ-meat surfaced"
+    },
+    {
+      "id": "8.2",
+      "group": "Stress / edge case",
+      "dim": "correctness",
+      "verdict": "LLM",
+      "detail": "self-correction = Layer-1 preference agent"
+    },
+    {
+      "id": "8.3",
+      "group": "Stress / edge case",
+      "dim": "correctness",
+      "verdict": "PASS",
+      "detail": "abbreviation surfaced (Phase1)"
+    },
+    {
+      "id": "8.4",
+      "group": "Stress / edge case",
+      "dim": "correctness",
+      "verdict": "LLM",
+      "detail": "graceful fallback = LLM behavior"
+    }
+  ],
+  "overall": {
+    "pass": 16,
+    "partial": 2,
+    "fail": 0,
+    "llm": 10,
+    "deterministic_coverage": 18,
+    "deterministic_pass_rate_pct": 88
+  },
+  "by_dimension": {
+    "correctness": {
+      "PASS": 8,
+      "PARTIAL": 0,
+      "FAIL": 0,
+      "LLM": 5
+    },
+    "precedence": {
+      "PASS": 1,
+      "PARTIAL": 1,
+      "FAIL": 0,
+      "LLM": 3
+    },
+    "safety": {
+      "PASS": 3,
+      "PARTIAL": 1,
+      "FAIL": 0,
+      "LLM": 0
+    },
+    "isolation": {
+      "PASS": 2,
+      "PARTIAL": 0,
+      "FAIL": 0,
+      "LLM": 1
+    },
+    "transparency": {
+      "PASS": 2,
+      "PARTIAL": 0,
+      "FAIL": 0,
+      "LLM": 1
+    }
+  },
+  "by_group": {
+    "Temporal persistence": {
+      "PASS": 4,
+      "PARTIAL": 0,
+      "FAIL": 0,
+      "LLM": 0
+    },
+    "Conflict resolution": {
+      "PASS": 1,
+      "PARTIAL": 1,
+      "FAIL": 0,
+      "LLM": 2
+    },
+    "Safety": {
+      "PASS": 3,
+      "PARTIAL": 1,
+      "FAIL": 0,
+      "LLM": 0
+    },
+    "Session isolation": {
+      "PASS": 2,
+      "PARTIAL": 0,
+      "FAIL": 0,
+      "LLM": 1
+    },
+    "Multi-hop reasoning": {
+      "PASS": 0,
+      "PARTIAL": 0,
+      "FAIL": 0,
+      "LLM": 3
+    },
+    "Weighting & prioritization": {
+      "PASS": 2,
+      "PARTIAL": 0,
+      "FAIL": 0,
+      "LLM": 1
+    },
+    "Transparency": {
+      "PASS": 2,
+      "PARTIAL": 0,
+      "FAIL": 0,
+      "LLM": 1
+    },
+    "Stress / edge case": {
+      "PASS": 2,
+      "PARTIAL": 0,
+      "FAIL": 0,
+      "LLM": 2
+    }
+  }
+}

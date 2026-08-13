@@ -183,6 +183,12 @@ def _ensure_prior_referent(engine, session_id: str, prior_turns: list[dict], cit
     #      (production uses core.tracing.new_id("msg")).
     from core.tracing import new_id
     with engine.begin() as c:
+        # Ensure the session row exists BEFORE the message INSERT (FK chat_messages→chat_sessions).
+        # A replayed prior /chat turn normally creates it, but if that turn failed (FPT/transient)
+        # the session is absent and this seed INSERT would FK-violate + crash the whole eval.
+        c.execute(text(
+            "INSERT INTO chat_sessions (session_id) VALUES (:s) ON CONFLICT (session_id) DO NOTHING"),
+            {"s": session_id})
         c.execute(text(
             "INSERT INTO chat_messages (message_id, session_id, sender, text, trace_id, structured_payload_json, timestamp) "
             "VALUES (:mid, :s, 'agent', :t, NULL, CAST(:p AS jsonb), now())"),
@@ -289,7 +295,11 @@ def run_case(case: dict, engine) -> dict:
     # Eval-fidelity: if the replayed prior agent turn has no results (GT-scripted prior merchants
     # aren't in the DB / search non-deterministic), seed REAL cuisine-matched merchants so the
     # anaphora follow-up (TC-09/41/47) has a deterministic referent.
-    seeded = _ensure_prior_referent(engine, sid, ctx.get("prior_turns") or [], None)
+    try:
+        seeded = _ensure_prior_referent(engine, sid, ctx.get("prior_turns") or [], None)
+    except Exception as e:  # noqa: BLE001 — seeding is best-effort; never crash the whole eval
+        print(f"   [seed-skip] {cid}: prior-referent seeding failed ({type(e).__name__})")
+        seeded = False
     if seeded:
         print(f"   [seed] {cid}: prior referent seeded from real DB merchants")
 

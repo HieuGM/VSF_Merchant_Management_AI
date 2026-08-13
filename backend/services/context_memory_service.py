@@ -73,9 +73,11 @@ _RETRACT_STOP = {"di", "roi", "nua", "ay", "the", "lam", "nhieu", "va", "ma", "t
 # over a bare "ngày" form. Absent a marker → None → the note is durable (current default).
 _DURATIONS: tuple[tuple[str, int], ...] = (
     ("2 ngay", 2), ("hai ngay", 2), ("3 ngay", 3), ("ba ngay", 3),
-    ("may ngay", 3), ("vai ngay", 2), ("mot ngay", 1), ("1 ngay", 1), ("trong ngay", 1),
-    ("hom nay", 1),
-    ("2 tuan", 14), ("hai tuan", 14), ("mot tuan", 7), ("1 tuan", 7), ("tuan nay", 7), ("tuan", 7),
+    ("mot ngay", 1), ("1 ngay", 1), ("trong ngay", 1), ("hom nay", 1),
+    # NOTE: "mấy ngày"/"vài ngày" (a few days) intentionally EXCLUDED — they false-match non-duration
+    # contexts ("mấy ngày khác bình thường" = other days are normal) and wrongly expire a permanent
+    # constraint. Prefer under-detection to wrongly expiring a durable fact (memory_test.json 3.2).
+    ("2 tuan", 14), ("hai tuan", 14), ("mot tuan", 7), ("1 tuan", 7), ("tuan nay", 7),
     ("2 thang", 60), ("mot thang", 30), ("1 thang", 30), ("thang nay", 30),
 )
 
