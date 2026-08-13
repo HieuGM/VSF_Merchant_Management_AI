@@ -164,7 +164,8 @@ def _configure_crewai_storage() -> None:
     # path. CrewAI's task-output storage must be writable for every kickoff.
     os.environ["XDG_DATA_HOME"] = str(runtime_root)
     os.environ.setdefault("CREWAI_STORAGE_DIR", "merchant-advisor")
-    os.environ.setdefault("CREWAI_TELEMETRY_OPT_OUT", "true")
+    os.environ.setdefault("CREWAI_DISABLE_TELEMETRY", "true")
+    os.environ.setdefault("CREWAI_TRACING_ENABLED", "false")
 
 
 def coordinator_task_description() -> str:
@@ -352,6 +353,7 @@ class NativeMerchantAdvisorCrew:
             tasks=[self.advisory_task(), self.synthesis_task()],
             process=Process.hierarchical,
             manager_agent=self.coordinator(),
+            tracing=False,
             verbose=_VERBOSE,
         )
 

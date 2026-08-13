@@ -6,17 +6,22 @@ Each vertical implements its OWN router file; cross-cutting extensions attach vi
 """
 from __future__ import annotations
 
+import base64
 import os
-os.environ["CREWAI_TELEMETRY_OPT_OUT"] = "true"
+os.environ["CREWAI_DISABLE_TELEMETRY"] = "true"
+os.environ["CREWAI_TRACING_ENABLED"] = "false"
 
 from contextlib import asynccontextmanager
+import httpx
 
 from fastapi import FastAPI
-from langfuse import get_client
+from langfuse import Langfuse, __version__ as langfuse_version
 from openinference.instrumentation.crewai import CrewAIInstrumentor
+from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
 
 from app import extensions
 from core.logging import configure_logging, get_logger
+from core.otel_insecure_session import create_session
 from core.settings import get_settings, sync_langfuse_env
 
 
@@ -49,11 +54,55 @@ _BASE_ROUTERS = [
 
 
 def initialize_langfuse():
-    sync_langfuse_env(get_settings())
-    client = get_client()
+    settings = get_settings()
+    sync_langfuse_env(settings)
+
+    insecure_ssl = (
+        os.getenv("LANGFUSE_INSECURE_SSL", "false").lower() == "true"
+    )
+
+    client_options = {
+        "httpx_client": httpx.Client(verify=not insecure_ssl),
+    }
+    if insecure_ssl:
+        public_key = settings.langfuse_public_key
+        secret_key = settings.langfuse_secret_key
+        base_url = (
+            settings.langfuse_base_url
+            or os.getenv("LANGFUSE_BASE_URL")
+            or "https://cloud.langfuse.com"
+        ).rstrip("/")
+        auth = base64.b64encode(
+            f"{public_key}:{secret_key}".encode("utf-8")
+        ).decode("ascii")
+        client_options["span_exporter"] = OTLPSpanExporter(
+            endpoint=f"{base_url}/api/public/otel/v1/traces",
+            headers={
+                "Authorization": f"Basic {auth}",
+                "x-langfuse-sdk-name": "python",
+                "x-langfuse-sdk-version": langfuse_version,
+                "x-langfuse-public-key": public_key,
+            },
+            session=create_session(),
+        )
+        logger.warning(
+            "Langfuse TLS certificate verification is disabled for local development"
+        )
+
+    client = Langfuse(**client_options)
+
     if not client.auth_check():
         raise RuntimeError("Langfuse authentication failed")
-    CrewAIInstrumentor().instrument(skip_dep_check=True)
+
+    CrewAIInstrumentor().instrument(
+        skip_dep_check=True,
+    )
+
+    logger.info(
+        "langfuse_initialized insecure_ssl=%s",
+        insecure_ssl,
+    )
+
     return client
 
 
