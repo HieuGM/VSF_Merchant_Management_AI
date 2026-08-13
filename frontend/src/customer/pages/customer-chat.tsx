@@ -12,6 +12,7 @@ import { ChatMessageView } from "../components/chat-message";
 import { Composer } from "../components/composer";
 import { QuickPrompts } from "../components/quick-prompts";
 import { useChat } from "../context/chat-provider";
+import { useGeolocation } from "../hooks/use-geolocation";
 import { usePreferences } from "../hooks/use-preferences";
 import { useStickToBottom } from "../hooks/use-stick-to-bottom";
 import "./customer-chat.css";
@@ -26,7 +27,8 @@ function accuracyLabel(m: number | null): { text: string; poor: boolean } | null
 
 export default function CustomerChat() {
   const { messages, sending, send, stop, openSession, sessionId } = useChat();
-  const { prefs } = usePreferences();
+  const { prefs, update } = usePreferences();
+  const geo = useGeolocation();
   const navigate = useNavigate();
   const [draft, setDraft] = useState("");
   const { ref, atBottom, scrollToBottom, onScroll } = useStickToBottom<HTMLDivElement>();
@@ -78,7 +80,17 @@ export default function CustomerChat() {
 
   const empty = messages.length === 0;
   const locActive = prefs.useLocation && prefs.locationReady;
+  // "use my location" is ON but no coords were captured (geolocation denied/failed once) → the
+  // agent silently falls back to text search and asks "ở khu nào". Surface this as an
+  // actionable chip so the user knows geo-filtering is off and can retry in-place.
+  const locPending = prefs.useLocation && !prefs.locationReady;
   const acc = accuracyLabel(prefs.accuracy);
+
+  const recaptureLocation = async () => {
+    const coords = await geo.request();
+    if (coords)
+      update({ locationReady: true, lat: coords.lat, lng: coords.lng, accuracy: coords.accuracy });
+  };
 
   return (
     <div className="cchat">
@@ -119,6 +131,19 @@ export default function CustomerChat() {
       )}
 
       <div className="cchat__composer-wrap">
+        {locPending && (
+          <button
+            type="button"
+            className="cchat__loc is-poor"
+            onClick={recaptureLocation}
+            title="Định vị chưa sẵn sàng — bấm để thử lại"
+          >
+            <MapPin size={13} />
+            {geo.status === "loading"
+              ? "Đang xác định vị trí…"
+              : "Vị trí chưa sẵn sàng — bấm để bật lại"}
+          </button>
+        )}
         {locActive && (
           <button
             type="button"

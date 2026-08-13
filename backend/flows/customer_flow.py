@@ -1305,6 +1305,11 @@ def _persist_turns(
             "merchant_id": r.get("merchant_id"),
             "name": r.get("name"),
             "cuisine": r.get("cuisine"),
+            "address": r.get("address"),
+            "distance_km": r.get("distance_km"),
+            "avg_rating": r.get("avg_rating"),
+            "match_score": r.get("match_score"),
+            "image_url": r.get("image_url"),
         }
         for r in (displayed or [])[:3]
         if r.get("merchant_id")
