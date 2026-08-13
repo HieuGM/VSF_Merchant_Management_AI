@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   fetchDemoTargetMerchants,
   fetchMerchantProfile,
@@ -84,6 +84,7 @@ function ChatbotWorkspace({
   const [inspectedMessage, setInspectedMessage] = useState<ChatMessage | null>(null);
   const [inspectedTab, setInspectedTab] = useState<'results' | 'map' | 'trace'>('results');
   const [selectedDetailMerchant, setSelectedDetailMerchant] = useState<AnalyzedMerchant | null>(null);
+  const [routeDistances, setRouteDistances] = useState<Record<string, number>>({});
   const endRef = useRef<HTMLDivElement>(null);
   const {
     messages,
@@ -121,6 +122,9 @@ function ChatbotWorkspace({
     setInspectedMessage(msg);
     setInspectedTab(tab);
   };
+  const handleRouteCalculated = useCallback((id: string, distance: number) => {
+    setRouteDistances((current) => current[id] === distance ? current : { ...current, [id]: distance });
+  }, []);
 
   const latestMessageWithMerchants =
     messages.filter((m) => m.sender === 'assistant' && (m.analyzedMerchants?.length ?? 0) > 0).slice(-1)[0] ??
@@ -174,6 +178,7 @@ function ChatbotWorkspace({
               onOpenDetails={handleOpenDetails}
               onPrompt={sendMessage}
               onOpenMerchantDetail={(m) => setSelectedDetailMerchant(m)}
+              routeDistances={routeDistances}
             />
 
             <ChatInput isThinking={isThinking} onSend={sendMessage} />
@@ -188,6 +193,8 @@ function ChatbotWorkspace({
           latestMessage={latestMessageWithMerchants}
           selectedMerchant={selectedDetailMerchant}
           onSelectMerchant={(m) => setSelectedDetailMerchant(m)}
+          onRouteCalculated={handleRouteCalculated}
+          routeDistances={routeDistances}
         />
       </aside>
 
@@ -200,6 +207,8 @@ function ChatbotWorkspace({
               latestMessage={latestMessageWithMerchants}
               selectedMerchant={selectedDetailMerchant}
               onSelectMerchant={(m) => setSelectedDetailMerchant(m)}
+              onRouteCalculated={handleRouteCalculated}
+              routeDistances={routeDistances}
               onCloseMobileMap={() => setMobileMapOpen(false)}
             />
           </div>
@@ -218,6 +227,8 @@ function ChatbotWorkspace({
       {selectedDetailMerchant && (
         <MerchantDetailModal
           merchant={selectedDetailMerchant}
+          routeDistanceKm={routeDistances[selectedDetailMerchant.merchant_id]}
+          ownerMerchantId={merchantId}
           onClose={() => setSelectedDetailMerchant(null)}
         />
       )}

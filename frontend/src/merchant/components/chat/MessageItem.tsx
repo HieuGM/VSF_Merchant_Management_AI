@@ -6,10 +6,12 @@ export function MessageItem({
   message,
   onOpenDetails,
   onOpenMerchantDetail,
+  routeDistances = {},
 }: {
   message: ChatMessage;
   onOpenDetails: (message: ChatMessage, tab?: 'results' | 'map' | 'trace') => void;
   onOpenMerchantDetail?: (merchant: AnalyzedMerchant) => void;
+  routeDistances?: Record<string, number>;
 }) {
   if (message.sender === 'user') {
     return (
@@ -62,7 +64,8 @@ export function MessageItem({
           <div className="merchant-carousel-wrapper">
             <div className="merchant-carousel">
               {merchantsToDisplay.map((item, index) => {
-                const rating = item.rating || (4.8 - index * 0.1).toFixed(1);
+                const rating = item.rating ?? item.ratings?.shopeefood ?? item.ratings?.foody;
+                const distance = routeDistances[item.merchant_id] ?? item.distance_km;
                 return (
                   <div className="merchant-card" key={item.merchant_id || index}>
                     <div className="merchant-card-image-wrap">
@@ -71,7 +74,7 @@ export function MessageItem({
                       }}>
                         <span className="food-emoji">{['🥗', '🍣', '🍲', '🥑'][index % 4]}</span>
                       </div>
-                      <div className="rating-badge">★ {rating}</div>
+                      <div className="rating-badge">{rating != null ? `★ ${rating.toFixed(1)}` : 'Chưa có đánh giá'}</div>
                     </div>
                     <div className="merchant-card-body">
                       <h4 className="merchant-card-title">{item.name}</h4>
@@ -82,7 +85,7 @@ export function MessageItem({
                         </span>
                         <span className="meta-distance">
                           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                          {item.distance_km != null ? `${item.distance_km} km` : '0.6 km'}
+                          {distance != null ? `${distance.toFixed(1)} km` : 'Chưa có khoảng cách'}
                         </span>
                       </div>
                       <button

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { getMerchantMap } from '../../api/mapApi';
 import type { ChatMessage, AnalyzedMerchant } from '../../types/merchantChat';
 import type { MerchantMapFeatureCollection } from '../../types/monitoring';
-import { MerchantMap } from './MerchantMap';
+import { fetchOsrmRoute, MerchantMap } from './MerchantMap';
 
 export function RightSideMapPanel({
   merchantId,
@@ -10,12 +10,16 @@ export function RightSideMapPanel({
   selectedMerchant,
   onSelectMerchant,
   onCloseMobileMap,
+  onRouteCalculated,
+  routeDistances = {},
 }: {
   merchantId: string;
   latestMessage?: ChatMessage | null;
   selectedMerchant?: AnalyzedMerchant | null;
   onSelectMerchant?: (merchant: AnalyzedMerchant) => void;
   onCloseMobileMap?: () => void;
+  onRouteCalculated?: (merchantId: string, distanceKm: number) => void;
+  routeDistances?: Record<string, number>;
 }) {
   const [featureCollection, setFeatureCollection] = useState<MerchantMapFeatureCollection | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -52,6 +56,20 @@ export function RightSideMapPanel({
       active = false;
     };
   }, [merchantId, latestMessage?.id, candidates.length]);
+
+  useEffect(() => {
+    if (!featureCollection || !onRouteCalculated) return;
+    const origin = featureCollection.features.find((feature) => ['owner', 'user_location'].includes(String(feature.properties.role)));
+    if (!origin) return;
+
+    candidates.forEach((candidate) => {
+      const target = featureCollection.features.find((feature) => String(feature.properties.merchant_id) === candidate.merchant_id);
+      if (!target) return;
+      fetchOsrmRoute(origin.geometry.coordinates, target.geometry.coordinates)
+        .then(({ distanceKm }) => distanceKm !== undefined && onRouteCalculated(candidate.merchant_id, distanceKm))
+        .catch(() => undefined);
+    });
+  }, [candidates, featureCollection, onRouteCalculated]);
 
   return (
     <>
@@ -114,6 +132,7 @@ export function RightSideMapPanel({
               <MerchantMap
                 featureCollection={featureCollection}
                 selectedMerchantId={selectedMerchantId}
+                onRouteCalculated={onRouteCalculated}
               />
               <div className="compact-map-overlay-badge">
                 <span>Bấm để phóng to ⤢</span>
@@ -145,8 +164,8 @@ export function RightSideMapPanel({
                       <strong className="card-name">{merchant.name}</strong>
                       <span className="card-sub">{merchant.cuisine || merchant.city || 'F&B'}</span>
                     </div>
-                    {merchant.distance_km != null && (
-                      <span className="card-dist-pill">{merchant.distance_km} km</span>
+                    {(routeDistances[merchant.merchant_id] ?? merchant.distance_km) != null && (
+                      <span className="card-dist-pill">{(routeDistances[merchant.merchant_id] ?? merchant.distance_km)!.toFixed(1)} km</span>
                     )}
                   </button>
                 );
@@ -184,6 +203,7 @@ export function RightSideMapPanel({
                 <MerchantMap
                   featureCollection={featureCollection}
                   selectedMerchantId={selectedMerchantId}
+                  onRouteCalculated={onRouteCalculated}
                 />
               )}
             </div>
@@ -202,7 +222,7 @@ export function RightSideMapPanel({
                         onClick={() => onSelectMerchant?.(item)}
                       >
                         <span>{idx + 1}. {item.name}</span>
-                        {item.distance_km != null && <small>{item.distance_km} km</small>}
+                        {(routeDistances[item.merchant_id] ?? item.distance_km) != null && <small>{(routeDistances[item.merchant_id] ?? item.distance_km)!.toFixed(1)} km</small>}
                       </button>
                     );
                   })}

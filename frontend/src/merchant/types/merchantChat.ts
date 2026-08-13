@@ -44,8 +44,10 @@ export interface AnalyzedMerchant {
   merchant_id: string;
   name: string;
   cuisine?: string;
+  city?: string;
   distance_km?: number;
   rating?: number;
+  ratings?: { shopeefood?: number; foody?: number };
   score?: number;
   address?: string;
   /** Tool that surfaced this merchant, e.g. "search_merchants" */

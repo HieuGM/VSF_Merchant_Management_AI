@@ -7,11 +7,11 @@ interface FetchOsrmRouteOptions {
   osrmEndpoint?: string;
 }
 
-async function fetchOsrmRoute(
+export async function fetchOsrmRoute(
   start: [number, number],
   end: [number, number],
   options?: FetchOsrmRouteOptions,
-): Promise<{ geometry: any }> {
+): Promise<{ geometry: GeoJSON.LineString; distanceKm?: number }> {
   const baseUrl = (options?.osrmEndpoint || 'https://router.project-osrm.org').replace(/\/$/, '');
   const url = `${baseUrl}/route/v1/driving/${start[0]},${start[1]};${end[0]},${end[1]}?overview=full&geometries=geojson`;
 
@@ -22,7 +22,10 @@ async function fetchOsrmRoute(
     }
     const data = await response.json();
     if (data.routes && data.routes.length > 0 && data.routes[0]?.geometry) {
-      return { geometry: data.routes[0].geometry };
+      return {
+        geometry: data.routes[0].geometry,
+        distanceKm: typeof data.routes[0].distance === 'number' ? data.routes[0].distance / 1000 : undefined,
+      };
     }
   } catch (error) {
     console.warn('OSRM routing request failed, falling back to direct line:', error);
@@ -42,11 +45,13 @@ export function MerchantMap({
   selectedMerchantId,
   onMapClick,
   osrmEndpoint,
+  onRouteCalculated,
 }: {
   featureCollection: MerchantMapFeatureCollection;
   selectedMerchantId?: string | null;
   onMapClick?: () => void;
   osrmEndpoint?: string;
+  onRouteCalculated?: (merchantId: string, distanceKm: number) => void;
 }) {
   const hostRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
@@ -66,14 +71,6 @@ export function MerchantMap({
     const ownerFeature = featureCollection.features.find(
       (f) => String(f.properties.role) === 'owner' || String(f.properties.role) === 'user_location',
     ) || featureCollection.features[0];
-
-    const ownerType = String(
-      ownerFeature.properties.cuisine_type ??
-      ownerFeature.properties.category ??
-      ownerFeature.properties.type ??
-      ownerFeature.properties.merchant_type ??
-      '',
-    ).trim().toLowerCase();
 
     const displayFeatures = featureCollection.features;
 
@@ -193,8 +190,10 @@ export function MerchantMap({
       const startPt = userCoords as [number, number];
       const endPt = selectedFeature.geometry.coordinates as [number, number];
 
-      const { geometry } = await fetchOsrmRoute(startPt, endPt, { osrmEndpoint });
+      const { geometry, distanceKm } = await fetchOsrmRoute(startPt, endPt, { osrmEndpoint });
       if (isCancelled || !mapRef.current) return;
+      const routeMerchantId = String(selectedFeature.properties.merchant_id ?? '');
+      if (routeMerchantId && distanceKm !== undefined) onRouteCalculated?.(routeMerchantId, distanceKm);
 
       if (map.getSource(sourceId)) {
         (map.getSource(sourceId) as maplibregl.GeoJSONSource).setData({
@@ -231,7 +230,7 @@ export function MerchantMap({
 
       if (geometry && Array.isArray(geometry.coordinates) && geometry.coordinates.length > 2) {
         const routeBounds = new maplibregl.LngLatBounds();
-        geometry.coordinates.forEach((pt: [number, number]) => routeBounds.extend(pt));
+        geometry.coordinates.forEach((pt) => routeBounds.extend(pt as [number, number]));
         map.fitBounds(routeBounds, { padding: 65, maxZoom: 15 });
       }
     };
@@ -274,7 +273,7 @@ export function MerchantMap({
       map.remove();
       mapRef.current = null;
     };
-  }, [featureCollection, activeSelectedId, osrmEndpoint, onMapClick]);
+  }, [featureCollection, activeSelectedId, osrmEndpoint, onMapClick, onRouteCalculated]);
 
   return (
     <div
@@ -284,5 +283,3 @@ export function MerchantMap({
     />
   );
 }
-
-

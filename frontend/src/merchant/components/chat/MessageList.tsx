@@ -42,12 +42,14 @@ export function MessageList({
   onOpenDetails,
   onPrompt,
   onOpenMerchantDetail,
+  routeDistances,
 }: {
   messages: ChatMessage[];
   endRef: RefObject<HTMLDivElement>;
   onOpenDetails: (message: ChatMessage, tab?: 'results' | 'map' | 'trace') => void;
   onPrompt?: (prompt: string) => void;
   onOpenMerchantDetail?: (merchant: AnalyzedMerchant) => void;
+  routeDistances?: Record<string, number>;
 }) {
   if (messages.length === 0) {
     return (
@@ -95,6 +97,7 @@ export function MessageList({
             message={message}
             onOpenDetails={onOpenDetails}
             onOpenMerchantDetail={onOpenMerchantDetail}
+            routeDistances={routeDistances}
           />
         ))}
         <div ref={endRef} />

@@ -21,4 +21,16 @@ describe('metrics-only observability', () => {
     fireEvent.click(screen.getByRole('tab', { name: 'Trace' }));
     expect(screen.getByText('Trace is processing')).toBeInTheDocument();
   });
+
+  it('does not invent merchant rating or distance when search omits them', () => {
+    render(<MessageItem onOpenDetails={vi.fn()} message={{
+      id: 'assistant', sender: 'assistant', content: 'Kết quả', timestamp: '10:32',
+      analyzedMerchants: [{ merchant_id: 'm-1', name: 'Quán thật' }],
+    }} />);
+
+    expect(screen.getByText('Chưa có đánh giá')).toBeInTheDocument();
+    expect(screen.getByText('Chưa có khoảng cách')).toBeInTheDocument();
+    expect(screen.queryByText('★ 4.8')).not.toBeInTheDocument();
+    expect(screen.queryByText('0.6 km')).not.toBeInTheDocument();
+  });
 });
