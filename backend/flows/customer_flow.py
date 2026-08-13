@@ -845,7 +845,7 @@ class CustomerFlow:
                 results = apply_constraints(results, constraints)
                 # Attach real merchant food photos (agent candidates carry no image field).
                 results = _enrich_with_images(results)[:3]
-                suggestions = (
+                suggestions = _filter_confirmable(
                     [s.model_dump() for s in preference.suggestions] if preference is not None else []
                 )
                 # Phase-03 B3: server-side weather short-circuit — merge a deterministic rain
@@ -1112,6 +1112,33 @@ def _build_inputs(
         # safely on both paths (streaming injects the real block separately).
         "constraints_block": "",
     }
+
+
+def _filter_confirmable(suggestions: list[dict]) -> list[dict]:
+    """Drop preference suggestions the user could NOT confirm (apply_delta would 400).
+
+    The preference_reasoning LLM sometimes IGNORES the propose_profile_delta tool's valid
+    output and invents its own suggestions whose field/operation/value don't match the profile
+    schema (e.g. field 'cuisine'/'diet' instead of 'liked_cuisines'/'dietary', delta_id
+    'delta1'…). Surfacing those lets the user click 'Lưu' on a suggestion that always 400s and
+    never persists — it then stays visible 'as if not clicked'. Validate each against the SAME
+    resolver apply_delta uses (single source of truth) and keep only the confirmable ones; log
+    how many were dropped so a degraded preference agent is visible, not silent."""
+    from repositories.user_profile_repository import UserProfileRepository
+
+    kept: list[dict] = []
+    for s in suggestions:
+        try:
+            UserProfileRepository._resolve_value(s.get("field"), s.get("operation"), s.get("value"))
+            kept.append(s)
+        except (ValueError, TypeError):
+            continue
+    if len(kept) < len(suggestions):
+        _LOG.info(
+            "preference_suggestions filtered: %d -> %d (dropped %d with non-schema field/op/value)",
+            len(suggestions), len(kept), len(suggestions) - len(kept),
+        )
+    return kept
 
 
 def _task_pydantic(crew_output: Any, model_name: str) -> Any | None:
@@ -1873,7 +1900,7 @@ def _to_chat_response(trace_id: str, session_id: str | None, crew_output: Any) -
     results = _enrich_with_images(
         [c.model_dump() for c in search.candidates] if search is not None else []
     )[:3]
-    suggestions = (
+    suggestions = _filter_confirmable(
         [s.model_dump() for s in preference.suggestions] if preference is not None else []
     )
     answer = _explanation_raw_answer(crew_output)

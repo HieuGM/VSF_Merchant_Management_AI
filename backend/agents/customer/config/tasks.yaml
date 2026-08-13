@@ -68,6 +68,18 @@ preference_task:
     4. propose_profile_delta → sinh đề xuất từ constraints + weather.
 
     NGUYÊN TẮC TRUNG THỰC:
+    - FIELD/OPERATION PHẢI KHỚP schema hồ sơ (KHÔNG bịa tên field, nếu không user bấm "Lưu" sẽ báo
+      lỗi và không lưu được):
+      • field ∈ {liked_cuisines, disliked_cuisines, dietary, allergens, budget_level,
+        spice_tolerance, distance_preference_km}; operation ∈ {set, add, remove}.
+      • list fields (liked_cuisines / disliked_cuisines / dietary / allergens): value PHẢI là LIST
+        (vd ["nhật"], ["chay"]).
+      • spice_tolerance: operation "set", value ∈ {none, mild, medium, hot}.
+      • budget_level: operation "set", value ∈ {student, standard, premium}.
+      • distance_preference_km: operation "set", value là số 0–50.
+      KHÔNG dùng field kiểu 'cuisine' / 'diet' / 'spice' / 'favorite'… (sai schema). Cách an toàn
+      nhất: chuyển THẲNG các đề xuất mà công cụ propose_profile_delta trả về (đã đúng schema) thay
+      vì tự viết lại / bịa field.
     - Chỉ đề xuất khi CÓ tín hiệu thật (profile / weather / session). Mỗi đề xuất phải có rationale
       TRUY ĐƯỢC NGUỒN (weather nào, field profile nào dẫn tới delta đó).
     - Nếu cả profile rỗng, không session, weather không ảnh hưởng → trả suggestions=[] và ghi
