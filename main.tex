@@ -1,0 +1,136 @@
+\documentclass[11pt]{article}
+\usepackage{graphicx}
+\setlength{\parindent}{0pt}
+\usepackage{enumitem}
+\usepackage[utf8]{inputenc}
+\usepackage[left=1.06cm,top=1.7cm,right=1.06cm,bottom=0.49cm]{geometry}
+\usepackage{xcolor} % Cần thiết để định nghĩa và sử dụng màu sắc
+\usepackage{titlesec} % Để tùy chỉnh tiêu đề section
+
+% Tùy chỉnh gói hyperref để hiển thị link rõ ràng hơn (Màu xanh đậm, gạch chân)
+\usepackage[
+    colorlinks=true,
+    linkcolor=blue!70!black, % Màu xanh đậm cho link
+    urlcolor=blue!70!black, % Màu xanh đậm cho URL
+    pdfborderstyle={/S/U/W 1} % Gạch chân (Underline)
+]{hyperref}
+
+% Định nghĩa màu chủ đạo cho CV (ví dụ: màu Teal)
+\definecolor{cvcolor}{HTML}{008080} % Teal
+
+% Tùy chỉnh tiêu đề Section (làm cho chúng có màu và căn giữa)
+\titleformat{\section}
+  {\centering\normalfont\large\bfseries\color{cvcolor}} % Định dạng: Căn giữa, màu
+  {}{0em}{}
+\titlespacing*{\section}
+  {0pt}{1.5ex}{1ex} % Điều chỉnh khoảng cách xung quanh section title
+
+% Lệnh tiện ích để tạo Tiêu đề Section (thay thế \begin{center} \textbf{...} \end{center})
+\newcommand{\cvsection}[1]{%
+    \vspace{5pt}
+    \section*{#1}%
+    \hrulefill
+    \vspace{5pt}
+}
+
+\begin{document}
+% Loại bỏ \begin{center} \textbf{Education} \end{center} và thay bằng \cvsection{Education}
+% để sử dụng màu và format đẹp hơn.
+
+\begin{center}
+    \textbf{\Large Giap Minh Hieu}\\ 
+    \hrulefill
+\end{center}
+
+\begin{center}
+    \href{https://github.com/HieuGM}{Github} \textbullet   \href{https://www.linkedin.com/in/minh-hi%E1%BA%BFu-gi%C3%A1p-39149635a/}{Linkedin} \textbullet \ hieugm0102.work@gmail.com \textbullet \ +84 971010205
+\end{center}
+
+\cvsection{Education}
+
+\textbf{Posts and Telecommunications Institute of Technology} \hfill Ha Noi, Viet Nam
+
+Bachelor of Information Technology -- Talented Program (GPA: $3.53/4.0$)
+
+\textbf{Achievements}
+\begin{itemize}[noitemsep, topsep=1pt, partopsep=0pt, parsep=0pt, leftmargin=15pt]
+    \item Third Prize in OLP AI PTIT 2025
+    \item Third Prize in Hanoi City Excellent Math Student Competition 2022
+    \item Participated in ICPC PTIT Finals
+    \item Top 20 A.I Thuc Chien 2025
+\end{itemize}
+
+English: B2 Certified (APTIS) - Vietnamese: Native
+
+\cvsection{Technical Skills}
+
+\textbf{Programming Language:} Python, C/C++, Java
+
+\textbf{AI/ML:} PyTorch, AI Agents, RAG, LLMs, LangChain
+
+\textbf{Database and tools:} MongoDB, Docker, Git
+
+\cvsection{Experience}
+
+\textbf{VinSmartFuture} \hfill Ha Noi
+
+\textbf{AI Engineer Intern} \hfill 2026
+\begin{itemize}[noitemsep, topsep=0pt, partopsep=0pt, parsep=0pt]
+\item Participate in the development and implementation of the RAG system using Reranking and VectorDB (MongoDB).
+\item Research and apply Agent(ADK) model for PTIT's AI assistant
+
+\end{itemize}
+
+
+\textbf{ProgrammingPTIT Club} \hfill Ha Noi
+
+\textbf{AI project team member} \hfill 2025
+\begin{itemize}[noitemsep, topsep=0pt, partopsep=0pt, parsep=0pt]
+\item Participate in the development and implementation of the RAG system using Reranking and VectorDB (MongoDB).
+\item Research and apply Agent(ADK) model for PTIT's AI assistant
+
+\end{itemize}
+
+\vspace{5pt}
+
+\textbf{Head of Training Department} \hfill 2024-2025
+\begin{itemize}[noitemsep, topsep=0pt, partopsep=0pt, parsep=0pt]
+\item Directly designed and taught C/C++, Algorithms, and Java courses.
+\item Organize and manage competitive programming (CP) competitions.
+\end{itemize}
+
+\cvsection{Projects}
+
+\noindent \textbf{NeoRAGCup 2025:}
+
+\href{https://github.com/HieuGM/NeoRAG_Cup_2025}{NeoRAG}
+\begin{itemize}[noitemsep, topsep=0pt, partopsep=0pt, parsep=0pt, leftmargin=*]
+
+\item Designed and implemented a RAG pipeline to optimize internal information lookup and knowledge retrieval.
+\item Provide accurate information about the club in Vietnamese
+\item Consulting and answering questions for 600 new students
+
+\end{itemize}
+
+\vspace{3pt}
+
+\noindent \textbf{ProLockTech:}
+
+\href{https://github.com/HieuGM/ProLockTech}{ProLockTech}
+\begin{itemize}[noitemsep, topsep=0pt, partopsep=0pt, parsep=0pt, leftmargin=*]
+
+\item Developed a real-time desktop chat application using Java and JavaFX, featuring photo uploads and emotional expression tools.
+\end{itemize}
+
+\vspace{3pt}
+
+\noindent \textbf{ClubSync.AI:}
+
+\href{https://github.com/HieuGM/-AIDEA-ClubSync_AI}{ClubSync}
+\begin{itemize}[noitemsep, topsep=0pt, partopsep=0pt, parsep=0pt, leftmargin=*]
+
+\item A web application for meeting room management with AI to analyze and suggest optimal meeting times.
+\item Helps scheduling meetings become easier even with a busy calendar in a Club.
+\end{itemize}
+
+\end{document}

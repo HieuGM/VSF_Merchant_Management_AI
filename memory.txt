@@ -1,0 +1,88 @@
+A. Test tính đúng đắn cơ bản (Persistence)
+
+Test 1 — Static profile bám dai
+
+Session 1: "Tôi ăn chay"
+[đóng session, mở lại sau vài ngày]
+Session 2: "Tìm quán ăn trưa gần đây"
+✅ Pass: agent tự động lọc quán chay mà KHÔNG cần hỏi lại "bạn ăn chay không?"
+❌ Fail: agent hỏi lại từ đầu, hoặc gợi ý quán có thịt
+
+Test 2 — Real-time context KHÔNG được cache sai
+
+Session 1 (trời mưa): "Tìm chỗ ăn" → agent ưu tiên quán trong nhà
+Session 2 (trời nắng, 1 tuần sau): "Tìm chỗ ăn"
+✅ Pass: agent fetch thời tiết mới, không còn ưu tiên "indoor" từ lần trước
+❌ Fail: agent vẫn gợi ý quán trong nhà vì "nhớ" lần trước user thích indoor
+B. Test an toàn — quan trọng nhất
+
+Test 3 — Dị ứng phải là hard constraint, không phải "gợi nhớ mờ"
+
+Session 1: "Tôi dị ứng hải sản"
+Session 5 (nhiều turn sau, chủ đề đã đổi nhiều lần): "Gợi ý quán sushi ngon gần đây"
+✅ Pass: agent từ chối/cảnh báo hoặc chỉ gợi ý quán sushi có món non-seafood, nhắc lại lý do
+❌ Fail: agent gợi ý quán sushi hải sản bình thường vì thông tin dị ứng "trôi" khỏi context
+
+→ Đây là test bắt lỗi kiểu retrieval xác suất thất bại — nên test nhiều lần với độ dài hội thoại khác nhau (5 turn, 20 turn, 50 turn) để xem tại đâu bắt đầu quên.
+
+C. Test ghi đè & mâu thuẫn (Override logic)
+
+Test 4 — Feedback tường minh phải override
+
+Session 1: "Tôi thích đồ Hàn"
+Session 2: "Thật ra tôi không thích đồ Hàn nữa, đừng gợi ý nữa"
+Session 3: "Tìm chỗ ăn tối"
+✅ Pass: không có quán Hàn trong gợi ý
+❌ Fail: agent vẫn gợi ý quán Hàn vì lấy preference cũ đè lên feedback mới
+
+Test 5 — Tín hiệu ngầm KHÔNG được ghi đè profile tường minh
+
+Static profile: "thích đồ Ý"
+User bỏ qua 2 gợi ý quán Ý liên tiếp (có thể vì lý do khác: quá xa, hết chỗ...)
+Session sau: "Tìm chỗ ăn"
+✅ Pass: quán Ý vẫn được cân nhắc (không tự động xóa preference chỉ vì 2 lần bỏ qua)
+❌ Fail: agent ngừng hẳn gợi ý đồ Ý dù chưa có tín hiệu tường minh nào phủ định
+
+→ Test này kiểm tra việc bạn có phân biệt đúng "trọng số yếu" (implicit) vs "override mạnh" (explicit) không.
+
+D. Test decay / độ liên quan theo thời gian
+
+Test 6 — Ưu tiên đúng theo recency + rating
+
+6 tháng trước: đã đặt quán A, rating 5★
+1 tuần trước: bỏ qua gợi ý quán A (không đưa lý do)
+Session hiện tại: "Gợi ý chỗ ăn giống quán tôi từng thích"
+✅ Pass: quán A vẫn nằm trong top vì rating cao > 1 tín hiệu bỏ qua yếu gần đây
+❌ Fail: quán A bị loại hoàn toàn chỉ vì lần bỏ qua gần nhất
+E. Test cách ly ngữ cảnh (Context isolation)
+
+Test 7 — Không rò rỉ ngữ cảnh phiên này sang phiên khác không liên quan
+
+Session 1: "Tôi đang đi ăn với gia đình, cần chỗ rộng"
+Session 2 (ngày khác): "Tìm chỗ ăn trưa"
+✅ Pass: agent KHÔNG mặc định giả sử đi đông người nữa (vì đó là context tạm thời của session 1)
+❌ Fail: agent vẫn gợi ý quán "phù hợp nhóm đông" dù user không nói gì về việc đi với ai
+F. Test khả năng phục hồi khi memory sai
+
+Test 8 — User sửa thông tin sai
+
+Agent (do suy luận sai): "Vì bạn thích ăn cay nên tôi gợi ý..."
+User: "Không, tôi không thích cay, bạn nhầm rồi"
+Session sau: "Tìm chỗ ăn"
+✅ Pass: không còn giả định "thích cay" trong profile
+❌ Fail: lỗi lặp lại, chứng tỏ correction không được ghi nhận vào static profile
+G. Test hiệu năng retrieval (khi profile lớn)
+
+Test 9 — Nhiễu (noise) không làm lệch kết quả
+
+Profile có 30+ preference đã tích lũy lâu dài (nhiều cái không liên quan đến bữa ăn hiện tại)
+Query: "Tìm chỗ ăn sáng nhanh gọn"
+✅ Pass: agent chỉ dùng preference liên quan (giờ ăn sáng, tốc độ phục vụ), bỏ qua các preference không liên quan (VD: "thích quán có nhạc sống" — không relevant cho bữa sáng nhanh)
+❌ Fail: agent nhồi nhét tất cả preference cũ vào câu trả lời, gây gợi ý lệch hoặc chậm
+Cách chấm điểm gợi ý
+
+Với mỗi test, đo 3 chỉ số:
+
+Correctness — có nhớ đúng thông tin không
+Precedence — khi có mâu thuẫn, thông tin đúng có thắng không (explicit > implicit, mới > cũ với cùng độ tin cậy)
+Isolation — thông tin tạm thời có bị rò rỉ thành vĩnh viễn không

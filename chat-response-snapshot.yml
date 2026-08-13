@@ -1,0 +1,82 @@
+- generic [ref=e4]:
+  - complementary "Điều hướng" [ref=e5]:
+    - generic [ref=e6]:
+      - generic [ref=e12]:
+        - generic [ref=e13]: GSM
+        - generic [ref=e14]: Trợ lý ẩm thực
+      - button "Đóng menu" [ref=e15] [cursor=pointer]
+    - button "Trò chuyện mới" [ref=e19] [cursor=pointer]
+    - navigation [ref=e21]:
+      - link "Trang chủ" [ref=e22] [cursor=pointer]:
+        - /url: /customer
+      - link "Trò chuyện" [ref=e27] [cursor=pointer]:
+        - /url: /customer/chat
+      - link "Khám phá" [ref=e31] [cursor=pointer]:
+        - /url: /customer/explore
+      - link "Sở thích" [ref=e36] [cursor=pointer]:
+        - /url: /customer/preferences
+    - generic [ref=e39]:
+      - generic [ref=e40]:
+        - generic [ref=e41]: Giao diện
+        - button "Chuyển sang giao diện tối" [ref=e42] [cursor=pointer]
+      - button "Sao chép mã người dùng" [ref=e45] [cursor=pointer]:
+        - generic [ref=e46]: Mã của bạn
+        - generic [ref=e47]: user_0bfc2…
+  - main [ref=e51]:
+    - generic [ref=e154]:
+      - generic [ref=e157]:
+        - generic [ref=e158]: Phở ngon gần đây cho bữa tối
+        - generic [ref=e165]:
+          - paragraph [ref=e187]:
+            - text: Ồ, tối nay bạn thèm phở à? Hmm, để mình nhìn quanh xem — à, trong danh sách mình đang có thì toàn mấy quán
+            - strong [ref=e188]: 3 Râu - Gà Rán, Pizza & Trà Sữa
+            - text: thôi, chưa thấy quán phở nào cả. Nếu bạn chịu khó đổi gió thì chi nhánh ở
+            - strong [ref=e189]: Hồ Đắc Di (Tân Phú)
+            - text: được đánh giá 4.8 khá ổn đấy, còn hai chi nhánh ở Bình Phú và Xô Viết Nghệ Tĩnh cũng 4.7. Còn nếu vẫn muốn phở thì bạn kể mình nghe đang ở khu nào, mình tìm kỹ hơn cho nhé?
+          - button "Sao chép câu trả lời" [ref=e190] [cursor=pointer]
+          - generic [ref=e194]:
+            - button "3 Râu - Gà Rán, Pizza & Trà Sữa - Bình Phú, Món Việt" [ref=e195] [cursor=pointer]:
+              - generic [ref=e196]:
+                - generic [ref=e197]: "#1"
+                - generic [ref=e199]:
+                  - heading "3 Râu - Gà Rán, Pizza & Trà Sữa - Bình Phú" [level=3] [ref=e200]
+                  - generic [ref=e201]:
+                    - generic [ref=e202]: Món Việt
+                    - generic [ref=e203]:
+                      - img "4.7 trên 5 sao" [ref=e204]
+                      - generic [ref=e227]: "4.7"
+                - generic [ref=e228]:
+                  - generic [ref=e229]: "39"
+                  - generic [ref=e230]: match
+            - button "3 Râu - Gà Rán, Pizza & Trà Sữa - Hồ Đắc Di, Quán ăn" [ref=e231] [cursor=pointer]:
+              - generic [ref=e232]:
+                - generic [ref=e233]: "#2"
+                - generic [ref=e235]:
+                  - heading "3 Râu - Gà Rán, Pizza & Trà Sữa - Hồ Đắc Di" [level=3] [ref=e236]
+                  - generic [ref=e237]:
+                    - generic [ref=e238]: Quán ăn
+                    - generic [ref=e239]:
+                      - img "4.8 trên 5 sao" [ref=e240]
+                      - generic [ref=e263]: "4.8"
+                - generic [ref=e264]:
+                  - generic [ref=e265]: "39"
+                  - generic [ref=e266]: match
+            - button "3 Râu - Gà Rán, Pizza & Trà Sữa - 551 Xô Viết Nghệ Tĩnh, Quán ăn" [ref=e267] [cursor=pointer]:
+              - generic [ref=e268]:
+                - generic [ref=e269]: "#3"
+                - generic [ref=e271]:
+                  - heading "3 Râu - Gà Rán, Pizza & Trà Sữa - 551 Xô Viết Nghệ Tĩnh" [level=3] [ref=e272]
+                  - generic [ref=e273]:
+                    - generic [ref=e274]: Quán ăn
+                    - generic [ref=e275]:
+                      - img "4.7 trên 5 sao" [ref=e276]
+                      - generic [ref=e299]: "4.7"
+                - generic [ref=e300]:
+                  - generic [ref=e301]: "38"
+                  - generic [ref=e302]: match
+      - generic [ref=e179]:
+        - generic [ref=e180]:
+          - textbox "Tin nhắn" [active] [ref=e181]:
+            - /placeholder: Nhập món, khẩu vị hoặc tâm trạng…
+          - button "Gửi tin nhắn" [disabled] [ref=e303]
+        - paragraph [ref=e185]: Trợ lý có thể sai sót. Hãy kiểm tra thông tin quan trọng.

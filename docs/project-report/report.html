@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<title>VSF Merchant Management AI — Báo cáo mô tả dự án</title>
+<style>
+  @page {
+    size: A4;
+    margin: 20mm 16mm 18mm 16mm;
+    @bottom-center {
+      content: "VSF Merchant Management AI — Báo cáo dự án  ·  Trang " counter(page);
+      font-family: 'Segoe UI', Arial, sans-serif;
+      font-size: 8pt;
+      color: #888;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: 'Segoe UI', 'Inter', Arial, sans-serif;
+    color: #1f2937;
+    font-size: 10.5pt;
+    line-height: 1.55;
+    margin: 0;
+  }
+  :root { --green: #16a34a; --green-d: #15803d; --green-l: #dcfce7; --ink: #1f2937; --mut: #6b7280; }
+  h1, h2, h3, h4 { color: var(--ink); font-weight: 700; line-height: 1.25; }
+  h2.section {
+    font-size: 17pt;
+    color: var(--green-d);
+    border-bottom: 3px solid var(--green);
+    padding-bottom: 5px;
+    margin: 0 0 14px 0;
+    page-break-before: always;
+    page-break-after: avoid;
+  }
+  h2.section .num {
+    display: inline-block;
+    background: var(--green);
+    color: #fff;
+    font-size: 12pt;
+    width: 30px; height: 30px; line-height: 30px;
+    text-align: center; border-radius: 50%;
+    margin-right: 10px; vertical-align: middle;
+  }
+  h3 { font-size: 12.5pt; margin: 18px 0 6px; color: var(--green-d); page-break-after: avoid; }
+  h4 { font-size: 11pt; margin: 12px 0 4px; color: #374151; page-break-after: avoid; }
+  p { margin: 6px 0; text-align: justify; }
+  ul, ol { margin: 6px 0 6px 0; padding-left: 22px; }
+  li { margin: 3px 0; }
+  strong { color: #111827; }
+  code {
+    font-family: 'Consolas', 'Courier New', monospace;
+    background: #f3f4f6; color: #b91c1c;
+    padding: 1px 5px; border-radius: 4px; font-size: 9pt;
+  }
+  .lead { font-size: 11pt; color: #374151; }
+  .mut { color: var(--mut); }
+  .pill {
+    display: inline-block; background: var(--green-l); color: var(--green-d);
+    border: 1px solid #86efac; border-radius: 999px; padding: 1px 9px;
+    font-size: 8.5pt; font-weight: 600; margin-right: 4px;
+  }
+  .pill.gray { background:#f3f4f6; color:#374151; border-color:#d1d5db; }
+  table {
+    width: 100%; border-collapse: collapse; margin: 10px 0;
+    font-size: 9.3pt; page-break-inside: avoid;
+  }
+  th { background: var(--green-d); color: #fff; text-align: left; padding: 7px 8px; font-weight: 600; }
+  td { border: 1px solid #e5e7eb; padding: 6px 8px; vertical-align: top; }
+  tbody tr:nth-child(even) { background: #f9fafb; }
+  figure { margin: 14px 0; page-break-inside: avoid; text-align: center; }
+  figure img {
+    max-width: 100%; border: 1px solid #d1d5db; border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,.08);
+  }
+  figcaption {
+    font-size: 8.8pt; color: var(--mut); margin-top: 6px; font-style: italic;
+  }
+  .callout {
+    border-left: 4px solid var(--green); background: var(--green-l);
+    padding: 9px 13px; border-radius: 0 8px 8px 0; margin: 10px 0; page-break-inside: avoid;
+  }
+  .callout.warn { border-color:#dc2626; background:#fef2f2; }
+  .callout.info { border-color:#2563eb; background:#eff6ff; }
+  .callout b { color: var(--green-d); }
+  .callout.warn b { color:#b91c1c; }
+  .callout.info b { color:#1d4ed8; }
+  .two { display: flex; gap: 12px; }
+  .two > div { flex: 1; }
+  .stat-grid { display: flex; gap: 10px; margin: 12px 0; flex-wrap: wrap; }
+  .stat {
+    flex: 1; min-width: 120px; background:#fff; border:1px solid #e5e7eb; border-radius: 10px;
+    padding: 10px; text-align:center; box-shadow:0 1px 3px rgba(0,0,0,.05);
+  }
+  .stat .v { font-size: 19pt; font-weight: 800; color: var(--green-d); display:block; }
+  .stat .l { font-size: 8.3pt; color: var(--mut); text-transform: uppercase; letter-spacing:.3px; }
+  .diagram { width: 100%; border:1px solid #e5e7eb; border-radius:8px; background:#fcfcfd; }
+  /* ---- Title page ---- */
+  .cover { height: 247mm; display:flex; flex-direction:column; justify-content:center; text-align:center; page-break-after: always; }
+  .cover .kicker { color: var(--green); font-weight:700; letter-spacing:3px; font-size:11pt; text-transform:uppercase; }
+  .cover h1 { font-size: 30pt; color:#111827; margin: 10px 30px; line-height:1.15; }
+  .cover .sub { font-size: 14pt; color:#374151; margin-top:8px; }
+  .cover .rule { width: 90px; height: 5px; background: var(--green); border-radius:3px; margin: 22px auto; }
+  .cover .meta { margin-top: 30px; font-size: 11pt; color:#4b5563; line-height:2; }
+  .cover .meta b { color:#111827; }
+  .toc { page-break-after: always; }
+  .toc h2 { font-size:18pt; color:var(--green-d); border-bottom:3px solid var(--green); padding-bottom:5px; }
+  .toc ol { list-style:none; padding-left:0; font-size:11pt; }
+  .toc li { margin: 8px 0; }
+  .toc li a { color:#1f2937; text-decoration:none; }
+  .toc li .n { display:inline-block; width:26px; color:var(--green-d); font-weight:700; }
+  .toc .sub { padding-left: 30px; font-size:10pt; color:#4b5563; }
+</style>
+</head>
+<body>
+
+<!-- ===================== COVER ===================== -->
+<section class="cover">
+  <div class="kicker">Trợ lý Ẩm thực AI · AI Food Assistant</div>
+  <h1>VSF Merchant Management AI</h1>
+  <div class="sub">Nền tảng quản lý merchant & trợ lý gợi ý nhà hàng thông minh</div>
+  <div class="rule"></div>
+  <div class="lead" style="max-width:150mm; margin:0 auto;">
+    Báo cáo đồ án nhóm — tập trung vào <b>phần thực hiện của tác giả</b> (trục Customer: trợ lý AI gợi ý nhà hàng, UC-04 &amp; UC-05),
+    trong nền tảng VSF Merchant Management AI.
+  </div>
+  <div class="meta">
+    <div><b>Sinh viên thực hiện:</b> Giáp Minh Hiếu</div>
+    <div><b>Mentor hướng dẫn:</b> Đỗ Đức Kiên</div>
+    <div><b>Ngày nộp:</b> 01 / 08 / 2026 &nbsp;·&nbsp; <b>Phiên bản:</b> 1.0</div>
+  </div>
+</section>
+
+<!-- ===================== TOC ===================== -->
+<section class="toc">
+  <h2>Mục lục</h2>
+  <ol>
+    <li><span class="n">1.</span><a href="#s1">Tổng quan dự án</a></li>
+    <li><span class="n">2.</span><a href="#s2">Use cases &amp; phạm vi</a></li>
+    <li><span class="n">3.</span><a href="#s3">Kiến trúc hệ thống</a></li>
+    <li><span class="n">4.</span><a href="#s4">Tech stack</a></li>
+    <li><span class="n">5.</span><a href="#s5">Thiết kế AI Agent (Customer)</a></li>
+    <li><span class="n">6.</span><a href="#s6">Dữ liệu &amp; phương pháp chấm điểm</a></li>
+    <li><span class="n">7.</span><a href="#s7">Giao diện người dùng</a></li>
+    <li><span class="n">8.</span><a href="#s8">Đánh giá &amp; kết quả</a></li>
+    <li><span class="n">9.</span><a href="#s9">Thách thức &amp; giải pháp</a></li>
+    <li><span class="n">10.</span><a href="#s10">Hướng phát triển</a></li>
+    <li><span class="n">P.</span><a href="#sp">Phụ lục</a></li>
+  </ol>
+</section>
+
+<!-- ===================== 1. OVERVIEW ===================== -->
+<h2 class="section" id="s1"><span class="num">1</span>Tổng quan dự án</h2>
+
+<p class="lead">
+<strong>VSF Merchant Management AI</strong> là nền tảng trung tâm phục vụ hệ sinh thái <em>VSF Merchant</em>.
+Hệ thống kết hợp <strong>quản trị dữ liệu merchant</strong> (nhà hàng/quán ăn) với một
+<strong>trợ lý AI hội thoại</strong> phục vụ hai nhóm người dùng: <strong>Khách hàng</strong> (tìm &amp; gợi ý quán ăn)
+và <strong>Chủ merchant</strong> (chẩn đoán điểm yếu, đề xuất cải thiện, phân tích đối thủ).
+</p>
+
+<div class="callout info">
+<b>Phạm vi đóng góp (đồ án nhóm 2 người).</b> <b>Phần em (Giáp Minh Hiếu)</b>: trục <b>Customer</b> — UC-04 (tìm kiếm) + UC-05 (sở thích/bối cảnh), AI Agent khách hàng (crew tuần tự, multi-turn, grounding, clarify gates), frontend Customer, eval ground-truth; và <b>tầng data chung</b> (schema, merchant profiles, scoring 8 dimension, dataset) — đây là trọng tâm báo cáo.
+<b>Đồng đội Minh</b>: trục <b>Merchant</b> — agent UC-01/02/03 (chẩn đoán/đề xuất/đối thủ cho chủ merchant).
+</div>
+
+<h3>1.1 · Vấn đề giải quyết</h3>
+<div class="two">
+<div>
+<ul>
+<li><strong>Khách</strong> khó chọn quán phù hợp giữa hàng ngàn lựa chọn theo khẩu vị, ngân sách, vị trí &amp; thời điểm (thời tiết).</li>
+<li><strong>Chủ merchant</strong> không biết <em>vì sao</em> quán ít đơn, cải thiện <em>điều gì trước</em>, và đang <em>kém đối thủ ở điểm nào</em>.</li>
+<li><strong>Vận hành</strong>: cần tìm kiếm không gian (lân cận) nhanh, không phụ thuộc extension nặng (PostGIS).</li>
+</ul>
+</div>
+<div>
+<div class="callout info">
+<b>Triết lý cốt lõi</b><br>
+Mọi đánh giá là <b>đa chiều</b> (multi-dimension) kèm <b>evidence truy vết được</b> — thay vì một
+"điểm tổng" dễ gây hiểu lầm. Agent <b>không bịa</b> khi thiếu dữ liệu, nói <b>"chưa có thông tin"</b> thay vì suy đoán.
+</div>
+</div>
+</div>
+
+<h3>1.2 · Mục tiêu</h3>
+<ul>
+<li>Tra cứu nhà hàng theo ràng buộc tự nhiên (món, giá, khoảng cách, đánh giá) với lọcgeo chính xác.</li>
+<li>Trợ lý đa lượt (multi-turn), ghi nhớ sở thích &amp; bối cảnh (thời tiết, vị trí).</li>
+<li>Trung thực tối thượng: claim phải có evidence; thiếu evidence → từ chối, không hallucinate.</li>
+<li>An toàn: dị ứng/thực đơn nhạy cảm phải xác nhận; chống injection/SQLi; xử lý ngoài phạm vi (OOD).</li>
+</ul>
+
+<div class="stat-grid">
+  <div class="stat"><span class="v">1.625</span><span class="l">Merchants</span></div>
+  <div class="stat"><span class="v">5</span><span class="l">Use cases</span></div>
+  <div class="stat"><span class="v">8</span><span class="l">Scoring dims</span></div>
+  <div class="stat"><span class="v">39/39</span><span class="l">GT eval</span></div>
+  <div class="stat"><span class="v">27/27</span><span class="l">Unit tests</span></div>
+</div>
+
+<!-- ===================== 2. USE CASES ===================== -->
+<h2 class="section" id="s2"><span class="num">2</span>Use cases &amp; phạm vi</h2>
+<p>Dự án quy định 5 use case (UC-01..05). Trục <strong>Customer (UC-04/05)</strong> đã được xây dựng trọn vẹn
+end-to-end và là trọng tâm báo cáo này. Trục <strong>Merchant (UC-01/02/03)</strong> đã có design + scoring + data sẵn,
+agent flow ở mức target/thiết kế.</p>
+
+<table>
+<thead><tr><th style="width:11%">UC</th><th>Nhóm</th><th>Mô tả</th><th>Trạng thái</th></tr></thead>
+<tbody>
+<tr><td><b>UC-01</b></td><td>Merchant</td><td><b>Diagnosis</b> — chẩn đoán nguyên nhân ít đơn theo dimension yếu nhất + evidence (vd: <code>waiting_time 0.15</code>, prep 34').</td><td><span class="pill gray">Design + data</span></td></tr>
+<tr><td><b>UC-02</b></td><td>Merchant</td><td><b>Recommendation</b> — đề xuất hành động ưu tiên, gắn dimension + evidence + estimated impact.</td><td><span class="pill gray">Design + data</span></td></tr>
+<tr><td><b>UC-03</b></td><td>Merchant</td><td><b>Competitor</b> — so sánh công khai từng dimension với cụm đối thủ lân cận; cấm claim KPI nội bộ.</td><td><span class="pill gray">Design + data</span></td></tr>
+<tr><td><b>UC-04</b></td><td>Customer</td><td><b>Restaurant search</b> — tra cứu theo món/giá/khoảng cách (Haversine), lọc hard-constraint end-to-end.</td><td><span class="pill">Hoàn thành</span></td></tr>
+<tr><td><b>UC-05</b></td><td>Customer</td><td><b>Preference + Context</b> — gợi ý theo sở thích đã xác nhận + thời tiết; tạo preference suggestion (chưa persist).</td><td><span class="pill">Hoàn thành</span></td></tr>
+</tbody>
+</table>
+
+<p class="mut"><b>Phân công:</b> UC-01/02/03 (Merchant) — đồng đội <b>Minh</b>; UC-04/05 (Customer) — <b>em (Hiếu)</b>, trọng tâm báo cáo.</p>
+
+<div class="callout">
+<b>Ví dụ UC-04 (thực tế chạy).</b> Query <em>"Tìm quán phở gần Cầu Giấy"</em> → Agent trả lời hội thoại:
+<em>"Ọ, Cầu Giấy á? Mình thấy có Cuốn Xưa - Phở Cuốn Hà Thành ... rating 4.6 khá ổn ..."</em> kèm 3 merchant card
+(#1 Cuốn Xưa 4.6, #2 Anh Béo - Bún Miến Ngan 4.7, #3 Bánh Mì Chủ Tiệu 4.8) với match score &amp; khoảng cách.
+</div>
+
+<!-- ===================== 3. ARCHITECTURE ===================== -->
+<h2 class="section" id="s3"><span class="num">3</span>Kiến trúc hệ thống</h2>
+<p>Hệ thống chia lớp rõ ràng: <strong>Client</strong> → <strong>API</strong> → <strong>Agent Flow</strong> →
+<strong>Tools/Services</strong> → <strong>Dữ liệu</strong>, với <strong>LLM providers</strong> và dịch vụ ngoài ở biên.</p>
+
+<figure>
+<svg class="diagram" viewBox="0 0 920 560" xmlns="http://www.w3.org/2000/svg" font-family="'Segoe UI',Arial,sans-serif">
+  <defs>
+    <marker id="arr" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L9,4.5 L0,9 z" fill="#16a34a"/>
+    </marker>
+    <marker id="arrg" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L9,4.5 L0,9 z" fill="#9ca3af"/>
+    </marker>
+  </defs>
+  <!-- Layer 1: Client -->
+  <rect x="40" y="22" width="600" height="56" rx="10" fill="#f0fdf4" stroke="#86efac"/>
+  <text x="60" y="46" font-size="13" font-weight="700" fill="#15803d">① Client</text>
+  <text x="60" y="66" font-size="11" fill="#374151">Người dùng (trình duyệt) → React SPA (Vite + Tailwind) — chat SSE</text>
+  <!-- Layer 2: API -->
+  <rect x="40" y="100" width="600" height="64" rx="10" fill="#eff6ff" stroke="#93c5fd"/>
+  <text x="60" y="124" font-size="13" font-weight="700" fill="#1d4ed8">② API Layer — FastAPI</text>
+  <text x="60" y="144" font-size="10.5" fill="#374151">/api/v1/agent/customer/chat  ·  /chat/stream (SSE)</text>
+  <text x="60" y="158" font-size="10.5" fill="#374151">routes · Pydantic validation · trace_id · X-Request-ID</text>
+  <!-- Layer 3: Agent flow -->
+  <rect x="40" y="186" width="600" height="110" rx="10" fill="#fefce8" stroke="#fde047"/>
+  <text x="60" y="210" font-size="13" font-weight="700" fill="#a16207">③ Agent Flow — CrewAI (KHÔNG dùng coordinator)</text>
+  <rect x="58" y="222" width="175" height="60" rx="8" fill="#fff" stroke="#16a34a" stroke-width="1.5"/>
+  <text x="146" y="244" font-size="10.5" text-anchor="middle" font-weight="700" fill="#15803d">1 · restaurant_search</text>
+  <text x="146" y="262" font-size="9" text-anchor="middle" fill="#6b7280">trích ràng buộc + gọi tool</text>
+  <text x="146" y="275" font-size="9" text-anchor="middle" fill="#6b7280">gpt-oss-20b</text>
+  <rect x="252" y="222" width="175" height="60" rx="8" fill="#fff" stroke="#16a34a" stroke-width="1.5"/>
+  <text x="339" y="244" font-size="10.5" text-anchor="middle" font-weight="700" fill="#15803d">2 · preference_reasoning</text>
+  <text x="339" y="262" font-size="9" text-anchor="middle" fill="#6b7280">suy luận khẩu vị + context</text>
+  <text x="339" y="275" font-size="9" text-anchor="middle" fill="#6b7280">gpt-oss-20b</text>
+  <rect x="446" y="222" width="182" height="60" rx="8" fill="#fff" stroke="#0d9488" stroke-width="1.8"/>
+  <text x="537" y="244" font-size="10.5" text-anchor="middle" font-weight="700" fill="#0f766e">3 · customer_explanation</text>
+  <text x="537" y="262" font-size="9" text-anchor="middle" fill="#6b7280">giải thích + stream token</text>
+  <text x="537" y="275" font-size="9" text-anchor="middle" fill="#6b7280">DeepSeek-V4-Flash (SSE)</text>
+  <line x1="233" y1="252" x2="252" y2="252" stroke="#16a34a" stroke-width="2" marker-end="url(#arr)"/>
+  <line x1="427" y1="252" x2="446" y2="252" stroke="#16a34a" stroke-width="2" marker-end="url(#arr)"/>
+  <!-- Layer 4: Tools/Services -->
+  <rect x="40" y="316" width="600" height="76" rx="10" fill="#f5f3ff" stroke="#c4b5fd"/>
+  <text x="60" y="340" font-size="13" font-weight="700" fill="#6d28d9">④ Tools &amp; Services</text>
+  <text x="60" y="360" font-size="10" fill="#374151">merchant_search · nearby_merchant_search (Haversine) · get_merchant_profile</text>
+  <text x="60" y="378" font-size="10" fill="#374151">preference_service · weather (Open-Meteo) · cache · PII redaction</text>
+  <!-- Layer 5: Data -->
+  <rect x="40" y="412" width="600" height="74" rx="10" fill="#fff7ed" stroke="#fdba74"/>
+  <text x="60" y="436" font-size="13" font-weight="700" fill="#c2410c">⑤ Data Layer</text>
+  <text x="60" y="456" font-size="10" fill="#374151">PostgreSQL 18 + SQLAlchemy 2.0 — merchants, menu_items, reviews,</text>
+  <text x="60" y="472" font-size="10" fill="#374151">merchant_profiles, user_profiles, chat_sessions/messages · haversine() PL/pgSQL</text>
+  <text x="380" y="472" font-size="10" fill="#374151">· Redis (cache)</text>
+  <!-- vertical arrows between layers -->
+  <line x1="340" y1="78" x2="340" y2="98" stroke="#9ca3af" stroke-width="2" marker-end="url(#arrg)"/>
+  <line x1="340" y1="164" x2="340" y2="184" stroke="#9ca3af" stroke-width="2" marker-end="url(#arrg)"/>
+  <line x1="340" y1="296" x2="340" y2="314" stroke="#9ca3af" stroke-width="2" marker-end="url(#arrg)"/>
+  <line x1="340" y1="392" x2="340" y2="410" stroke="#9ca3af" stroke-width="2" marker-end="url(#arrg)"/>
+  <!-- Right column: LLM + External -->
+  <rect x="670" y="186" width="210" height="110" rx="10" fill="#ecfeff" stroke="#67e8f9"/>
+  <text x="775" y="210" font-size="12" font-weight="700" text-anchor="middle" fill="#0e7490">LLM Providers (FPT Cloud AI)</text>
+  <text x="775" y="234" font-size="10" text-anchor="middle" fill="#374151">gpt-oss-20b</text>
+  <text x="775" y="250" font-size="8.5" text-anchor="middle" fill="#6b7280">→ agent 1 &amp; 2</text>
+  <text x="775" y="276" font-size="10" text-anchor="middle" fill="#374151">DeepSeek-V4-Flash</text>
+  <text x="775" y="292" font-size="8.5" text-anchor="middle" fill="#6b7280">→ agent 3 (stream)</text>
+  <line x1="628" y1="252" x2="668" y2="240" stroke="#0d9488" stroke-width="1.6" stroke-dasharray="4 3"/>
+  <rect x="670" y="316" width="210" height="60" rx="10" fill="#ecfdf5" stroke="#6ee7b7"/>
+  <text x="775" y="340" font-size="12" font-weight="700" text-anchor="middle" fill="#047857">Dịch vụ ngoài</text>
+  <text x="775" y="360" font-size="10" text-anchor="middle" fill="#374151">Open-Meteo (thời tiết)</text>
+  <line x1="640" y1="354" x2="668" y2="346" stroke="#9ca3af" stroke-width="1.6" stroke-dasharray="4 3"/>
+  <!-- Memory loop hint -->
+  <text x="40" y="528" font-size="9.5" fill="#6b7280">↻ Bộ nhớ đa lượt: chat_messages / user_profiles persist per session_id (TTL 24h) — nạp lại 4 lượt gần nhất vào crew.</text>
+</svg>
+<figcaption>Hình 1 — Kiến trúc tổng quan 5 lớp. Trục Customer đi end-to-end; trục Merchant dùng cùng data/scoring layer.</figcaption>
+</figure>
+
+<h3>3.1 · Luồng xử lý một truy vấn (SSE)</h3>
+<ol>
+<li><strong>Frontend</strong> gửi query + <code>session_id</code> + <code>location</code> (+ tuỳ chọn <code>weather_override</code>) tới <code>/chat/stream</code>.</li>
+<li><strong>Pre-search guard</strong> (tất định, không LLM): rỗng/OOD/dị ứng/báo giá mơ hồ/thiếu vị trí → chặn hoặc yêu cầu làm rõ ngay.</li>
+<li><strong>Crew tuần tự</strong>: search → preference → explanation; agent explanation <strong>stream token</strong> về client qua SSE (TTFT thấp).</li>
+<li>Persist user + agent turn (kèm <code>structured_payload_json</code>: result_merchant_ids) → phục vụ <em>anaphora</em> lượt sau.</li>
+<li>Mỗi bước ghi <code>agent_events</code> (task/tool, duration) theo <code>trace_id</code> — quan sát được toàn vẹn.</li>
+</ol>
+
+<!-- ===================== 4. TECH STACK ===================== -->
+<h2 class="section" id="s4"><span class="num">4</span>Tech stack</h2>
+<div class="two">
+<div>
+<h4>Backend</h4>
+<ul>
+<li>Python · <strong>FastAPI</strong> + Pydantic</li>
+<li><strong>CrewAI</strong> (sequential crew, standalone)</li>
+<li><strong>SQLAlchemy 2.0</strong> + Alembic migrations</li>
+<li>PostgreSQL 18 (JSONB, PL/pgSQL <code>haversine()</code>)</li>
+<li>Redis (cache adapter — CachePort)</li>
+<li>SSE streaming</li>
+</ul>
+</div>
+<div>
+<h4>Frontend</h4>
+<ul>
+<li>React 19 + TypeScript</li>
+<li>Vite · Tailwind CSS v4</li>
+<li>react-router · react-markdown</li>
+<li>lucide-react (icons)</li>
+</ul>
+<h4>AI / LLM</h4>
+<ul>
+<li><strong>gpt-oss-20b</strong> (search/preference)</li>
+<li><strong>DeepSeek-V4-Flash</strong> (explanation, stream)</li>
+<li>Open-Meteo (weather context)</li>
+</ul>
+</div>
+</div>
+<div class="callout warn">
+<b>Infra &amp; chất lượng.</b> Docker Compose (Postgres + Redis riêng từng dev) · trace_id + <code>agent_events</code> observability ·
+<strong>27/27 unit test xanh</strong> · eval harness ground-truth (<code>eval_ground_truth.py</code>) · SQLi escape + Pydantic bounds validation.
+</div>
+
+<!-- ===================== 5. AI AGENT ===================== -->
+<h2 class="section" id="s5"><span class="num">5</span>Thiết kế AI Agent (Customer)</h2>
+
+<p>Đây là phần kỹ thuật cốt lõi và tốn công nhất. Trục Customer dùng <strong>crew tuần tự không coordinator</strong>
+— một quyết định thiết kế cố ý: thay vì một LLM "router" (coordinator) phân phối — vốn dễ hallucinate và chậm —
+hệ thống dùng <strong>các guard tất định + pipeline cố định</strong>, vừa tin cậy vừa dễ kiểm chứng.</p>
+
+<figure>
+<svg class="diagram" viewBox="0 0 920 300" xmlns="http://www.w3.org/2000/svg" font-family="'Segoe UI',Arial,sans-serif">
+  <defs>
+    <marker id="a2" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 z" fill="#16a34a"/></marker>
+  </defs>
+  <!-- guard -->
+  <rect x="20" y="120" width="120" height="64" rx="10" fill="#fef2f2" stroke="#fca5a5"/>
+  <text x="80" y="146" font-size="10.5" text-anchor="middle" font-weight="700" fill="#b91c1c">Pre-search</text>
+  <text x="80" y="162" font-size="10.5" text-anchor="middle" font-weight="700" fill="#b91c1c">Guard</text>
+  <text x="80" y="177" font-size="8.5" text-anchor="middle" fill="#6b7280">tất định, không LLM</text>
+  <!-- agent 1 -->
+  <rect x="165" y="110" width="150" height="84" rx="10" fill="#fff" stroke="#16a34a" stroke-width="1.6"/>
+  <text x="240" y="132" font-size="10.5" text-anchor="middle" font-weight="700" fill="#15803d">restaurant_search</text>
+  <text x="240" y="150" font-size="9" text-anchor="middle" fill="#374151">trích ràng buộc</text>
+  <text x="240" y="164" font-size="9" text-anchor="middle" fill="#374151">→ merchant_search</text>
+  <text x="240" y="178" font-size="9" text-anchor="middle" fill="#374151">→ nearby_search</text>
+  <text x="240" y="191" font-size="8.5" text-anchor="middle" fill="#0e7490">gpt-oss-20b</text>
+  <!-- agent 2 -->
+  <rect x="335" y="110" width="150" height="84" rx="10" fill="#fff" stroke="#16a34a" stroke-width="1.6"/>
+  <text x="410" y="132" font-size="10.5" text-anchor="middle" font-weight="700" fill="#15803d">preference_reasoning</text>
+  <text x="410" y="150" font-size="9" text-anchor="middle" fill="#374151">khẩu vị + profile</text>
+  <text x="410" y="164" font-size="9" text-anchor="middle" fill="#374151">+ thời tiết/context</text>
+  <text x="410" y="178" font-size="9" text-anchor="middle" fill="#374151">→ preference_suggest</text>
+  <text x="410" y="191" font-size="8.5" text-anchor="middle" fill="#0e7490">gpt-oss-20b</text>
+  <!-- agent 3 -->
+  <rect x="505" y="110" width="160" height="84" rx="10" fill="#f0fdfa" stroke="#0d9488" stroke-width="1.8"/>
+  <text x="585" y="132" font-size="10.5" text-anchor="middle" font-weight="700" fill="#0f766e">customer_explanation</text>
+  <text x="585" y="150" font-size="9" text-anchor="middle" fill="#374151">profile grounding</text>
+  <text x="585" y="164" font-size="9" text-anchor="middle" fill="#374151">+ absence-note (anti-bịa)</text>
+  <text x="585" y="178" font-size="9" text-anchor="middle" fill="#374151">stream token (SSE)</text>
+  <text x="585" y="191" font-size="8.5" text-anchor="middle" fill="#0e7490">DeepSeek-V4-Flash</text>
+  <!-- output -->
+  <rect x="690" y="120" width="120" height="64" rx="10" fill="#f0fdf4" stroke="#86efac"/>
+  <text x="750" y="146" font-size="10.5" text-anchor="middle" font-weight="700" fill="#15803d">Answer +</text>
+  <text x="750" y="162" font-size="10.5" text-anchor="middle" font-weight="700" fill="#15803d">Cards +</text>
+  <text x="750" y="177" font-size="8.5" text-anchor="middle" fill="#6b7280">suggestions</text>
+  <!-- arrows -->
+  <line x1="140" y1="152" x2="163" y2="152" stroke="#16a34a" stroke-width="2" marker-end="url(#a2)"/>
+  <line x1="315" y1="152" x2="333" y2="152" stroke="#16a34a" stroke-width="2" marker-end="url(#a2)"/>
+  <line x1="485" y1="152" x2="503" y2="152" stroke="#16a34a" stroke-width="2" marker-end="url(#a2)"/>
+  <line x1="665" y1="152" x2="688" y2="152" stroke="#16a34a" stroke-width="2" marker-end="url(#a2)"/>
+  <!-- memory -->
+  <rect x="335" y="230" width="320" height="46" rx="8" fill="#fffbeb" stroke="#fcd34d"/>
+  <text x="495" y="250" font-size="10" text-anchor="middle" font-weight="700" fill="#b45309">Bộ nhớ đa lượt (chat_messages + user_profiles)</text>
+  <text x="495" y="266" font-size="9" text-anchor="middle" fill="#6b7280">nạp 4 lượt gần nhất · giải quyết anaphora · persist top-3 results theo thứ tự hiển thị</text>
+  <line x1="495" y1="230" x2="495" y2="196" stroke="#f59e0b" stroke-width="1.6" stroke-dasharray="4 3"/>
+  <!-- guard branches -->
+  <text x="80" y="100" font-size="8.5" text-anchor="middle" fill="#b91c1c">rỗng · OOD · dị ứng · giá mơ hồ · thiếu vị trí</text>
+  <line x1="80" y1="106" x2="80" y2="118" stroke="#fca5a5" stroke-width="1.6"/>
+  <text x="845" y="152" font-size="9" fill="#15803d" font-weight="700">→ user</text>
+</svg>
+<figcaption>Hình 2 — Pipeline Customer Agent: guard tất định → 3 agent tuần tự (không coordinator) → output, với vòng lặp bộ nhớ đa lượt.</figcaption>
+</figure>
+
+<h3>5.1 · Đa lượt &amp; bộ nhớ (multi-turn memory)</h3>
+<p>Mỗi phiên chat (<code>session_id</code>) persist user + agent turn vào <code>chat_messages</code>; 4 lượt gần nhất
+được nạp lại vào crew (TTL 24h). Agent turn lưu <code>structured_payload_json</code> với <code>result_merchant_ids</code>
+theo đúng <strong>thứ tự hiển thị</strong> — để lượt sau giải quyết tham chiếu chính xác.</p>
+
+<h3>5.2 · Giải quyết tham chiếu (anaphora resolution)</h3>
+<p>Câu như <em>"quán đầu tiên", "cái đó", "hai quán kia"</em> được giải quyết tất định bằng ordinal/referent detector
+đọc payload lượt trước. Kết hợp với <strong>profile grounding</strong> để trả lời đúng đối tượng — không phụ thuộc tên quán khớp chuỗi.</p>
+
+<h3>5.3 · Profile grounding &amp; trung thực tối thượng</h3>
+<div class="callout warn">
+<b>Anti-confabulation.</b> Khi Agent được hỏi <em>giá</em> hoặc <em>độ cay</em> mà profile <b>không có</b> trường đó
+(vd <code>price_level</code> chỉ định tính "rẻ/cao cấp", <b>không có giá số</b>; <b>không có trường cay</b>), hệ thống
+ghép một <b>absence-note cứng</b> ngay cạnh dữ liệu: <em>"TUYỆT ĐỐI KHÔNG bịa con số / không bịa độ cay"</em>.
+Kết quả: thay vì bịa <em>"vài chục nghìn"</em> hoặc <em>"bún đậu vốn không cay"</em>, Agent nói <em>"chưa có giá cụ thể — mức giá dạng rẻ"</em> / <em>"không có thông tin độ cay trong dữ liệu"</em>.
+</div>
+
+<h3>5.4 · Cổng bắt buộc làm rõ (mandatory-clarify gates)</h3>
+<div class="two">
+<div class="callout info">
+<b>B1 · Báo giá mơ hồ.</b> Một con số trần (1-3 chữ số) trong ngữ cảnh ngân sách, không đơn vị
+→ hỏi rõ đơn vị <em>"50 nghìn / 500 nghìn / 50 triệu?"</em> trước khi tìm. Triple-protected để không bắn nhầm (vd "5.0 sao", "1 tuần", "50.000đ").
+</div>
+<div class="callout info">
+<b>B2 · Thiếu vị trí thưa.</b> Chỉ có từ món ăn, không prior, không vị trí, không động từ ý định → hỏi khu vực trước khi tìm.
+Cả hai gate được verify chỉ kích hoạt đúng 1 case mỗi loại trên toàn 39 case.
+</div>
+</div>
+
+<h3>5.5 · An toàn (safety envelope)</h3>
+<ul>
+<li><strong>Dị ứng / thực đơn nhạy cảm</strong>: quét prior turn, nếu có dị ứng + món → <b>bắt buộc xác nhận</b> trước khi tìm (loại bỏ rủi ro sức khoẻ).</li>
+<li><strong>OOD / injection</strong>: ngoài phạm vi hoặc chèn prompt → từ chối tỉnh táo; <strong>SQLi</strong>: escape ký tự LIKE (<code>\ % _</code>) + Pydantic bounds (lat/lng/radius).</li>
+<li><strong>So sánh/origin thiếu data</strong>: từ chối trung thực, không bịa KPI nội bộ đối thủ.</li>
+</ul>
+
+<!-- ===================== 6. DATA & SCORING ===================== -->
+<h2 class="section" id="s6"><span class="num">6</span>Dữ liệu &amp; phương pháp chấm điểm</h2>
+
+<p class="mut">Tầng data (schema, merchant profiles, scoring) do em xây — phần chung nuôi cả hai trục Customer &amp; Merchant.</p>
+
+<h3>6.1 · Schema (9 bảng chính)</h3>
+<p><code>merchants</code> · <code>menu_items</code> (JSONB cuisine/diet tags) · <code>reviews</code> · <code>delivery_feedbacks</code> ·
+<code>food_images</code> · <code>operational_metrics</code> · <code>merchant_profiles</code> · <code>user_profiles</code> ·
+<code>chat_sessions</code>/<code>chat_messages</code>. Tìm kiếm không gian dùng hàm PL/pgSQL <code>haversine()</code> phía server — nhanh, indexable, không cần PostGIS.</p>
+
+<h3>6.2 · Các trường dữ liệu (field)</h3>
+<p>Các bảng chia 4 nhóm: thực thể merchant, profile chấm điểm, bằng chứng/vận hành, và runtime/customer. Score dùng một thang chuẩn <code>0..1</code>; <code>overall_score_internal</code> là cột sinh tự động (bình quân 8 score), <b>chỉ nội bộ</b>.</p>
+
+<h4>merchants — thực thể nhà hàng</h4>
+<table>
+<thead><tr><th style="width:26%">Trường</th><th style="width:20%">Kiểu</th><th>Ý nghĩa</th></tr></thead>
+<tbody>
+<tr><td><code>merchant_id</code></td><td>text PK</td><td>Mã merchant, khóa chính (theo ID nguồn)</td></tr>
+<tr><td><code>name</code> · <code>cuisine</code> · <code>city</code> · <code>city_slug</code></td><td>text</td><td>Tên, loại ẩm thực, thành phố — dùng để lọc</td></tr>
+<tr><td><code>lat</code> · <code>lng</code></td><td>double</td><td>Tọa độ (cặp cùng null/cùng có) → Haversine tìm lân cận</td></tr>
+<tr><td><code>opens_at</code> · <code>closes_at</code></td><td>time</td><td>Giờ mở/đóng cửa</td></tr>
+<tr><td><code>taste_tags</code> · <code>diet_tags</code> · <code>ingredient_tags</code></td><td>text[]</td><td>Tag đa giá trị: hương vị / chế độ ăn / nguyên liệu</td></tr>
+<tr><td><code>is_active</code> · <code>is_demo_target</code></td><td>bool</td><td>Đang hoạt động / thuộc cohort demo (5 hero)</td></tr>
+</tbody>
+</table>
+
+<h4>merchant_profiles — điểm đa chiều (output scoring)</h4>
+<table>
+<thead><tr><th style="width:26%">Trường</th><th style="width:20%">Kiểu</th><th>Ý nghĩa</th></tr></thead>
+<tbody>
+<tr><td><code>tier</code></td><td>text</td><td><code>hero</code> (evidence giàu) hoặc <code>background</code></td></tr>
+<tr><td><code>price_level</code></td><td>text</td><td>Định tính: <code>rẻ</code> / <code>trung bình</code> / <code>cao cấp</code> — <b>không phải giá số</b></td></tr>
+<tr><td>8 cột <code>*_score</code></td><td>numeric 0..1</td><td>food / image / delivery / packaging / service / waiting_time / menu_diversity / price_competitiveness</td></tr>
+<tr><td><code>overall_score_internal</code></td><td>generated</td><td>Bình quân 8 score — <b>không bao giờ hiển thị</b> ra ngoài (chỉ QA nội bộ)</td></tr>
+</tbody>
+</table>
+
+<h4>Bằng chứng &amp; vận hành (merchant)</h4>
+<table>
+<thead><tr><th style="width:26%">Bảng</th><th>Trường chính</th></tr></thead>
+<tbody>
+<tr><td><code>merchant_dimension_evidence</code></td><td>Số liệu truy vết: <code>value_numeric/text/boolean</code> + <code>reference_ids</code> — đi kèm mỗi claim/điểm</td></tr>
+<tr><td><code>merchant_complaints</code></td><td>Khiếu nại theo <code>category</code> + <code>severity</code> (trừ điểm dimension tương ứng)</td></tr>
+<tr><td><code>operational_metrics</code></td><td><code>avg_prep_time_min</code>, <code>on_time_rate</code>, <code>driver_rating</code>, <code>packaging_ok_rate</code>, <code>peak_hours</code>…</td></tr>
+<tr><td><code>reviews</code> / <code>delivery_feedbacks</code></td><td>Đánh giá (rating 0..10, text, sentiment) / phản hồi giao hàng (on_time, issue, driver_rating)</td></tr>
+<tr><td><code>menu_items</code> / <code>food_images</code></td><td>Món (price, likes, ảnh, category) / chất lượng ảnh món</td></tr>
+</tbody>
+</table>
+
+<h4>Runtime / Customer (phiên chat, trace agent)</h4>
+<table>
+<thead><tr><th style="width:26%">Bảng</th><th>Trường chính</th></tr></thead>
+<tbody>
+<tr><td><code>user_profiles</code></td><td><code>liked/disliked_cuisines</code> (JSONB), <code>spice_tolerance</code>, <code>dietary</code>, <code>budget_level</code>, <code>distance_preference_km</code>, <code>current_lat/lng</code></td></tr>
+<tr><td><code>chat_messages</code></td><td><code>sender</code> (user/agent), <code>text</code>, <code>trace_id</code>, <code>structured_payload_json</code> (lưu <code>result_merchant_ids</code> theo thứ tự → giải quyết anaphora lượt sau)</td></tr>
+<tr><td><code>chat_sessions</code></td><td><code>session_id</code>, <code>user_id</code>, <code>context_snapshot_json</code>, <code>last_trace_id</code></td></tr>
+<tr><td><code>preference_events</code></td><td>Audit append-only: <code>field</code>, <code>operation</code>, <code>status</code> (candidate→confirmed), <code>evidence_refs</code> — <b>không ghi đè</b> user_profiles</td></tr>
+<tr><td><code>agent_runs</code> / <code>agent_events</code></td><td><code>trace_id</code>, <code>crew_name</code>, task/tool, <code>duration_ms</code>, <code>status</code> — quan sát toàn vẹn mỗi lần chạy</td></tr>
+</tbody>
+</table>
+
+<h3>6.3 · 8 dimension chấm điểm merchant</h3>
+<p>Mỗi merchant có <code>merchant_profiles</code> chấm theo 8 dimension — mỗi dimension là <strong>hàm thuần</strong> trả
+<em>(score 0–1, evidence[], basis)</em>, tất định &amp; tái lập. Bảng tóm tắt:</p>
+<table>
+<thead><tr><th>Dimension</th><th>Tín hiệu chính</th><th>Complaint trừ điểm</th></tr></thead>
+<tbody>
+<tr><td><code>food_quality</code></td><td>rating 0.55 · sentiment 0.30 · popularity 0.15</td><td>chất_lượng_món, món_nguội (−0.03)</td></tr>
+<tr><td><code>image_quality</code></td><td>vision (hero) / photo coverage (bg)</td><td>—</td></tr>
+<tr><td><code>delivery_quality</code></td><td>on_time 0.5 · driver 0.3 · time 0.2</td><td>giao_hàng_trễ (−0.03)</td></tr>
+<tr><td><code>packaging</code></td><td>packaging_ok_rate</td><td>đóng_gói_kém (−0.05)</td></tr>
+<tr><td><code>service</code></td><td>rating_norm</td><td>thái_độ_phục_vụ (−0.06)</td></tr>
+<tr><td><code>waiting_time</code></td><td>avg_prep_minutes</td><td>giao_hàng_trễ (−0.03)</td></tr>
+<tr><td><code>menu_diversity</code></td><td>dish_count 0.6 · dish_type 0.4</td><td>—</td></tr>
+<tr><td><code>price_level</code></td><td>ratio vs peer_median cùng cuisine</td><td>— (đắt phản ánh qua ratio)</td></tr>
+</tbody>
+</table>
+
+<div class="callout warn">
+<b>🔒 Rule cứng.</b> <code>overall_score</code> (bình quân 8 dimension) <b>không bao giờ hiển thị</b> ra ngoài —
+một điểm yếu mạnh bị pha loãng nếu gộp (vd <code>waiting=0.15</code> nhưng overall=0.66 vẫn "khá").
+Thay vào đó luôn trả <b>per-dimension + evidence</b>. Enforce ở API response &amp; Agent prompt.
+</div>
+
+<h3>6.4 · Dataset &amp; kịch bản</h3>
+<p>Tổng <strong>1.625 merchant</strong>, trong đó <strong>18 hero</strong> (reviews/complaints/vision thật+synthetic → evidence giàu),
+<em>5 hero</em> được gán <strong>1 điểm yếu tất định</strong> có chủ đích để demo chẩn đoán:</p>
+<table>
+<thead><tr><th>ID</th><th>Tên</th><th>Điểm yếu chủ đích</th><th>Dimension thấp</th></tr></thead>
+<tbody>
+<tr><td>233150</td><td>Sushi Lounge (Vũng Tàu)</td><td>slow_prep</td><td>waiting_time 0.15</td></tr>
+<tr><td>10344</td><td>Popeyes - Tùng Thiện Vương</td><td>weak_delivery</td><td>delivery_quality 0.35</td></tr>
+<tr><td>100810</td><td>3 Râu - Gà Rán/Pizza</td><td>weak_packaging</td><td>packaging 0.30</td></tr>
+<tr><td>13909</td><td>(Hải Phòng)</td><td>weak_food</td><td>food_quality 0.57</td></tr>
+<tr><td>68814</td><td>Dì Bảy - Bún Mắm</td><td>weak_service</td><td>service 0.58</td></tr>
+</tbody>
+</table>
+
+<!-- ===================== 7. UI ===================== -->
+<h2 class="section" id="s7"><span class="num">7</span>Giao diện người dùng</h2>
+<p>Frontend React (Vite + Tailwind) với theme xanh mint thân thiện. Sidebar điều hướng (Trang chủ / Trò chuyện / Khám phá / Sở thích),
+khu vực chat trung tâm và merchant card bên phải. Mỗi card: thứ hạng <code>#1/#2/#3</code>, ảnh món, tên, cuisine, rating sao, và <strong>match score</strong>.
+Dưới đây là 5 luồng truy vấn đại diện: trang chủ, tra cứu cơ bản, bối cảnh thời tiết, lọc ngân sách, và đa lượt (giải quyết tham chiếu + trung thực giá).</p>
+
+<figure>
+<img src="images/landing-fresh.png" alt="Trang chủ"/>
+<figcaption>Hình 3 — <b>Trang chủ</b> (chụp từ app đang chạy, phiên bản hiện tại): hero "Ăn gì hôm nay? Để mình gợi ý cho.", thanh tìm kiếm, 6 prompt gợi ý nhanh
+(phở, trà sữa chill, trời mưa, dưới 50k, Nhật hẹn hò, chay) và 3 feature card (Hiểu khẩu vị / Gần &amp; hợp / Đúng thời điểm).</figcaption>
+</figure>
+
+<figure>
+<img src="images/chat-pho-fresh.png" alt="Tìm phở Cầu Giấy"/>
+<figcaption>Hình 4 — <b>Tra cứu UC-04</b> (phiên bản hiện tại, đã fix stream): "Tìm phở gần Cầu Giấy" → câu trả lời hội thoại tự nhiên + 3 card kết quả
+(Cuốn Xưa 4.6 / Anh Béo 4.7 / Bánh Mì Chú Tiểu 4.8) kèm match score. Không còn lỗi stream.</figcaption>
+</figure>
+
+<figure>
+<img src="images/chat-weather-fresh.png" alt="UC-05 thời tiết mưa"/>
+<figcaption>Hình 5 — <b>Nhạy bối cảnh thời tiết (UC-05)</b> (phiên bản hiện tại): "Trời mưa lạnh, thèm phở nóng gần Cầu Giấy" → Agent hiểu bối cảnh mưa lạnh, gợi ý món nước nóng hổi (bún miến nước dùng đậm đà) + 3 card khu vực Cầu Giấy/Tây Hồ (Anh Béo 4.7, Bami Sot 4.9, Aussie Burger 4.7).</figcaption>
+</figure>
+
+<figure>
+<img src="images/chat-budget-fresh.png" alt="Lọc theo ngân sách"/>
+<figcaption>Hình 6 — <b>Lọc ràng buộc ngân sách (UC-04)</b> (phiên bản hiện tại): "Ăn trưa dưới 50k gần Cầu Giấy" → hard-filter giá end-to-end, trả 3 card hợp ngân sách (Anh Béo 4.7, Bento Delichi 4.6, Bánh Mì Chú Tiểu 4.8).</figcaption>
+</figure>
+
+<figure>
+<img src="images/chat-multiturn-fresh.png" alt="Đa lượt + giải quyết tham chiếu"/>
+<figcaption>Hình 7 — <b>Đa lượt &amp; giải quyết tham chiếu + trung thực</b> (phiên bản hiện tại): lượt 1 tìm bún bò → lượt 2 hỏi "quán đầu tiên giá bao nhiêu?" → Agent <em>giải quyết đúng</em> "quán đầu tiên" = Bún Bò Huế 2Bro (lượt 1) &amp; <em>thành thật</em> trả giá: "chưa có giá cụ thể, phân khúc cao cấp" (không bịa con số).</figcaption>
+</figure>
+
+<!-- ===================== 8. EVAL ===================== -->
+<h2 class="section" id="s8"><span class="num">8</span>Đánh giá &amp; kết quả</h2>
+
+<p>Hệ thống được đo trên <strong>ground-truth 39 case</strong> (12 case coordinator-only bị bỏ qua công bằng).
+Mỗi case: seed profile + replay prior turn + POST test turn tới <code>/chat/stream</code>, chấm bởi judge LLM (eval-fidelity-aware).</p>
+
+<figure>
+<svg class="diagram" viewBox="0 0 580 320" xmlns="http://www.w3.org/2000/svg" font-family="'Segoe UI',Arial,sans-serif">
+  <!-- axes -->
+  <line x1="70" y1="260" x2="540" y2="260" stroke="#9ca3af" stroke-width="1.5"/>
+  <line x1="70" y1="40" x2="70" y2="260" stroke="#9ca3af" stroke-width="1.5"/>
+  <!-- y labels -->
+  <g font-size="9" fill="#6b7280" text-anchor="end">
+    <text x="64" y="264">0%</text><text x="64" y="206">25%</text><text x="64" y="150">50%</text>
+    <text x="64" y="95">75%</text><text x="64" y="44">100%</text>
+  </g>
+  <g stroke="#e5e7eb" stroke-dasharray="3 3">
+    <line x1="70" y1="206" x2="540" y2="206"/><line x1="70" y1="150" x2="540" y2="150"/>
+    <line x1="70" y1="95" x2="540" y2="95"/><line x1="70" y1="44" x2="540" y2="44"/>
+  </g>
+  <!-- bars: 59 69 87 100 ; baseline 260, 100% -> y=44 (height 216) -->
+  <!-- 59 -> h=127 -->
+  <rect x="110" y="133" width="80" height="127" rx="5" fill="#fca5a5"/>
+  <text x="150" y="124" font-size="12" font-weight="700" text-anchor="middle" fill="#b91c1c">59%</text>
+  <text x="150" y="278" font-size="9.5" text-anchor="middle" fill="#374151">16/27</text>
+  <text x="150" y="292" font-size="8.5" text-anchor="middle" fill="#6b7280">GT optimization</text>
+  <!-- 69 -> h=149 -->
+  <rect x="225" y="111" width="80" height="149" rx="5" fill="#fcd34d"/>
+  <text x="265" y="102" font-size="12" font-weight="700" text-anchor="middle" fill="#b45309">69%</text>
+  <text x="265" y="278" font-size="9.5" text-anchor="middle" fill="#374151">27/39</text>
+  <text x="265" y="292" font-size="8.5" text-anchor="middle" fill="#6b7280">6-round arc</text>
+  <!-- 87 -> h=188 -->
+  <rect x="340" y="72" width="80" height="188" rx="5" fill="#86efac"/>
+  <text x="380" y="63" font-size="12" font-weight="700" text-anchor="middle" fill="#15803d">87%</text>
+  <text x="380" y="278" font-size="9.5" text-anchor="middle" fill="#374151">34/39</text>
+  <text x="380" y="292" font-size="8.5" text-anchor="middle" fill="#6b7280">arch-seam (sạch)</text>
+  <!-- 100 -> h=216 -->
+  <rect x="455" y="44" width="80" height="216" rx="5" fill="#16a34a"/>
+  <text x="495" y="35" font-size="12" font-weight="700" text-anchor="middle" fill="#15803d">100%</text>
+  <text x="495" y="278" font-size="9.5" text-anchor="middle" fill="#374151">39/39</text>
+  <text x="495" y="292" font-size="8.5" text-anchor="middle" fill="#6b7280">anaphora + clarify</text>
+  <text x="305" y="312" font-size="9.5" text-anchor="middle" fill="#374151" font-weight="600">Tỷ lệ đúng qua các vòng tối ưu</text>
+</svg>
+<figcaption>Hình 8 — Qualify arc: 59% → 69% → 87% → 100%. Mốc 87% là phép đo <b>đầu tiên không nhiễm</b> (session sạch); 100% sau khi đóng 5 fail cuối (anaphora + clarify).</figcaption>
+</figure>
+
+<h3>8.1 · Độ tin cậy</h3>
+<div class="two">
+<div class="stat-grid" style="flex-direction:column;">
+  <div class="stat"><span class="v">31% → 2.6%</span><span class="l">Search timeout (5s→15s)</span></div>
+  <div class="stat"><span class="v">~10-30% → ~1%</span><span class="l">Stream interrupt</span></div>
+</div>
+<div>
+<div class="callout">
+<b>Stream reliability.</b> Endpoint DeepSeek (FPT) hay drop giữa chừng / stall. Fix: <b>thử stream (timeout 30s) → retry → fallback non-stream (45s)</b>.
+Tỉ lệ lỗi ~10-30% giảm xuống ~1%. Phục hồi non-stream emit warning để quan sát được.
+</div>
+</div>
+</div>
+
+<div class="stat-grid">
+  <div class="stat"><span class="v">27/27</span><span class="l">Unit tests xanh</span></div>
+  <div class="stat"><span class="v">5/5</span><span class="l">Fail cuối đóng (judge)</span></div>
+  <div class="stat"><span class="v">0</span><span class="l">Lỗi / gián đoạn (39 case)</span></div>
+  <div class="stat"><span class="v">~1.9s</span><span class="l">Median explain stream</span></div>
+</div>
+
+<!-- ===================== 9. CHALLENGES ===================== -->
+<h2 class="section" id="s9"><span class="num">9</span>Thách thức &amp; giải pháp</h2>
+
+<h3>9.1 · Confabulation (LLM bịa khi thiếu data)</h3>
+<p>Rule "trung thực tối thượng" đã có trong prompt nhưng DeepSeek vẫn bỏ qua — bịia giá (<em>"vài chục nghìn"</em>) và độ cay
+(<em>"bún đậu vốn không cay"</em>). <strong>Giải pháp</strong>: <code>_profile_grounding</code> nhận diện attribute được hỏi;
+nếu profile thiếu → ghép <strong>absence-note cứng</strong> ngay cạnh data, cấm bịa. Kết quả: trả lời trung thực.</p>
+
+<h3>9.2 · Stream interrupt (mất câu trả lời giữa chừng)</h3>
+<p>Endpoint DeepSeek (FPT) đôi khi drop/stall giữa chừng → cảnh báo <code>explanation_stream_interrupted</code>, khiến câu trả lời bị mất (chỉ còn lời xin lỗi).
+Fix: thử stream (timeout 30s) → retry → <b>fallback non-stream</b> (45s) — metric &amp; chi tiết ở §8.1 (tỉ lệ ~10-30% → ~1%).
+Sau fix, cùng dạng query trả lời sạch, hội thoại tự nhiên (xem Hình 4).</p>
+
+<h3>9.3 · Eval fidelity — phép đo bị "nhiễm"</h3>
+<p>Các vòng đo đầu tái dùng <code>session_id</code> cố định trong khi DB persist <code>chat_messages</code> → đọc <strong>prior turn cũ</strong> → confabulation.
+Số "69%" vốn đo trên session nhiễm; <strong>87% (arch-seam) là con số đầu tiên đáng tin</strong>. Fix: per-run stamp → session/user id duy nhất mỗi lần chạy.</p>
+
+<div class="callout info">
+<b>9.4 · Anaphora với prior rỗng.</b> Harness lấy toạ độ chỉ từ test message, nhưng case đa lượt để vị trí ở <em>prior turn</em> → prior replay tìm không vị trí → rỗng → không có referent.
+Fix: toạ độ lấy từ <code>prior + test</code>. Đây là fix leverage cao nhất, giúp 3 case anaphora hoạt động đúng.
+</div>
+
+<!-- ===================== 10. ROADMAP ===================== -->
+<h2 class="section" id="s10"><span class="num">10</span>Hướng phát triển</h2>
+<ol>
+<li><strong>Search relevance prior-turn</strong>: một số case (lẩu → bún riêu surfaced đầu) — tinh chỉnh retrieval (phần Customer).</li>
+<li><strong>Result card đa lượt</strong>: case TC-41 trả lời đúng nhưng thiếu card (n_results=0) — gap nhỏ ở FE Customer.</li>
+<li><strong>Đa lượt sâu hơn</strong>: lan truyền ràng buộc giữa các lượt, mạnh hoá anaphora/ordinal.</li>
+<li><strong>Production deployment (trục Customer)</strong>: CI pipeline, performance test, cache + observability.</li>
+</ol>
+<p class="mut">Trục <b>Merchant</b> (agent UC-01/02/03) là track riêng của đồng đội <b>Minh</b> — ngoài phạm vi báo cáo này.</p>
+
+<!-- ===================== APPENDIX ===================== -->
+<h2 class="section" id="sp"><span class="num">P</span>Phụ lục</h2>
+<h3>Thuật ngữ</h3>
+<table>
+<thead><tr><th>Thuật ngữ</th><th>Ý nghĩa</th></tr></thead>
+<tbody>
+<tr><td>Crew / CrewAI</td><td>Khung điều phối nhiều agent; ở đây dùng sequential crew (tuần tự).</td></tr>
+<tr><td>Coordinator</td><td>Agent router — <b>đã cố ý loại bỏ</b> thay bằng guard tất định.</td></tr>
+<tr><td>SSE</td><td>Server-Sent Events — stream token về client (TTFT thấp).</td></tr>
+<tr><td>Anaphora</td><td>Tham chiếu như "quán đầu tiên", "cái đó" — cần giải quyết từ ngữ cảnh lượt trước.</td></tr>
+<tr><td>Grounding</td><td>Gắn câu trả lời vào dữ liệu thật (profile) — cốt lõi chống hallucinate.</td></tr>
+<tr><td>Dimension</td><td>Trục chấm điểm merchant (8 trục: food/service/packaging/...).</td></tr>
+<tr><td>Evidence</td><td>Số liệu truy vết đi kèm mỗi claim/score.</td></tr>
+<tr><td>Haversine</td><td>Công thức tính khoảng cách trái đất — dùng cho tìm kiếm lân cận.</td></tr>
+</tbody>
+</table>
+
+<h3>Tài liệu tham chiếu (trong repo)</h3>
+<ul>
+<li><code>docs/2026-07-21-merchant-ai-agent-complete-design.md</code> — design AI agent đầy đủ.</li>
+<li><code>docs/scoring-methodology.md</code> — công thức 8 dimension.</li>
+<li><code>docs/database-schema.md</code> · <code>docs/data-pipeline-and-dictionary.md</code> — schema &amp; pipeline.</li>
+<li><code>docs/development-roadmap.md</code> · <code>docs/project-changelog.md</code> — lộ trình &amp; lịch sử thay đổi.</li>
+<li><code>docs/demo-script.md</code> · <code>docs/sample-qa.md</code> · <code>docs/evaluation-plan.md</code> — demo &amp; eval.</li>
+<li><code>plans/reports/eval-260731-anaphora-clarify-final.md</code> — báo cáo tối ưu customer agent.</li>
+</ul>
+
+<p class="mut" style="margin-top:24px; font-size:9pt; border-top:1px solid #e5e7eb; padding-top:8px;">
+Báo cáo này mô tả trạng thái tính đến 01/08/2026. <b>Trục Customer (UC-04/05) — do em thực hiện</b> — hoàn thành end-to-end &amp; đo 39/39 ground-truth.
+Trục Merchant (agent UC-01/02/03) do đồng đội <b>Minh</b> thực hiện; agent flow còn ở mức thiết kế.
+</p>
+
+</body>
+</html>

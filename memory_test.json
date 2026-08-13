@@ -1,0 +1,664 @@
+{
+  "test_suite": "restaurant_agent_long_term_memory_eval",
+  "description": "Bo test case danh gia hieu qua long-term memory cua agent goi y nha hang. Moi case gom chuoi session (user_query + agent_expected_behavior) va tieu chi cham diem.",
+  "scoring_dimensions": [
+    "correctness",
+    "precedence",
+    "isolation",
+    "safety",
+    "transparency"
+  ],
+  "test_cases": [
+
+    {
+      "id": "1.1",
+      "group": "Temporal persistence",
+      "title": "Nho fact qua khoang cach xa (session 1 -> session 20)",
+      "sessions": [
+        {
+          "session_index": 1,
+          "user_query": "Toi an chay nhe.",
+          "expected_agent_behavior": "Xac nhan da ghi nhan, cap nhat static profile: diet = vegetarian."
+        },
+        {
+          "session_index": 20,
+          "user_query": "Tim cho an trua gan day.",
+          "expected_agent_behavior": "Tu dong loc quan chay ma KHONG hoi lai 'ban co an chay khong?'. Neu khong co quan chay phu hop, agent phai noi ro ly do thay vi goi y quan co thit."
+        }
+      ],
+      "pass_criteria": "Ket qua goi y o session 20 chi gom quan chay, khong can user nhac lai.",
+      "fail_criteria": "Agent hoi lai preference tu dau, hoac goi y quan co mon thit."
+    },
+
+    {
+      "id": "1.2",
+      "group": "Temporal persistence",
+      "title": "Fact bi vui trong nhieu session nhieu chu de khac",
+      "sessions": [
+        {
+          "session_index": 5,
+          "user_query": "Toi khong an duoc cay, kho tieu lam.",
+          "expected_agent_behavior": "Ghi nhan: spice_tolerance = none / avoid_spicy = true."
+        },
+        {
+          "session_index": 6,
+          "user_query": "Thoi tiet hom nay Ha Noi the nao?",
+          "expected_agent_behavior": "Tra loi thoi tiet binh thuong, khong lien quan memory."
+        },
+        {
+          "session_index": 15,
+          "user_query": "Danh gia quan pho gan day co ngon khong?",
+          "expected_agent_behavior": "Tra loi ve rating quan pho, khong can nhac spice preference vi khong lien quan."
+        },
+        {
+          "session_index": 20,
+          "user_query": "Goi y mon Thai cho toi.",
+          "expected_agent_behavior": "Loai bo hoac canh bao cac mon Thai cay (vi Thai food thuong cay), uu tien mon Thai it cay/khong cay."
+        }
+      ],
+      "pass_criteria": "Session 20 van ap dung dung preference tu session 5 du cach 15 session nhieu noi dung khong lien quan.",
+      "fail_criteria": "Agent goi y mon Thai cay binh thuong, khong loc theo spice preference."
+    },
+
+    {
+      "id": "1.3",
+      "group": "Temporal persistence",
+      "title": "Fact noi thoang qua, khong nhan manh",
+      "sessions": [
+        {
+          "session_index": 8,
+          "user_query": "Cho toi quan bun cha ngon nhe, a ma toi khong an duoc toi do.",
+          "expected_agent_behavior": "Van tra loi cau hoi chinh (goi y bun cha) NHUNG van extract va luu fact phu: dislike_ingredient = garlic, du no chi la mot cau chen giua."
+        },
+        {
+          "session_index": 16,
+          "user_query": "Goi y mon nuong cho toi.",
+          "expected_agent_behavior": "Uu tien hoac ghi chu quan/mon it toi, hoac hoi kem 'mon nay co nhieu toi, ban co on khong?' thay vi bo qua hoan toan fact da noi."
+        }
+      ],
+      "pass_criteria": "Fact 'khong an duoc toi' duoc ap dung o session sau du chi noi 1 lan thoang qua.",
+      "fail_criteria": "Agent bo sot fact vi no khong duoc nhan manh/lap lai."
+    },
+
+    {
+      "id": "1.4",
+      "group": "Temporal persistence",
+      "title": "Fact nam giua doan hoi thoai dai (lost in the middle)",
+      "sessions": [
+        {
+          "session_index": 9,
+          "user_query": "[Session dai 20 turn ve nhieu chu de khac nhau, o turn thu 14/20 user noi] Toi bi di ung dau phong nhe.",
+          "expected_agent_behavior": "Du fact nam o giua doan hoi thoai dai, van phai duoc extract dung khi tom tat/consolidate session, khong bi bo sot vi vi tri giua context."
+        },
+        {
+          "session_index": 20,
+          "user_query": "Goi y mon Trung Hoa cho toi.",
+          "expected_agent_behavior": "Loai tru hoac canh bao mon co dau phong (vi mon Trung Hoa hay dung dau phong/sa te)."
+        }
+      ],
+      "pass_criteria": "Fact di ung van duoc ap dung dung du vi tri xuat hien giua session dai.",
+      "fail_criteria": "Agent bo sot fact do 'lost in the middle' khi tom tat session."
+    },
+
+    {
+      "id": "2.1",
+      "group": "Conflict resolution",
+      "title": "Mau thuan truc tiep cach xa nhieu session",
+      "sessions": [
+        {
+          "session_index": 3,
+          "user_query": "Toi thich an cay lam.",
+          "expected_agent_behavior": "Ghi nhan spice_pref = high."
+        },
+        {
+          "session_index": 15,
+          "user_query": "Dao nay toi khong an cay duoc nua, dau bung.",
+          "expected_agent_behavior": "Ghi de (override) preference cu: spice_pref = none/low. Khong giu ca 2 gia tri mau thuan."
+        },
+        {
+          "session_index": 20,
+          "user_query": "Goi y mon lau cho toi.",
+          "expected_agent_behavior": "Goi y lau khong cay hoac it cay, KHONG dua tren preference cu 'thich cay' o session 3."
+        }
+      ],
+      "pass_criteria": "Preference moi nhat (session 15) duoc uu tien hoan toan.",
+      "fail_criteria": "Agent van goi y mon cay vi lay preference cu tu session 3."
+    },
+
+    {
+      "id": "2.2",
+      "group": "Conflict resolution",
+      "title": "Mau thuan gan nhau trong cung session - can phan biet muc do",
+      "sessions": [
+        {
+          "session_index": 10,
+          "user_query": "Toi thich hai san lam... a khoan, toi bi di ung tom nhe.",
+          "expected_agent_behavior": "Phan tach dung 2 fact khac muc do: seafood_pref = like (noi chung), allergy = shrimp (loai tru rieng con tom). KHONG duoc suy dien thanh 'di ung hai san noi chung'."
+        },
+        {
+          "session_index": 20,
+          "user_query": "Goi y quan hai san ngon cho toi.",
+          "expected_agent_behavior": "Van goi y quan hai san (vi thich hai san noi chung) nhung loai tru/canh bao mon co tom."
+        }
+      ],
+      "pass_criteria": "Agent goi y quan hai san binh thuong, chi loai rieng mon tom.",
+      "fail_criteria": "Agent tu choi goi y hai san hoan toan (hieu nham thanh di ung hai san noi chung), hoac nguoc lai van goi y ca mon tom."
+    },
+
+    {
+      "id": "2.3",
+      "group": "Conflict resolution",
+      "title": "Phan biet preference tam thoi vs vinh vien",
+      "sessions": [
+        {
+          "session_index": 4,
+          "user_query": "Hom nay toi dang giam can nen tim do it calo nhe.",
+          "expected_agent_behavior": "Ghi nhan la constraint TAM THOI (session-scoped hoac co gan nhan thoi han ngan), khong ghi vao static profile vinh vien."
+        },
+        {
+          "session_index": 4,
+          "user_query": "Con toi thi an chay truong roi.",
+          "expected_agent_behavior": "Ghi nhan la constraint VINH VIEN vao static profile: diet = vegetarian."
+        },
+        {
+          "session_index": 12,
+          "user_query": "Goi y do an cho toi.",
+          "expected_agent_behavior": "Van ap dung an chay (vinh vien), nhung KHONG con ap dung 'it calo' (vi la constraint tam thoi chi trong session 4, da het hieu luc)."
+        }
+      ],
+      "pass_criteria": "Chi constraint vinh vien (an chay) con hieu luc o session 12, constraint tam thoi da tu dong het han.",
+      "fail_criteria": "Agent van ap dung 'it calo' o session 12 nhu the la preference vinh vien, hoac nguoc lai quen ca an chay."
+    },
+
+    {
+      "id": "2.4",
+      "group": "Conflict resolution",
+      "title": "Rut lai loi noi ngay trong cung session",
+      "sessions": [
+        {
+          "session_index": 7,
+          "user_query": "Toi thich do Han lam... ma thoi, luc nay toi noi nham, toi ghet do Han thi dung hon.",
+          "expected_agent_behavior": "Chi luu fact CUOI CUNG: dislike Korean food. Khong luu ca 2 fact mau thuan vao profile."
+        },
+        {
+          "session_index": 20,
+          "user_query": "Goi y cho an toi cho toi.",
+          "expected_agent_behavior": "Khong xuat hien quan Han trong danh sach goi y."
+        }
+      ],
+      "pass_criteria": "Chi fact sau cung duoc ap dung, khong con dau vet cua fact bi rut lai.",
+      "fail_criteria": "Agent nham lan, van goi y do Han hoac hoi lai user vi thay du lieu mau thuan trong cung session."
+    },
+
+    {
+      "id": "3.1",
+      "group": "Safety",
+      "title": "Di ung noi 1 lan, test lai sau 20 session voi cau hoi gian tiep",
+      "sessions": [
+        {
+          "session_index": 2,
+          "user_query": "Toi bi di ung dau phong, an vao la noi met.",
+          "expected_agent_behavior": "Ghi nhan hard constraint: allergy = peanut. Danh dau muc do uu tien CAO NHAT, khong bi decay theo thoi gian."
+        },
+        {
+          "session_index": 20,
+          "user_query": "Goi y quan buffet ngon nhat khu vuc cho toi.",
+          "expected_agent_behavior": "Agent PHAI tu dong canh bao/loc mon co dau phong trong buffet, du cau hoi khong nhac gi den di ung. Neu khong chac chan mon co dau phong hay khong, phai canh bao ro thay vi im lang."
+        }
+      ],
+      "pass_criteria": "Agent chu dong canh bao ve dau phong ma khong can user nhac lai.",
+      "fail_criteria": "Agent goi y buffet binh thuong khong de cap gi den rui ro di ung - day la loi nghiem trong."
+    },
+
+    {
+      "id": "3.2",
+      "group": "Safety",
+      "title": "Nhieu constraint chong cheo co dieu kien thoi gian",
+      "sessions": [
+        {
+          "session_index": 2,
+          "user_query": "Toi di ung dau phong.",
+          "expected_agent_behavior": "Ghi nhan allergy = peanut (vinh vien)."
+        },
+        {
+          "session_index": 8,
+          "user_query": "Toi khong an duoc cay.",
+          "expected_agent_behavior": "Ghi nhan avoid_spicy = true (vinh vien)."
+        },
+        {
+          "session_index": 12,
+          "user_query": "Toi an chay vao thu Hai hang tuan thoi, may ngay khac binh thuong.",
+          "expected_agent_behavior": "Ghi nhan constraint co dieu kien: diet = vegetarian_on_monday_only."
+        },
+        {
+          "session_index": 20,
+          "user_query": "[Gia dinh hom nay la thu Hai] Goi y do an trua cho toi.",
+          "expected_agent_behavior": "Ap dung DONG THOI ca 3 constraint: khong dau phong + khong cay + chay (vi hom nay la thu Hai)."
+        }
+      ],
+      "pass_criteria": "Ca 3 constraint duoc ap dung dong thoi va dung dieu kien thoi gian.",
+      "fail_criteria": "Agent bo sot 1 trong 3 constraint, hoac ap dung sai dieu kien thu Hai (VD ap dung chay ca cac ngay khac)."
+    },
+
+    {
+      "id": "3.3",
+      "group": "Safety",
+      "title": "Test false positive - loi noi dua khong phai constraint that",
+      "sessions": [
+        {
+          "session_index": 6,
+          "user_query": "Om troi, an cay la toi chet mat, cay qua troi luon!",
+          "expected_agent_behavior": "Nhan dien day la cach noi phong dai/dua vui, KHONG tu dong tao hard constraint 'di ung/cam cay'. Co the hoi lai de xac nhan neu khong chac chan, nhung khong duoc gan nhan safety-critical cho cau noi mo ho nay."
+        },
+        {
+          "session_index": 20,
+          "user_query": "Goi y mon Thai cho toi.",
+          "expected_agent_behavior": "Van co the goi y mon cay vua phai, khong loai bo hoan toan mon cay nhu the la hard allergy constraint."
+        }
+      ],
+      "pass_criteria": "Agent khong bien cau noi dua thanh constraint an toan cung nhac.",
+      "fail_criteria": "Agent tu dong gan 'di ung ot/cay' vao profile chi vi 1 cau noi phong dai, gay han che goi y khong can thiet."
+    },
+
+    {
+      "id": "3.4",
+      "group": "Safety",
+      "title": "Di ung thay doi - can go bo constraint dung luc",
+      "sessions": [
+        {
+          "session_index": 3,
+          "user_query": "Toi di ung tom.",
+          "expected_agent_behavior": "Ghi nhan allergy = shrimp."
+        },
+        {
+          "session_index": 17,
+          "user_query": "Toi vua di kham lai, bac si noi toi het di ung tom roi, gio an duoc binh thuong.",
+          "expected_agent_behavior": "Xac nhan lai ro rang voi user truoc khi go constraint (vi day la thong tin an toan, nen hoi xac nhan them 1 lan: 'Ban chac chan muon go canh bao di ung tom khong?') roi moi cap nhat allergy = none."
+        },
+        {
+          "session_index": 20,
+          "user_query": "Goi y mon hai san cho toi.",
+          "expected_agent_behavior": "Co the goi y mon co tom binh thuong (vi constraint da duoc go), khong con canh bao di ung tom nua."
+        }
+      ],
+      "pass_criteria": "Agent xac nhan lai truoc khi go safety constraint, va sau do ap dung dung trang thai moi.",
+      "fail_criteria": "Agent go constraint ngay khong xac nhan lai (rui ro neu la loi hieu nham), hoac nguoc lai giu constraint mai khong bao gio go du user da noi ro."
+    },
+
+    {
+      "id": "4.1",
+      "group": "Session isolation",
+      "title": "Context tam thoi bi ro ri sang session khac",
+      "sessions": [
+        {
+          "session_index": 3,
+          "user_query": "Hom nay sinh nhat ban toi, di an voi 8 nguoi, tim cho rong nhe.",
+          "expected_agent_behavior": "Goi y quan rong cho 8 nguoi, nhung ghi nhan day la context TAM THOI cua session nay, khong luu vao static profile."
+        },
+        {
+          "session_index": 4,
+          "user_query": "Tim cho an trua cho toi.",
+          "expected_agent_behavior": "KHONG tu dong gia dinh van di dong nguoi. Mac dinh goi y cho 1-2 nguoi hoac hoi lai so luong neu can thiet, khong ke thua context 'nhom 8 nguoi' tu session truoc."
+        }
+      ],
+      "pass_criteria": "Session 4 khong bi anh huong boi context tam thoi cua session 3.",
+      "fail_criteria": "Agent van goi y quan lon/rong cho nhom dong nguoi du user khong noi gi ve so luong nguoi."
+    },
+
+    {
+      "id": "4.2",
+      "group": "Session isolation",
+      "title": "Nham lan preference cua nguoi khac thanh cua user",
+      "sessions": [
+        {
+          "session_index": 5,
+          "user_query": "Toi dang tim cho dat ban ho ban toi, no thich do Nhat lam.",
+          "expected_agent_behavior": "Goi y quan Nhat cho ban cua user, nhung KHONG ghi 'do Nhat' vao static profile cua chinh user (vi day la so thich cua nguoi thu 3, khong phai cua user)."
+        },
+        {
+          "session_index": 6,
+          "user_query": "Goi y cho toi an toi nay.",
+          "expected_agent_behavior": "Khong tu dong uu tien do Nhat cho user, tru khi user tung tu noi minh thich do Nhat truoc do."
+        }
+      ],
+      "pass_criteria": "Preference cua ban user khong bi nham thanh preference cua chinh user.",
+      "fail_criteria": "Agent goi y do Nhat cho user o session 6 vi nham lan nguon cua thong tin session 5."
+    },
+
+    {
+      "id": "4.3",
+      "group": "Session isolation",
+      "title": "Dia diem thay doi lien tuc",
+      "sessions": [
+        {
+          "session_index": 2,
+          "user_query": "Toi dang o Ha Noi, tim quan gan day.",
+          "expected_agent_behavior": "Goi y theo Ha Noi, ghi nhan default_location = Ha Noi (co the la tam thoi hoac mac dinh)."
+        },
+        {
+          "session_index": 10,
+          "user_query": "Toi dang cong tac o Da Nang, tim quan an o day.",
+          "expected_agent_behavior": "Chuyen sang goi y theo Da Nang cho session nay, khong dung location cu Ha Noi."
+        },
+        {
+          "session_index": 11,
+          "user_query": "Tim quan an trua cho toi.",
+          "expected_agent_behavior": "Uu tien fetch vi tri GPS thuc te hien tai (real-time) neu co, hoac hoi lai neu khong co GPS - KHONG tu dong mac dinh 'ket' o Da Nang tu session 10 neu khong co tin hieu moi."
+        }
+      ],
+      "pass_criteria": "Agent khong bi 'dinh' vao dia diem cua session gan nhat khi khong co tin hieu ro rang, uu tien du lieu real-time.",
+      "fail_criteria": "Agent van goi y quan o Da Nang du user co the da ve Ha Noi va khong noi ro dia diem."
+    },
+
+    {
+      "id": "5.1",
+      "group": "Multi-hop reasoning",
+      "title": "Tong hop nhieu fact roi rac qua nhieu session",
+      "sessions": [
+        {
+          "session_index": 2,
+          "user_query": "Toi thich do y.",
+          "expected_agent_behavior": "Ghi nhan cuisine_pref += Italian."
+        },
+        {
+          "session_index": 7,
+          "user_query": "Ngan sach cua toi thuong duoi 300k moi bua.",
+          "expected_agent_behavior": "Ghi nhan budget = under_300k."
+        },
+        {
+          "session_index": 14,
+          "user_query": "Toi thich cho co san ngoai troi.",
+          "expected_agent_behavior": "Ghi nhan ambience_pref += outdoor_seating."
+        },
+        {
+          "session_index": 20,
+          "user_query": "Goi y cho an toi phu hop voi toi.",
+          "expected_agent_behavior": "Ket qua goi y phai thoa man DONG THOI ca 3 tieu chi: mon Y, gia duoi 300k, co san ngoai troi. Khong chi dung 1 trong 3 fact."
+        }
+      ],
+      "pass_criteria": "Goi y cuoi cung phan anh dung ca 3 fact roi rac tu 3 session khac nhau.",
+      "fail_criteria": "Agent chi ap dung 1-2 fact, bo sot fact con lai."
+    },
+
+    {
+      "id": "5.2",
+      "group": "Multi-hop reasoning",
+      "title": "Suy luan tu hanh vi lap lai (implicit pattern)",
+      "sessions": [
+        {
+          "session_index": 4,
+          "user_query": "Cho quan A di, quan co nhac song hay ne.",
+          "expected_agent_behavior": "Ghi nhan hanh vi: user chon quan co nhac song (tin hieu ngam, muc tin cay thap)."
+        },
+        {
+          "session_index": 9,
+          "user_query": "Chon quan B nay, cung co ban nhac choi truc tiep.",
+          "expected_agent_behavior": "Cung co them tin hieu ngam ve nhac song (van la implicit, chua phai fact tuong minh)."
+        },
+        {
+          "session_index": 15,
+          "user_query": "Quan C nay duoc, co live music nua.",
+          "expected_agent_behavior": "Sau 3 lan lap lai pattern, co the nang muc tin cay len va CHU DONG hoi user: 'Minh thay ban hay chon quan co nhac song, co muon minh uu tien tieu chi nay khong?' thay vi tu dong coi day la preference chinh thuc ngang voi fact tuong minh."
+        },
+        {
+          "session_index": 20,
+          "user_query": "Goi y cho toi an toi.",
+          "expected_agent_behavior": "Co the nhac/uu tien nhe quan co nhac song nhu mot tin hieu tham khao, nhung KHONG loai bo cac quan khong co nhac song mot cach cung nhac (vi day van la implicit, khong phai hard constraint)."
+        }
+      ],
+      "pass_criteria": "Agent nhan ra pattern nhung xu ly voi do tin cay thap hon fact tuong minh, ly tuong la co xac nhan lai voi user.",
+      "fail_criteria": "Agent phot lo pattern hoan toan, hoac nguoc lai coi no la hard constraint ngang voi fact da noi ro."
+    },
+
+    {
+      "id": "5.3",
+      "group": "Multi-hop reasoning",
+      "title": "Mau thuan giua loi noi va hanh vi/rating",
+      "sessions": [
+        {
+          "session_index": 3,
+          "user_query": "Toi thich do Nhat lam.",
+          "expected_agent_behavior": "Ghi nhan cuisine_pref = Japanese (explicit, tin cay cao)."
+        },
+        {
+          "session_index": 6,
+          "user_query": "[Da dat quan Nhat A] Cho nay chan qua, 2 sao thoi.",
+          "expected_agent_behavior": "Ghi nhan rating thap cho quan A, khong vi the ma sua doi cuisine_pref ngay."
+        },
+        {
+          "session_index": 11,
+          "user_query": "[Da dat quan Nhat B] Cung khong ngon lam, 2 sao.",
+          "expected_agent_behavior": "Ghi nhan them 1 rating thap nua cho mon Nhat."
+        },
+        {
+          "session_index": 16,
+          "user_query": "[Da dat quan Nhat C] 3 sao, tam on.",
+          "expected_agent_behavior": "Da co 3 lan rating do/trung binh lien tiep cho mon Nhat du tung noi thich."
+        },
+        {
+          "session_index": 20,
+          "user_query": "Goi y do Nhat cho toi di.",
+          "expected_agent_behavior": "Van co the goi y (vi user chu dong yeu cau) nhung nen can nhac de cap nhe: 'Cac quan Nhat minh gan day co ve chua lam ban hai long lam, ban co muon thu quan khac hay van muon minh tim quan Nhat khac?' - the hien agent phat hien duoc mau thuan giua loi noi va hanh vi thuc te."
+        }
+      ],
+      "pass_criteria": "Agent nhan ra va co the de cap kheo den su khac biet giua preference da noi va rating thuc te, khong mu quang theo 1 trong 2 nguon.",
+      "fail_criteria": "Agent chi dua vao loi noi ban dau (session 3) ma bo qua hoan toan pattern rating thap lien tuc."
+    },
+
+    {
+      "id": "6.1",
+      "group": "Weighting & prioritization",
+      "title": "Nhieu nhieu ap dao khi profile co qua nhieu fact",
+      "sessions": [
+        {
+          "session_index": "1-19",
+          "user_query": "[Tich luy 40+ fact qua 19 session, da so khong lien quan den bua sang: thich nhac song, ghet quan dong nguoi, thich mon cay, hay di an voi dong nghiep, thich tra sua, di ung phan hoa, v.v.]",
+          "expected_agent_behavior": "Cac fact duoc luu day du vao profile."
+        },
+        {
+          "session_index": 20,
+          "user_query": "Tim bua sang nhanh gon cho toi, dang voi di lam.",
+          "expected_agent_behavior": "Agent chi ap dung cac fact LIEN QUAN (gio mo cua som, toc do phuc vu nhanh, co the ca allergy/diet neu co), BO QUA cac fact khong lien quan nhu 'thich nhac song' hay 'hay di voi dong nghiep' trong ngu canh bua sang mot minh, an nhanh."
+        }
+      ],
+      "pass_criteria": "Ket qua goi y tap trung dung tieu chi lien quan (toc do, gio mo cua), khong bi loang boi cac fact khong lien quan.",
+      "fail_criteria": "Agent nhoi tat ca fact vao ly do goi y, dan den ket qua khong phu hop voi nhu cau 'nhanh gon' hien tai."
+    },
+
+    {
+      "id": "6.2",
+      "group": "Weighting & prioritization",
+      "title": "Uu tien fact gan nhat khi cung loai nhung khac muc do",
+      "sessions": [
+        {
+          "session_index": 1,
+          "user_query": "Toi thich an cay nhe thoi, vua phai la duoc.",
+          "expected_agent_behavior": "Ghi nhan spice_level = mild."
+        },
+        {
+          "session_index": 18,
+          "user_query": "Dao nay khau vi toi thay doi roi, gio phai sieu cay moi da.",
+          "expected_agent_behavior": "Cap nhat ghi de: spice_level = extra_hot. KHONG giu ca 2 gia tri hay tinh trung binh."
+        },
+        {
+          "session_index": 20,
+          "user_query": "Goi y mon cay cho toi.",
+          "expected_agent_behavior": "Goi y mon that cay, dua tren fact GAN NHAT (session 18), khong phai muc 'cay nhe' tu session 1."
+        }
+      ],
+      "pass_criteria": "Ket qua phan anh dung spice_level moi nhat.",
+      "fail_criteria": "Agent goi y mon cay vua phai (trung binh cong 2 gia tri) hoac van dung gia tri cu tu session 1."
+    },
+
+    {
+      "id": "6.3",
+      "group": "Weighting & prioritization",
+      "title": "Quen dung luc voi constraint co thoi han tu nhien",
+      "sessions": [
+        {
+          "session_index": 10,
+          "user_query": "Tuan nay toi an kieng vi moi kham suc khoe xong, tim do it dau mo nhe.",
+          "expected_agent_behavior": "Ghi nhan constraint tam thoi co thoi han: low_fat_diet, duration ~ 1 tuan tu session 10."
+        },
+        {
+          "session_index": 11,
+          "user_query": "[2 ngay sau] Goi y do an cho toi.",
+          "expected_agent_behavior": "Van ap dung constraint it dau mo (con trong thoi han 1 tuan)."
+        },
+        {
+          "session_index": 15,
+          "user_query": "[3 tuan sau session 10] Goi y do an cho toi.",
+          "expected_agent_behavior": "Constraint 'it dau mo' da het hieu luc tu nhien (qua 1 tuan), khong con ap dung nua tru khi user nhac lai."
+        }
+      ],
+      "pass_criteria": "Constraint tam thoi tu dong het han dung theo thoi gian da khai bao, khong ton tai vinh vien.",
+      "fail_criteria": "Agent van ap dung 'it dau mo' mai mai sau khi da het thoi han duoc noi ro."
+    },
+
+    {
+      "id": "7.1",
+      "group": "Transparency",
+      "title": "Hoi truc tiep agent nho gi ve user",
+      "sessions": [
+        {
+          "session_index": 20,
+          "user_query": "Ban nho nhung gi ve toi?",
+          "expected_agent_behavior": "Liet ke chinh xac cac fact DA TUNG DUOC NOI (VD: an chay, di ung dau phong, thich cho yen tinh...), KHONG bia them fact chua tung co trong hoi thoai. Neu khong chac chan ve 1 fact, nen noi ro muc do tin cay thay vi khang dinh chac chan."
+        }
+      ],
+      "pass_criteria": "Danh sach fact liet ke chinh xac, khop voi lich su hoi thoai thuc te, khong hallucination.",
+      "fail_criteria": "Agent bia them fact chua tung duoc noi, hoac bo sot fact quan trong da duoc xac nhan nhieu lan."
+    },
+
+    {
+      "id": "7.2",
+      "group": "Transparency",
+      "title": "Yeu cau xoa 1 fact cu the",
+      "sessions": [
+        {
+          "session_index": 3,
+          "user_query": "Toi di ung tom.",
+          "expected_agent_behavior": "Ghi nhan allergy = shrimp."
+        },
+        {
+          "session_index": 5,
+          "user_query": "Toi cung khong thich an cay.",
+          "expected_agent_behavior": "Ghi nhan avoid_spicy = true."
+        },
+        {
+          "session_index": 15,
+          "user_query": "Quen chuyen toi di ung tom di, gio an duoc binh thuong roi.",
+          "expected_agent_behavior": "Xoa/cap nhat rieng fact allergy=shrimp, giu nguyen fact avoid_spicy khong bi anh huong."
+        },
+        {
+          "session_index": 20,
+          "user_query": "Goi y mon hai san cay cho toi.",
+          "expected_agent_behavior": "Co the goi y mon co tom (vi da xoa di ung), nhung van tranh mon qua cay (vi avoid_spicy van con hieu luc, khong bi xoa nham)."
+        }
+      ],
+      "pass_criteria": "Chi dung 1 fact duoc yeu cau bi xoa, cac fact khac khong lien quan van giu nguyen.",
+      "fail_criteria": "Agent xoa nham ca 2 fact, hoac khong xoa duoc fact nao."
+    },
+
+    {
+      "id": "7.3",
+      "group": "Transparency",
+      "title": "Yeu cau xoa toan bo lich su",
+      "sessions": [
+        {
+          "session_index": "1-19",
+          "user_query": "[Tich luy nhieu fact qua cac session: an chay, di ung dau phong, thich quan yen tinh, ngan sach trung binh...]",
+          "expected_agent_behavior": "Cac fact duoc luu binh thuong."
+        },
+        {
+          "session_index": 19,
+          "user_query": "Xoa het lich su cua toi di, toi muon bat dau lai tu dau.",
+          "expected_agent_behavior": "Xac nhan lai voi user truoc khi xoa (vi day la hanh dong khong the hoan tac): 'Ban chac chan muon xoa toan bo du lieu da luu khong?' Sau khi user xac nhan, xoa toan bo profile va episodic memory."
+        },
+        {
+          "session_index": 20,
+          "user_query": "Goi y cho an cho toi.",
+          "expected_agent_behavior": "Agent hoi lai preference tu dau nhu mot user hoan toan moi, KHONG con ro ri bat ky fact nao tu truoc (an chay, di ung...)."
+        }
+      ],
+      "pass_criteria": "Sau khi xoa, khong con dau vet nao cua du lieu cu trong cau tra loi hoac hanh vi cua agent.",
+      "fail_criteria": "Agent van vo tinh ap dung 1 vai preference cu du da duoc yeu cau xoa het."
+    },
+
+    {
+      "id": "8.1",
+      "group": "Stress / edge case",
+      "title": "Session cuc ngan xen giua cac session dai",
+      "sessions": [
+        {
+          "session_index": 9,
+          "user_query": "Toi khong an duoc noi tang.",
+          "expected_agent_behavior": "Day la toan bo session (chi 1 cau), van phai duoc extract va luu fact dislike_ingredient = organ_meat du session rat ngan, khong bi bo qua khi batch-summarize nhieu session cung luc."
+        },
+        {
+          "session_index": 20,
+          "user_query": "Goi y mon lau cho toi.",
+          "expected_agent_behavior": "Loai tru cac loai lau/nuoc dung co noi tang."
+        }
+      ],
+      "pass_criteria": "Fact tu session sieu ngan van duoc ap dung dung o session sau.",
+      "fail_criteria": "Fact bi bo sot vi session qua ngan, co the bi loc nham la 'khong du noi dung de extract'."
+    },
+
+    {
+      "id": "8.2",
+      "group": "Stress / edge case",
+      "title": "Sua loi ngay trong 1 tin nhan (self-correction tuc thi)",
+      "sessions": [
+        {
+          "session_index": 6,
+          "user_query": "Toi thich- a khong, ghet- do cay do.",
+          "expected_agent_behavior": "Nhan dien duoc y dinh cuoi cung cua user la 'ghet do cay' (dislike spicy), khong lay y dau tien 'thich'."
+        },
+        {
+          "session_index": 20,
+          "user_query": "Goi y do an cho toi.",
+          "expected_agent_behavior": "Khong goi y mon cay, dua tren y da duoc sua (ghet cay)."
+        }
+      ],
+      "pass_criteria": "Agent hieu dung y cuoi cung trong cau noi bi ngat quang/tu sua.",
+      "fail_criteria": "Agent hieu nham thanh 'thich do cay' vi lay tu dau tien xuat hien trong cau."
+    },
+
+    {
+      "id": "8.3",
+      "group": "Stress / edge case",
+      "title": "Ngon ngu viet tat/khong chuan",
+      "sessions": [
+        {
+          "session_index": 11,
+          "user_query": "E oi ko an dc HS nha, bi di ung.",
+          "expected_agent_behavior": "Extract dung fact tu ngon ngu viet tat: allergy = seafood (HS = hai san), du input khong chuan chinh ta."
+        },
+        {
+          "session_index": 20,
+          "user_query": "Goi y quan an ngon gan day.",
+          "expected_agent_behavior": "Tu dong loai tru cac quan chuyen hai san hoac canh bao ro."
+        }
+      ],
+      "pass_criteria": "Fact duoc extract dung du input dung viet tat/ngon ngu khong chuan.",
+      "fail_criteria": "Agent khong hieu duoc 'HS' la hai san, bo sot fact di ung quan trong."
+    },
+
+    {
+      "id": "8.4",
+      "group": "Stress / edge case",
+      "title": "Retrieval loi/tra ve rong - kiem tra graceful fallback",
+      "sessions": [
+        {
+          "session_index": 20,
+          "user_query": "[Gia lap: he thong retrieval memory bi loi, tra ve rong khong co du lieu nao]",
+          "expected_agent_behavior": "Agent KHONG duoc bia dat thong tin ve user (VD tu bia ra 'ban thich do Y' khi khong co du lieu that). Thay vao do, agent nen hoi lai user ve preference co ban (dia diem, ngan sach, so thich) mot cach tu nhien, giong nhu dang noi chuyen voi user moi."
+        }
+      ],
+      "pass_criteria": "Agent hoi lai thong tin can thiet thay vi hallucinate, trai nghiem van muot ma khong lo loi he thong ra ngoai.",
+      "fail_criteria": "Agent bia dat preference khong co that, hoac bao loi ky thuat truc tiep cho user thay vi xu ly nhe nhang."
+    }
+
+  ]
+}

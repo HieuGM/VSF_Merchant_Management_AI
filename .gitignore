@@ -1,7 +1,10 @@
-# Crawled / generated data (large, regenerable — do not commit)
+# Raw crawl + build caches (heavy/regenerable — kept OUT of git).
+# NOTE: the dataset deliverables (profiles.jsonl, merchants_unique.jsonl,
+# shopeefood_catalog.jsonl) + merchant_platform_full.dump ARE committed
+# so a fresh machine can import data without OneDrive/USB.
 data/crawled/
-data/merchants_unique.jsonl
-data/profiles.jsonl
+data/profile_cache/
+data/synthetic/
 plans/reports/crawl-progress.log
 plans/reports/*-batch.log
 plans/reports/model-compare.log
@@ -13,6 +16,7 @@ CLAUDE.md
 AGENTS.md
 .mcp.json
 .opencode/
+.playwright-mcp/
 
 # Superpowers tooling
 .superpowers
@@ -39,6 +43,9 @@ htmlcov/
 .env.*
 !.env.example
 *.key
+
+# DB dumps: stale .sql kept out; the active transfer dump IS committed.
+merchant_platform*.sql
 
 # OS / editor
 .DS_Store

@@ -1,0 +1,30 @@
+{
+  "tc": [
+    {
+      "id": "TC-51",
+      "category": "noisy_input",
+      "difficulty": "hard",
+      "session_context": {
+        "user_profile": null,
+        "prior_turns": [],
+        "current_datetime": "2026-07-24T12:00:00+07:00"
+      },
+      "user_message": "gà rán",
+      "expected": {
+        "coordinator_intent": "search",
+        "missing_slots": [
+          "location"
+        ],
+        "should_ask_clarification": true,
+        "note": "input 2 từ, không có động từ hay ngữ cảnh — phải suy luận đây là ý định tìm 'gà rán' làm cuisine/keyword, không phải intent nào khác, rồi hỏi location vì vẫn thiếu"
+      },
+      "why_hard": "Input cực ngắn, không có cấu trúc câu — ranh giới giữa 'đủ để hiểu là tìm món gà rán' và 'quá mơ hồ cần hỏi lại toàn bộ' rất mong manh; test agent không tự ý bịa thêm ngữ cảnh không có (ví dụ tự suy 'chắc muốn KFC') để tránh phải hỏi lại."
+    }
+  ],
+  "scoring_guidance": {
+    "coordinator": "PASS nếu intent đúng category kỳ vọng VÀ (nếu expected.should_ask_clarification=true) coordinator thực sự trả về câu hỏi làm rõ thay vì tự chọn giá trị mặc định cho slot còn thiếu. Sai nhãn intent = fail cứng, không có điểm một phần.",
+    "search_agent": "PASS nếu tool call params khớp field-by-field với expected_tool_call_params (field null trong expected nghĩa là KHÔNG được truyền giá trị đoán). Nếu expected_result=empty mà agent trả về candidates không rỗng (bịa) = fail cứng bất kể quán có 'nghe hợp lý' hay không.",
+    "preference_agent": "PASS nếu proposed_deltas bám đúng context đã cho (thời tiết/giờ) VÀ có reasoning_trace giải thích được — không chỉ đúng kết quả mà lý do phải truy được nguồn (weather/session nào dẫn tới delta đó).",
+    "explanation_agent": "PASS nếu mọi câu giải thích trích được evidence_id có thật trong input; bất kỳ câu nào không map được về evidence nào = fail cứng (coi là hallucination), kể cả khi nội dung nghe hợp lý."
+  }
+}

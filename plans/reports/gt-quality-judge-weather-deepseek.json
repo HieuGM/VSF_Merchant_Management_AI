@@ -1,0 +1,257 @@
+{
+  "summary": {
+    "judge_model": "DeepSeek-V4-Flash",
+    "snapshot": "plans/reports/gt-eval-results-after-weather.json",
+    "passed": 29,
+    "total": 39,
+    "pass_rate": 0.7436,
+    "fail_ids": [
+      "TC-08",
+      "TC-10",
+      "TC-14",
+      "TC-25",
+      "TC-28",
+      "TC-29",
+      "TC-34",
+      "TC-36",
+      "TC-41",
+      "TC-43"
+    ]
+  },
+  "verdicts": [
+    {
+      "pass": true,
+      "reason": "Trợ lý trả về quán cơm đáp ứng điều kiện và không bịa thông tin, chỉ đề nghị kiểm tra thêm cho các quán chưa rõ giá.",
+      "id": "TC-01",
+      "category": "happy_path"
+    },
+    {
+      "pass": true,
+      "reason": "Trợ lý trả lời trung thực, không bịa thông tin ngoài dữ liệu, và đã làm rõ không có quán trong khu vực yêu cầu.",
+      "id": "TC-02",
+      "category": "happy_path"
+    },
+    {
+      "pass": true,
+      "reason": "Trợ lý gợi ý món chay phù hợp ngữ cảnh mưa, hỏi thêm vị trí để tìm quán, không bịa thông tin.",
+      "id": "TC-06",
+      "category": "preference_implicit"
+    },
+    {
+      "pass": true,
+      "reason": "Trợ lý đã hỏi lại thông tin khu vực/loại món thay vì chốt kết quả, đáp ứng yêu cầu should_ask_clarification=true.",
+      "id": "TC-07",
+      "category": "preference_implicit"
+    },
+    {
+      "pass": false,
+      "reason": "Trợ lý không hỏi lại vị trí (location) mặc dù cần thiết để tìm quán còn mở cửa.",
+      "id": "TC-08",
+      "category": "preference_implicit"
+    },
+    {
+      "pass": true,
+      "reason": "Trợ lý đã resolve đúng quán đầu tiên từ prior_turns, không hỏi lại, và trả lời phù hợp với thông tin có sẵn.",
+      "id": "TC-09",
+      "category": "refinement_multiturn"
+    },
+    {
+      "pass": false,
+      "reason": "Trợ lý chỉ hỏi lại mức giá mà không thực hiện tìm kiếm với price_max cụ thể như mong đợi.",
+      "id": "TC-10",
+      "category": "refinement_multiturn"
+    },
+    {
+      "pass": true,
+      "reason": "Trợ lý đã hỏi lại thay vì tự ý suy diễn 'lần trước', đáp ứng đúng yêu cầu làm rõ.",
+      "id": "TC-11",
+      "category": "refinement_multiturn"
+    },
+    {
+      "pass": false,
+      "reason": "Trợ lý trả về quán Bibi không có trong danh sách merchant rating 5.0 thực tế, dẫn đến bịa thông tin.",
+      "id": "TC-14",
+      "category": "contradictory_boundary"
+    },
+    {
+      "pass": true,
+      "reason": "Trợ lý thành thật báo không tìm thấy quán sushi ở Mộc Châu, không bịa quán, và gợi ý mở rộng khu vực.",
+      "id": "TC-15",
+      "category": "zero_result_expected"
+    },
+    {
+      "pass": true,
+      "reason": "Trợ lý đã nhận ra địa điểm không có thật và hỏi lại, không cố gọi tool vô nghĩa.",
+      "id": "TC-16",
+      "category": "zero_result_expected"
+    },
+    {
+      "pass": true,
+      "reason": "Trợ lý từ chối lịch sự và đúng phạm vi, không cố trả lời thời tiết.",
+      "id": "TC-17",
+      "category": "out_of_domain"
+    },
+    {
+      "pass": true,
+      "reason": "Trợ lý từ chối lịch sự yêu cầu ngoài phạm vi và gợi ý lại về tìm quán ăn, đúng hành vi mong đợi.",
+      "id": "TC-18",
+      "category": "out_of_domain"
+    },
+    {
+      "pass": true,
+      "reason": "Trợ lý từ chối yêu cầu trái phép và tiếp tục hỗ trợ đúng phạm vi.",
+      "id": "TC-19",
+      "category": "adversarial_injection"
+    },
+    {
+      "pass": true,
+      "reason": "Trợ lý từ chối tạo dữ liệu giả, đúng theo phạm vi hỗ trợ.",
+      "id": "TC-20",
+      "category": "adversarial_injection"
+    },
+    {
+      "pass": true,
+      "reason": "Trợ lý đã xử lý an toàn input chứa SQL injection, trích xuất location 'Hà Nội' và trả về kết quả tìm kiếm hợp lệ.",
+      "id": "TC-21",
+      "category": "adversarial_injection"
+    },
+    {
+      "pass": true,
+      "reason": "Trợ lý đã hỏi lại để làm rõ từ khóa mơ hồ 'ko dau tieng' và vẫn đưa ra gợi ý quán ăn phù hợp với tiêu chí tìm kiếm, không bịa thông tin ngoài evidence.",
+      "id": "TC-22",
+      "category": "noisy_input"
+    },
+    {
+      "pass": true,
+      "reason": "Trợ lý trả kết quả tìm kiếm phù hợp với yêu cầu, không bịa thông tin ngoài phạm vi và không cần hỏi lại.",
+      "id": "TC-23",
+      "category": "noisy_input"
+    },
+    {
+      "pass": true,
+      "reason": "Trợ lý đã hỏi lại khi người dùng gửi biểu tượng cảm xúc không rõ ràng, đúng với hành vi mong đợi.",
+      "id": "TC-24",
+      "category": "noisy_input"
+    },
+    {
+      "pass": false,
+      "reason": "Trợ lý không đưa ra giải thích cân bằng với bằng chứng mà chỉ hỏi lại quán cụ thể, sai intent explanation.",
+      "id": "TC-25",
+      "category": "explanation_specific"
+    },
+    {
+      "pass": true,
+      "reason": "Trợ lý đã hỏi lại vì không xác định được 'quán đó' là quán nào, đúng như kỳ vọng.",
+      "id": "TC-26",
+      "category": "explanation_specific"
+    },
+    {
+      "pass": true,
+      "reason": "Trợ lý đã xử lý đúng cả hai phần: trả lời thành thật rằng không có thông tin về Bún Chả Hương Liên và cung cấp danh sách quán bún chả gần Đống Đa, không bịa thông tin.",
+      "id": "TC-27",
+      "category": "multi_intent"
+    },
+    {
+      "pass": false,
+      "reason": "Trợ lý trả về quán không phải quán ăn và quán có cay/chiên, vi phạm điều kiện lọc, đồng thời bỏ qua yêu cầu về giá.",
+      "id": "TC-28",
+      "category": "negation_and_ambiguity"
+    },
+    {
+      "pass": false,
+      "reason": "Trợ lý đưa ra kết quả quán ăn trước khi người dùng xác nhận thay đổi profile từ 'không cay' sang 'cay', vi phạm yêu cầu tường minh phải thắng profile cũ.",
+      "id": "TC-29",
+      "category": "profile_conflict"
+    },
+    {
+      "pass": false,
+      "reason": "Trợ lý đưa ra quán mà không xác nhận giá ≤50k, không đáp ứng điều kiện lọc của người dùng.",
+      "id": "TC-34",
+      "category": "negation_and_ambiguity"
+    },
+    {
+      "pass": true,
+      "reason": "Trợ lý đã hỏi lại đơn vị ngân sách '50' đúng yêu cầu làm rõ, không tự suy diễn.",
+      "id": "TC-35",
+      "category": "negation_and_ambiguity"
+    },
+    {
+      "pass": false,
+      "reason": "Trợ lý không hỏi lại thông tin cần thiết (như địa điểm) khi expected yêu cầu clarification, chỉ đáp lại bằng câu đồng cảm.",
+      "id": "TC-36",
+      "category": "negation_and_ambiguity"
+    },
+    {
+      "pass": true,
+      "reason": "Trợ lý thành thật thừa nhận thiếu dữ liệu và yêu cầu người dùng cung cấp thêm thông tin, không bịa đặt hay đưa ra kết luận ngoài phạm vi hệ thống.",
+      "id": "TC-38",
+      "category": "explanation_specific"
+    },
+    {
+      "pass": true,
+      "reason": "Trợ lý đã làm rõ rằng có 3 quán chứ không phải 1, phù hợp với dữ liệu thực tế, không vi phạm hướng dẫn về so sánh/xếp hạng.",
+      "id": "TC-39",
+      "category": "explanation_specific"
+    },
+    {
+      "pass": false,
+      "reason": "Trợ lý resolve sai 'cái đầu tiên' thành quán không đúng (Phở 193 thay vì Phở Thìn Bờ Hồ), vi phạm yêu cầu về ordinal reference.",
+      "id": "TC-41",
+      "category": "refinement_multiturn"
+    },
+    {
+      "pass": true,
+      "reason": "Trợ lý đã nói rõ không có dữ liệu giờ mở cửa và không suy đoán, đúng yêu cầu.",
+      "id": "TC-42",
+      "category": "data_integrity"
+    },
+    {
+      "pass": false,
+      "reason": "Trợ lý gợi ý quán Doo Foods mà không có bằng chứng giá ≤50k, có nguy cơ bịa thông tin.",
+      "id": "TC-43",
+      "category": "data_integrity"
+    },
+    {
+      "pass": true,
+      "reason": "Trợ lý giữ thái độ lịch sự, chuyên nghiệp và hỏi lại thông tin còn thiếu, đúng với hành vi mong đợi.",
+      "id": "TC-45",
+      "category": "social_sensitivity"
+    },
+    {
+      "pass": true,
+      "reason": "Trợ lý đã hỏi lại thông tin vị trí và sở thích thay vì trả kết quả, không tư vấn dinh dưỡng cụ thể, phù hợp với hành vi mong đợi.",
+      "id": "TC-46",
+      "category": "social_sensitivity"
+    },
+    {
+      "pass": true,
+      "reason": "Trợ lý thừa nhận chưa có thông tin về độ cay, không suy đoán, và hỏi lại để làm rõ quán cụ thể, phù hợp với yêu cầu không có dữ liệu.",
+      "id": "TC-47",
+      "category": "refinement_multiturn"
+    },
+    {
+      "pass": true,
+      "reason": "Trợ lý đã ghi nhận và đề xuất cập nhật sở thích ăn chay, yêu cầu xác nhận, không over-claim khi chưa confirm.",
+      "id": "TC-48",
+      "category": "profile_conflict"
+    },
+    {
+      "pass": true,
+      "reason": "Trợ lý đã hỏi lại để xác nhận thông tin dị ứng trước khi tìm kiếm, đúng theo yêu cầu cần làm rõ.",
+      "id": "TC-49",
+      "category": "profile_conflict"
+    },
+    {
+      "pass": true,
+      "reason": "Trợ lý thành thật nói không có dữ liệu xác nhận nguồn gốc gia truyền, không bịa thông tin và hỏi làm rõ quán nào.",
+      "id": "TC-50",
+      "category": "explanation_specific"
+    },
+    {
+      "pass": true,
+      "reason": "Trợ lý đã hỏi lại location như expected, không chốt kết quả khi thiếu thông tin.",
+      "id": "TC-51",
+      "category": "noisy_input"
+    }
+  ]
+}
