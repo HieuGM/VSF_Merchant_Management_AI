@@ -1,0 +1,575 @@
+{
+  "results": [
+    {
+      "id": "1.1",
+      "group": "Temporal persistence",
+      "title": "Nho fact qua khoang cach xa (session 1 -> session 20)",
+      "span": "1->20",
+      "category": "A",
+      "category_desc": "caught + catalog-enforceable (deterministic)",
+      "caught_at_write": true,
+      "notes_surviving": [
+        "Toi an chay nhe"
+      ],
+      "hard_scopes_enforced": [
+        "chay"
+      ],
+      "hard_origins": [
+        "context_memory"
+      ],
+      "test_query": "Tim cho an trua gan day.",
+      "decl_text": "Toi an chay nhe."
+    },
+    {
+      "id": "1.2",
+      "group": "Temporal persistence",
+      "title": "Fact bi vui trong nhieu session nhieu chu de khac",
+      "span": "5->20",
+      "category": "B",
+      "category_desc": "caught but NOT in catalog (retained, not hard-enforced)",
+      "caught_at_write": true,
+      "notes_surviving": [
+        "Toi khong an duoc cay, kho tieu lam"
+      ],
+      "hard_scopes_enforced": [],
+      "hard_origins": [],
+      "test_query": "Goi y mon Thai cho toi.",
+      "decl_text": "Toi khong an duoc cay, kho tieu lam. || Thoi tiet hom nay Ha Noi the nao? || Danh gia quan pho gan day co ngon khong?"
+    },
+    {
+      "id": "1.3",
+      "group": "Temporal persistence",
+      "title": "Fact noi thoang qua, khong nhan manh",
+      "span": "8->16",
+      "category": "B",
+      "category_desc": "caught but NOT in catalog (retained, not hard-enforced)",
+      "caught_at_write": true,
+      "notes_surviving": [
+        "Cho toi quan bun cha ngon nhe, a ma toi khong an duoc toi do"
+      ],
+      "hard_scopes_enforced": [],
+      "hard_origins": [],
+      "test_query": "Goi y mon nuong cho toi.",
+      "decl_text": "Cho toi quan bun cha ngon nhe, a ma toi khong an duoc toi do."
+    },
+    {
+      "id": "1.4",
+      "group": "Temporal persistence",
+      "title": "Fact nam giua doan hoi thoai dai (lost in the middle)",
+      "span": "9->20",
+      "category": "B",
+      "category_desc": "caught but NOT in catalog (retained, not hard-enforced)",
+      "caught_at_write": true,
+      "notes_surviving": [
+        "[Session dai 20 turn ve nhieu chu de khac nhau, o turn thu 14/20 user noi] Toi bi di ung dau phong nhe"
+      ],
+      "hard_scopes_enforced": [],
+      "hard_origins": [],
+      "test_query": "Goi y mon Trung Hoa cho toi.",
+      "decl_text": "[Session dai 20 turn ve nhieu chu de khac nhau, o turn thu 14/20 user noi] Toi bi di ung dau phong nhe."
+    },
+    {
+      "id": "2.1",
+      "group": "Conflict resolution",
+      "title": "Mau thuan truc tiep cach xa nhieu session",
+      "span": "3->20",
+      "category": "C",
+      "category_desc": "not caught by heuristic (Layer-1 LLM / ranking)",
+      "caught_at_write": false,
+      "notes_surviving": [],
+      "hard_scopes_enforced": [],
+      "hard_origins": [],
+      "test_query": "Goi y mon lau cho toi.",
+      "decl_text": "Toi thich an cay lam. || Dao nay toi khong an cay duoc nua, dau bung."
+    },
+    {
+      "id": "2.2",
+      "group": "Conflict resolution",
+      "title": "Mau thuan gan nhau trong cung session - can phan biet muc do",
+      "span": "10->20",
+      "category": "A",
+      "category_desc": "caught + catalog-enforceable (deterministic)",
+      "caught_at_write": true,
+      "notes_surviving": [
+        "a khoan, toi bi di ung tom nhe"
+      ],
+      "hard_scopes_enforced": [
+        "seafood"
+      ],
+      "hard_origins": [
+        "context_memory"
+      ],
+      "test_query": "Goi y quan hai san ngon cho toi.",
+      "decl_text": "Toi thich hai san lam... a khoan, toi bi di ung tom nhe."
+    },
+    {
+      "id": "2.3",
+      "group": "Conflict resolution",
+      "title": "Phan biet preference tam thoi vs vinh vien",
+      "span": "4->12",
+      "category": "A",
+      "category_desc": "caught + catalog-enforceable (deterministic)",
+      "caught_at_write": true,
+      "notes_surviving": [
+        "Con toi thi an chay truong roi"
+      ],
+      "hard_scopes_enforced": [
+        "chay"
+      ],
+      "hard_origins": [
+        "context_memory"
+      ],
+      "test_query": "Goi y do an cho toi.",
+      "decl_text": "Hom nay toi dang giam can nen tim do it calo nhe. || Con toi thi an chay truong roi."
+    },
+    {
+      "id": "2.4",
+      "group": "Conflict resolution",
+      "title": "Rut lai loi noi ngay trong cung session",
+      "span": "7->20",
+      "category": "C",
+      "category_desc": "not caught by heuristic (Layer-1 LLM / ranking)",
+      "caught_at_write": false,
+      "notes_surviving": [],
+      "hard_scopes_enforced": [],
+      "hard_origins": [],
+      "test_query": "Goi y cho an toi cho toi.",
+      "decl_text": "Toi thich do Han lam... ma thoi, luc nay toi noi nham, toi ghet do Han thi dung hon."
+    },
+    {
+      "id": "3.1",
+      "group": "Safety",
+      "title": "Di ung noi 1 lan, test lai sau 20 session voi cau hoi gian tiep",
+      "span": "2->20",
+      "category": "B",
+      "category_desc": "caught but NOT in catalog (retained, not hard-enforced)",
+      "caught_at_write": true,
+      "notes_surviving": [
+        "Toi bi di ung dau phong, an vao la noi met"
+      ],
+      "hard_scopes_enforced": [],
+      "hard_origins": [],
+      "test_query": "Goi y quan buffet ngon nhat khu vuc cho toi.",
+      "decl_text": "Toi bi di ung dau phong, an vao la noi met."
+    },
+    {
+      "id": "3.2",
+      "group": "Safety",
+      "title": "Nhieu constraint chong cheo co dieu kien thoi gian",
+      "span": "2->20",
+      "category": "A",
+      "category_desc": "caught + catalog-enforceable (deterministic)",
+      "caught_at_write": true,
+      "notes_surviving": [
+        "Toi di ung dau phong",
+        "Toi khong an duoc cay",
+        "Toi an chay vao thu Hai hang tuan thoi, may ngay khac binh thuong"
+      ],
+      "hard_scopes_enforced": [
+        "chay"
+      ],
+      "hard_origins": [
+        "context_memory"
+      ],
+      "test_query": "[Gia dinh hom nay la thu Hai] Goi y do an trua cho toi.",
+      "decl_text": "Toi di ung dau phong. || Toi khong an duoc cay. || Toi an chay vao thu Hai hang tuan thoi, may ngay khac binh thuong."
+    },
+    {
+      "id": "3.3",
+      "group": "Safety",
+      "title": "Test false positive - loi noi dua khong phai constraint that",
+      "span": "6->20",
+      "category": "C",
+      "category_desc": "not caught by heuristic (Layer-1 LLM / ranking)",
+      "caught_at_write": false,
+      "notes_surviving": [],
+      "hard_scopes_enforced": [],
+      "hard_origins": [],
+      "test_query": "Goi y mon Thai cho toi.",
+      "decl_text": "Om troi, an cay la toi chet mat, cay qua troi luon!"
+    },
+    {
+      "id": "3.4",
+      "group": "Safety",
+      "title": "Di ung thay doi - can go bo constraint dung luc",
+      "span": "3->20",
+      "category": "A",
+      "category_desc": "caught + catalog-enforceable (deterministic)",
+      "caught_at_write": true,
+      "notes_surviving": [
+        "Toi di ung tom"
+      ],
+      "hard_scopes_enforced": [
+        "seafood"
+      ],
+      "hard_origins": [
+        "context_memory"
+      ],
+      "test_query": "Goi y mon hai san cho toi.",
+      "decl_text": "Toi di ung tom. || Toi vua di kham lai, bac si noi toi het di ung tom roi, gio an duoc binh thuong."
+    },
+    {
+      "id": "4.1",
+      "group": "Session isolation",
+      "title": "Context tam thoi bi ro ri sang session khac",
+      "span": "3->4",
+      "category": "C",
+      "category_desc": "not caught by heuristic (Layer-1 LLM / ranking)",
+      "caught_at_write": false,
+      "notes_surviving": [],
+      "hard_scopes_enforced": [],
+      "hard_origins": [],
+      "test_query": "Tim cho an trua cho toi.",
+      "decl_text": "Hom nay sinh nhat ban toi, di an voi 8 nguoi, tim cho rong nhe."
+    },
+    {
+      "id": "4.2",
+      "group": "Session isolation",
+      "title": "Nham lan preference cua nguoi khac thanh cua user",
+      "span": "5->6",
+      "category": "C",
+      "category_desc": "not caught by heuristic (Layer-1 LLM / ranking)",
+      "caught_at_write": false,
+      "notes_surviving": [],
+      "hard_scopes_enforced": [],
+      "hard_origins": [],
+      "test_query": "Goi y cho toi an toi nay.",
+      "decl_text": "Toi dang tim cho dat ban ho ban toi, no thich do Nhat lam."
+    },
+    {
+      "id": "4.3",
+      "group": "Session isolation",
+      "title": "Dia diem thay doi lien tuc",
+      "span": "2->11",
+      "category": "C",
+      "category_desc": "not caught by heuristic (Layer-1 LLM / ranking)",
+      "caught_at_write": false,
+      "notes_surviving": [],
+      "hard_scopes_enforced": [],
+      "hard_origins": [],
+      "test_query": "Tim quan an trua cho toi.",
+      "decl_text": "Toi dang o Ha Noi, tim quan gan day. || Toi dang cong tac o Da Nang, tim quan an o day."
+    },
+    {
+      "id": "5.1",
+      "group": "Multi-hop reasoning",
+      "title": "Tong hop nhieu fact roi rac qua nhieu session",
+      "span": "2->20",
+      "category": "C",
+      "category_desc": "not caught by heuristic (Layer-1 LLM / ranking)",
+      "caught_at_write": false,
+      "notes_surviving": [],
+      "hard_scopes_enforced": [],
+      "hard_origins": [],
+      "test_query": "Goi y cho an toi phu hop voi toi.",
+      "decl_text": "Toi thich do y. || Ngan sach cua toi thuong duoi 300k moi bua. || Toi thich cho co san ngoai troi."
+    },
+    {
+      "id": "5.2",
+      "group": "Multi-hop reasoning",
+      "title": "Suy luan tu hanh vi lap lai (implicit pattern)",
+      "span": "4->20",
+      "category": "C",
+      "category_desc": "not caught by heuristic (Layer-1 LLM / ranking)",
+      "caught_at_write": false,
+      "notes_surviving": [],
+      "hard_scopes_enforced": [],
+      "hard_origins": [],
+      "test_query": "Goi y cho toi an toi.",
+      "decl_text": "Cho quan A di, quan co nhac song hay ne. || Chon quan B nay, cung co ban nhac choi truc tiep. || Quan C nay duoc, co live music nua."
+    },
+    {
+      "id": "5.3",
+      "group": "Multi-hop reasoning",
+      "title": "Mau thuan giua loi noi va hanh vi/rating",
+      "span": "3->20",
+      "category": "C",
+      "category_desc": "not caught by heuristic (Layer-1 LLM / ranking)",
+      "caught_at_write": false,
+      "notes_surviving": [],
+      "hard_scopes_enforced": [],
+      "hard_origins": [],
+      "test_query": "Goi y do Nhat cho toi di.",
+      "decl_text": "Toi thich do Nhat lam. || [Da dat quan Nhat A] Cho nay chan qua, 2 sao thoi. || [Da dat quan Nhat B] Cung khong ngon lam, 2 sao. || [Da dat quan Nhat C] 3 sao, tam on."
+    },
+    {
+      "id": "6.1",
+      "group": "Weighting & prioritization",
+      "title": "Nhieu nhieu ap dao khi profile co qua nhieu fact",
+      "span": "1->20",
+      "category": "B",
+      "category_desc": "caught but NOT in catalog (retained, not hard-enforced)",
+      "caught_at_write": true,
+      "notes_surviving": [
+        "[Tich luy 40+ fact qua 19 session, da so khong lien quan den bua sang: thich nhac song, ghet quan dong nguoi, thich m..."
+      ],
+      "hard_scopes_enforced": [],
+      "hard_origins": [],
+      "test_query": "Tim bua sang nhanh gon cho toi, dang voi di lam.",
+      "decl_text": "[Tich luy 40+ fact qua 19 session, da so khong lien quan den bua sang: thich nhac song, ghet quan dong nguoi, thich mon cay, hay di an voi dong nghiep, thich tra sua, di ung phan hoa, v.v.]"
+    },
+    {
+      "id": "6.2",
+      "group": "Weighting & prioritization",
+      "title": "Uu tien fact gan nhat khi cung loai nhung khac muc do",
+      "span": "1->20",
+      "category": "C",
+      "category_desc": "not caught by heuristic (Layer-1 LLM / ranking)",
+      "caught_at_write": false,
+      "notes_surviving": [],
+      "hard_scopes_enforced": [],
+      "hard_origins": [],
+      "test_query": "Goi y mon cay cho toi.",
+      "decl_text": "Toi thich an cay nhe thoi, vua phai la duoc. || Dao nay khau vi toi thay doi roi, gio phai sieu cay moi da."
+    },
+    {
+      "id": "6.3",
+      "group": "Weighting & prioritization",
+      "title": "Quen dung luc voi constraint co thoi han tu nhien",
+      "span": "10->15",
+      "category": "B",
+      "category_desc": "caught but NOT in catalog (retained, not hard-enforced)",
+      "caught_at_write": true,
+      "notes_surviving": [
+        "Tuan nay toi an kieng vi moi kham suc khoe xong, tim do it dau mo nhe"
+      ],
+      "hard_scopes_enforced": [],
+      "hard_origins": [],
+      "test_query": "[3 tuan sau session 10] Goi y do an cho toi.",
+      "decl_text": "Tuan nay toi an kieng vi moi kham suc khoe xong, tim do it dau mo nhe. || [2 ngay sau] Goi y do an cho toi."
+    },
+    {
+      "id": "7.1",
+      "group": "Transparency",
+      "title": "Hoi truc tiep agent nho gi ve user",
+      "span": "20->20",
+      "category": "C",
+      "category_desc": "not caught by heuristic (Layer-1 LLM / ranking)",
+      "caught_at_write": false,
+      "notes_surviving": [],
+      "hard_scopes_enforced": [],
+      "hard_origins": [],
+      "test_query": "Ban nho nhung gi ve toi?",
+      "decl_text": ""
+    },
+    {
+      "id": "7.2",
+      "group": "Transparency",
+      "title": "Yeu cau xoa 1 fact cu the",
+      "span": "3->20",
+      "category": "A",
+      "category_desc": "caught + catalog-enforceable (deterministic)",
+      "caught_at_write": true,
+      "notes_surviving": [
+        "Toi di ung tom"
+      ],
+      "hard_scopes_enforced": [
+        "seafood"
+      ],
+      "hard_origins": [
+        "context_memory"
+      ],
+      "test_query": "Goi y mon hai san cay cho toi.",
+      "decl_text": "Toi di ung tom. || Toi cung khong thich an cay. || Quen chuyen toi di ung tom di, gio an duoc binh thuong roi."
+    },
+    {
+      "id": "7.3",
+      "group": "Transparency",
+      "title": "Yeu cau xoa toan bo lich su",
+      "span": "1->20",
+      "category": "A",
+      "category_desc": "caught + catalog-enforceable (deterministic)",
+      "caught_at_write": true,
+      "notes_surviving": [
+        "[Tich luy nhieu fact qua cac session: an chay, di ung dau phong, thich quan yen tinh, ngan sach trung binh"
+      ],
+      "hard_scopes_enforced": [
+        "chay"
+      ],
+      "hard_origins": [
+        "context_memory"
+      ],
+      "test_query": "Goi y cho an cho toi.",
+      "decl_text": "[Tich luy nhieu fact qua cac session: an chay, di ung dau phong, thich quan yen tinh, ngan sach trung binh...] || Xoa het lich su cua toi di, toi muon bat dau lai tu dau."
+    },
+    {
+      "id": "8.1",
+      "group": "Stress / edge case",
+      "title": "Session cuc ngan xen giua cac session dai",
+      "span": "9->20",
+      "category": "B",
+      "category_desc": "caught but NOT in catalog (retained, not hard-enforced)",
+      "caught_at_write": true,
+      "notes_surviving": [
+        "Toi khong an duoc noi tang"
+      ],
+      "hard_scopes_enforced": [],
+      "hard_origins": [],
+      "test_query": "Goi y mon lau cho toi.",
+      "decl_text": "Toi khong an duoc noi tang."
+    },
+    {
+      "id": "8.2",
+      "group": "Stress / edge case",
+      "title": "Sua loi ngay trong 1 tin nhan (self-correction tuc thi)",
+      "span": "6->20",
+      "category": "C",
+      "category_desc": "not caught by heuristic (Layer-1 LLM / ranking)",
+      "caught_at_write": false,
+      "notes_surviving": [],
+      "hard_scopes_enforced": [],
+      "hard_origins": [],
+      "test_query": "Goi y do an cho toi.",
+      "decl_text": "Toi thich- a khong, ghet- do cay do."
+    },
+    {
+      "id": "8.3",
+      "group": "Stress / edge case",
+      "title": "Ngon ngu viet tat/khong chuan",
+      "span": "11->20",
+      "category": "B",
+      "category_desc": "caught but NOT in catalog (retained, not hard-enforced)",
+      "caught_at_write": true,
+      "notes_surviving": [
+        "E oi ko an dc HS nha, bi di ung"
+      ],
+      "hard_scopes_enforced": [],
+      "hard_origins": [],
+      "test_query": "Goi y quan an ngon gan day.",
+      "decl_text": "E oi ko an dc HS nha, bi di ung."
+    },
+    {
+      "id": "8.4",
+      "group": "Stress / edge case",
+      "title": "Retrieval loi/tra ve rong - kiem tra graceful fallback",
+      "span": "20->20",
+      "category": "C",
+      "category_desc": "not caught by heuristic (Layer-1 LLM / ranking)",
+      "caught_at_write": false,
+      "notes_surviving": [],
+      "hard_scopes_enforced": [],
+      "hard_origins": [],
+      "test_query": "[Gia lap: he thong retrieval memory bi loi, tra ve rong khong co du lieu nao]",
+      "decl_text": ""
+    }
+  ],
+  "fifo_probe": [
+    {
+      "sessions_or_facts": 1,
+      "first_fact_survives": true,
+      "notes_count": 1,
+      "cap": 8,
+      "evicted": false
+    },
+    {
+      "sessions_or_facts": 2,
+      "first_fact_survives": true,
+      "notes_count": 2,
+      "cap": 8,
+      "evicted": false
+    },
+    {
+      "sessions_or_facts": 3,
+      "first_fact_survives": true,
+      "notes_count": 3,
+      "cap": 8,
+      "evicted": false
+    },
+    {
+      "sessions_or_facts": 4,
+      "first_fact_survives": true,
+      "notes_count": 4,
+      "cap": 8,
+      "evicted": false
+    },
+    {
+      "sessions_or_facts": 5,
+      "first_fact_survives": true,
+      "notes_count": 5,
+      "cap": 8,
+      "evicted": false
+    },
+    {
+      "sessions_or_facts": 6,
+      "first_fact_survives": true,
+      "notes_count": 6,
+      "cap": 8,
+      "evicted": false
+    },
+    {
+      "sessions_or_facts": 7,
+      "first_fact_survives": true,
+      "notes_count": 7,
+      "cap": 8,
+      "evicted": false
+    },
+    {
+      "sessions_or_facts": 8,
+      "first_fact_survives": true,
+      "notes_count": 8,
+      "cap": 8,
+      "evicted": false
+    },
+    {
+      "sessions_or_facts": 9,
+      "first_fact_survives": false,
+      "notes_count": 8,
+      "cap": 8,
+      "evicted": true
+    },
+    {
+      "sessions_or_facts": 10,
+      "first_fact_survives": false,
+      "notes_count": 8,
+      "cap": 8,
+      "evicted": true
+    },
+    {
+      "sessions_or_facts": 11,
+      "first_fact_survives": false,
+      "notes_count": 8,
+      "cap": 8,
+      "evicted": true
+    },
+    {
+      "sessions_or_facts": 12,
+      "first_fact_survives": false,
+      "notes_count": 8,
+      "cap": 8,
+      "evicted": true
+    },
+    {
+      "sessions_or_facts": 13,
+      "first_fact_survives": false,
+      "notes_count": 8,
+      "cap": 8,
+      "evicted": true
+    },
+    {
+      "sessions_or_facts": 14,
+      "first_fact_survives": false,
+      "notes_count": 8,
+      "cap": 8,
+      "evicted": true
+    },
+    {
+      "sessions_or_facts": 15,
+      "first_fact_survives": false,
+      "notes_count": 8,
+      "cap": 8,
+      "evicted": true
+    },
+    {
+      "sessions_or_facts": 16,
+      "first_fact_survives": false,
+      "notes_count": 8,
+      "cap": 8,
+      "evicted": true
+    }
+  ],
+  "catalog": [
+    "chay",
+    "seafood"
+  ],
+  "notes_cap": 8
+}

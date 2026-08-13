@@ -132,6 +132,7 @@ class ProfilePatchRequest(BaseModel):
     disliked_cuisines: list[str] | None = None
     spice_tolerance: str | None = None  # none | mild | medium | hot
     dietary: list[str] | None = None
+    allergens: list[str] | None = None
     budget_level: str | None = None  # student | standard | premium
     distance_preference_km: float | None = None
 

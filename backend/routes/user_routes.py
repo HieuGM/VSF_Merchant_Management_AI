@@ -30,6 +30,7 @@ _PROFILE_FIELD_WHITELIST: frozenset[str] = frozenset(
         "disliked_cuisines",
         "spice_tolerance",
         "dietary",
+        "allergens",
         "budget_level",
         "distance_preference_km",
     }

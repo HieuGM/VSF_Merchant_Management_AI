@@ -141,7 +141,7 @@ explanation_task:
 
     KHI CÓ QUÁN: gọi get_merchant_profile cho TỐI ĐA 2 quán đầu, mỗi merchant_id 1 lần.
 
-    {prior_context}{cross_conv_context}
+    {constraints_block}{prior_context}{cross_conv_context}
   expected_output: >
     Câu trả lời tiếng Việt tự nhiên, ấm áp (2-4 câu) như trò chuyện với bạn — KHÔNG cứng nhắc.
     Chỉ viết lời thoại trực tiếp: KHÔNG bọc JSON, KHÔNG dán nhãn trường (như "answer:"/"reasons:"),

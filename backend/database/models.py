@@ -329,6 +329,7 @@ class UserProfile(Base):
     disliked_cuisines = Column(JSONB)
     spice_tolerance = Column(String, CheckConstraint("spice_tolerance IN ('none', 'mild', 'medium', 'hot')"))
     dietary = Column(JSONB)
+    allergens = Column(JSONB)  # durable allergy/avoid facts (no FIFO cap — distinct from notes)
     budget_level = Column(String, CheckConstraint("budget_level IN ('student', 'standard', 'premium')"))
     distance_preference_km = Column(Float, default=5.0)
     current_lat = Column(Float)

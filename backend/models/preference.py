@@ -25,6 +25,7 @@ class UserProfilePublic(BaseModel):
     disliked_cuisines: list[str] = Field(default_factory=list)
     spice_tolerance: str | None = None  # none | mild | medium | hot
     dietary: list[str] = Field(default_factory=list)
+    allergens: list[str] = Field(default_factory=list)  # durable allergy/avoid facts (no FIFO cap)
     budget_level: str | None = None  # student | standard | premium
     distance_preference_km: float = 5.0
     current_lat: float | None = None

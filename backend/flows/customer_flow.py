@@ -572,6 +572,12 @@ class CustomerFlow:
                 mode = "full" if run_pref else "search_explain"
                 crew = build_customer_crew(has_location=has_location, mode=mode)
 
+            # Inject the active-constraints block (catalog hard exclusions + non-catalog health
+            # warnings, e.g. peanut) into the explanation prompt via the {constraints_block} YAML
+            # var. The streaming path appends this block in _build_explanation_messages; the
+            # blocking crew path formats it from inputs, so it must be set here before kickoff.
+            inputs["constraints_block"] = active_constraints_block(constraints)
+
             with run_scope(trace_id, self._repo), tool_call_scope(), profile_scope(profile), constraints_scope(constraints):
                 crew_output = crew.kickoff(inputs=inputs)
 
@@ -1078,6 +1084,10 @@ def _build_inputs(
         "weather_hint": _format_weather_hint(weather_override),
         "descriptor_hints": _descriptor_hints(query),
         "cross_conv_context": _cross_conv_hint(user_id, query, session_id),
+        # Default empty — the blocking search path overrides this with the rendered constraints
+        # block after building `constraints`. Lets the {constraints_block} YAML placeholder format
+        # safely on both paths (streaming injects the real block separately).
+        "constraints_block": "",
     }
 
 

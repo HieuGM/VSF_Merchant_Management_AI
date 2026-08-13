@@ -11,6 +11,7 @@ from typing import Any
 
 from sqlalchemy.orm import Session
 
+from core.text_norm import fold_diacritics
 from database.models import UserProfile
 from models.preference import UserProfilePublic
 from repositories.user_liked_merchant_repository import UserLikedMerchantRepository
@@ -18,7 +19,7 @@ from repositories.user_liked_merchant_repository import UserLikedMerchantReposit
 # --- phase-04 confirmed-delta application (B5 typed validation + B6 list semantics) ---
 # Fields a confirmed delta may touch (mirrors the route whitelist). Bounds WHAT mutates,
 # not WHO (auth gates WHO). user_id/PK/updated_at are intentionally absent.
-_APPLY_LIST_FIELDS: frozenset[str] = frozenset({"liked_cuisines", "disliked_cuisines", "dietary"})
+_APPLY_LIST_FIELDS: frozenset[str] = frozenset({"liked_cuisines", "disliked_cuisines", "dietary", "allergens"})
 _APPLY_ENUM_FIELDS: dict[str, frozenset[str]] = {
     "spice_tolerance": frozenset({"none", "mild", "medium", "hot"}),
     "budget_level": frozenset({"student", "standard", "premium"}),
@@ -127,6 +128,7 @@ class UserProfileRepository:
                 liked_cuisines=[],
                 disliked_cuisines=[],
                 dietary=[],
+                allergens=[],
                 distance_preference_km=5.0,
             )
             db.add(row)
@@ -180,12 +182,17 @@ class UserProfileRepository:
         self._db.refresh(row)
         return self._to_public(row)
 
-    def append_context_notes(self, user_id: str, notes: list[str], cap: int = 8) -> None:
+    def append_context_notes(self, user_id: str, notes: list[str], cap: int = 8,
+                             expiries: dict[str, str] | None = None) -> None:
         """Append durable-fact notes to ``context_memory["notes"]`` (JSONB, phase-03).
 
         Dedupe (case-insensitive) + FIFO cap. Upserts a minimal row if the user has none.
         One tx on the receiver's session. ``context_memory`` is the LONG-TERM cross-session
-        store — DISTINCT from the short-term ``prior_context`` (chat_messages)."""
+        store — DISTINCT from the short-term ``prior_context`` (chat_messages).
+
+        ``expiries`` (optional, 6.3): maps note-lowercased → ISO expiry for TEMPORARY constraints
+        ("tuần này ăn kiêng"); stored in ``context_memory["note_expiries"]``. FIFO eviction also
+        drops the evicted notes' expiry entries so the map cannot outlive its note."""
         if not notes:
             return
         row = self._get_or_create_row(self._db, user_id)
@@ -199,8 +206,116 @@ class UserProfileRepository:
         if len(existing) > cap:
             existing = existing[-cap:]  # FIFO: keep the most recent `cap`
         mem["notes"] = existing
+        # Expiry bookkeeping (6.3): merge new expiries, then drop any whose note was FIFO-evicted.
+        if expiries or mem.get("note_expiries"):
+            exp = dict(mem.get("note_expiries") or {})
+            exp.update({k: v for k, v in (expiries or {}).items()})
+            keep = {n.lower() for n in existing}
+            mem["note_expiries"] = {k: v for k, v in exp.items() if k in keep}
         row.context_memory = mem  # reassign (not in-place) so SQLAlchemy detects the change
         self._db.commit()
+
+    def prune_expired_notes(self, user_id: str, now: str | None = None) -> int:
+        """Drop notes whose temporary expiry has elapsed (6.3). ``now`` is an ISO timestamp
+        (injectable for tests); defaults to utc now. Removes both the note and its expiry entry.
+        No-op (returns 0) when there are no expiries or none have elapsed."""
+        from datetime import datetime, timezone
+
+        row = self._db.get(UserProfile, user_id)  # read-only: do NOT create a row for a new user
+        if row is None:
+            return 0
+        mem = dict(row.context_memory or {})
+        exp = dict(mem.get("note_expiries") or {})
+        if not exp:
+            return 0
+        now_dt = datetime.fromisoformat(now) if now else datetime.now(timezone.utc)
+        expired = {k for k, v in exp.items() if datetime.fromisoformat(v) < now_dt}
+        if not expired:
+            return 0
+        old_notes = list(mem.get("notes") or [])
+        notes = [n for n in old_notes if n.lower() not in expired]
+        removed = len(old_notes) - len(notes)
+        mem["notes"] = notes
+        mem["note_expiries"] = {k: v for k, v in exp.items() if k not in expired}
+        row.context_memory = mem
+        self._db.commit()
+        return removed
+
+    def remove_notes_matching(self, user_id: str, terms: list[str]) -> int:
+        """Retract prior allergy notes: drop every ``context_memory["notes"]`` entry whose
+        (folded) text contains any of `terms`. Used when the user withdraws a prior allergy
+        ("quên dị ứng tôm", "đã hết dị ứng") so the stale declaration can no longer enforce.
+        Multi-word terms match as a phrase; single-word terms match as a whole token (avoids
+        substring false hits). No-op when nothing matches. Returns the count removed."""
+        if not terms:
+            return 0
+        row = self._db.get(UserProfile, user_id)  # read-only: nothing to remove for a new user
+        if row is None:
+            return 0
+        mem = dict(row.context_memory or {})
+        notes = list(mem.get("notes") or [])
+        kept: list[str] = []
+        for n in notes:
+            fn = fold_diacritics(n)
+            hit = False
+            for t in terms:
+                if " " in t:
+                    if t in fn:
+                        hit = True
+                        break
+                elif t in fn.split():
+                    hit = True
+                    break
+            if not hit:
+                kept.append(n)
+        removed = len(notes) - len(kept)
+        if removed:
+            mem["notes"] = kept
+            row.context_memory = mem  # reassign so SQLAlchemy detects the change
+            self._db.commit()
+        return removed
+
+    def add_allergens(self, user_id: str, terms: list[str]) -> None:
+        """Append durable allergy/avoid sentences to ``allergens`` (JSONB, NO FIFO cap — distinct
+        from context_memory.notes which is capped at 8, so a safety-critical allergy is never
+        evicted under durable-fact pressure, memory_test.json 6.1). Dedupe case-insensitive. One tx."""
+        if not terms:
+            return
+        row = self._get_or_create_row(self._db, user_id)
+        current = list(row.allergens or [])
+        seen = {a.lower() for a in current}
+        for t in terms:
+            if t and t.lower() not in seen:
+                current.append(t)
+                seen.add(t.lower())
+        row.allergens = current  # reassign so SQLAlchemy detects the change
+        self._db.commit()
+
+    def remove_allergens_matching(self, user_id: str, terms: list[str]) -> int:
+        """Retract allergens: drop every ``allergens`` entry whose (folded) text contains any of
+        ``terms`` (mirrors remove_notes_matching, kept in sync when a user withdraws an allergy).
+        Returns count removed."""
+        if not terms:
+            return 0
+        row = self._db.get(UserProfile, user_id)  # read-only: nothing to remove for a new user
+        if row is None:
+            return 0
+        current = list(row.allergens or [])
+        kept: list[str] = []
+        for a in current:
+            fa = fold_diacritics(a)
+            hit = False
+            for t in terms:
+                if (" " in t and t in fa) or (t in fa.split()):
+                    hit = True
+                    break
+            if not hit:
+                kept.append(a)
+        removed = len(current) - len(kept)
+        if removed:
+            row.allergens = kept  # reassign so SQLAlchemy detects the change
+            self._db.commit()
+        return removed
 
     def clear_memory(self, user_id: str) -> None:
         """Wipe the user's remembered memory: context_memory notes (allergy/diet declarations)
@@ -210,8 +325,10 @@ class UserProfileRepository:
         row = self._get_or_create_row(self._db, user_id)
         mem = dict(row.context_memory or {})
         mem["notes"] = []
+        mem["note_expiries"] = {}
         row.context_memory = mem
         row.dietary = []
+        row.allergens = []
         row.liked_cuisines = []
         row.disliked_cuisines = []
         row.budget_level = None
@@ -225,6 +342,7 @@ class UserProfileRepository:
             disliked_cuisines=row.disliked_cuisines or [],
             spice_tolerance=row.spice_tolerance,
             dietary=row.dietary or [],
+            allergens=row.allergens or [],
             budget_level=row.budget_level,
             distance_preference_km=(
                 row.distance_preference_km if row.distance_preference_km is not None else 5.0
