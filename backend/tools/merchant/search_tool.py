@@ -8,8 +8,8 @@ import math
 import re
 import statistics
 import time
-from typing import Any, Callable
-from pydantic import BaseModel, Field
+from typing import Any, Callable, Literal
+from pydantic import BaseModel, Field, field_validator
 from sqlalchemy import String, and_, cast, or_
 from sqlalchemy.orm import Session
 
@@ -500,3 +500,8 @@ class SearchMerchantsInput(BaseModel):
     radius_km: float | None = Field(None, ge=0.5, le=20, description="Radius around anchor merchant in kilometers.")
     sort_by: Literal["relevance", "rating", "distance"] = Field("relevance", description="Deterministic result ordering.")
     limit: int = Field(10, description="Max results (1..25)")
+
+    @field_validator("anchor_merchant_id", mode="before")
+    @classmethod
+    def normalize_anchor_merchant_id(cls, value: Any) -> Any:
+        return str(value) if isinstance(value, int) and not isinstance(value, bool) else value

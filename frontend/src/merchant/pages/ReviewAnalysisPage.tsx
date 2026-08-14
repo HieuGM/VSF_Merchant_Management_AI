@@ -65,7 +65,7 @@ export function ReviewAnalysisPage({ merchantId }: { merchantId: string }) {
             <span>Merchant #{merchantId}</span>
           </div>
           <h1 className="text-2xl font-extrabold flex items-center gap-2 text-white">
-            ⭐ Phân Tích Nhận Xét Khách Hàng
+            ⭐ Customer reviews
           </h1>
           <p className="text-teal-50 text-sm mt-1">
             Tổng hợp ý kiến phản hồi và đánh giá từ người dùng ứng dụng Xanh SM.
@@ -73,7 +73,7 @@ export function ReviewAnalysisPage({ merchantId }: { merchantId: string }) {
         </div>
         <div className="bg-white/15 backdrop-blur-md px-6 py-3 rounded-xl border border-white/20 flex items-center gap-4 text-center">
           <div>
-            <div className="text-3xl font-extrabold text-amber-300">{stats.avg} / 5.0</div>
+            <div className="text-3xl font-extrabold text-amber-300">{stats.avg} / 10.0</div>
             <div className="text-xs text-teal-100">{stats.total} đánh giá</div>
           </div>
         </div>
@@ -138,7 +138,7 @@ export function ReviewAnalysisPage({ merchantId }: { merchantId: string }) {
         {/* Rating Star Filters */}
         <div className="flex items-center gap-1.5">
           <span className="text-xs text-slate-500 font-semibold mr-1">Sao:</span>
-          {(['all', 5, 4, 3, 2, 1] as const).map((star) => (
+          {(['all', 10, 8, 6, 4, 2] as const).map((star) => (
             <button
               key={String(star)}
               type="button"
@@ -173,7 +173,7 @@ export function ReviewAnalysisPage({ merchantId }: { merchantId: string }) {
                 <div className="flex items-center justify-between gap-2 mb-2">
                   <div className="flex items-center gap-1 text-amber-500 font-bold text-sm">
                     {'★'.repeat(Math.round(rev.rating || 5))}
-                    <span className="text-xs text-slate-500 ml-1">({rev.rating || 5}/5.0)</span>
+                    <span className="text-xs text-slate-500 ml-1">({rev.rating || 5}/10.0)</span>
                   </div>
                   <span
                     className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase ${

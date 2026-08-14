@@ -13,7 +13,7 @@ os.environ["CREWAI_TRACING_ENABLED"] = "false"
 
 from contextlib import asynccontextmanager
 import httpx
-
+import requests
 from fastapi import FastAPI
 from langfuse import Langfuse, __version__ as langfuse_version
 from openinference.instrumentation.crewai import CrewAIInstrumentor
@@ -21,7 +21,6 @@ from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExport
 
 from app import extensions
 from core.logging import configure_logging, get_logger
-from core.otel_insecure_session import create_session
 from core.settings import get_settings, sync_langfuse_env
 
 
@@ -51,6 +50,18 @@ _BASE_ROUTERS = [
     map_routes.router,
     trace_routes.router,
 ]
+
+def create_session():
+    session = requests.Session()
+    session.verify = False
+    original_request = session.request
+
+    def request(method, url, **kwargs):
+        kwargs["verify"] = False
+        return original_request(method, url, **kwargs)
+
+    session.request = request
+    return session
 
 
 def initialize_langfuse():

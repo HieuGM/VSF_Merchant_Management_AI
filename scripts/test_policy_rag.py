@@ -34,7 +34,7 @@ def main():
                 break
 
             print(f"\n[RAG Service] Searching for: '{query}'...")
-            res = rag_service.search(query=query, top_k=5)
+            res = rag_service.search(query=query)
             results = res.get("results", [])
 
             if not results:

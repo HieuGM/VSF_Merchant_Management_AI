@@ -11,9 +11,13 @@ from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 
 import chromadb
-from chromadb import Search, K, Knn, Rrf
 from chromadb.config import Settings as ChromaSettings
-from chromadb.utils.embedding_functions import Bm25EmbeddingFunction
+from langchain_community.retrievers import BM25Retriever
+from llama_index.core.base.base_retriever import BaseRetriever
+from llama_index.core.llms import MockLLM
+from llama_index.core.retrievers import QueryFusionRetriever
+from llama_index.core.retrievers.fusion_retriever import FUSION_MODES
+from llama_index.core.schema import NodeWithScore, QueryBundle, TextNode
 
 from core.settings import Settings, get_settings
 from database.models import PolicyDocument, PolicyDocumentChunk
@@ -25,6 +29,17 @@ from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 
 # Default lightweight embedding model for fast local tests
 DEFAULT_EMBED_MODEL = "BAAI/bge-small-en-v1.5"
+RETRIEVAL_LIMIT = 20
+RESULT_LIMIT = 5
+
+
+class _RankedRetriever(BaseRetriever):
+    def __init__(self, retrieve: Any) -> None:
+        super().__init__()
+        self._retrieve_nodes = retrieve
+
+    def _retrieve(self, query_bundle: QueryBundle) -> list[NodeWithScore]:
+        return self._retrieve_nodes(query_bundle.query_str)
 
 
 class PolicyRagService:
@@ -180,6 +195,21 @@ class PolicyRagService:
         if not rows:
             return 0
 
+        if self._rag_client is not None:
+            self._rag_client.add_documents(documents=[
+                {
+                    "doc_id": chunk.chunk_id,
+                    "content": chunk.content,
+                    "metadata": {
+                        "document_id": document.document_id,
+                        "category": document.category,
+                        "section_path": json.dumps(chunk.section_path or [], ensure_ascii=False),
+                    },
+                }
+                for chunk, document in rows
+            ])
+            return len(rows)
+
         collection = self._collection()
         embedder = self._get_embedder()
 
@@ -209,46 +239,62 @@ class PolicyRagService:
     def search(
         self,
         query: str,
-        *,
-        categories: list[str] | None = None,
-        top_k: int = 5,
     ) -> dict[str, Any]:
-        """Search policy documents and hydrate evidence from PostgreSQL."""
-        collection = self._collection()
-        query_embedding = self._get_embedder().get_query_embedding(query)
+        """Fuse the top BM25 and dense policy chunks with reciprocal rank fusion."""
+        rows = self._chunk_rows()
+        if not rows:
+            return self._hydrate_matches([])
+        bm25 = BM25Retriever.from_texts(
+            [chunk.content for chunk, _ in rows],
+            ids=[chunk.chunk_id for chunk, _ in rows],
+            k=RETRIEVAL_LIMIT,
+        )
 
-        mapped_filters = self._map_category_filters(categories)
-        where: dict | None = None
-        if len(mapped_filters) == 1:
-            where = {"category": mapped_filters[0]}
-        elif mapped_filters:
-            where = {"category": {"$in": list(set(mapped_filters))}}
+        def lexical_nodes(text: str) -> list[NodeWithScore]:
+            return [
+                self._ranked_node(doc.id, 1 / rank)
+                for rank, doc in enumerate(bm25.invoke(text), start=1)
+            ]
 
-        kwargs: dict[str, Any] = {
-            "query_embeddings": [query_embedding],
-            "n_results": top_k,
-            "include": ["distances", "metadatas", "documents"],
-        }
-        if where:
-            kwargs["where"] = where
+        fused = QueryFusionRetriever(
+            [_RankedRetriever(lexical_nodes), _RankedRetriever(self._dense_nodes)],
+            llm=MockLLM(),
+            mode=FUSION_MODES.RECIPROCAL_RANK,
+            similarity_top_k=RESULT_LIMIT,
+            num_queries=1,
+            use_async=False,
+        ).retrieve(query)
+        return self._hydrate_matches(
+            [{"id": item.node.node_id, "score": item.score or 0.0} for item in fused]
+        )
 
-        if hasattr(collection, "query"):
-            result = collection.query(**kwargs)
-            if (not result.get("ids") or not result["ids"][0]) and where:
-                kwargs.pop("where", None)
-                result = collection.query(**kwargs)
-            ids = result["ids"][0] if result.get("ids") else []
-            distances = result["distances"][0] if result.get("distances") else []
-            metadatas = result["metadatas"][0] if result.get("metadatas") else []
-            documents = result["documents"][0] if result.get("documents") else []
-        else:
-            ids, distances, metadatas, documents = [], [], [], []
+    def _dense_nodes(self, query: str) -> list[NodeWithScore]:
+        if self._rag_client is not None and not hasattr(self._rag_client, "query"):
+            matches = self._rag_client.search(query=query, top_k=RETRIEVAL_LIMIT)
+            return [
+                self._ranked_node(item["id"], float(item.get("score", 0.0)))
+                for item in matches
+            ]
 
-        matches = [
-            {"id": cid, "score": max(0.0, 1.0 - dist), "text": doc, "meta": meta}
-            for cid, dist, doc, meta in zip(ids, distances, documents, metadatas)
+        result = self._collection().query(
+            query_embeddings=[self._get_embedder().get_query_embedding(query)],
+            n_results=RETRIEVAL_LIMIT,
+            include=["distances", "documents"],
+        )
+        ids = result.get("ids", [[]])[0]
+        distances = result.get("distances", [[]])[0]
+        documents = result.get("documents", [[]])[0]
+        return [
+            self._ranked_node(chunk_id, max(0.0, 1.0 - distance))
+            for chunk_id, distance, _ in zip(ids, distances, documents)
         ]
 
+    @staticmethod
+    def _ranked_node(chunk_id: str, score: float) -> NodeWithScore:
+        node = TextNode(id_=chunk_id, text="", metadata={"chunk_id": chunk_id})
+        return NodeWithScore(node=node, score=score)
+
+    def _hydrate_matches(self, matches: list[dict[str, Any]]) -> dict[str, Any]:
         chunk_ids = [m["id"] for m in matches]
         stored = {
             str(chunk.chunk_id): (chunk, document)
@@ -318,7 +364,10 @@ class PolicyRagService:
         os.environ["TRANSFORMERS_OFFLINE"] = "1"
         if self._embed_model_obj is not None:
             return self._embed_model_obj
-        self._embed_model_obj = HuggingFaceEmbedding(model_name=DEFAULT_EMBED_MODEL)
+        self._embed_model_obj = HuggingFaceEmbedding(
+            model_name=DEFAULT_EMBED_MODEL,
+            local_files_only=True,
+        )
         return self._embed_model_obj
 
     def _chunk_rows(self, chunk_ids: list[str] | None = None) -> list[tuple[PolicyDocumentChunk, PolicyDocument]]:
@@ -352,19 +401,3 @@ class PolicyRagService:
             metadata={"hnsw:space": "cosine"},
         )
         return self._rag_client
-
-    def _map_category_filters(self, categories: list[str] | None) -> list[str]:
-        if not categories:
-            return []
-        category_map = {
-            "policy": "merchant_code_of_conduct",
-            "terms": "general_terms",
-            "regulations": "platform_regulations",
-            "compliance": "merchant_code_of_conduct",
-            "faq": "merchant_faq",
-        }
-        res = []
-        for cat in categories:
-            c = cat.strip().lower()
-            res.append(category_map.get(c, c))
-        return res

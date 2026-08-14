@@ -10,8 +10,6 @@ class PolicySearchInput(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     query: str = Field(min_length=2, max_length=600)
-    categories: list[str] = Field(default_factory=list, max_length=5)
-    top_k: int = Field(default=5, ge=1, le=10)
 
 
 class PolicyChunkEvidence(BaseModel):

@@ -4,6 +4,8 @@ FROZEN SEAM (Phase 0): both Customer (Dev A) and Merchant (Dev B) verticals read
 config from here. Add new fields, do not rename/remove existing ones without going
 through the contract-change protocol (plan.md §[C2]).
 """
+from typing import Literal
+
 from functools import lru_cache
 from dotenv import find_dotenv, load_dotenv
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -35,6 +37,9 @@ class Settings(BaseSettings):
     llm_model_small: str | None = None  # Model nhỏ / fast (Intent, Scope Guard, etc.)
     llm_model_large: str | None = None  # Model lớn / heavy (Synthesis, Audit, Diagnosis)
     llm_base_url: str | None = None
+
+    # --- Execution Mode ---
+    merchant_execution_mode: Literal["legacy", "shadow", "active"] = "legacy"
 
     # --- Policy RAG ---
     rag_embedding_api_key: str | None = None
