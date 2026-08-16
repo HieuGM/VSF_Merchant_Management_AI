@@ -29,6 +29,8 @@ class FakeRagClient:
 
 
 def test_policy_rag_hydrates_chroma_ids_from_postgres(db_session):
+    db_session.query(PolicyDocumentChunk).delete()
+    db_session.query(PolicyDocument).delete()
     updated = datetime(2026, 7, 1, tzinfo=timezone.utc)
     db_session.add(
         PolicyDocument(
@@ -73,6 +75,8 @@ def test_policy_rag_hydrates_chroma_ids_from_postgres(db_session):
 
 
 def test_policy_rag_syncs_minimal_chunk_metadata(db_session):
+    db_session.query(PolicyDocumentChunk).delete()
+    db_session.query(PolicyDocument).delete()
     db_session.add(
         PolicyDocument(
             document_id="merchant-handbook-vi",

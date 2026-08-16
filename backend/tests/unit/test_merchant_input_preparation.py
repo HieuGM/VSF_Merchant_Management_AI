@@ -66,8 +66,7 @@ def prepare(llm: FakeAnalyzer, traces: list[dict] | None = None):
 def test_analyzer_accepts_gemini_escaped_apostrophe_without_repair_call():
     llm = FakeAnalyzer(
         '{"rewritten_query":"So sánh review \\\'quanh đây\\\'",'
-        '"scope_candidate":"allowed","missing_context":[],'
-        '"proposed_outcome":"coordinate"}'
+        '"scope_candidate":"allowed","missing_context":[]}'
     )
 
     result = prepare(llm)
@@ -82,7 +81,6 @@ def test_analyzer_accepts_native_structured_response_without_repair():
         PreparedRequest(
             rewritten_query="Tôi muốn code",
             scope_candidate="out_of_scope",
-            proposed_outcome="coordinate",
         )
     )
 
@@ -102,13 +100,12 @@ def test_analyzer_accepts_fenced_repair_aliases():
         "not-json",
         "```json\n"
         '{"rewritten_query":"So sánh review","scope":"allowed",'
-        '"missing_context":[],"outcome":"coordinate"}\n```',
+        '"missing_context":[]}\n```',
     )
 
     result = prepare(llm)
 
     assert result.scope_candidate == "allowed"
-    assert result.proposed_outcome == "coordinate"
     assert len(llm.calls) == 2
 
 
@@ -127,8 +124,7 @@ def test_analyzer_failure_trace_keeps_sanitized_raw_and_repair_outputs():
 def test_trace_callback_failure_is_logged_without_changing_valid_result(caplog):
     llm = FakeAnalyzer(
         '{"rewritten_query":"Hello","resolved_references":[],'
-        '"scope_candidate":"allowed","missing_context":[],'
-        '"proposed_outcome":"fast_answer"}'
+        '"scope_candidate":"allowed","missing_context":[]}'
     )
     service = InputPreparationService(
         llm=llm,
@@ -200,3 +196,20 @@ def test_bounded_prompt_compiles_bounded_variables():
 
     assert prompt.startswith("INPUT_ANALYZER_PROMPT")
     assert "Hello" in prompt
+
+
+def test_bounded_prompt_overrides_stale_remote_execution_fields(monkeypatch):
+    monkeypatch.setattr(
+        "agents.merchant.input_analyzer_prompt.compile_merchant_prompt",
+        lambda _key, **_variables: ("Return proposed_outcome and route.", object()),
+    )
+
+    prompt = build_bounded_prompt(
+        raw_query="Tìm tài liệu cần thiết để đăng ký merchant",
+        history=[],
+        session_state={},
+        owner_context={},
+    )
+
+    assert '"rewritten_query"' in prompt
+    assert "Do not output proposed_outcome" in prompt

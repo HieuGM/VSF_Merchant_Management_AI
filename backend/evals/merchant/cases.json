@@ -91,7 +91,7 @@
     "subcategory": "greeting",
     "query": "Xin chào",
     "history": [],
-    "expected_outcome": "fast_answer",
+    "expected_outcome": "coordinate",
     "expected_reason": "greeting",
     "expected_delegations": [],
     "ground_truth_answer": "Chào Quý Đối tác! Tôi có thể hỗ trợ gì cho bạn hôm nay?"
@@ -102,7 +102,7 @@
     "subcategory": "thank_you",
     "query": "Cảm ơn bạn nhiều nhé!",
     "history": [],
-    "expected_outcome": "fast_answer",
+    "expected_outcome": "coordinate",
     "expected_reason": "greeting",
     "expected_delegations": [],
     "ground_truth_answer": "Dạ không có gì ạ! Rất vui được đồng hành cùng Quý Đối tác."
@@ -113,7 +113,7 @@
     "subcategory": "capabilities",
     "query": "Bạn có thể giúp gì cho tôi?",
     "history": [],
-    "expected_outcome": "fast_answer",
+    "expected_outcome": "coordinate",
     "expected_reason": "capabilities",
     "expected_delegations": [],
     "ground_truth_answer": "Tôi có thể hỗ trợ bạn chẩn đoán tình hình kinh doanh, tra cứu chính sách Xanh SM, và tìm hiểu đối thủ."
@@ -124,7 +124,7 @@
     "subcategory": "greeting_time",
     "query": "Chào buổi sáng bạn",
     "history": [],
-    "expected_outcome": "fast_answer",
+    "expected_outcome": "coordinate",
     "expected_reason": "greeting",
     "expected_delegations": [],
     "ground_truth_answer": "Chào Quý Đối tác! Chúc Quý Đối tác một ngày mới kinh doanh hồng phát!"
@@ -135,7 +135,7 @@
     "subcategory": "goodbye",
     "query": "Tạm biệt bạn",
     "history": [],
-    "expected_outcome": "fast_answer",
+    "expected_outcome": "coordinate",
     "expected_reason": "greeting",
     "expected_delegations": [],
     "ground_truth_answer": "Tạm biệt Quý Đối tác! Hẹn gặp lại Quý Đối tác."
@@ -155,7 +155,7 @@
         "content": "Rating hiện tại của nhà hàng là 4.6 sao, trong khi đó rating của Pizza 4P đang là 4.9 sao. Bạn hãy cố gắng cải thiện nhé."
       }
     ],
-    "expected_outcome": "fast_answer",
+    "expected_outcome": "coordinate",
     "expected_reason": "history_context",
     "expected_delegations": [],
     "ground_truth_answer": "Rating 4.6 là thấp hơn 4.9 sao bạn nhé"
@@ -175,7 +175,7 @@
         "content": "Tuần này bạn có 145 đơn hàng, còn tuần trước bạn có 120 đơn hàng."
       }
     ],
-    "expected_outcome": "fast_answer",
+    "expected_outcome": "coordinate",
     "expected_reason": "history_context",
     "expected_delegations": [],
     "ground_truth_answer": "Số đơn hàng tuần này (145 đơn) đã tăng khoảng 20% so với tuần trước (120 đơn)."
@@ -186,7 +186,7 @@
     "subcategory": "general_guide",
     "query": "Hướng dẫn tôi cách sử dụng agent này?",
     "history": [],
-    "expected_outcome": "fast_answer",
+    "expected_outcome": "coordinate",
     "expected_reason": "capabilities",
     "expected_delegations": [],
     "ground_truth_answer": "Bạn có thể đặt câu hỏi về chính sách Xanh SM, phân tích hiệu suất quán của bạn, hoặc tìm kiếm quán ăn đối thủ."

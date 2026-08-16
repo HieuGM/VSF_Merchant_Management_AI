@@ -88,8 +88,7 @@ class InputPreparationService:
             parse_result = "ok"
             return parsed_request
         except (ValidationError, ValueError):
-            parse_result = "schema_repair_failed"
-            raise InputPreparationError("schema_repair_failed") from error
+            raise InputPreparationError("schema_repair_failed") from None
         except Exception as error:
             if _exception_has_error_code(error, "prompt_injection_detected"):
                 parse_result = "prompt_injection_blocked"
@@ -213,22 +212,6 @@ def _parse_prepared_request(raw_output: str) -> PreparedRequest:
     # Backward-compatible aliases.
     if "scope_candidate" not in canonical and "scope" in canonical:
         canonical["scope_candidate"] = canonical.pop("scope")
-
-    if "proposed_outcome" not in canonical and "outcome" in canonical:
-        canonical["proposed_outcome"] = canonical.pop("outcome")
-
-    # Minor structural repair: LLM may emit {} instead of [].
-    refs = canonical.get("resolved_references")
-    if refs is None or refs == {}:
-        canonical["resolved_references"] = []
-    elif isinstance(refs, dict):
-        canonical["resolved_references"] = [refs]
-
-    missing = canonical.get("missing_context")
-    if missing is None:
-        canonical["missing_context"] = []
-    elif isinstance(missing, str):
-        canonical["missing_context"] = [missing]
 
     return PreparedRequest.model_validate(canonical)
 

@@ -6,14 +6,6 @@ from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field
 
 
-ProposedOutcome = Literal["fast_answer", "coordinate"]
-RouteOutcome = Literal[
-    "reject",
-    "fast_answer",
-    "coordinate",
-]
-
-
 class ResolvedReference(BaseModel):
     """A context-derived entity reference, with explicit confidence."""
 
@@ -27,19 +19,16 @@ class ResolvedReference(BaseModel):
 
 
 class PreparedRequest(BaseModel):
-    """Tool-less input-layer output; deliberately excludes planning fields."""
+    """Tool-less input-layer output; deliberately excludes planning fields.
+
+    Contains only contextual preparation — never an execution mode, capability,
+    route, agent, or tool selection. The coordinator is the sole router.
+    """
 
     model_config = ConfigDict(extra="forbid")
 
     rewritten_query: str = Field(min_length=1, max_length=1200)
-    resolved_references: list[ResolvedReference] = Field(
-        default_factory=list,
-        max_length=5,
-    )
-    scope_candidate: Literal["allowed", "out_of_scope", "unclear"]
-    missing_context: list[str] = Field(default_factory=list, max_length=5)
-    proposed_outcome: ProposedOutcome
-
+    scope_candidate: Literal["allowed", "out_of_scope"]
 
 class PromptBudget(BaseModel):
     """Explicit per-prompt dynamic-input and generated-output bounds."""

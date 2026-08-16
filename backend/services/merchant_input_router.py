@@ -14,7 +14,7 @@ from services.merchant_data_policy import QueryPolicyDecision
 class RoutingDecision:
     """A compact, inspectable outcome chosen before any CrewAI kickoff."""
 
-    outcome: Literal["reject", "fast_answer", "coordinate"]
+    outcome: Literal["reject", "coordinate"]
     reason: str
     reply: str | None = None
 
@@ -84,31 +84,26 @@ def decide_route(
     *,
     prepared: PreparedRequest,
     policy: QueryPolicyDecision,
-    immutable_facts: dict[str, ImmutableSessionFact],
+    immutable_facts: dict[str, ImmutableSessionFact] | None = None,
 ) -> RoutingDecision:
-    """Select exactly one allowed route without planning or tool execution."""
+    """Select exactly one pre-coordinator route without planning or tool execution.
+
+    Routes:
+      reject     — hard policy denial or explicit out-of-scope from Input Analyzer.
+      coordinate — all other allowed requests; the coordinator decides execution mode.
+
+    The coordinator is the sole semantic execution router. This function must not
+    select a mode, capability, agent, or tool.
+    """
     if not policy.allowed:
         return RoutingDecision("reject", "merchant_data_policy", reply=policy.reason)
 
-    # The analyzer's scope classification is an actual routing gate, not
-    # observability-only metadata. Ambiguous in-scope requests may still be
-    # resolved by the coordinator, but an explicit out-of-scope result stops.
+    # Explicit out-of-scope from Input Analyzer is a hard stop.
     if prepared.scope_candidate == "out_of_scope":
         return RoutingDecision(
             "reject",
             "input_scope",
             reply="Câu hỏi nằm ngoài phạm vi hỗ trợ merchant và tài liệu Green SM.",
-        )
-
-    # Fast answers: greetings, farewells, capability questions, or cached immutable facts.
-    # The analyzer signals fast_answer when no data retrieval is needed.
-    # If there is a cached immutable fact for this exact query, use it as the reply.
-    if prepared.proposed_outcome == "fast_answer":
-        safe_fact = immutable_facts.get(normalize_text(prepared.rewritten_query))
-        return RoutingDecision(
-            "fast_answer",
-            "analyzer_fast_answer",
-            reply=safe_fact.value if safe_fact is not None else None,
         )
 
     return RoutingDecision("coordinate", "coordinator_required")

@@ -14,8 +14,8 @@ from typing import Any
 
 from crewai import Agent, Crew, Process, Task
 from crewai.project import CrewBase, agent, crew, task
-from langfuse import get_client
 
+from models.merchant_execution import CapabilityName, ExecutionPlan, PlannedTask
 from models.merchant_input import PreparedRequest
 from tools.merchant.gateway import RunScopedMerchantToolGateway
 from services.merchant_prompts import compile_merchant_prompt, get_merchant_prompt
@@ -185,12 +185,70 @@ def specialist_prompts() -> dict[str, str]:
     }
 
 
+def plan_execution(
+    prepared_request: PreparedRequest,
+    history: Any,
+    owner_context: Any,
+    *,
+    llm: Any,
+) -> ExecutionPlan:
+    """Call small coordinator LLM to select execution mode and capability tasks.
+
+    Permits 1 repair call on JSON parse / validation error. Rejects invalid output.
+    """
+    coordinator_prompt = build_coordinator_prompt(
+        prepared_request, history, owner_context
+    )
+    prompt_obj = get_merchant_prompt("COORDINATE_PROMPT")
+    base_system_prompt = prompt_obj.prompt.strip()
+
+    prompt_text = (
+        f"{base_system_prompt}\n\n"
+        "Your role is to produce exactly one ExecutionPlan JSON object deciding the execution mode and task capabilities.\n\n"
+        "Available Capabilities:\n"
+        "- owner: Owner metrics, profile, operational diagnosis, complaints, reviews.\n"
+        "- market: Public market search and competitor listings.\n"
+        "- policy: Green SM policy search and documentation.\n"
+        "- review: Customer reviews and satisfaction feedback.\n"
+        "- cohort: Benchmark analysis against peer merchant cohorts.\n\n"
+        "Execution Modes:\n"
+        "- direct: exactly 1 task (use when 1 capability can complete the request without manager coordination)\n"
+        "- parallel: 2 to 4 independent tasks (capabilities must be distinct)\n"
+        "- hierarchical: 2 to 4 dependent tasks requiring cross-capability reasoning\n\n"
+        "Response Types:\n"
+        "- fact: direct mode only\n"
+        "- summary: direct or parallel mode\n"
+        "- analysis: direct or hierarchical mode\n\n"
+        "Context:\n"
+        f"{coordinator_prompt.dynamic_context}\n\n"
+        "Return ONLY a bare JSON object matching schema:\n"
+        '{"mode": "direct"|"parallel"|"hierarchical", "tasks": [{"capability": "owner"|"market"|"policy"|"review"|"cohort", "instruction": "..."}], "response_type": "fact"|"summary"|"analysis"}'
+    )
+
+    response = llm.call(prompt_text)
+    raw_text = response if isinstance(response, str) else str(getattr(response, "content", response))
+
+    def _parse(text: str) -> ExecutionPlan:
+        clean = text.strip()
+        if clean.startswith("```"):
+            lines = clean.splitlines()
+            if lines and lines[0].startswith("```"):
+                lines = lines[1:]
+            if lines and lines[-1].startswith("```"):
+                lines = lines[:-1]
+            clean = "\n".join(lines).strip()
+        return ExecutionPlan.model_validate_json(clean)
+
+    try:
+        return _parse(raw_text)
+    except Exception:
+        raise 
+
+
 @CrewBase
 class NativeMerchantAdvisorCrew:
     """A hierarchical CrewAI crew with coordinator-managed specialist delegation."""
 
-    # Prompts and task contracts are defined in this module.  Explicit empty
-    # configs prevent CrewBase from probing the deleted legacy YAML files.
     agents_config: dict[str, Any] = {}
     tasks_config: dict[str, Any] = {}
 
@@ -214,22 +272,19 @@ class NativeMerchantAdvisorCrew:
         knowledge_sources: list[Any] | None = None,
         prompt: Any = None,
     ) -> Agent:
-        context = get_client().start_as_current_observation(
-            name=f"merchant-prompt-{name}", as_type="agent", prompt=prompt,
-        ) if prompt is not None else __import__("contextlib").nullcontext()
-        with context:
-            return Agent(
-                role=role,
-                goal=goal,
-                backstory="You work only from the conversation context and gateway observations.",
-                tools=tools,
-                knowledge_sources=knowledge_sources,
-                llm=self.llm,
-                allow_delegation=allow_delegation,
-                verbose=_VERBOSE,
-                max_iter=5 if allow_delegation else 3,
-                max_execution_time=300 if allow_delegation else 120,
-            )
+        del prompt
+        return Agent(
+            role=role,
+            goal=goal,
+            backstory="You work only from the conversation context and gateway observations.",
+            tools=tools,
+            knowledge_sources=knowledge_sources,
+            llm=self.llm,
+            allow_delegation=allow_delegation,
+            verbose=_VERBOSE,
+            max_iter=3 if allow_delegation else 2,
+            max_execution_time=300 if allow_delegation else 120,
+        )
 
     @agent
     def coordinator(self) -> Agent:
@@ -240,7 +295,7 @@ class NativeMerchantAdvisorCrew:
             goal=prompt.prompt.strip(),
             tools=[],
             allow_delegation=True,
-            prompt=prompt,
+            # prompt=prompt,
         )
 
     @agent
@@ -251,7 +306,7 @@ class NativeMerchantAdvisorCrew:
             role="Public Market Search Specialist",
             goal=prompt.prompt.strip(),
             tools=self.gateway.tools_for("market_search"),
-            prompt=prompt,
+            # prompt=prompt,
         )
 
     @agent
@@ -262,7 +317,7 @@ class NativeMerchantAdvisorCrew:
             role="Green SM Policy Document Specialist",
             goal=prompt.prompt.strip(),
             tools=self.gateway.tools_for("policy_document"),
-            prompt=prompt,
+            # prompt=prompt,
         )
 
     @agent
@@ -273,7 +328,7 @@ class NativeMerchantAdvisorCrew:
             role="Public Cohort Analysis Specialist",
             goal=prompt.prompt.strip(),
             tools=self.gateway.tools_for("cohort_analysis"),
-            prompt=prompt,
+            # prompt=prompt,
         )
 
     @agent
@@ -284,7 +339,7 @@ class NativeMerchantAdvisorCrew:
             role="Owner Performance Analysis Specialist",
             goal=prompt.prompt.strip(),
             tools=self.gateway.tools_for("self_analysis"),
-            prompt=prompt,
+            # prompt=prompt,
         )
 
     @agent
@@ -295,7 +350,7 @@ class NativeMerchantAdvisorCrew:
             role="Evidence and Policy Verifier",
             goal=prompt.prompt.strip(),
             tools=self.gateway.tools_for("evidence_verifier"),
-            prompt=prompt,
+            # prompt=prompt,
         )
 
     @agent
@@ -306,8 +361,20 @@ class NativeMerchantAdvisorCrew:
             role="Merchant Owner Answer Specialist",
             goal=prompt.prompt.strip(),
             tools=[],
-            prompt=prompt,
+            # prompt=prompt,
         )
+
+    def _get_agent_for_capability(self, capability: CapabilityName) -> Agent:
+        capability_map = {
+            "owner": self.self_analysis,
+            "market": self.market_search,
+            "policy": self.policy_document,
+            "review": self.self_analysis,
+            "cohort": self.cohort_analysis,
+        }
+        if capability not in capability_map:
+            raise ValueError(f"Unknown capability name: '{capability}'")
+        return capability_map[capability]()
 
     @task
     def advisory_task(self) -> Task:
@@ -321,21 +388,57 @@ class NativeMerchantAdvisorCrew:
         self.advisory_prompt = prompt
         return Task(
             description=description,
-            expected_output=description,
+            expected_output=prompt.config,
         )
 
     @task
     def synthesis_task(self) -> Task:
         prompt = get_merchant_prompt("SYNTHESIS_PROMPT")
         return Task(
-            description=(
-                f"{prompt.prompt.strip()}\n\n"
-                "Return exactly one bare JSON object:\n"
-                '{"status":"completed","answer":"<grounded Vietnamese answer>"}'
-            ),
+            description=(prompt.prompt.strip()),
             expected_output='Exactly one JSON object: {"status":"completed","answer":"<grounded Vietnamese answer>"}',
             agent=self.final_synthesis(),
             context=[self.advisory_task()],
+        )
+
+    def crew_for_tasks(self, tasks: list[PlannedTask]) -> Crew:
+        _configure_crewai_storage()
+        selected_agents = [self._get_agent_for_capability(t.capability) for t in tasks]
+
+        # Construct specific planned tasks bound to instructions
+        planned_crew_tasks = []
+        for idx, t in enumerate(tasks):
+            agent = selected_agents[idx]
+            planned_crew_tasks.append(
+                Task(
+                    description=t.instruction,
+                    expected_output="A grounded, evidence-backed capability task response.",
+                    agent=agent,
+                )
+            )
+
+        # Append terminal synthesis task (final_synthesis is the task agent, excluded from worker agents pool)
+        synthesis_t = Task(
+            description=(
+                "Synthesize all task results into one grounded Vietnamese answer for the merchant owner.\n"
+                "Return exactly one bare JSON object: {\"status\":\"completed\",\"answer\":\"<grounded Vietnamese answer>\"}"
+            ),
+            expected_output='Exactly one JSON object: {"status":"completed","answer":"<grounded Vietnamese answer>"}',
+            agent=self.final_synthesis(),
+            context=planned_crew_tasks,
+        )
+        all_tasks = planned_crew_tasks + [synthesis_t]
+
+        # Dedup worker agents (exclude final_synthesis from worker pool delegation targets)
+        unique_worker_agents = list({a.role: a for a in selected_agents}.values())
+
+        return Crew(
+            agents=unique_worker_agents,
+            tasks=all_tasks,
+            process=Process.hierarchical,
+            manager_agent=self.coordinator(),
+            tracing=False,
+            verbose=_VERBOSE,
         )
 
     @crew
@@ -364,9 +467,10 @@ class NativeMerchantAdvisorCrew:
         compact_history: str,
         owner_context: str,
         coordinator_prompt: CoordinatorPrompt | None = None,
+        plan_tasks: list[PlannedTask] | None = None,
     ) -> Any:
-        """Run one manager-led conversation with native CrewAI delegation."""
-        crew = self.crew()
+        """Run hierarchical manager execution with selected specialists."""
+        crew = self.crew_for_tasks(plan_tasks) if plan_tasks else self.crew()
         prompt = coordinator_prompt or build_coordinator_prompt(
             prepared_request,
             compact_history,

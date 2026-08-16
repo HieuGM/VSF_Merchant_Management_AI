@@ -4,6 +4,16 @@ import json
 from unittest.mock import MagicMock
 
 from providers.cache.memory_adapter import InMemoryCache
+
+
+def test_search_schema_normalizes_numeric_anchor_merchant_id():
+    from tools.merchant.search_tool import SearchMerchantsInput
+
+    args = SearchMerchantsInput.model_validate({"anchor_merchant_id": 233150})
+
+    assert args.anchor_merchant_id == "233150"
+
+
 def test_city_aliases_canonicalize_to_single_slug():
     from models.merchant_agentic import normalize_city_slugs
 

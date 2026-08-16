@@ -20,7 +20,6 @@ def test_named_public_request_preserves_raw_target():
     prepared = PreparedRequest(
         rewritten_query="owner target",
         scope_candidate="allowed",
-        proposed_outcome="coordinate",
     )
     corrected = _correct_named_public_request(prepared, "Compare exact public merchant", True)
     assert corrected.rewritten_query == "Compare exact public merchant"

@@ -47,7 +47,7 @@ def load_cases() -> list[dict[str, Any]]:
 
 
 def run_tier1_routing(cases: list[dict[str, Any]], prep_svc: Any, decide_route: Any, db: Any) -> list[dict[str, Any]]:
-    """Tier 1: Check that the routing gate (reject / fast_answer / coordinate) fires correctly.
+    """Tier 1: Check that the routing gate (reject / coordinate) fires correctly.
 
     Delegation (which coordinator subagent handles the query) is a coordinator decision
     verified in Tier 2 against real pipeline output — NOT inferred here.
@@ -125,7 +125,7 @@ def run_tier2_ragas(results: list[dict[str, Any]], db: Any) -> list[dict[str, An
             continue
 
         questions.append(r["query"])
-        search_res = rag_service.search(r["query"], top_k=3)
+        search_res = rag_service.search(r["query"])
         retrieved_contexts = [chunk["text"] for chunk in search_res["results"]]
         contexts.append(retrieved_contexts)
         

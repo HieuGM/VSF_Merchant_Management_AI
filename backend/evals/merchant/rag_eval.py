@@ -147,7 +147,7 @@ def rag_service(db_session):
 
 @pytest.mark.parametrize("uc", POLICY_20_USECASES, ids=[u["id"] for u in POLICY_20_USECASES])
 def test_policy_usecase(rag_service, uc):
-    res = rag_service.search(uc["query"], top_k=5)
+    res = rag_service.search(uc["query"])
     assert res["count"] > 0, f"Usecase {uc['id']} failed: query '{uc['query']}' returned 0 results"
 
     matched_texts = " ".join([r["text"].lower() for r in res["results"]])

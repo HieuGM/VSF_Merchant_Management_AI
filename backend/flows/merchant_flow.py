@@ -30,7 +30,7 @@ from services.merchant_input_router import (
     effective_query_policy,
     immutable_session_facts,
 )
-from services.merchant_prompts import compile_merchant_prompt
+
 from tools.merchant.gateway import RunScopedMerchantToolGateway
 
 logger = get_logger(__name__)
@@ -51,6 +51,17 @@ def _require_trace_id(value: str | None) -> str:
 def _selected_public_merchant(snapshot: dict[str, Any]) -> dict[str, Any] | None:
     selected = snapshot.get(_SELECTED_PUBLIC_MERCHANT)
     return selected if isinstance(selected, dict) and selected.get("merchant_id") else None
+
+
+def _deduplicate_merchants(merchants: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    seen = set()
+    result = []
+    for item in merchants:
+        mid = str(item.get("merchant_id")) if item.get("merchant_id") is not None else None
+        if mid and mid not in seen:
+            seen.add(mid)
+            result.append(item)
+    return result
 
 
 def _public_merchant_selection_update(answer: str, candidates: list[dict[str, Any]]) -> dict[str, Any]:
@@ -231,6 +242,7 @@ class MerchantFlowDispatcher:
                 if blocked else "Input Analyzer trả về kết quả không hợp lệ.",
                 "completed" if blocked else "failed", [], started,
             )
+        logger.info(f"NLU: {prepared}")
         prepared = _correct_named_public_request(prepared, message, named_target is not None)
         raw_policy = MerchantDataPolicy(merchant_id).query_decision(
             message, targets_other_merchant=named_target is not None
@@ -250,19 +262,13 @@ class MerchantFlowDispatcher:
                 route.reply or "Câu hỏi nằm ngoài phạm vi hỗ trợ của Merchant Advisor AI.",
                 "completed", [], started,
             )
-        if route.outcome == "fast_answer":
-            reply = route.reply
-            if not reply:
-                prompt, linked_prompt = compile_merchant_prompt(
-                    "FAST_GREETING_PROMPT", query=prepared.rewritten_query
-                )
-                with propagate_attributes(prompt=linked_prompt):
-                    response = analyzer.call(prompt)
-                reply = response if isinstance(response, str) else str(response)
-            return self._complete(
-                session_service, trace_id, session_id, merchant_id, prepared.rewritten_query,
-                reply, "completed", ["fast_answer"], started,
-            )
+        # if route.outcome == "clarify":
+        #     missing = ", ".join(prepared.missing_context[:3])
+        #     reply = f"Vâng, tôi cần thêm thông tin để trả lời chính xác: {missing}." if missing else "Bạn có thể cung cấp thêm chi tiết không?"
+        #     return self._complete(
+        #         session_service, trace_id, session_id, merchant_id, prepared.rewritten_query,
+        #         reply, "completed", [], started,
+        #     )
 
         gateway = RunScopedMerchantToolGateway(
             context=AgenticRunContext(
@@ -282,14 +288,154 @@ class MerchantFlowDispatcher:
             for reference in prepared.resolved_references
             if reference.kind == "public_merchant" and reference.merchant_id
         ])
-        coordinator = get_configured_llm("large")
-        if coordinator is None:
+
+        settings = get_settings()
+        mode_setting = settings.merchant_execution_mode.lower()
+        coordinator_llm = get_configured_llm("large")
+        small_llm = get_configured_llm("small") or coordinator_llm
+
+        if mode_setting in ("legacy", "shadow") and coordinator_llm is None:
             return self._complete(
                 session_service, trace_id, session_id, merchant_id, prepared.rewritten_query,
                 "LLM điều phối chưa được cấu hình.", "failed", ["coordinator"], started,
+                execution_mode=mode_setting,
+            )
+
+        # 1. Shadow or Active mode: generate ExecutionPlan
+        plan: ExecutionPlan | None = None
+        if mode_setting in ("shadow", "active"):
+            try:
+                from agents.merchant.native_crew import plan_execution
+                plan = plan_execution(prepared, history, owner_context, llm=small_llm or coordinator_llm)
+                logger.info("execution_plan_generated mode=%s plan_mode=%s tasks_count=%d", mode_setting, plan.mode, len(plan.tasks))
+            except Exception as plan_err:
+                logger.warning("execution_plan_generation_failed mode=%s error=%s", mode_setting, plan_err)
+                if mode_setting == "active":
+                    return self._complete(
+                        session_service, trace_id, session_id, merchant_id, prepared.rewritten_query,
+                        "Không thể lập kế hoạch xử lý cho yêu cầu này.", "failed", ["coordinator"], started,
+                        execution_mode=mode_setting,
+                    )
+
+        # 2. Active Mode: Execute direct, parallel, or hierarchical based on plan
+        if mode_setting == "active" and plan is not None:
+            from services.merchant_execution_executor import execute_direct, execute_parallel, merge_parallel_results
+
+            if plan.mode == "direct":
+                task = plan.tasks[0]
+                spec_res = execute_direct(task, gateway=gateway, llm=small_llm, response_type=plan.response_type)
+                reply = spec_res.content if spec_res.status == "completed" else "Không thể xử lý yêu cầu trực tiếp."
+                merchants = _deduplicate_merchants(spec_res.public_merchants or gateway.latest_public_search_members())
+                if merchants:
+                    session_service.update_session_snapshot(
+                        session_id,
+                        _public_merchant_selection_update(reply, merchants),
+                        last_trace_id=trace_id,
+                    )
+                return self._complete(
+                    session_service, trace_id, session_id, merchant_id, prepared.rewritten_query,
+                    reply, "completed" if spec_res.status == "completed" else "failed",
+                    [task.capability], started, merchants=merchants, execution_mode=plan.mode,
+                )
+
+            elif plan.mode == "parallel":
+                def gateway_factory() -> tuple[RunScopedMerchantToolGateway, Session | None]:
+                    branch_session = SessionLocal()
+                    branch_gw = RunScopedMerchantToolGateway(
+                        context=AgenticRunContext(
+                            trace_id=trace_id,
+                            session_id=session_id,
+                            owner_merchant_id=str(merchant_id),
+                            user_id=user_id,
+                            user_query=message,
+                        ),
+                        db=branch_session,
+                        cache=get_cache(),
+                        emit=lambda _payload: None,
+                        db_factory=None,  # reuse branch_session without opening 2nd session
+                    )
+                    branch_gw.allow_public_merchant_ids([
+                        str(r.merchant_id) for r in prepared.resolved_references
+                        if r.kind == "public_merchant" and r.merchant_id
+                    ])
+                    return branch_gw, branch_session
+
+                par_results = execute_parallel(plan.tasks, gateway_factory=gateway_factory, llm=small_llm, response_type=plan.response_type)
+                reply = merge_parallel_results(par_results)
+
+                # Combine & deduplicate public search members across all parallel branches
+                all_merchants = []
+                for res in par_results:
+                    if res.public_merchants:
+                        all_merchants.extend(res.public_merchants)
+                merchants = _deduplicate_merchants(all_merchants)
+
+                if merchants:
+                    session_service.update_session_snapshot(
+                        session_id,
+                        _public_merchant_selection_update(reply, merchants),
+                        last_trace_id=trace_id,
+                    )
+
+                # Determine status
+                if all(r.status == "failed" for r in par_results):
+                    final_status = "failed"
+                elif any(r.status == "failed" for r in par_results):
+                    final_status = "partial"
+                else:
+                    final_status = "completed"
+
+                caps = [t.capability for t in plan.tasks]
+                return self._complete(
+                    session_service, trace_id, session_id, merchant_id, prepared.rewritten_query,
+                    reply, final_status, caps, started, merchants=merchants, execution_mode=plan.mode,
+                )
+
+            elif plan.mode == "hierarchical":
+                if coordinator_llm is None:
+                    return self._complete(
+                        session_service, trace_id, session_id, merchant_id, prepared.rewritten_query,
+                        "LLM điều phối chưa được cấu hình.", "failed", ["coordinator"], started,
+                        execution_mode=plan.mode,
+                    )
+                context = build_coordinator_prompt(prepared, history, owner_context)
+                result = NativeMerchantAdvisorCrew(gateway=gateway, llm=coordinator_llm).kickoff(
+                    prepared_request=prepared,
+                    compact_history=context.compact_history,
+                    owner_context=context.owner_context,
+                    coordinator_prompt=context,
+                    plan_tasks=plan.tasks,
+                )
+                raw = str(result.raw if hasattr(result, "raw") else result).strip()
+                outcome = self._parse_native_outcome(raw)
+                if outcome is None:
+                    return self._complete(
+                        session_service, trace_id, session_id, merchant_id, prepared.rewritten_query,
+                        "Điều phối viên trả về định dạng không hợp lệ.", "failed", ["coordinator"], started,
+                        execution_mode=plan.mode,
+                    )
+                merchants = _deduplicate_merchants(gateway.latest_public_search_members())
+                if merchants:
+                    session_service.update_session_snapshot(
+                        session_id,
+                        _public_merchant_selection_update(outcome.answer, merchants),
+                        last_trace_id=trace_id,
+                    )
+                caps = [t.capability for t in plan.tasks]
+                return self._complete(
+                    session_service, trace_id, session_id, merchant_id, prepared.rewritten_query,
+                    outcome.answer, "completed", caps, started, merchants=merchants, execution_mode=plan.mode,
+                )
+
+        # 3. Legacy mode or Shadow fallback mode: Execute native crew hierarchy
+        if coordinator_llm is None:
+            return self._complete(
+                session_service, trace_id, session_id, merchant_id, prepared.rewritten_query,
+                "LLM điều phối chưa được cấu hình.", "failed", ["coordinator"], started,
+                execution_mode="legacy",
             )
         context = build_coordinator_prompt(prepared, history, owner_context)
-        result = NativeMerchantAdvisorCrew(gateway=gateway, llm=coordinator).kickoff(
+        result = NativeMerchantAdvisorCrew(gateway=gateway, llm=coordinator_llm).kickoff(
             prepared_request=prepared,
             compact_history=context.compact_history,
             owner_context=context.owner_context,
@@ -303,6 +449,7 @@ class MerchantFlowDispatcher:
                 session_service, trace_id, session_id, merchant_id, prepared.rewritten_query,
                 "Điều phối viên trả về định dạng không hợp lệ.",
                 "failed", ["coordinator"], started,
+                execution_mode="legacy",
             )
         merchants = gateway.latest_public_search_members()
         if merchants:
@@ -314,7 +461,7 @@ class MerchantFlowDispatcher:
         return self._complete(
             session_service, trace_id, session_id, merchant_id, prepared.rewritten_query,
             outcome.answer, "completed", ["coordinator", "final_synthesis"], started,
-            merchants=merchants,
+            merchants=merchants, execution_mode="legacy",
         )
 
     @staticmethod
@@ -344,6 +491,7 @@ class MerchantFlowDispatcher:
         started: float,
         *,
         merchants: list[dict[str, Any]] | None = None,
+        execution_mode: str = "legacy",
     ) -> dict[str, Any]:
         duration_ms = round((time.perf_counter() - started) * 1000)
         session_service.append_message(
@@ -351,13 +499,14 @@ class MerchantFlowDispatcher:
             sender="agent",
             text=reply,
             trace_id=trace_id,
-            structured_payload={"capabilities": capabilities, "status": status},
+            structured_payload={"capabilities": capabilities, "status": status, "execution_mode": execution_mode},
         )
         return {
             "trace_id": trace_id,
             "session_id": session_id,
             "merchant_id": merchant_id,
             "capabilities": capabilities,
+            "execution_mode": execution_mode,
             "rewritten_query": query,
             "reply": reply,
             "duration_ms": duration_ms,

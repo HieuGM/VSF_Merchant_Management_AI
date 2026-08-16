@@ -131,7 +131,7 @@ class OwnerComplaintsInput(BaseModel):
     """Optional bounded filters for the current owner's complaints."""
 
     category: str | None = None
-    severity: Literal["low", "medium", "high"] | None = None
+    severity: str | None = None
     limit_samples: int = Field(default=3, ge=1, le=5)
 
 
@@ -338,6 +338,7 @@ class RunScopedMerchantToolGateway:
         self._cohort_members: dict[str, list[dict[str, Any]]] = {}
         self._latest_public_search_members: list[dict[str, Any]] = []
         self._known_public_merchant_ids: set[str] = set()
+        self._completed_tool_calls = 0
 
     def allow_public_merchant_ids(self, merchant_ids: list[str]) -> None:
         self._known_public_merchant_ids.update(str(value) for value in merchant_ids if value)
@@ -345,6 +346,9 @@ class RunScopedMerchantToolGateway:
     def latest_public_search_members(self) -> list[dict[str, Any]]:
         """Return the public discovery evidence most recently observed this run."""
         return list(self._latest_public_search_members)
+
+    def completed_tool_calls(self) -> int:
+        return self._completed_tool_calls
 
     @contextmanager
     def _tool_session(self) -> Iterator[Session]:
@@ -372,6 +376,7 @@ class RunScopedMerchantToolGateway:
     ) -> Iterator[None]:
         """Bind a run-local SDK correlation record to this concrete invocation."""
         yield
+        self._completed_tool_calls += 1
 
     def tools_for(self, agent_name: str) -> list[BaseTool]:
         market_tools: list[BaseTool] = [
@@ -383,7 +388,14 @@ class RunScopedMerchantToolGateway:
             )
         tools: dict[str, list[BaseTool]] = {
             "market_search": market_tools,
+            "market": market_tools,
             "cohort_analysis": [
+                GatewaySearchMerchantsTool(gateway=self, agent_name=agent_name),
+                GatewayAggregateCohortTool(gateway=self, agent_name=agent_name),
+                GatewayCompareOwnerCohortTool(gateway=self, agent_name=agent_name),
+                GatewayOwnerBenchmarkTool(gateway=self, agent_name=agent_name),
+            ],
+            "cohort": [
                 GatewaySearchMerchantsTool(gateway=self, agent_name=agent_name),
                 GatewayAggregateCohortTool(gateway=self, agent_name=agent_name),
                 GatewayCompareOwnerCohortTool(gateway=self, agent_name=agent_name),
@@ -399,10 +411,27 @@ class RunScopedMerchantToolGateway:
                 GatewayOwnerDiagnosisTool(gateway=self, agent_name=agent_name),
                 GatewayOwnerRecommendationTool(gateway=self, agent_name=agent_name),
             ],
+            "owner": [
+                GatewayOwnerProfileTool(gateway=self, agent_name=agent_name),
+                GatewayOwnerMetricsTool(gateway=self, agent_name=agent_name),
+                GatewayOwnerReviewsTool(gateway=self, agent_name=agent_name),
+                GatewayOwnerComplaintsTool(gateway=self, agent_name=agent_name),
+                GatewayOwnerMenuTool(gateway=self, agent_name=agent_name),
+                GatewayOwnerImageComparisonTool(gateway=self, agent_name=agent_name),
+                GatewayOwnerDiagnosisTool(gateway=self, agent_name=agent_name),
+                GatewayOwnerRecommendationTool(gateway=self, agent_name=agent_name),
+            ],
+            "review": [
+                GatewayOwnerReviewsTool(gateway=self, agent_name=agent_name),
+                GatewayOwnerComplaintsTool(gateway=self, agent_name=agent_name),
+            ],
             # The verifier evaluates the dossier supplied by the coordinator;
             # it must not expand scope by fetching independent data.
             "evidence_verifier": [],
             "policy_document": [
+                GatewayPolicySearchTool(gateway=self, agent_name=agent_name),
+            ],
+            "policy": [
                 GatewayPolicySearchTool(gateway=self, agent_name=agent_name),
             ],
         }

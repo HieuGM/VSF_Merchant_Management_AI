@@ -53,9 +53,9 @@ def get_merchant_complaints(
         query = session.query(MerchantComplaint).filter(
             MerchantComplaint.merchant_id == merchant_id
         )
-        if category:
+        if category and category.strip().lower() not in ("null", "none", ""):
             query = query.filter(MerchantComplaint.category == category.strip())
-        if severity:
+        if severity and severity.strip().lower() not in ("null", "none", ""):
             query = query.filter(MerchantComplaint.severity == severity.strip())
 
         complaints = query.order_by(

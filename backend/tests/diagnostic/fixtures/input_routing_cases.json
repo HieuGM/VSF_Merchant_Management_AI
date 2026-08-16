@@ -10,8 +10,7 @@
         "rewritten_query": "Bạn có thể viết code Python cho tôi không?",
         "resolved_references": [],
         "scope_candidate": "out_of_scope",
-        "missing_context": [],
-        "proposed_outcome": "coordinate"
+        "missing_context": []
       },
       "expected": {
         "route": "reject",
@@ -27,8 +26,7 @@
         "rewritten_query": "Merchant Advisor identity",
         "resolved_references": [],
         "scope_candidate": "allowed",
-        "missing_context": [],
-        "proposed_outcome": "fast_answer"
+        "missing_context": []
       },
       "session_state": {
         "merchant_agentic.immutable_facts": {
@@ -40,8 +38,8 @@
         }
       },
       "expected": {
-        "route": "fast_answer",
-        "max_crew_kickoffs": 0,
+        "route": "coordinate",
+        "max_crew_kickoffs": 1,
         "business_tool_calls": 0
       }
     },
@@ -54,8 +52,7 @@
         "rewritten_query": "Tìm các quán bún cá gần vị trí người dùng ở Hải Phòng.",
         "resolved_references": [{"kind": "location", "name": "Hải Phòng", "source": "recent_history", "confidence": "high"}],
         "scope_candidate": "allowed",
-        "missing_context": [],
-        "proposed_outcome": "coordinate"
+        "missing_context": []
       },
       "expected": {
         "route": "coordinate",
@@ -71,8 +68,7 @@
         "rewritten_query": "Tìm các quán bún cá gần vị trí người dùng ở Hải Phòng.",
         "resolved_references": [{"kind": "location", "name": "Hải Phòng", "source": "current_query", "confidence": "high"}],
         "scope_candidate": "allowed",
-        "missing_context": [],
-        "proposed_outcome": "coordinate"
+        "missing_context": []
       },
       "simulated_business_tool_calls": 2,
       "expected": {
@@ -89,8 +85,7 @@
         "rewritten_query": "Tìm các quán bún cá gần vị trí người dùng ở Hải Phòng.",
         "resolved_references": [{"kind": "location", "name": "Hải Phòng", "source": "current_query", "confidence": "high"}],
         "scope_candidate": "allowed",
-        "missing_context": [],
-        "proposed_outcome": "coordinate"
+        "missing_context": []
       },
       "assert_stream_replay": true,
       "expected": {

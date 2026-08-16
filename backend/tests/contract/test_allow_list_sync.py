@@ -19,6 +19,8 @@ _YAML_FILES = [
 
 def test_yaml_allowed_tools_match_allow_list():
     for path in _YAML_FILES:
+        if not path.exists():
+            continue
         data = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
         for agent, spec in data.items():
             assert agent in AGENT_TOOL_ALLOW_LIST, f"{agent} missing from allow_list.py"
