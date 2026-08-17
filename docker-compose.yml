@@ -1,36 +1,95 @@
+name: vsf-merchant-ai
+
 services:
   db:
-    image: postgres:18-alpine
-    container_name: gsm_merchant_postgres
-    restart: always
+    image: pgvector/pgvector:pg17
+    restart: unless-stopped
+    shm_size: 128mb
     ports:
-      - "5432:5432"
+      - "127.0.0.1:${DB_PORT:-5432}:5432"
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
-      POSTGRES_DB: ${POSTGRES_DB:-merchant_platform}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: merchant_platform
     volumes:
-      - postgres_data:/var/lib/postgresql
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/postgres/init-databases.sh:/docker-entrypoint-initdb.d/10-init-databases.sh:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d merchant_platform"]
+      test: ["CMD-SHELL", "pg_isready -q -U ${POSTGRES_USER:-postgres} -d merchant_platform"]
       interval: 5s
       timeout: 5s
-      retries: 5
+      retries: 10
 
   redis:
     image: redis:7-alpine
-    container_name: gsm_merchant_redis
-    restart: always
+    restart: unless-stopped
     ports:
-      - "6379:6379"
+      - "127.0.0.1:${REDIS_HOST_PORT:-6381}:6379"
     volumes:
       - redis_data:/data
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
       timeout: 5s
-      retries: 5
+      retries: 10
+
+  mem0:
+    image: ${MEM0_IMAGE:-vsf-mem0:v2.0.18-custom.1}
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${MEM0_PORT:-8888}:8000"
+    environment:
+      POSTGRES_HOST: db
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: mem0
+      APP_DB_NAME: mem0
+      POSTGRES_COLLECTION_NAME: ${POSTGRES_COLLECTION_NAME:-memories}
+      LLM_BASE_URL: ${LLM_BASE_URL:?Set v-llm-v1 LLM_BASE_URL in .env}
+      LLM_API_KEY: ${LLM_API_KEY:?Set v-llm-v1 LLM_API_KEY in .env}
+      MEM0_DEFAULT_LLM_MODEL: ${LLM_MODEL_SMALL:-v-llm-v1-small}
+      MEM0_DISABLE_RESPONSE_FORMAT: "true"
+      RAG_EMBEDDING_BASE_URL: ${RAG_EMBEDDING_BASE_URL:?Set v-llm-v1 embedding base URL in .env}
+      RAG_EMBEDDING_API_KEY: ${RAG_EMBEDDING_API_KEY:?Set v-llm-v1 embedding API key in .env}
+      RAG_EMBEDDING_MODEL: ${RAG_EMBEDDING_MODEL:-v-llm-v1-embed-medium}
+      RAG_EMBEDDING_DIMENSIONS: ${RAG_EMBEDDING_DIMENSIONS:-384}
+      HISTORY_DB_PATH: /app/history/history.db
+      ADMIN_API_KEY: ${ADMIN_API_KEY:?Set ADMIN_API_KEY in .env}
+      JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET in .env}
+      AUTH_DISABLED: ${AUTH_DISABLED:-false}
+      DASHBOARD_URL: http://localhost:${MEM0_DASHBOARD_PORT:-3000}
+      MEM0_TELEMETRY: ${MEM0_TELEMETRY:-false}
+    volumes:
+      - mem0_history:/app/history
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/health', timeout=3)"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  mem0-dashboard:
+    image: ${MEM0_DASHBOARD_IMAGE:-vsf-mem0-dashboard:v2.0.18-custom.1}
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${MEM0_DASHBOARD_PORT:-3000}:3000"
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:${MEM0_PORT:-8888}
+      API_INTERNAL_URL: http://mem0:8000
+      NEXT_PUBLIC_INSTANCE_NAME: VSF Merchant Memory
+    depends_on:
+      mem0:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3000/api/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
 
 volumes:
   postgres_data:
   redis_data:
+  mem0_history:
