@@ -49,7 +49,7 @@ services:
       LLM_BASE_URL: ${LLM_BASE_URL:?Set v-llm-v1 LLM_BASE_URL in .env}
       LLM_API_KEY: ${LLM_API_KEY:?Set v-llm-v1 LLM_API_KEY in .env}
       MEM0_DEFAULT_LLM_MODEL: ${LLM_MODEL_SMALL:-v-llm-v1-small}
-      MEM0_DISABLE_RESPONSE_FORMAT: "true"
+      MEM0_DISABLE_RESPONSE_FORMAT: ${MEM0_DISABLE_RESPONSE_FORMAT:-true}
       RAG_EMBEDDING_BASE_URL: ${RAG_EMBEDDING_BASE_URL:?Set v-llm-v1 embedding base URL in .env}
       RAG_EMBEDDING_API_KEY: ${RAG_EMBEDDING_API_KEY:?Set v-llm-v1 embedding API key in .env}
       RAG_EMBEDDING_MODEL: ${RAG_EMBEDDING_MODEL:-v-llm-v1-embed-medium}
