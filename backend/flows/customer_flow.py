@@ -1511,6 +1511,14 @@ def _persist_turns(
             "avg_rating": r.get("avg_rating"),
             "match_score": r.get("match_score"),
             "image_url": r.get("image_url"),
+            # Card-detail fields (directions / open-now / signature dishes). Persisted so a
+            # RELOADED conversation renders the same full cards the user just saw — before
+            # this the reopen path dropped them and every expanded card went bare.
+            "lat": r.get("lat"),
+            "lng": r.get("lng"),
+            "opens_at": r.get("opens_at"),
+            "closes_at": r.get("closes_at"),
+            "top_dishes": r.get("top_dishes") or [],
         }
         for r in (displayed or [])[:3]
         if r.get("merchant_id")
