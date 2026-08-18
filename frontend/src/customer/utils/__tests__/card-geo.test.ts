@@ -3,7 +3,7 @@
  * frame parser, and the parallel-safe progress-step marker.
  */
 import { describe, expect, it, vi } from "vitest";
-import { hhmm, mapsUrl, openNow } from "../card-geo";
+import { areaQuery, hhmm, mapsUrl, openNow } from "../card-geo";
 import { parseFrame } from "../../api/customer-agent-client";
 import { markDone, type ProgressStep } from "../../hooks/use-customer-chat";
 
@@ -47,18 +47,35 @@ describe("openNow — VN time (UTC+7), cross-midnight aware", () => {
   });
 });
 
+describe("areaQuery — VN unit codes must be stripped (Google mis-tokens them)", () => {
+  it("strips S209 / S2.10 / R1.02 / Hô 06-130 style codes", () => {
+    expect(areaQuery("Sushi & Sashimi", "S209 Vinhomes Ocean Park, Gia Lâm, Hà Nội"))
+      .toBe("Sushi & Sashimi Vinhomes Ocean Park, Gia Lâm, Hà Nội");
+    expect(areaQuery("X", "R1.02 Vinhomes Ocean Park")).toBe("X Vinhomes Ocean Park");
+    expect(areaQuery("Minori San", "Hô 06-130-132 KĐT Vinhomes Ocean Park"))
+      .toBe("Minori San KĐT Vinhomes Ocean Park");
+  });
+  it("keeps the name when there is no address", () => {
+    expect(areaQuery("Phở Phong Cách", null)).toBe("Phở Phong Cách");
+  });
+});
+
 describe("mapsUrl", () => {
-  it("prefers the name+address TEXT query (crawled coords are only neighborhood-accurate)", () => {
-    const url = mapsUrl({ lat: 20.991158, lng: 105.940946, name: "Jiro Sushi", address: "S209 Vinhomes Ocean Park" });
-    expect(url).toContain("google.com/maps/dir/?api=1&destination=");
-    expect(decodeURIComponent(url)).toContain("Jiro Sushi S209 Vinhomes Ocean Park");
-    expect(url).not.toContain("20.991158"); // coords NOT used when address text exists
+  it("searches by name+area (unit code stripped) — NOT coords, NOT the raw code", () => {
+    const url = mapsUrl({ lat: 20.991158, lng: 105.940946, name: "Jiro Sushi", address: "S209 Vinhomes Ocean Park, Gia Lâm, Hà Nội" });
+    expect(url).toContain("google.com/maps/search/?api=1&query=");
+    const q = decodeURIComponent(url.split("query=")[1]);
+    expect(q).toContain("Jiro Sushi");
+    expect(q).toContain("Vinhomes Ocean Park");
+    expect(q).not.toContain("S209"); // the code Google mis-reads as S2.10
+    expect(url).not.toContain("20.991158");
   });
-  it("name-only (no address) still uses the text query — Google geocodes the shop name", () => {
-    const url = mapsUrl({ lat: 10.79, lng: 106.66, name: "Phở Phong Cách", address: null });
-    expect(decodeURIComponent(url)).toContain("Phở Phong Cách");
+  it("falls back to coords directions when there is no usable text", () => {
+    expect(mapsUrl({ lat: 10.79, lng: 106.66, name: "", address: null })).toBe(
+      "https://www.google.com/maps/dir/?api=1&destination=10.79,106.66",
+    );
   });
-  it("maps homepage as the last resort (no name, no address, no coords)", () => {
+  it("maps homepage as the last resort (nothing at all)", () => {
     expect(mapsUrl({ lat: null, lng: null, name: "", address: null })).toBe(
       "https://www.google.com/maps",
     );

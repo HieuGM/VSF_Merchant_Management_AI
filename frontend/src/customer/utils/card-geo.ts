@@ -21,19 +21,33 @@ export function openNow(opens?: string | null, closes?: string | null): boolean 
 }
 
 /**
- * Google Maps directions deep-link.
+ * Google Maps link for the "Chỉ đường" action.
  *
- * PRIORITY: name+address TEXT query, NOT the crawled lat/lng. The crawl-sourced coords
- * are only accurate to the neighborhood level (a representative point — verified: an
- * S209 Vinhomes Ocean Park merchant's stored coords reverse-geocode to a different
- * street ~750m away, so a coords link pins the WRONG block). Google's own geocoder
- * resolves "S209 Vinhomes Ocean Park" exactly. Raw coords remain the fallback for
- * merchants with no address text.
+ * VERIFIED-FALSE ASSUMPTIONS (tested live against Google Maps, 2026-08-18):
+ *   - Raw crawl coords: neighborhood-representative points, off by 200-700m from the
+ *     actual unit (an S209 shop's stored coords land on a different street).
+ *   - Address text WITH the VN unit code ("S209 ..."): Google's geocoder does NOT know
+ *     building codes like S209 — it tokenizes toward "S2" and nearest-matches a
+ *     DIFFERENT block (S2.10), pinning the wrong shop. This was the reported bug.
+ *
+ * What works: a SEARCH by shop name + area (unit code stripped). Google lists matching
+ * POIs in the right neighborhood; when it carries the POI (e.g. "Jiro sushi ocean
+ * park") the search lands on it directly, otherwise the user taps the exact shop.
+ *
+ * Fallbacks: coords-only directions when no usable text; Maps homepage when nothing.
  */
+const UNIT_CODE_RE = /\b[SRT]\s?-?\d+(\.\d+)?\b|\bHô\s?\d+(-\d+)*\b/gi;
+
+/** Search query = name + address MINUS unit codes (S209 / R1.02 / Hô 06-… stripped). */
+export function areaQuery(name: string, address?: string | null): string {
+  const cleanedAddr = (address ?? "").replace(UNIT_CODE_RE, " ").replace(/\s+/g, " ").trim();
+  return [name, cleanedAddr].filter(Boolean).join(" ").trim();
+}
+
 export function mapsUrl(item: Pick<RestaurantResult, "lat" | "lng" | "name" | "address">): string {
-  const q = [item.name, item.address].filter(Boolean).join(" ");
+  const q = areaQuery(item.name, item.address);
   if (q)
-    return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(q)}`;
+    return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}`;
   if (item.lat != null && item.lng != null)
     return `https://www.google.com/maps/dir/?api=1&destination=${item.lat},${item.lng}`;
   return "https://www.google.com/maps";
