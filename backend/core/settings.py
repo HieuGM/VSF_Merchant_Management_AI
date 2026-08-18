@@ -107,9 +107,10 @@ class Settings(BaseSettings):
     memory_purge_max_age_days: int = 90          # MEMORY_PURGE_MAX_AGE_DAYS
     memory_purge_min_interval_hours: int = 1     # MEMORY_PURGE_MIN_INTERVAL_HOURS
 
-    # --- CORS (FE origins) — comma-separated. Default is the Vite dev server only;
-    # do NOT use "*" together with credentials (reflects any origin). ---
-    cors_origins: str = "http://localhost:5173"
+    # --- CORS (FE origins) — comma-separated. Defaults cover the Vite dev server on its
+    # usual port AND the +1 fallback Vite picks when 5173 is busy; do NOT use "*" together
+    # with credentials (reflects any origin). ---
+    cors_origins: str = "http://localhost:5173,http://localhost:5174"
 
     @property
     def cors_origin_list(self) -> list[str]:
