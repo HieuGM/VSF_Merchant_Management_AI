@@ -249,7 +249,7 @@ export function useCustomerChat(identity: CustomerIdentity) {
 }
 
 /** Mark a step done — by tool name if given (parallel-safe), else the oldest pending. */
-function markDone(steps: ProgressStep[] | undefined, tool?: string): ProgressStep[] {
+export function markDone(steps: ProgressStep[] | undefined, tool?: string): ProgressStep[] {
   if (!steps?.length) return steps ?? [];
   const idx = tool
     ? steps.findIndex((s) => !s.done && s.tool === tool)

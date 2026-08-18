@@ -30,6 +30,7 @@ import type { LucideIcon } from "lucide-react";
 import { StarRating } from "./star-rating";
 import type { RestaurantResult } from "../api/customer-agent-client";
 import { useLikedMerchants } from "../hooks/use-liked-merchants";
+import { hhmm, mapsUrl, openNow } from "../utils/card-geo";
 import "./restaurant-card.css";
 
 /** Keyword → icon. Order matters: more specific first. Used as the photo fallback. */
@@ -52,30 +53,6 @@ function iconFor(cuisine?: string | null, name?: string | null): LucideIcon {
   const text = `${cuisine ?? ""} ${name ?? ""}`.toLowerCase();
   for (const [re, Icon] of CUISINE_ICON) if (re.test(text)) return Icon;
   return Utensils;
-}
-
-/** "07:00" / "07:00:30.000" → "07:00" (backend sends Time.isoformat()). */
-function hhmm(iso?: string | null): string | null {
-  return iso ? iso.slice(0, 5) : null;
-}
-
-/** Open-now in the merchant's TZ (VN, UTC+7 — no DST) from ISO opens/closes.
- * Handles the cross-midnight case (closes < opens → open late-night). */
-function openNow(opens?: string | null, closes?: string | null): boolean | null {
-  const o = hhmm(opens);
-  const c = hhmm(closes);
-  if (!o || !c) return null; // hours unknown → no badge (never guess)
-  const now = new Date(Date.now() + 7 * 3600_000); // VN time regardless of device TZ
-  const cur = `${String(now.getUTCHours()).padStart(2, "0")}:${String(now.getUTCMinutes()).padStart(2, "0")}`;
-  return o <= c ? cur >= o && cur < c : cur >= o || cur < c; // cross-midnight
-}
-
-/** Google Maps directions deep-link — coords when we have them, else name+address search. */
-function mapsUrl(item: RestaurantResult): string {
-  if (item.lat != null && item.lng != null)
-    return `https://www.google.com/maps/dir/?api=1&destination=${item.lat},${item.lng}`;
-  const q = encodeURIComponent([item.name, item.address].filter(Boolean).join(" "));
-  return `https://www.google.com/maps/search/?api=1&query=${q}`;
 }
 
 export function RestaurantCard({ item, rank }: { item: RestaurantResult; rank?: number }) {

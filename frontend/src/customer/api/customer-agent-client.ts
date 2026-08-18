@@ -141,7 +141,7 @@ export async function streamChat(
   }
 }
 
-function parseFrame(raw: string): StreamFrame | null {
+export function parseFrame(raw: string): StreamFrame | null {
   let event = "message";
   const dataLines: string[] = [];
   for (const line of raw.split("\n")) {

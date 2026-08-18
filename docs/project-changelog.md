@@ -4,6 +4,22 @@ This document tracks all significant changes, features, and security improvement
 
 ---
 
+## [2026-08-18] Infra — FE test suite (vitest, 29 tests) + GitHub Actions CI
+
+**Bối cảnh**: finding #22 audit — FE 0 test, không runner, không CI; hooks chứa nhiều race-guard tự viết (H1 sequence, H2 send-gate, abort PATCH, debounce) không có lưới.
+
+- **Toolchain**: vitest 4 + @testing-library/react + jsdom; `test`/`test:watch`/`test:coverage` scripts; vite.config dùng `vitest/config` (test key).
+- **29 tests**:
+  - `use-customer-chat` (7): SSE frame folding (answer_delta tích lũy; run_finished không blank text đã stream khi answer rỗng; memory_updated + active_constraints capture; error frame giữ partial text), empty/duplicate send gate, **H1** open sequence guard (open chậm trước không đè open mới), **H2** send-gate trong open.
+  - `use-preferences` (7): load taste+allergens+expiries; offline fallback giữ cache; **debounce 500ms gộp burst → 1 PATCH** mang state cuối; PATCH fail → offline, edit sau heal; note delete optimistic + **rollback khi server fail** (UI không lie); clearAll giữ geo.
+  - `card-geo` + parser (15): openNow giờ VN + **qua-midnight** (22:00–02:00 mở lúc 23:00 VÀ 01:00), unknown → null; mapsUrl coords/fallback; parseFrame (multi-line JSON, ping frame, non-JSON degrade); markDone parallel-safe.
+- **Extract** `utils/card-geo.ts` từ restaurant-card (pure functions test được); export `parseFrame` + `markDone`.
+- **CI** `.github/workflows/ci.yml`: FE job (npm ci → oxlint → vitest → build) + BE job (pip install requirements.txt → pytest tests/unit — conftest stub DB nên không cần Postgres; 263 tests).
+
+**Verify local**: vitest 29/29 (~3s), tsc 0, oxlint sạch, pytest unit 263 pass.
+
+---
+
 ## [2026-08-18] Polish — chat suggestions in Vietnamese, safe links, Explore count/sort, danger zone
 
 **Bối cảnh**: findings #6/#17/#24/#26 audit 2026-08-18 — batch 4 mục nhỏ FE.
