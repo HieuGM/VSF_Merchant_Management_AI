@@ -592,6 +592,15 @@ class CustomerFlow:
             # Unified active-constraints filter (allergies + diet, all origins): drop any result
             # violating a hard constraint (cuisine/name L1 + dish-level L2 partial-overlap).
             response.results = apply_constraints(response.results, constraints)
+            # Empty-result honesty: when the constraint filter emptied the list but unfiltered
+            # matches EXIST, regenerate the answer grounded in that fact (the LLM would otherwise
+            # confabulate "chắc do giờ này/vị trí khuất"). Best-effort — see helper docstring.
+            if not response.results:
+                emptiness = _constraint_emptiness_note(
+                    inputs.get("query"), response.results, constraints, has_location, lat, lng,
+                )
+                if emptiness:
+                    response.answer = _empty_result_rewrite(emptiness, constraints)
             response.answer = _strip_prior_claims(response.answer, prior_turns)
 
             # Phase-03 B3: server-side weather short-circuit — deterministic rain delta
@@ -861,6 +870,11 @@ class CustomerFlow:
             # Unified active-constraints filter (allergies + diet, all origins): drop any result
             # violating a hard constraint (cuisine/name L1 + dish-level L2 partial-overlap).
             results = apply_constraints(results, constraints)
+            # Empty-result honesty: attribute the emptiness to the user's own constraint when
+            # that is the actual cause (probe the unfiltered search), never confabulate.
+            emptiness_note = _constraint_emptiness_note(
+                inputs.get("query"), results, constraints, has_location, lat, lng,
+            )
             # Grounding guard: no results AND a comparison/claim/origin query → DeepSeek would
             # answer from general knowledge (hallucination). Refuse truthfully + ask specifics.
             guard_answer = _grounding_guard_answer(query, results, profile_hints)
@@ -884,7 +898,7 @@ class CustomerFlow:
 
             messages = _build_explanation_messages(
                 explanation_prompt_pieces(), inputs, results, suggestions, preference,
-                weather_override, profile_hints, constraints,
+                weather_override, profile_hints, constraints, emptiness_note,
             )
             answer_parts: list[str] = []
             stream_warnings: list[str] = []  # surfaced via CustomerChatResponse.warnings (FE renders)
@@ -1224,6 +1238,67 @@ def _direct_nearby_results(
         ]
     finally:
         db.close()
+
+
+def _constraint_emptiness_note(
+    query: str | None, results: list[dict[str, Any]], constraints: Any,
+    has_location: bool, lat: float | None = None, lng: float | None = None,
+) -> str:
+    """Anti-confabulation note (empty-result honesty): when the filtered result list is EMPTY
+    but a hard user constraint is active, probe how many merchants the SAME search returns
+    WITHOUT the constraint filter. If some exist, the constraint (not data sparsity) caused
+    the empty list → tell the explanation LLM to say exactly that, and FORBID inventing other
+    reasons ("chắc do giờ này or vị trí khuất" — the 8-13 Korean-turn failure). Returns "" when
+    results exist / no constraint / probe finds nothing (a genuinely sparse area stays honest)."""
+    if results or constraints is None or not getattr(constraints, "hard", ()):
+        return ""
+    if not constraints.labels("hard"):
+        return ""  # hard set exists but no catalog labels (non-catalog allergens only) — nothing to attribute
+    try:
+        from database.connection import SessionLocal
+        from repositories.merchant_repository import MerchantRepository
+        from services.merchant_search_service import MerchantSearchService
+
+        db = SessionLocal()
+        try:
+            svc = MerchantSearchService(MerchantRepository(db))
+            keyword = _extract_search_keyword(query)
+            # Same search shape as _direct_nearby_results, run OUTSIDE constraints_scope
+            # (ContextVar unset here) so the probe sees the unfiltered candidate set.
+            if has_location and lat is not None and lng is not None:
+                probe = svc.nearby_search(lat, lng, radius_km=5.0, query=keyword, limit=5)
+            else:
+                probe = svc.search(query=keyword, limit=5)
+        finally:
+            db.close()
+    except Exception:  # noqa: BLE001 — probe is best-effort; never break the flow
+        return ""
+    if not probe:
+        return ""  # truly nothing out there → keep the honest sparse-area answer
+    labels = ", ".join(constraints.labels("hard"))
+    return (
+        f"NGUYÊN NHÂN DANH SÁCH TRỐNG: bộ lọc ràng buộc của người dùng ({labels}) đã loại TOÀN BỘ "
+        f"{len(probe)}+ quán khớp tìm kiếm. Khi trả lời, PHẢI nói rõ kết quả trống VÌ ràng buộc này "
+        "(vd \"mình chưa thấy quán nào khớp cả ràng buộc X của bạn\") — TUYỆT ĐỐI KHÔNG bịa lý do "
+        "khác (giờ mở cửa, vị trí khuất, dữ liệu thiếu) vì quán có thật đã bị lọc bỏ."
+    )
+
+
+_EMPTY_RESULT_TEMPLATES = (
+    "Hmm, mình có tìm thấy quán khớp với yêu cầu của bạn, nhưng toàn bộ bị loại vì ràng buộc "
+    "{labels} mà mình đang nhớ cho bạn. Nếu hôm nay muốn tạm gỡ ràng buộc này (ví dụ đi ăn cùng "
+    "người khác), bạn cứ nói nhé!",
+    "Mình phải nói thật: có quán phù quanh đây đấy, nhưng {labels} của bạn lọc mất hết rồi. Muốn "
+    "mình tạm thời bỏ lọc vụ này lượt này không?",
+)
+
+
+def _empty_result_rewrite(emptiness_note: str, constraints: Any) -> str:
+    """Deterministic truthful answer replacing a confabulated empty-result explanation.
+    Used by the blocking path (no streamed rewrite available); the streaming path instead
+    injects ``emptiness_note`` into the explanation prompt so the LLM phrases it naturally."""
+    labels = ", ".join(constraints.labels("hard")) if constraints is not None else "ràng buộc"
+    return _EMPTY_RESULT_TEMPLATES[0].format(labels=labels)
 
 
 def _enrich_with_images(results: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -1976,6 +2051,7 @@ def _build_explanation_messages(
     weather_override: dict | None = None,
     profile_hints: str = "",
     constraints: Any = None,
+    emptiness_note: str = "",
 ) -> list[dict[str, str]]:
     """Build chat messages for the direct streaming explanation call.
 
@@ -2030,6 +2106,11 @@ def _build_explanation_messages(
     block = active_constraints_block(constraints)
     if block:
         lines.append(block)
+    # Empty-result honesty (anti-confabulation): when a constraint emptied the list but
+    # unfiltered matches EXIST, the LLM must attribute the emptiness to the constraint —
+    # never invent spurious reasons (hours/location obscurity).
+    if emptiness_note:
+        lines.append(emptiness_note)
     return [
         {"role": "system", "content": pieces["system"]},
         {"role": "user", "content": instruction + "\n".join(lines)},

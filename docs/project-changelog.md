@@ -4,6 +4,31 @@ This document tracks all significant changes, features, fixes, and security impr
 
 ---
 
+## [2026-08-18] Fix — third-party dining: diet suspension + empty-result honesty (2 bugs, demo 8-13 lượt 5)
+
+**Bối cảnh**: điều tra câu hỏi "agent nói không khớp quán là hết data hay lỗi?". Kết luận từ `logs/search_queries.jsonl` + DB probe: lượt 5 demo 8-13 ("đi ăn hộ bạn… tìm quán Hàn") trả 0 kết quả **dù DB có 11 quán Hàn trong 20km** quanh vị trí demo. 2 bug:
+
+**Bug 1 — constraint "ăn chay trường" đè chết query của người khác**: note "ăn chay trường" (lượt 1) sinh constraint `diet/chay` kind=`want` hard-filter → `hard_filter_l1` drop mọi quán không có tín hiệu chay, áp MỌI lượt. Toàn vũ trụ quán của user chay = 3 quán (CHAY EXPRESS ×2, Mr Chay) → query "quán Hàn" (cho bạn) = 0. Tái hiện: `WITH chay constraint → nearby cuisine=Hàn 20km = 0; WITHOUT → 11`.
+- **Fix** (`services/active_constraints_loader.py`): thêm `_THIRD_PARTY_RE` ("an ho", "ban toi/ay/cua toi", "gia dinh", "dong nghiep"…). Match trên query hiện tại → **diet constraint bị bỏ qua cho lượt đó** (mọi layer: profile.dietary, notes, allergens-mirror, session turns, current message). **Allergy GIỮ NGUYÊN** (an toàn: user vẫn là người nhận/xử lý món). Turn-scoped — note bền vững không bị đụng.
+
+**Bug 2 — bịa lý do khi kết quả trống do constraint**: khi constraint làm rỗng danh sách, LLM bịa "chắc do giờ này hoặc vị trí khuất" thay vì nói thật nguyên nhân.
+- **Fix** (`flows/customer_flow.py`): `_constraint_emptiness_note()` — khi results rỗng + có hard constraint, probe lại search同じ điều kiện NGOÀI constraints_scope; nếu có quán thật → (stream path) nhét "NGUYÊN NHÂN DANH SÁCH TRỐNG: bộ lọc X đã loại TOÀN BỘ N quán — PHẢI nói rõ VÌ ràng buộc, TUYỆT ĐỐI KHÔNG bịa lý do khác" vào explanation prompt; (blocking path) replace answer bằng câu truthful deterministic `_empty_result_rewrite()`. Probe trống thật (vùng data thưa) → giữ hành vi honest như cũ.
+
+**Verify** (live :8000, replay exact demo geo + turns): Lượt 5 giờ trả **3 quán** (Gumiho Món Hàn dẫn đầu, ~10km) + nhắc đúng peanut-allergy của user; lượt 6 thường ngay sau → chay **enforce lại** (0 quán chay quanh đó → câu thành thật "bị loại vì ràng buộc đồ chay" — đúng 2 tầng fix). Memory không leak "thích đồ Hàn". Tests: **260/260 unit** (4 regression mới: suspend-diet, keep-allergy, turn-scoped, casual-"bạn"-no-overfire).
+
+Ghi chú data: "chưa thấy quán chay nào gần đây" (lượt 4 demo) là **thành thật** — chỉ 3 quán chay có tín hiệu L1 trong cả catalog, cách demo-geo ~10km (auto-widen 20km vẫn không tới vì 3 quán này ở vị trí khác). Không phải bug.
+
+---
+
+
+**Bug** (live session `session_674cd3ce`, test.txt kịch bản Lượt 5): user tự khai "tôi dị ứng đậu phộng" (Lượt 2) nhưng ở lượt "đi ăn hộ bạn, nó thích đồ Hàn" (Lượt 5), agent trả lời "bạn mình dị ứng thì bạn cũng cẩn thận" — gán nhầm dị ứng của user cho người bạn được nhắc tới. Memory lưu đúng (note + allergens đúng user); lỗi nằm ở prompt render: `active_constraints_block()` chèn câu gốc user ("Tôi… dị ứng…") KHÔNG kèm khung chủ thể, nên khi lượt hiện tại có chữ "bạn" (người thứ 3), LLM ghép nhầm cảnh báo sang người đó.
+
+**Fix**: `services/active_constraints_loader.py` — header "CẢNH BÁO SỨC KHOẺ" giờ ghi rõ "của CHÍNH NGƯỜI DÙNG… KHÔNG phải bạn bè/người thứ 3 họ có thể nhắc tới trong lượt này… gọi chủ thể là BẠN (người dùng), đừng gán cho người khác"; mỗi note render dạng `- Chính người dùng từng nói về bản thân họ: "…"`. (Fix kèm typo "rảnh"→"tránh" có sẵn trong chuỗi cũ.)
+
+**Verify**: replay exact 3-turn conversation qua live API :8000 — Lượt 5 mới: "mình hơi lo vụ dị ứng **của bạn** đấy" (đúng chủ thể); DB check: notes/allergens chỉ có chay trường + đậu phộng, KHÔNG leak "thích đồ Hàn" vào profile (isolation Lượt 5 đạt cả 2 mặt). Tests: 55 related pass + 1 regression mới `test_health_note_attributes_allergy_to_the_user_not_third_party` (21/21 test_memory_spec).
+
+---
+
 ## [2026-08-06] Unify Customer Preference/Memory Store — Plan A, Phases 1–4 (canonical store + ranking + context_memory + FE cutover)
 
 Turned the "remember user preferences" promise into reality. One canonical taste store (`user_profiles`), deterministic additive ranking, live long-term `context_memory`, FE cutover off localStorage. 4 phases on branch `dev-a`; all GT-eval PARITY (39/39). Plan: `plans/260805-1005-unify-preference-memory-store/`. Architecture: `docs/system-architecture.md` (3-layer memory model).

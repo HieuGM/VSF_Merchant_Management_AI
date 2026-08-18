@@ -51,6 +51,17 @@ _RECOVERY_RE = re.compile(
     r"|bo\s*di ung|bac si.{0,30}(het|khong con|khoi)"
 )
 
+# Third-party dining (folded) — the CURRENT turn asks on behalf of SOMEONE ELSE ("đi ăn hộ bạn",
+# "bạn tôi thích đồ Hàn", "mẹ tôi thèm chè"). The eater is not the user, so their tastes differ:
+# DIET (chay) constraints must NOT filter this turn's results — the user is not the one eating.
+# ALLERGIES are KEPT (safety posture: ordering for someone else still passes through the user's
+# own allergen awareness; dropping a seafood-allergy here would be indefensible). Suppression is
+# TURN-SCOPED (regex on the current query only) — the durable note itself is untouched.
+_THIRD_PARTY_RE = re.compile(
+    r"an ho|ho ban|ban (toi|to|minh|cua toi)|ban ay|nguoi khac|gia dinh|cho (me|bo|chong|vo|ong|ba) "
+    r"|ban cua (toi|to|minh)|ket ban|dong nghiep|nguoi than"
+)
+
 _SESSION_WINDOW = 8  # floor: recent USER turns scanned (covers transient "nay ăn chay" not in notes)
 
 
@@ -175,17 +186,19 @@ def _expired_note_keys(expiries: Any) -> set[str]:
 
 
 def _process_declaration(
-    text: str, origin: str, broke_diet: bool, hard: list, health_notes: list
+    text: str, origin: str, broke_diet: bool, hard: list, health_notes: list,
+    *, suppress_diet: bool = False,
 ) -> None:
     """Enforce catalog constraints from one durable sentence AND surface it as a health warning
     when it carries an active allergy the catalog can't fully cover. Shared by the notes loop
     (Layer 2) and the no-cap ``allergens`` loop (Phase 2) so both paths enforce + warn identically
-    — a permanent allergy thus survives even when its note twin was FIFO-evicted (6.1)."""
+    — a permanent allergy thus survives even when its note twin was FIFO-evicted (6.1).
+    ``suppress_diet`` (third-party turn) skips ONLY diet constraints — allergies still enforce."""
     note_str = str(text)
     folded_note = fold_diacritics(note_str)
     produced = _from_text(note_str, origin, "durable")
     for c in produced:
-        if not (c.type == "diet" and broke_diet):
+        if not (c.type == "diet" and (broke_diet or suppress_diet)):
             hard.append(c)
     only_abandoned_diet = bool(produced) and all(c.type == "diet" for c in produced) and broke_diet
     if (_ALLERGY_VERB_RE.search(folded_note)
@@ -204,8 +217,10 @@ def build_active_constraints(
     Hard: allergies (any origin) + diet declarations (durable note/profile OR recent session turn).
     Soft: structured disliked cuisines (ranking handles the penalty; included so the explanation
     prompt can mention them). Contradiction (current query OR a prior user turn breaks the diet)
-    drops diet constraints for THIS turn so a changed mind isn't over-restricted."""
+    drops diet constraints for THIS turn so a changed mind isn't over-restricted. Third-party
+    dining ("đi ăn hộ bạn") likewise suspends DIET constraints for this turn (allergies kept)."""
     q_folded = fold_diacritics(query or "")
+    third_party = bool(_THIRD_PARTY_RE.search(q_folded))
 
     # Prior USER turns — filtered BEFORE the window slice so agent turns don't halve the window.
     user_texts: list[str] = []
@@ -230,7 +245,7 @@ def build_active_constraints(
         if isinstance(dietary, (list, tuple)):
             joined = " ".join(str(d) for d in dietary)
             for scope, _d in _want_scopes(joined, fold_diacritics(joined)):
-                if not broke_diet:
+                if not broke_diet and not third_party:
                     hard.append(Constraint("diet", scope, "hard_filter", "profile", "durable",
                                            f"profile.dietary = {CATALOG[scope].label_vi}"))
         disliked = getattr(profile, "disliked_cuisines", None) or []
@@ -247,24 +262,28 @@ def build_active_constraints(
         for note in notes:
             if str(note).lower() in expired:
                 continue  # TTL (6.3): temporary constraint elapsed — neither enforce nor warn
-            _process_declaration(note, "context_memory", broke_diet, hard, health_notes)
+            _process_declaration(note, "context_memory", broke_diet, hard, health_notes,
+                                 suppress_diet=third_party)
         # Phase 2 (6.1): the no-cap `allergens` store — same enforcement + surfacing as notes, so a
         # permanent allergy survives even when its note twin was FIFO-evicted. (No expiry skip here:
         # allergens holds PERMANENT facts only; temporary "kiêng" lives in notes with a TTL.)
         for allergen in (getattr(profile, "allergens", None) or []):
-            _process_declaration(allergen, "profile", broke_diet, hard, health_notes)
+            _process_declaration(allergen, "profile", broke_diet, hard, health_notes,
+                                 suppress_diet=third_party)
 
     # Layer 3 — recent session USER turns (session-scoped; covers transient 'nay ăn chay').
     for text in recent_user_texts:
         for c in _from_text(text, "session_turn", "session"):
-            if not (c.type == "diet" and broke_diet):
+            if not (c.type == "diet" and (broke_diet or third_party)):
                 hard.append(c)
 
     # The CURRENT message is also a declaration source (session) — covers a same-turn declaration
     # like TC-48 'từ giờ nhớ tôi ăn chay trường' (not yet in prior_turns). Diet-break markers in
     # the current query already set broke_diet above, which suppresses diet constraints here.
+    # (A same-turn diet declaration with a third-party marker is contradictory — third-party
+    # suspension wins for THIS turn; the declaration still persists via context_memory.)
     for c in _from_text(query or "", "session_turn", "session"):
-        if not (c.type == "diet" and broke_diet):
+        if not (c.type == "diet" and (broke_diet or third_party)):
             hard.append(c)
 
     return ActiveConstraints(
@@ -291,9 +310,11 @@ def active_constraints_block(cs: ActiveConstraints | None) -> str:
             lines.append(f"- LOẠI TRỪ {label} ({c.rationale or c.type})")
     if cs.health_notes:
         lines.append(
-            "CẢNH BÁO SỨC KHOẺ (dị ứng/không ăn được — CHỦ ĐỘNG nhắc + rảnh món có nguy cơ, KHÔNG chờ "
-            "user nhắc lại; nếu không chắc món có chứa chất đó thì VẪN cảnh báo rõ):"
+            "CẢNH BÁO SỨC KHOẺ — của CHÍNH NGƯỜI DÙNG đang chat với bạn (dị ứng/không ăn được; "
+            "KHÔNG phải bạn bè/người thứ 3 họ có thể nhắc tới trong lượt này). CHỦ ĐỘNG nhắc + "
+            "tránh món có nguy cơ, KHÔNG chờ user nhắc lại; nếu không chắc món có chứa chất đó "
+            "thì VẪN cảnh báo rõ. Khi nhắc, gọi chủ thể là BẠN (người dùng), đừng gán cho người khác:"
         )
         for n in cs.health_notes:
-            lines.append(f"- {n}")
+            lines.append(f'- Chính người dùng từng nói về bản thân họ: "{n}"')
     return "\n".join(lines)

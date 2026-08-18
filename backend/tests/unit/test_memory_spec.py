@@ -86,6 +86,53 @@ def test_health_note_rendered_in_constraints_block():
     assert "CẢNH BÁO SỨC KHOẺ" in block
 
 
+def test_health_note_attributes_allergy_to_the_user_not_third_party():
+    # Regression (session 674cd3ce, turn 5): when the user mentions a FRIEND in the current
+    # message ("đi ăn hộ bạn"), the LLM misattributed the user's own stored allergy to that
+    # friend ("bạn mình dị ứng"). The block must frame every health note as a fact about
+    # CHÍNH NGƯỜI DÙNG so the LLM addresses the user, never a third party they mention.
+    cs = build(prof(["Tôi dị ứng đậu phộng"]), [],
+               "Thật ra hôm nay tôi đi ăn hộ bạn, nó thích đồ Hàn lắm")
+    block = render_block(cs)
+    assert "CHÍNH NGƯỜI DÙNG" in block          # header names the subject explicitly
+    assert "Chính người dùng" in block          # each note is framed as user's own words
+
+
+# --- Third-party dining (test.txt Lượt 5): DIET suspended, ALLERGY kept ---
+# Regression (same session, the OTHER half of the turn-5 failure): the user's durable
+# "ăn chay trường" note hard-filtered EVERY merchant with no chay signal, so the
+# friend-turn Korean query returned 0 of 11 real Korean places nearby and the LLM
+# confabulated a reason ("chắc do giờ này hoặc vị trí khuất"). The eater is not the
+# user → diet constraints must not filter this turn. Allergies stay (safety posture).
+def test_third_party_turn_suspends_diet_constraint():
+    cs = build(prof(["Tôi ăn chay trường nhé"]), [],
+               "Thật ra hôm nay tôi đi ăn hộ bạn, nó thích đồ Hàn lắm, tìm quán Hàn ngon nhé")
+    assert not any(c.scope == "chay" for c in cs.hard)  # diet suspended for this turn
+
+
+def test_third_party_turn_keeps_allergy_constraint():
+    # Safety: a seafood allergy MUST survive a third-party turn — the user still handles
+    # (orders/receives) the food, so allergen filtering is never suspended.
+    prof_allergy = NS(dietary=[], disliked_cuisines=[], allergens=["Tôi dị ứng hải sản"],
+                      context_memory={"notes": ["Tôi dị ứng hải sản"]})
+    cs = build(prof_allergy, [], "Đi ăn hộ bạn nó thích đồ Hàn")
+    assert any(c.scope == "seafood" and c.type == "allergy" for c in cs.hard)
+
+
+def test_third_party_suspension_is_turn_scoped_only():
+    # The very NEXT normal turn must still enforce chay (durable note untouched by suspension).
+    cs = build(prof(["Tôi ăn chay trường nhé"]), [], "Tìm quán ăn trưa gần đây")
+    assert any(c.scope == "chay" and c.persistence == "durable" for c in cs.hard)
+
+
+def test_casual_ban_does_not_suspend_diet():
+    # Over-fire guard: "bạn" as a plain address ("Bạn ơi tìm quán cho mình") is NOT
+    # third-party dining — the regex must not suspend the diet on ordinary turns.
+    cs = build(prof(["Tôi ăn chay trường nhé"]), [],
+               "Bạn ơi tìm quán trưa gần đây cho mình với")
+    assert any(c.scope == "chay" for c in cs.hard)
+
+
 def test_catalog_allergy_still_hard_filtered():
     # Seafood IS a catalog scope → enforced as a hard constraint (unchanged behavior).
     cs = build(prof(["Tôi dị ứng hải sản"]), [], "Gợi ý sushi")
