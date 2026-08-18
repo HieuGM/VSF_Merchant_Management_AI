@@ -34,8 +34,9 @@ export default function PreferenceCenter() {
   const geo = useGeolocation();
 
   const [clearing, setClearing] = useState(false);
+
   const onClear = async () => {
-    if (!window.confirm("Xóa hết ghi nhớ (dị ứng, ăn kiêng, sở thích) để test lại từ đầu?")) return;
+    if (!window.confirm("Xóa hết ghi nhớ (dị ứng, ăn kiêng, sở thích) trong hồ sơ để test lại từ đầu?")) return;
     setClearing(true);
     await clearAll();
     setClearing(false);
@@ -66,7 +67,7 @@ export default function PreferenceCenter() {
       <div className="cpref__inner">
         <header className="cpref__head">
           <div>
-            <h2 className="cpref__title">Khẩu vị của bạn</h2>
+            <h2 className="cpref__title">Hồ sơ cá nhân</h2>
             <p className="cpref__sub">Trợ lý dùng những lựa chọn này để gợi ý sát hơn.</p>
           </div>
           <button
@@ -74,7 +75,7 @@ export default function PreferenceCenter() {
             className="cust-btn cust-btn-ghost cpref__clear"
             onClick={onClear}
             disabled={clearing || sync === "loading"}
-            title="Xóa ghi nhớ + sở thích để test lại"
+            title="Xóa ghi nhớ + khẩu vị trong hồ sơ để test lại"
           >
             <Eraser size={15} />
             {clearing ? "Đang xóa…" : "Xóa ghi nhớ"}

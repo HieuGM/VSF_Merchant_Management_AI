@@ -32,7 +32,7 @@ const NAV = [
   { to: "/customer", label: "Trang chủ", icon: House, end: true },
   { to: "/customer/chat", label: "Trò chuyện", icon: MessageCircle, end: false },
   { to: "/customer/explore", label: "Khám phá", icon: Compass, end: false },
-  { to: "/customer/preferences", label: "Sở thích", icon: SlidersHorizontal, end: false },
+  { to: "/customer/preferences", label: "Hồ sơ cá nhân", icon: SlidersHorizontal, end: false },
 ];
 
 export function AppSidebar({

@@ -43,7 +43,7 @@ export interface ChatMessage {
 const TOOL_LABEL: Record<string, string> = {
   merchant_search: "Đang tìm quán ăn phù hợp",
   nearby_merchant_search: "Đang tìm quán gần bạn",
-  get_user_profile: "Đang đọc sở thích của bạn",
+  get_user_profile: "Đang đọc hồ sơ cá nhân của bạn",
   get_session_candidates: "Đang xem lại gợi ý trong phiên",
   get_weather_context: "Đang kiểm tra thời tiết hôm nay",
   propose_profile_delta: "Đang cân nhắc điều chỉnh khẩu vị",

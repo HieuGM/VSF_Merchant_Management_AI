@@ -149,7 +149,7 @@ export default function CustomerChat() {
             type="button"
             className={`cchat__loc ${acc?.poor ? "is-poor" : ""}`}
             onClick={() => navigate("/customer/preferences")}
-            title="Sửa vị trí ở mục Sở thích"
+            title="Sửa vị trí ở mục Hồ sơ cá nhân"
           >
             <MapPin size={13} />
             {acc
