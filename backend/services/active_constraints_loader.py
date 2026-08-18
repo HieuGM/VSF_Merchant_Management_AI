@@ -268,7 +268,15 @@ def build_active_constraints(
         # permanent allergy survives even when its note twin was FIFO-evicted. (No expiry skip here:
         # allergens holds PERMANENT facts only; temporary "kiêng" lives in notes with a TTL.)
         for allergen in (getattr(profile, "allergens", None) or []):
-            _process_declaration(allergen, "profile", broke_diet, hard, health_notes,
+            entry = str(allergen).strip()
+            # UI-added allergens (Preference Center) are bare nouns ("đậu phộng") — no allergy
+            # verb, but catalog scope + health-note surfacing both key on the verb. Wrap a
+            # verb-less entry as "dị ứng {noun}" so a hand-added allergen hard-filters (catalog
+            # scopes, e.g. "hải sản") and warns (non-catalog allergens) exactly like a
+            # chat-declared sentence. Full sentences already carry the verb → untouched.
+            if entry and not _ALLERGY_VERB_RE.search(fold_diacritics(entry)):
+                entry = f"dị ứng {entry}"
+            _process_declaration(entry, "profile", broke_diet, hard, health_notes,
                                  suppress_diet=third_party)
 
     # Layer 3 — recent session USER turns (session-scoped; covers transient 'nay ăn chay').

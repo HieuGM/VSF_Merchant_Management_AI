@@ -98,6 +98,37 @@ def test_health_note_attributes_allergy_to_the_user_not_third_party():
     assert "Chính người dùng" in block          # each note is framed as user's own words
 
 
+# --- UI-added allergens (Preference Center) — bare nouns must enforce like sentences ---
+# The allergy section lets the user add free-text allergens ("đậu phộng", "hải sản") with no
+# allergy verb. Both catalog hard-filter and health-note surfacing key on the verb, so the
+# loader wraps a verb-less `allergens` entry as "dị ứng {noun}" — a hand-added allergen must
+# behave exactly like a chat-declared sentence, never be silently ignored.
+def _ui_profile(allergens):
+    return NS(dietary=[], disliked_cuisines=[], allergens=allergens,
+              context_memory={"notes": []})
+
+
+def test_ui_bare_noun_allergen_catalog_scope_hard_filters():
+    # "hải sản" (bare noun) hits catalog scope seafood → must hard-filter like a full sentence.
+    cs = build(_ui_profile(["hải sản"]), [], "Gợi ý quán ăn trưa")
+    assert any(c.scope == "seafood" and c.type == "allergy" for c in cs.hard)
+
+
+def test_ui_bare_noun_allergen_non_catalog_surfaced_as_health_note():
+    # "đậu phộng" has no catalog scope → no bogus hard constraint, but MUST be surfaced to
+    # the LLM as a health note instead of being dropped for lacking a verb.
+    cs = build(_ui_profile(["đậu phộng"]), [], "Gợi ý quán buffet")
+    assert not any("đậu phộng" == c.scope for c in cs.hard)
+    assert any("đậu phộng" in n for n in cs.health_notes)
+
+
+def test_ui_full_sentence_allergen_not_double_wrapped():
+    # A chat-declared sentence already carries the verb → must pass through UNCHANGED
+    # (no "dị ứng Tôi bị dị ứng tôm" duplication in the surfaced health note).
+    cs = build(_ui_profile(["Tôi bị dị ứng tôm"]), [], "Gợi ý sushi")
+    assert any(n == "Tôi bị dị ứng tôm" for n in cs.health_notes)
+
+
 # --- Third-party dining (test.txt Lượt 5): DIET suspended, ALLERGY kept ---
 # Regression (same session, the OTHER half of the turn-5 failure): the user's durable
 # "ăn chay trường" note hard-filtered EVERY merchant with no chay signal, so the

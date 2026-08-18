@@ -101,6 +101,60 @@
   gap: 0.45rem;
 }
 
+/* --- Dị ứng / cần tránh (allergy) — safety section, distinct from plain "disliked".
+ * Red icon tint + removable danger chips (each allergen is a free-text sentence from
+ * the backend `allergens` store, not a preset toggle like cuisines). */
+.cpref__allergy-card .cpref__card-icon--danger {
+  color: #c0392b;
+  background: rgba(192, 57, 43, 0.1);
+}
+[data-theme="dark"] .customer-root .cpref__allergy-card .cpref__card-icon--danger {
+  color: #f87171;
+  background: rgba(248, 113, 113, 0.14);
+}
+.cpref__allergy-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+.cpref__allergy-x {
+  display: inline-grid;
+  place-items: center;
+  width: 1.15rem;
+  height: 1.15rem;
+  border: 0;
+  border-radius: 50%;
+  padding: 0;
+  background: rgba(255, 255, 255, 0.28);
+  color: inherit;
+  font-size: 0.85rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.15s var(--ease);
+}
+.cpref__allergy-x:hover {
+  background: rgba(255, 255, 255, 0.5);
+}
+.cpref__allergy-empty {
+  margin: 0 0 0.6rem;
+  font-size: 0.8rem;
+  color: var(--ink-500);
+}
+.cpref__allergy-add {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.7rem;
+}
+.cpref__allergy-add .cust-input {
+  flex: 1;
+  min-width: 0;
+}
+.cpref__allergy-add .cust-btn {
+  flex-shrink: 0;
+  gap: 0.3rem;
+  font-size: 0.8rem;
+}
+
 /* --- Ghi nhớ (assistant memory) — the highlighted "smart" section ---
  * Note cards: a brand-gradient accent bar + soft emerald tint, so long free-text facts
  * (allergies, diets) read as distinct remembered items rather than a plain bullet list.

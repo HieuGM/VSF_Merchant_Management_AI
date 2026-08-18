@@ -185,6 +185,8 @@ export interface UserProfile {
   disliked_cuisines: string[] | null;
   spice_tolerance: string | null;
   dietary: string[] | null;
+  /** Durable allergy/avoid facts (no FIFO cap) — hard-filtered on every search. */
+  allergens: string[] | null;
   budget_level: string | null;
   distance_preference_km: number;
   current_lat: number | null;
@@ -199,6 +201,7 @@ export type ProfilePatch = Partial<{
   liked_cuisines: string[];
   disliked_cuisines: string[];
   dietary: string[];
+  allergens: string[];
   budget_level: string | null;
   distance_preference_km: number;
 }>;

@@ -4,6 +4,22 @@ This document tracks all significant changes, features, fixes, and security impr
 
 ---
 
+## [2026-08-18] Feature — allergy section in Preference Center (visible + editable `allergens`)
+
+**Bối cảnh**: store `allergens` (no-cap, hard-filter mọi lượt search + surface cảnh báo sức khỏe) đã tồn tại ở backend từ Phase 2 nhưng **vô hình hoàn toàn ở FE** — user dị ứng không xem/sửa/ biết hệ thống đang nhớ gì (finding #1 audit 2026-08-18).
+
+**FE**:
+- `customer-agent-client.ts`: thêm `allergens` vào `UserProfile` + `ProfilePatch`.
+- `use-preferences.ts`: `allergens` vào `Preferences` + `TASTE_KEYS` + map 2 chiều (`profileToTaste`/`tasteToPatch`) + migrate-check + `clearAll` reset. Sửa kèm typo `taste.disliked_cuisines` → `taste.dislikedCuisines` (lỗi compile do edit trước).
+- `components/allergy-section.tsx` (NEW, 83 dòng — tách theo rule 200-dòng): section "Dị ứng / cần tránh" — chips đỏ xóa được từng mục (PATCH set-replace, debounce 500ms như taste khác) + input thêm mới; empty-state hướng dẫn; mô tả "Trợ lý sẽ loại món/quán có nguy cơ chứa những thứ này khỏi mọi gợi ý".
+- `preference-center.tsx`: chèn section sau "Chế độ ăn" (278 dòng sau tách).
+
+**Backend (sửa nhỏ bắt buộc)**: `active_constraints_loader.py` loop `allergens` — allergen **danh từ trần** tự thêm tay ("đậu phộng", "hải sản") không có allergy verb nên bị `_ALLERGY_VERB_RE` bỏ qua hoàn toàn → wrap verb-less entry thành `"dị ứng {noun}"` trước khi `_process_declaration`. Kết quả: catalog scope ("hải sản") hard-filter + non-catalog ("đậu phộng") surface health-note **giống hệt** câu khai qua chat; câu đầy đủ có sẵn verb → đi qua nguyên vẹn.
+
+**Verify**: tsc + vite build sạch; unit **263/263** (3 regression mới: bare-noun catalog hard-filter, bare-noun non-catalog health-note, full-sentence không double-wrap); live E2E :8000 — PATCH set/remove round-trip UTF-8 nguyên vẹn; user có "hải sản" (trần) hỏi "quán hải sản" → agent **không gợi ý quán nào** + chủ động confirm ràng buộc; query neutral "quán ăn trưa" → 3 kết quả **0 leak** quán hải sản.
+
+---
+
 ## [2026-08-18] Fix — third-party dining: diet suspension + empty-result honesty (2 bugs, demo 8-13 lượt 5)
 
 **Bối cảnh**: điều tra câu hỏi "agent nói không khớp quán là hết data hay lỗi?". Kết luận từ `logs/search_queries.jsonl` + DB probe: lượt 5 demo 8-13 ("đi ăn hộ bạn… tìm quán Hàn") trả 0 kết quả **dù DB có 11 quán Hàn trong 20km** quanh vị trí demo. 2 bug:

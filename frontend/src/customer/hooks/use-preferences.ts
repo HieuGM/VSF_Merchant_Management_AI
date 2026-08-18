@@ -27,6 +27,9 @@ export interface Preferences {
   dietary: string[];
   likedCuisines: string[];
   dislikedCuisines: string[];
+  /** Durable allergy/avoid facts (backend `allergens`, no FIFO cap) — editable via the
+   * allergy section; hard-filtered on every search, so edits change future results. */
+  allergens: string[];
   useLocation: boolean;
   /** True only after live geolocation or manual coords — gates whether coords are sent. */
   locationReady: boolean;
@@ -48,6 +51,7 @@ const DEFAULTS: Preferences = {
   dietary: [],
   likedCuisines: [],
   dislikedCuisines: [],
+  allergens: [],
   useLocation: false,
   locationReady: false,
   lat: 10.79, // Placeholder only (HCM). Never sent unless `locationReady` is true.
@@ -56,7 +60,7 @@ const DEFAULTS: Preferences = {
 };
 
 // Taste fields are API-backed; geo fields are localStorage-only.
-const TASTE_KEYS = ["budget", "dietary", "likedCuisines", "dislikedCuisines"] as const;
+const TASTE_KEYS = ["budget", "dietary", "likedCuisines", "dislikedCuisines", "allergens"] as const;
 
 function load(): Preferences {
   try {
@@ -90,6 +94,7 @@ function profileToTaste(p: UserProfile): Partial<Preferences> {
     dietary: p.dietary ?? [],
     likedCuisines: p.liked_cuisines ?? [],
     dislikedCuisines: p.disliked_cuisines ?? [],
+    allergens: p.allergens ?? [],
   };
 }
 
@@ -100,6 +105,7 @@ function tasteToPatch(taste: Partial<Preferences>) {
   if (taste.dietary !== undefined) body.dietary = taste.dietary;
   if (taste.likedCuisines !== undefined) body.liked_cuisines = taste.likedCuisines;
   if (taste.dislikedCuisines !== undefined) body.disliked_cuisines = taste.dislikedCuisines;
+  if (taste.allergens !== undefined) body.allergens = taste.allergens;
   return body;
 }
 
@@ -164,7 +170,8 @@ export function usePreferences(): UsePreferences {
               cached.budget ||
               cached.dietary.length ||
               cached.likedCuisines.length ||
-              cached.dislikedCuisines.length;
+              cached.dislikedCuisines.length ||
+              cached.allergens.length;
             if (hasTaste) {
               try {
                 await patchProfile(userId, tasteToPatch(cached));
@@ -280,6 +287,7 @@ export function usePreferences(): UsePreferences {
         dietary: [],
         likedCuisines: [],
         dislikedCuisines: [],
+        allergens: [],
       }));
       setNotes([]);
       persistNotes([]);
@@ -289,6 +297,7 @@ export function usePreferences(): UsePreferences {
         dietary: [],
         likedCuisines: [],
         dislikedCuisines: [],
+        allergens: [],
       });
       setSync("synced");
     } catch {

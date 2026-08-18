@@ -7,6 +7,7 @@
 import { useState, type ReactNode } from "react";
 import { Ban, Database, Eraser, Heart, LocateFixed, MapPin, Salad, Sparkles, StickyNote, Wallet } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+import { AllergySection } from "../components/allergy-section";
 import { useCustomerIdentity } from "../hooks/use-customer-identity";
 import { useGeolocation } from "../hooks/use-geolocation";
 import { usePreferences } from "../hooks/use-preferences";
@@ -111,6 +112,11 @@ export default function PreferenceCenter() {
             ))}
           </div>
         </Section>
+
+        <AllergySection
+          allergens={prefs.allergens}
+          onChange={(next) => update({ allergens: next })}
+        />
 
         <Section icon={Heart} label="Ẩm thực yêu thích">
           <div className="cpref__chips">
