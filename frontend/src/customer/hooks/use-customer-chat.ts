@@ -35,8 +35,27 @@ export interface ChatMessage {
   suggestions?: PreferenceSuggestion[];
   warnings?: string[];
   progress?: ProgressStep[];
+  /** What the assistant's long-term memory just learned/forgot THIS turn (SSE
+   * memory_updated) — rendered as a toast above the answer. */
+  memoryUpdates?: MemoryUpdates;
+  /** Hard constraints applied to this turn's results ("Đang lọc: …" chips). */
+  activeConstraints?: ActiveConstraint[];
   streaming?: boolean;
   error?: boolean;
+}
+
+/** Long-term memory diff for one turn (backend maybe_persist). */
+export interface MemoryUpdates {
+  added: string[];
+  removed: string[];
+  expired: string[];
+}
+
+/** One hard filter applied to the turn's results. */
+export interface ActiveConstraint {
+  label: string;
+  type: string;
+  rationale: string;
 }
 
 /** CrewAI tool names → friendly Vietnamese progress captions. */
@@ -119,6 +138,11 @@ export function useCustomerChat(identity: CustomerIdentity) {
           // backward compat with older backends. run_finished reconciles with the final.
           const delta = (data?.answer_delta ?? data?.answer ?? "") as string;
           if (delta) patchAgent(agentId, (m) => ({ ...m, text: m.text + delta }));
+        } else if (event === "memory_updated") {
+          // Transparency toast: the assistant's long-term memory changed THIS turn
+          // (added / removed / expired). Empty diff → backend sends no event.
+          const mem = data?.memory as MemoryUpdates | undefined;
+          if (mem) patchAgent(agentId, (m) => ({ ...m, memoryUpdates: mem }));
         } else if (event === "run_finished") {
           // Reconcile with the authoritative final answer — but only when the backend
           // actually sent one. answer is typed `str` (required), so it can legitimately be
@@ -131,6 +155,7 @@ export function useCustomerChat(identity: CustomerIdentity) {
             results: data?.results ?? [],
             suggestions: data?.preference_suggestions ?? [],
             warnings: data?.warnings ?? [],
+            activeConstraints: data?.active_constraints ?? [],
             progress: (m.progress ?? []).map((s) => ({ ...s, done: true })),
             streaming: false,
           }));

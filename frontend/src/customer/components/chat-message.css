@@ -262,3 +262,76 @@
 [data-theme="dark"] .customer-root .cmsg__warn li {
   color: var(--warm-300);
 }
+
+/* --- Memory diff toast (SSE memory_updated) + active-constraint filter chips --- */
+.cmsg__memtoast {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.45rem;
+  margin: 0 0 0.6rem;
+  padding: 0.5rem 0.65rem;
+  border-radius: var(--r-sm);
+  background: rgba(16, 185, 129, 0.07);
+  border: 1px dashed rgba(16, 185, 129, 0.3);
+}
+.cmsg__memtoast svg {
+  flex: none;
+  margin-top: 0.1rem;
+  color: var(--gsm-600);
+}
+.cmsg__memtoast ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+.cmsg__memtoast li {
+  font-size: 0.76rem;
+  line-height: 1.45;
+  color: var(--ink-700);
+}
+.cmsg__memtoast li.is-removed,
+.cmsg__memtoast li.is-expired {
+  color: var(--ink-500);
+}
+[data-theme="dark"] .customer-root .cmsg__memtoast li {
+  color: var(--ink-800);
+}
+
+.cmsg__filters {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin: 0 0 0.6rem;
+}
+.cmsg__filters > svg {
+  color: var(--ink-400);
+  flex: none;
+}
+.cmsg__filter-chip {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.3rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--gsm-700);
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.22);
+  border-radius: var(--r-pill);
+  padding: 0.12rem 0.55rem;
+  cursor: help;
+}
+.cmsg__filter-chip em {
+  font-style: normal;
+  font-weight: 500;
+  font-size: 0.68rem;
+  color: var(--ink-500);
+}
+[data-theme="dark"] .customer-root .cmsg__filter-chip {
+  color: var(--gsm-300);
+  background: rgba(52, 211, 153, 0.12);
+  border-color: rgba(52, 211, 153, 0.25);
+}

@@ -215,6 +215,40 @@ class UserProfileRepository:
         row.context_memory = mem  # reassign (not in-place) so SQLAlchemy detects the change
         self._db.commit()
 
+    def list_notes(self, user_id: str) -> list[str]:
+        """Current context_memory notes (read-only; [] when the user has no row). Used by
+        maybe_persist to compute the added-diff (a repeat declaration dedupes → no toast)."""
+        row = self._db.get(UserProfile, user_id)
+        if row is None:
+            return []
+        mem = row.context_memory or {}
+        return list(mem.get("notes") or [])
+
+    def prune_expired_notes_and_report(self, user_id: str, now: str | None = None) -> list[str]:
+        """prune_expired_notes, but returns the EXPIRED note texts (transparency diff for the
+        SSE memory_updated event) instead of just a count."""
+        from datetime import datetime, timezone
+
+        row = self._db.get(UserProfile, user_id)
+        if row is None:
+            return []
+        mem = dict(row.context_memory or {})
+        exp = dict(mem.get("note_expiries") or {})
+        if not exp:
+            return []
+        now_dt = datetime.fromisoformat(now) if now else datetime.now(timezone.utc)
+        expired_keys = {k for k, v in exp.items() if datetime.fromisoformat(v) < now_dt}
+        if not expired_keys:
+            return []
+        notes = list(mem.get("notes") or [])
+        expired_notes = [n for n in notes if n.lower() in expired_keys]
+        kept = [n for n in notes if n.lower() not in expired_keys]
+        mem["notes"] = kept
+        mem["note_expiries"] = {k: v for k, v in exp.items() if k not in expired_keys}
+        row.context_memory = mem  # reassign so SQLAlchemy detects the change
+        self._db.commit()
+        return expired_notes
+
     def prune_expired_notes(self, user_id: str, now: str | None = None) -> int:
         """Drop notes whose temporary expiry has elapsed (6.3). ``now`` is an ISO timestamp
         (injectable for tests); defaults to utc now. Removes both the note and its expiry entry.

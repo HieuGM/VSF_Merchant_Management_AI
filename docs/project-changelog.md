@@ -1,6 +1,23 @@
 # Project Changelog
 
-This document tracks all significant changes, features, fixes, and security improvements made to the VSF Merchant Management AI platform.
+This document tracks all significant changes, features, and security improvements made to the VSF Merchant Management AI platform.
+
+---
+
+## [2026-08-18] Feature — memory transparency: `memory_updated` diff toast + "Đang lọc" constraint chips
+
+**Bối cảnh**: findings #3 + #4 audit 2026-08-18 — `maybe_persist` làm 4 việc ảnh hưởng niềm tin (append/retract/prune TTL/mirror allergen) nhưng **im lặng** (user nói "hết dị ứng" không biết thành công chưa); `ActiveConstraints` giàu (labels() tiếng Việt sẵn) nhưng chỉ dùng nội bộ — user thấy "0 quán" không biết ràng buộc nào đang lọc.
+
+**BE**:
+- `context_memory_service.maybe_persist` giờ **trả diff** `{"added","removed","expired"}` (dedupe-aware: khai lại y hệt → diff rỗng; fail → diff rỗng, F3 giữ). Repo thêm `list_notes` + `prune_expired_notes_and_report` (trả text thay vì count).
+- `flows/customer_flow.py`: `_persist_user_turn` trả diff; stream path **yield `memory_updated` TRƯỚC answer** (FE toast hiện trên bubble đang stream); blocking path trả qua field. Helper `_constraints_payload()` map hard constraints → `{label, type, rationale}` (CATALOG label tiếng Việt).
+- `models/agent.py`: `CustomerChatResponse` + `memory_updates` + `active_constraints` (mọi exit path đều populate — OOD/guard/grounding/main/stream/blocking).
+
+**FE**:
+- `use-customer-chat.ts`: handle `memory_updated` frame + `active_constraints` từ run_finished → `ChatMessage.memoryUpdates/activeConstraints`.
+- `chat-message.tsx`: `MemoryToast` ("Đã ghi nhớ: X" / "Đã bỏ ghi nhớ: X" / "Hết hạn (tạm thời): X" — brain icon, xanh cho added, mờ cho removed/expired) + `ConstraintChips` ("hải sản *dị ứng*" — chip xanh, tooltip rationale, badge loại ràng buộc).
+
+**Verify**: 267 pass (unit 263 + integration 4); tsc + vite sạch; live E2E :8000 blocking — T1 khai dị ứng hải sản → `added` + chip hải sản; T2 neutral → diff rỗng + chip vẫn hiện; T3 khai lặp → diff rỗng (đúng dedupe); T4 thu hồi → `removed` + chips biến mất. SSE — `memory_updated` frame đứng TRƯỚC `answer_delta`, `run_finished` mang đủ 2 field; cua → scope hải sản đúng catalog.
 
 ---
 

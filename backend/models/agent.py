@@ -101,6 +101,12 @@ class CustomerChatResponse(BaseModel):
     preference_suggestions: list[dict[str, Any]] = Field(default_factory=list)
     evidence: list[dict[str, Any]] = Field(default_factory=list)
     warnings: list[str] = Field(default_factory=list)
+    # Transparency (FE toasts/chips). memory_updates: what the assistant's long-term memory
+    # just learned/forgot THIS turn ({"added","removed","expired"} — empty lists = no toast).
+    memory_updates: dict[str, list[str]] = Field(default_factory=dict)
+    # Active hard constraints applied to THIS turn's results (label/type/rationale), so the
+    # FE can show "Đang lọc: hải sản (dị ứng)" — the user sees WHY the list is what it is.
+    active_constraints: list[dict[str, str]] = Field(default_factory=list)
 
 
 class ConfirmDeltaRequest(BaseModel):

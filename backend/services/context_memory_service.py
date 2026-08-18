@@ -198,7 +198,7 @@ def _retracted_food_terms(text_folded: str) -> list[str]:
     return [t for t in terms if len(t) > 1]
 
 
-def maybe_persist(user_id: str | None, user_text: str | None) -> None:
+def maybe_persist(user_id: str | None, user_text: str | None) -> dict[str, list[str]]:
     """Extract durable facts from the user message + append them. No-op without a user_id
     or when no trigger fires. Best-effort, never raises (F3) — called from _persist_user_turn
     at flow ENTRY, BEFORE the run's try/except, so any exception here would surface as an
@@ -206,9 +206,15 @@ def maybe_persist(user_id: str | None, user_text: str | None) -> None:
       - Retract (7.2/3.4): a withdrawal ("quên dị ứng tôm") removes the matching prior note.
       - Expire (6.3): drop notes whose temporary duration window has elapsed.
       - Append: new durable facts, tagged with an expiry when the sentence is time-bounded
-        ("tuần này ăn kiêng" → expires in 7 days) so temporary constraints do not persist forever."""
+        ("tuần này ăn kiêng" → expires in 7 days) so temporary constraints do not persist forever.
+
+    Returns the DIFF (transparency, SSE ``memory_updated``): ``{"added": [...],
+    "removed": [...], "expired": [...]}`` — notes actually written/retracted this call
+    (dedupe against existing notes means a repeat declaration yields an empty diff). On any
+    failure the diff is empty (best-effort — the FE shows no toast rather than a wrong one)."""
     if not user_id:
-        return
+        return {"added": [], "removed": [], "expired": []}
+    diff: dict[str, list[str]] = {"added": [], "removed": [], "expired": []}
     try:
         folded = _fold(user_text or "")
         notes_with_expiry: list[tuple[str, str | None]] = []
@@ -221,14 +227,21 @@ def maybe_persist(user_id: str | None, user_text: str | None) -> None:
             if _RETRACTION_RE.search(folded):
                 terms = _retracted_food_terms(folded)
                 if terms:
-                    repo.remove_notes_matching(user_id, terms)
+                    removed = repo.remove_notes_matching(user_id, terms)
                     repo.remove_allergens_matching(user_id, terms)  # Phase 2: keep allergens in sync
-            repo.prune_expired_notes(user_id)  # TTL hygiene (6.3): drop elapsed temporary notes
+                    if removed:
+                        diff["removed"].append(user_text.strip()[:_MAX_NOTE_LEN])
+            diff["expired"] = [
+                n for n in repo.prune_expired_notes_and_report(user_id)
+            ]
             if notes_with_expiry:
+                existing = set(repo.list_notes(user_id))
+                fresh = [n for n, _ in notes_with_expiry if n not in existing]
                 repo.append_context_notes(
                     user_id, [n for n, _ in notes_with_expiry], cap=_MAX_NOTES,
                     expiries={n.lower(): exp for n, exp in notes_with_expiry if exp},
                 )
+                diff["added"] = fresh
             # Phase 2 (6.1): mirror PERMANENT allergy/avoid facts to the no-cap `allergens` store so
             # they survive FIFO eviction. Temporary kiêng (has duration) stays in notes (TTL) only.
             permanents = [n for n, _ in notes_with_expiry if _is_permanent_avoid_note(_fold(n))]
@@ -238,3 +251,5 @@ def maybe_persist(user_id: str | None, user_text: str | None) -> None:
             db.close()
     except Exception as exc:  # noqa: BLE001 — memory must never break the flow (F3)
         _LOG.warning("context_memory maybe_persist failed (user=%s): %s", user_id, exc)
+        return {"added": [], "removed": [], "expired": []}
+    return diff

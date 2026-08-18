@@ -10,6 +10,7 @@ from __future__ import annotations
 import concurrent.futures
 import contextvars
 
+from core.constraint_catalog import CATALOG
 from core.profile_context import constraints_scope, profile_scope
 import logging
 import re
@@ -506,7 +507,7 @@ class CustomerFlow:
         # Phase-01/02: load prior turns for anaphora context + persist the USER turn at
         # ENTRY so a client disconnect still leaves it for next-turn anaphora.
         prior_turns = _load_recent_turns(session_id)
-        _persist_user_turn(session_id, query or "", user_id=user_id)
+        memory_diff = _persist_user_turn(session_id, query or "", user_id=user_id)
 
         inputs = _build_inputs(
             query=query, cuisine=cuisine, city=city, budget=budget,
@@ -526,6 +527,7 @@ class CustomerFlow:
                 answer=_OUT_OF_DOMAIN_ANSWER,
                 results=[],
                 preference_suggestions=[],
+                memory_updates=memory_diff,
             )
             _persist_turns(session_id, trace_id, query or "", response, displayed=[], user_id=user_id)
             self._repo.add_event(
@@ -550,6 +552,7 @@ class CustomerFlow:
             response = CustomerChatResponse(
                 trace_id=trace_id, session_id=session_id, intent=g_intent,
                 answer=g_answer, results=[], preference_suggestions=[],
+                memory_updates=memory_diff, active_constraints=_constraints_payload(constraints),
             )
             _persist_turns(session_id, trace_id, query or "", response, displayed=[], user_id=user_id)
             self._repo.add_event(
@@ -582,6 +585,8 @@ class CustomerFlow:
                 crew_output = crew.kickoff(inputs=inputs)
 
             response = _to_chat_response(trace_id, session_id, crew_output)
+            response.memory_updates = memory_diff
+            response.active_constraints = _constraints_payload(constraints)
             # Reliability fallback: the search agent non-deterministically drops candidates.
             # If it returned none but we have a location, fetch nearby directly so the user
             # still gets real results (deterministic tool output — never fabricated).
@@ -716,7 +721,12 @@ class CustomerFlow:
         # Phase-01/02: load prior turns for anaphora context + persist the USER turn at
         # ENTRY so a client disconnect still leaves it for next-turn anaphora.
         prior_turns = _load_recent_turns(session_id)
-        _persist_user_turn(session_id, query or "", user_id=user_id)
+        memory_diff = _persist_user_turn(session_id, query or "", user_id=user_id)
+        # Transparency (memory_updated): if this turn taught/changed the assistant's memory
+        # (new durable fact / retraction / TTL expiry), tell the FE BEFORE the answer — the
+        # toast renders above the streaming bubble. Empty diff → no event, no noise.
+        if any(memory_diff.values()):
+            yield {"event": "memory_updated", "data": {"memory": memory_diff}}
         inputs = _build_inputs(
             query=query, cuisine=cuisine, city=city, budget=budget,
             lat=lat, lng=lng, radius_km=radius_km,
@@ -736,6 +746,7 @@ class CustomerFlow:
                 answer=answer,
                 results=[],
                 preference_suggestions=[],
+                memory_updates=memory_diff,
             )
             _persist_turns(session_id, trace_id, query or "", response, displayed=[], user_id=user_id)
             self._repo.add_event(
@@ -762,6 +773,7 @@ class CustomerFlow:
             response = CustomerChatResponse(
                 trace_id=trace_id, session_id=session_id, intent=g_intent,
                 answer=g_answer, results=[], preference_suggestions=[],
+                memory_updates=memory_diff, active_constraints=_constraints_payload(constraints),
             )
             _persist_turns(session_id, trace_id, query or "", response, displayed=[], user_id=user_id)
             self._repo.add_event(
@@ -884,6 +896,7 @@ class CustomerFlow:
                     trace_id=trace_id, session_id=session_id, intent="no_grounding",
                     answer=_strip_answer_artifacts(guard_answer), results=results,
                     preference_suggestions=suggestions, warnings=[],
+                    memory_updates=memory_diff, active_constraints=_constraints_payload(constraints),
                 )
                 _persist_turns(session_id, trace_id, query or "", response, results, user_id=user_id)
                 self._repo.add_event(
@@ -939,6 +952,8 @@ class CustomerFlow:
                 results=results,
                 preference_suggestions=suggestions,
                 warnings=stream_warnings,
+                memory_updates=memory_diff,
+                active_constraints=_constraints_payload(constraints),
             )
             # Phase-01: persist both turns BEFORE the terminal yield so the run record is
             # durable even if the client disconnects on run_finished. displayed=results
@@ -1240,6 +1255,23 @@ def _direct_nearby_results(
         db.close()
 
 
+def _constraints_payload(constraints: Any) -> list[dict[str, str]]:
+    """ActiveConstraints → the FE chip payload ("Đang lọc: hải sản (dị ứng)"). Hard
+    constraints only (soft dislikes are ranking penalties, not filters); each chip carries
+    the label + type + rationale so the FE can title-case and tooltip the WHY."""
+    if constraints is None:
+        return []
+    out: list[dict[str, str]] = []
+    for c in getattr(constraints, "hard", ()) or ():
+        label = CATALOG[c.scope].label_vi if getattr(c, "scope", None) in CATALOG else str(c.scope)
+        out.append({
+            "label": label,
+            "type": str(c.type),
+            "rationale": c.rationale or "",
+        })
+    return out
+
+
 def _constraint_emptiness_note(
     query: str | None, results: list[dict[str, Any]], constraints: Any,
     has_location: bool, lat: float | None = None, lng: float | None = None,
@@ -1388,7 +1420,7 @@ def _append_turns(
 
 def _persist_user_turn(
     session_id: str | None, user_text: str, user_id: str | None = None
-) -> None:
+) -> dict[str, list[str]]:
     """Persist the USER turn at flow ENTRY (phase-01 risk R3) + distill long-term memory.
 
     A client disconnect during the crew run still leaves the user side for next-turn
@@ -1397,13 +1429,19 @@ def _persist_user_turn(
 
     phase-03: also distills durable facts (allergy / persistent-diet) from the user message
     into user_profiles.context_memory (cross-session; read by the get_user_profile tool).
-    Best-effort (F3) — a memory failure never breaks the flow."""
+    Best-effort (F3) — a memory failure never breaks the flow.
+
+    Returns the memory DIFF ({"added","removed","expired"}) so the stream can emit a
+    ``memory_updated`` event — the user sees exactly what the assistant just learned or
+    forgot about them (empty diff = no event, no toast)."""
+    diff: dict[str, list[str]] = {"added": [], "removed": [], "expired": []}
     if session_id:
         _append_turns(
             session_id, [("user", user_text, None, {"query": user_text})], user_id=user_id
         )
     if user_id:
-        context_memory_service.maybe_persist(user_id, user_text)
+        diff = context_memory_service.maybe_persist(user_id, user_text)
+    return diff
 
 
 def _persist_turns(

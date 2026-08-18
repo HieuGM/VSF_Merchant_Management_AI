@@ -7,12 +7,12 @@
 import { useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { AlertTriangle, Check, Copy, Leaf, Lightbulb } from "lucide-react";
+import { AlertTriangle, Brain, Check, Copy, Leaf, Lightbulb, ListFilter } from "lucide-react";
 import { AgentProgress } from "./agent-progress";
 import { RestaurantCard } from "./restaurant-card";
 import { confirmDelta, rejectDelta, type PreferenceSuggestion } from "../api/customer-agent-client";
 import { getCustomerUserId } from "../hooks/use-customer-identity";
-import type { ChatMessage } from "../hooks/use-customer-chat";
+import type { ChatMessage, MemoryUpdates } from "../hooks/use-customer-chat";
 import "./chat-message.css";
 
 export function ChatMessageView({ msg }: { msg: ChatMessage }) {
@@ -47,6 +47,9 @@ function AgentTurn({ msg }: { msg: ChatMessage }) {
       </div>
       <div className={`cmsg__bubble ${msg.error ? "is-error" : ""}`}>
         {showProgress && <AgentProgress steps={msg.progress ?? []} />}
+
+        {msg.memoryUpdates && <MemoryToast mem={msg.memoryUpdates} />}
+        {!!msg.activeConstraints?.length && <ConstraintChips items={msg.activeConstraints} />}
 
         {msg.text && (
           <>
@@ -101,9 +104,7 @@ function AgentTurn({ msg }: { msg: ChatMessage }) {
 }
 
 /** Local per-row state for the Lưu/Bỏ qua actions. */
-type SuggestionStatus = "idle" | "saving" | "saved" | "dismissed";
-
-function SuggestionRow({ s }: { s: PreferenceSuggestion }) {
+type SuggestionStatus = "idle" | "saving" | "saved" | "dismissed";function SuggestionRow({ s }: { s: PreferenceSuggestion }) {
   const pct = s.confidence != null ? Math.round(s.confidence * 100) : null;
   const [status, setStatus] = useState<SuggestionStatus>("idle");
 
@@ -189,4 +190,42 @@ function SuggestionRow({ s }: { s: PreferenceSuggestion }) {
 /** Normalize a suggestion operation to the confirm-route whitelist. */
 function toOperation(op: string | undefined): "set" | "add" | "remove" {
   return op === "add" || op === "remove" ? op : "set";
+}
+
+/** "Trợ lý vừa ghi nhớ: …" — surfaces the memory diff for THIS turn (SSE memory_updated).
+ * Added/removed/expired lines; hidden entirely when the diff is empty (backend omits it). */
+function MemoryToast({ mem }: { mem: MemoryUpdates }) {
+  const rows: Array<{ cls: string; text: string }> = [];
+  for (const n of mem.added ?? [])
+    rows.push({ cls: "is-added", text: `Đã ghi nhớ: ${n}` });
+  for (const n of mem.removed ?? [])
+    rows.push({ cls: "is-removed", text: `Đã bỏ ghi nhớ: ${n}` });
+  for (const n of mem.expired ?? [])
+    rows.push({ cls: "is-expired", text: `Hết hạn (tạm thời): ${n}` });
+  if (!rows.length) return null;
+  return (
+    <div className="cmsg__memtoast" role="status">
+      <Brain size={13} />
+      <ul>
+        {rows.map((r, i) => (
+          <li key={i} className={r.cls}>{r.text}</li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+/** "Đang lọc: hải sản (dị ứng)" chips — WHY this turn's list is what it is. */
+function ConstraintChips({ items }: { items: NonNullable<ChatMessage["activeConstraints"]> }) {
+  return (
+    <div className="cmsg__filters">
+      <ListFilter size={12} aria-hidden="true" />
+      {items.map((c, i) => (
+        <span key={`${c.label}-${i}`} className="cmsg__filter-chip" title={c.rationale}>
+          {c.label}
+          <em>{c.type === "allergy" ? "dị ứng" : c.type === "diet" ? "chế độ ăn" : c.type}</em>
+        </span>
+      ))}
+    </div>
+  );
 }
