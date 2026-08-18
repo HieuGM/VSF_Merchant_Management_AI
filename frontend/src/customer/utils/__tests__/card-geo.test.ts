@@ -48,15 +48,20 @@ describe("openNow — VN time (UTC+7), cross-midnight aware", () => {
 });
 
 describe("mapsUrl", () => {
-  it("directions deep-link when coords exist", () => {
-    expect(mapsUrl({ lat: 10.79, lng: 106.66, name: "Phở", address: "S1" })).toBe(
-      "https://www.google.com/maps/dir/?api=1&destination=10.79,106.66",
-    );
+  it("prefers the name+address TEXT query (crawled coords are only neighborhood-accurate)", () => {
+    const url = mapsUrl({ lat: 20.991158, lng: 105.940946, name: "Jiro Sushi", address: "S209 Vinhomes Ocean Park" });
+    expect(url).toContain("google.com/maps/dir/?api=1&destination=");
+    expect(decodeURIComponent(url)).toContain("Jiro Sushi S209 Vinhomes Ocean Park");
+    expect(url).not.toContain("20.991158"); // coords NOT used when address text exists
   });
-  it("falls back to a name+address search when no coords", () => {
-    const url = mapsUrl({ lat: null, lng: null, name: "Phở Phong", address: "123 LVS" });
-    expect(url).toContain("google.com/maps/search");
-    expect(decodeURIComponent(url)).toContain("Phở Phong 123 LVS");
+  it("name-only (no address) still uses the text query — Google geocodes the shop name", () => {
+    const url = mapsUrl({ lat: 10.79, lng: 106.66, name: "Phở Phong Cách", address: null });
+    expect(decodeURIComponent(url)).toContain("Phở Phong Cách");
+  });
+  it("maps homepage as the last resort (no name, no address, no coords)", () => {
+    expect(mapsUrl({ lat: null, lng: null, name: "", address: null })).toBe(
+      "https://www.google.com/maps",
+    );
   });
 });
 

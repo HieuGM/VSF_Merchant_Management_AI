@@ -20,10 +20,21 @@ export function openNow(opens?: string | null, closes?: string | null): boolean 
   return o <= c ? cur >= o && cur < c : cur >= o || cur < c; // cross-midnight
 }
 
-/** Google Maps directions deep-link — coords when we have them, else name+address search. */
+/**
+ * Google Maps directions deep-link.
+ *
+ * PRIORITY: name+address TEXT query, NOT the crawled lat/lng. The crawl-sourced coords
+ * are only accurate to the neighborhood level (a representative point — verified: an
+ * S209 Vinhomes Ocean Park merchant's stored coords reverse-geocode to a different
+ * street ~750m away, so a coords link pins the WRONG block). Google's own geocoder
+ * resolves "S209 Vinhomes Ocean Park" exactly. Raw coords remain the fallback for
+ * merchants with no address text.
+ */
 export function mapsUrl(item: Pick<RestaurantResult, "lat" | "lng" | "name" | "address">): string {
+  const q = [item.name, item.address].filter(Boolean).join(" ");
+  if (q)
+    return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(q)}`;
   if (item.lat != null && item.lng != null)
     return `https://www.google.com/maps/dir/?api=1&destination=${item.lat},${item.lng}`;
-  const q = encodeURIComponent([item.name, item.address].filter(Boolean).join(" "));
-  return `https://www.google.com/maps/search/?api=1&query=${q}`;
+  return "https://www.google.com/maps";
 }
