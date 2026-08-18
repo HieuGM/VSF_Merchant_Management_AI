@@ -4,6 +4,24 @@ This document tracks all significant changes, features, fixes, and security impr
 
 ---
 
+## [2026-08-18] Feature — per-note delete + TTL/status chips in "Ghi nhớ của trợ lý"
+
+**Bối cảnh**: findings #2 + #5 audit 2026-08-18 — notes hiển thị read-only, đường duy nhất đụng notes là nuke-all `/memory/clear`; TTL (`note_expiries`) có ở backend nhưng FE type vứt mất; FIFO cap 8 diễn ra ngầm ("sao ghi nhớ tự mất rồi?").
+
+**BE**:
+- `repositories/user_profile_repository.py` +`remove_note(user_id, note_key)`: xóa ĐÚNG 1 note theo key lowercased + expiry entry của nó + **allergen twin** (cùng câu được mirror sang store no-cap) trong 1 tx — allergy đã xóa ngừng filter ngay. Unknown key/user → False (route → 404), không tạo row.
+- `services/user_profile_service.py` +`remove_note` (404 mapping, 1 tx).
+- `routes/user_routes.py` +`DELETE /api/v1/users/{id}/memory/notes/{note_key:path}` (key = text lowercased URL-encoded; IDOR-guarded như các mutation khác).
+
+**FE**:
+- `customer-agent-client.ts`: `context_memory` type + `note_expiries`; +`deleteNote()` client.
+- `use-preferences.ts`: state `noteExpiries` (localStorage mirror `cust_context_note_expiries` + cross-tab) + `deleteNote` optimistic/rollback (fail → khôi phục note — UI không bao giờ claim "đã quên" khi backend vẫn enforce).
+- `components/note-list.tsx` (NEW, tách từ page): mỗi note — chip **"tạm thời — còn N ngày"** (đổi vàng `is-expiring` khi ≤1 ngày) / **"lâu dài"**; nút × xóa từng mục; badge đếm **N/8** (đỏ khi đầy, tooltip giải thích FIFO); count + empty-state giữ nguyên.
+
+**Verify**: unit 263 + integration mới 4 (twin/allergen đồng bộ, expiry riêng bị drop, unknown-key False, unknown-user không tạo row) = **267 pass**; tsc + vite build sạch; live E2E :8000 — khai dị ứng qua chat (note + allergens cùng xuất hiện) → DELETE key Unicode URL-encoded → **cả hai biến mất** trong 1 tx.
+
+---
+
 ## [2026-08-18] Feature — allergy section in Preference Center (visible + editable `allergens`)
 
 **Bối cảnh**: store `allergens` (no-cap, hard-filter mọi lượt search + surface cảnh báo sức khỏe) đã tồn tại ở backend từ Phase 2 nhưng **vô hình hoàn toàn ở FE** — user dị ứng không xem/sửa/ biết hệ thống đang nhớ gì (finding #1 audit 2026-08-18).

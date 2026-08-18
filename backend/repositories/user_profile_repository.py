@@ -317,6 +317,31 @@ class UserProfileRepository:
             self._db.commit()
         return removed
 
+    def remove_note(self, user_id: str, note_key: str) -> bool:
+        """Delete ONE note by its lowercased text key (explicit user delete in the FE notes
+        list). Drops the note + its ``note_expiries`` entry + the matching ``allergens`` twin
+        (case-insensitive exact match — the FE key comes from the same list it rendered, so
+        no fuzzy matching). Returns True when the note existed and was removed; False when
+        absent (route → 404). One tx; no row created for an unknown user."""
+        row = self._db.get(UserProfile, user_id)  # read-only: nothing to remove for a new user
+        if row is None:
+            return False
+        mem = dict(row.context_memory or {})
+        notes = list(mem.get("notes") or [])
+        kept = [n for n in notes if n.lower() != note_key.lower()]
+        if len(kept) == len(notes):
+            return False  # no such note
+        mem["notes"] = kept
+        exp = dict(mem.get("note_expiries") or {})
+        exp.pop(note_key.lower(), None)
+        mem["note_expiries"] = exp
+        row.context_memory = mem  # reassign so SQLAlchemy detects the change
+        # Keep the allergen twin in sync (same sentence is mirrored there on persist) —
+        # dropping only the note would leave the allergy still hard-filtering.
+        row.allergens = [a for a in (row.allergens or []) if a.lower() != note_key.lower()]
+        self._db.commit()
+        return True
+
     def clear_memory(self, user_id: str) -> None:
         """Wipe the user's remembered memory: context_memory notes (allergy/diet declarations)
         + the taste fields the constraint layer reads (dietary, liked/disliked cuisines, budget).

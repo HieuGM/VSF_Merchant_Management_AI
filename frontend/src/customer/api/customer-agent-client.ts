@@ -191,8 +191,10 @@ export interface UserProfile {
   distance_preference_km: number;
   current_lat: number | null;
   current_lng: number | null;
-  /** Long-term cross-session notes (phase-03). FE reads only `.notes`. */
-  context_memory: { notes?: string[] } | null;
+  /** Long-term cross-session notes (phase-03). FE reads `.notes` + `.note_expiries`
+   * (lowercased note → ISO expiry; present only for TEMPORARY constraints — a note
+   * without an entry is durable). */
+  context_memory: { notes?: string[]; note_expiries?: Record<string, string> } | null;
   updated_at: string | null;
 }
 
@@ -245,6 +247,17 @@ export async function clearMemory(userId: string): Promise<UserProfile> {
     { method: "POST", headers: { "Content-Type": "application/json" } },
   );
   if (!resp.ok) throw new Error(`Clear memory failed: HTTP ${resp.status}`);
+  return (await resp.json()) as UserProfile;
+}
+
+/** Delete ONE remembered note (its lowercased text is the key, URL-encoded). Also drops the
+ * note's expiry entry + its allergen twin server-side. 404 when the note is absent. */
+export async function deleteNote(userId: string, note: string): Promise<UserProfile> {
+  const resp = await fetch(
+    `${API_BASE}/api/v1/users/${encodeURIComponent(userId)}/memory/notes/${encodeURIComponent(note.toLowerCase())}`,
+    { method: "DELETE" },
+  );
+  if (!resp.ok) throw new Error(`Delete note failed: HTTP ${resp.status}`);
   return (await resp.json()) as UserProfile;
 }
 

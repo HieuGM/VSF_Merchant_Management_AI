@@ -17,7 +17,13 @@
  */
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { getProfile, patchProfile, clearMemory, type UserProfile } from "../api/customer-agent-client";
+import {
+  getProfile,
+  patchProfile,
+  clearMemory,
+  deleteNote as apiDeleteNote,
+  type UserProfile,
+} from "../api/customer-agent-client";
 import { getCustomerUserId } from "./use-customer-identity";
 
 export type Budget = "" | "student" | "standard" | "premium";
@@ -41,8 +47,9 @@ export interface Preferences {
 export type SyncStatus = "idle" | "loading" | "synced" | "offline";
 
 const STORAGE_KEY = "cust_preferences";
-/** Mirror of context_memory.notes for cross-tab sync (carryover M-2). */
+/** Mirror of context_memory.notes (+ note_expiries) for cross-tab sync (carryover M-2). */
 const NOTES_KEY = "cust_context_notes";
+const NOTES_EXP_KEY = "cust_context_note_expiries";
 /** One-time migration flag: localStorage taste prefs pushed to the server. */
 const MIGRATED_KEY = "cust_preferences_migrated";
 
@@ -79,9 +86,10 @@ function persist(next: Preferences) {
   }
 }
 
-function persistNotes(notes: string[]) {
+function persistNotes(notes: string[], expiries: Record<string, string> = {}) {
   try {
     localStorage.setItem(NOTES_KEY, JSON.stringify(notes));
+    localStorage.setItem(NOTES_EXP_KEY, JSON.stringify(expiries));
   } catch {
     /* storage unavailable */
   }
@@ -111,12 +119,16 @@ function tasteToPatch(taste: Partial<Preferences>) {
 
 export interface UsePreferences {
   prefs: Preferences;
-  /** Long-term context_memory notes (phase-03), read-only. */
+  /** Long-term context_memory notes (phase-03). */
   notes: string[];
+  /** Lowercased note → ISO expiry (temporary notes only; no entry = durable). */
+  noteExpiries: Record<string, string>;
   /** Server-sync status for the taste profile. */
   sync: SyncStatus;
   update: (patch: Partial<Preferences>) => void;
   toggleIn: (key: "dietary" | "likedCuisines" | "dislikedCuisines", value: string) => void;
+  /** Delete ONE remembered note server-side + locally (allergen twin dropped too). */
+  deleteNote: (note: string) => Promise<void>;
   /** Clear remembered memory (notes + taste) server-side + locally. Keeps geo. For testing. */
   clearAll: () => Promise<void>;
 }
@@ -128,6 +140,14 @@ export function usePreferences(): UsePreferences {
       return JSON.parse(localStorage.getItem(NOTES_KEY) ?? "[]") as string[];
     } catch {
       return [];
+    }
+  });
+  /** Lowercased note → ISO expiry (TEMPORARY notes only; no entry = durable). */
+  const [noteExpiries, setNoteExpiries] = useState<Record<string, string>>(() => {
+    try {
+      return JSON.parse(localStorage.getItem(NOTES_EXP_KEY) ?? "{}") as Record<string, string>;
+    } catch {
+      return {};
     }
   });
   const [sync, setSync] = useState<SyncStatus>("idle");
@@ -148,8 +168,10 @@ export function usePreferences(): UsePreferences {
           const taste = profileToTaste(prof);
           setPrefs((prev) => ({ ...prev, ...taste }));
           const loadedNotes = prof.context_memory?.notes ?? [];
+          const loadedExpiries = prof.context_memory?.note_expiries ?? {};
           setNotes(loadedNotes);
-          persistNotes(loadedNotes);
+          setNoteExpiries(loadedExpiries);
+          persistNotes(loadedNotes, loadedExpiries);
           persist({ ...load(), ...taste });
           setSync("synced");
         } else {
@@ -256,6 +278,9 @@ export function usePreferences(): UsePreferences {
       } else if (e.key === NOTES_KEY && e.newValue) {
         try {
           setNotes(JSON.parse(e.newValue) as string[]);
+          setNoteExpiries(
+            JSON.parse(localStorage.getItem(NOTES_EXP_KEY) ?? "{}") as Record<string, string>,
+          );
         } catch {
           /* malformed — ignore */
         }
@@ -290,7 +315,8 @@ export function usePreferences(): UsePreferences {
         allergens: [],
       }));
       setNotes([]);
-      persistNotes([]);
+      setNoteExpiries({});
+      persistNotes([], {});
       persist({
         ...load(),
         budget: "",
@@ -305,5 +331,27 @@ export function usePreferences(): UsePreferences {
     }
   }, []);
 
-  return { prefs, notes, sync, update, toggleIn, clearAll };
+  // Delete ONE note. Optimistic: drop locally at once; on server failure roll back so the
+  // UI never claims a memory was forgotten while the backend still enforces it.
+  const deleteNote = useCallback(async (note: string) => {
+    const userId = getCustomerUserId();
+    if (!userId) return;
+    const prevNotes = notes;
+    const prevExpiries = noteExpiries;
+    const nextNotes = notes.filter((n) => n !== note);
+    const nextExpiries = { ...noteExpiries };
+    delete nextExpiries[note.toLowerCase()];
+    setNotes(nextNotes);
+    setNoteExpiries(nextExpiries);
+    persistNotes(nextNotes, nextExpiries);
+    try {
+      await apiDeleteNote(userId, note);
+    } catch {
+      setNotes(prevNotes);
+      setNoteExpiries(prevExpiries);
+      persistNotes(prevNotes, prevExpiries);
+    }
+  }, [notes, noteExpiries]);
+
+  return { prefs, notes, noteExpiries, sync, update, toggleIn, deleteNote, clearAll };
 }

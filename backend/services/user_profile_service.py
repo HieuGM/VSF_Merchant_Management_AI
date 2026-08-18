@@ -54,6 +54,27 @@ class UserProfileService:
         finally:
             db.close()
 
+    def remove_note(self, user_id: str, note_key: str) -> UserProfilePublic:
+        """Delete ONE remembered note (explicit FE per-note delete). Drops the note + its
+        expiry entry + the allergen twin in one tx. 404 when the note (or user) is absent."""
+        db = SessionLocal()
+        try:
+            repo = UserProfileRepository(db)
+            if not repo.remove_note(user_id, note_key):
+                raise HTTPException(
+                    status_code=404,
+                    detail=f"Không tìm thấy ghi nhớ này cho user '{user_id}'.",
+                )
+            profile = repo.get_by_id(user_id)
+            if profile is None:  # unreachable (remove_note found a row) — defensive
+                raise HTTPException(
+                    status_code=404,
+                    detail=f"Không tìm thấy hồ sơ user '{user_id}'.",
+                )
+            return profile
+        finally:
+            db.close()
+
     def update_profile(self, user_id: str, patch: dict) -> UserProfilePublic:
         """Apply a partial taste-profile patch (PATCH /profile) + audit it.
 

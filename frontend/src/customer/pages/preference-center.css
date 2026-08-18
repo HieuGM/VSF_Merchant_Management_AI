@@ -212,6 +212,70 @@
   border-radius: 3px;
   background: var(--grad-brand);
 }
+/* Note body: text + durability chip stacked; × button pinned right. */
+.cpref__note-main {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+  flex: 1;
+}
+.cpref__note-ttl {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  width: fit-content;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--ink-500);
+  background: rgba(100, 116, 139, 0.1);
+  border-radius: var(--r-pill);
+  padding: 0.08rem 0.5rem;
+}
+.cpref__note-ttl.is-durable {
+  color: var(--gsm-700);
+  background: rgba(16, 185, 129, 0.1);
+}
+[data-theme="dark"] .customer-root .cpref__note-ttl.is-durable {
+  color: var(--gsm-300);
+  background: rgba(52, 211, 153, 0.14);
+}
+.cpref__note-ttl.is-expiring {
+  color: #b45309;
+  background: rgba(245, 158, 11, 0.12);
+}
+[data-theme="dark"] .customer-root .cpref__note-ttl.is-expiring {
+  color: var(--warm-300);
+}
+.cpref__note-x {
+  flex: none;
+  align-self: flex-start;
+  display: inline-grid;
+  place-items: center;
+  width: 1.4rem;
+  height: 1.4rem;
+  margin-left: 0.4rem;
+  border: 0;
+  border-radius: 50%;
+  padding: 0;
+  background: transparent;
+  color: var(--ink-500);
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: background 0.15s var(--ease), color 0.15s var(--ease);
+}
+.cpref__note-x:hover:not(:disabled) {
+  background: rgba(192, 57, 43, 0.12);
+  color: #c0392b;
+}
+.cpref__note-x:disabled {
+  opacity: 0.5;
+  cursor: progress;
+}
+.cpref__count.is-full {
+  color: #b45309;
+  background: rgba(245, 158, 11, 0.14);
+}
 .cpref__note-text {
   font-size: 0.85rem;
   line-height: 1.5;

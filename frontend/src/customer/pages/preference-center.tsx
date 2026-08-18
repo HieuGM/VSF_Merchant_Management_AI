@@ -5,9 +5,10 @@
  * come from context_memory. Live geolocation fills lat/lng; manual entry remains as fallback.
  */
 import { useState, type ReactNode } from "react";
-import { Ban, Database, Eraser, Heart, LocateFixed, MapPin, Salad, Sparkles, StickyNote, Wallet } from "lucide-react";
+import { Ban, Database, Eraser, Heart, LocateFixed, MapPin, Salad, Wallet } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { AllergySection } from "../components/allergy-section";
+import { NoteList } from "../components/note-list";
 import { useCustomerIdentity } from "../hooks/use-customer-identity";
 import { useGeolocation } from "../hooks/use-geolocation";
 import { usePreferences } from "../hooks/use-preferences";
@@ -31,7 +32,8 @@ const SYNC_LABEL: Record<SyncStatus, string> = {
 
 export default function PreferenceCenter() {
   const { userId } = useCustomerIdentity();
-  const { prefs, notes, sync, update, toggleIn, clearAll } = usePreferences();
+  const { prefs, notes, noteExpiries, sync, update, toggleIn, deleteNote, clearAll } =
+    usePreferences();
   const geo = useGeolocation();
 
   const [clearing, setClearing] = useState(false);
@@ -211,39 +213,7 @@ export default function PreferenceCenter() {
         </section>
 
         <section className="cpref__card cust-glass cpref__notes-card">
-          <div className="cpref__card-head">
-            <span className="cpref__card-icon" aria-hidden="true">
-              <StickyNote size={18} />
-            </span>
-            <div className="cpref__notes-title">
-              <b>Ghi nhớ của trợ lý</b>
-              <p className="cpref__card-desc">Những điều lâu dài trợ lý ghi nhớ để gợi ý sát hơn.</p>
-            </div>
-            {notes.length > 0 && (
-              <span className="cpref__count" aria-label={`${notes.length} mục ghi nhớ`}>
-                {notes.length}
-              </span>
-            )}
-          </div>
-
-          {notes.length > 0 ? (
-            <ul className="cpref__notes">
-              {notes.map((n, i) => (
-                <li key={`${i}-${n.slice(0, 12)}`} className="cpref__note-item">
-                  <span className="cpref__note-bar" aria-hidden="true" />
-                  <span className="cpref__note-text">{n}</span>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <div className="cpref__notes-empty">
-              <Sparkles size={22} />
-              <p>
-                Chưa có ghi nhớ nào. Khi bạn kể về dị ứng, chế độ ăn lâu dài hay sở thích đặc biệt,
-                trợ lý sẽ tự ghi lại để gợi ý chuẩn hơn lần sau.
-              </p>
-            </div>
-          )}
+          <NoteList notes={notes} expiries={noteExpiries} onDelete={deleteNote} />
         </section>
 
         <p className="cpref__note" data-sync={sync}>

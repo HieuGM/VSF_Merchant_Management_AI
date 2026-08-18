@@ -173,6 +173,22 @@ def clear_memory(
     return user_profile_service.clear_memory(user_id)
 
 
+@router.delete("/{user_id}/memory/notes/{note_key:path}", response_model=UserProfilePublic)
+def delete_note(
+    user_id: str,
+    note_key: str,
+    request: Request,
+    _guard: bool = Depends(require_dev_only),
+) -> UserProfilePublic:
+    """Delete ONE remembered note (the FE per-note × button). ``note_key`` is the note's
+    lowercased text (URL-encoded by the FE). Drops the note + its TTL expiry entry + the
+    matching allergen twin in one tx — a deleted allergy stops filtering immediately.
+    404 when the note (or user) is absent. IDOR-guarded (dev-only until auth)."""
+    client_ip = request.client.host if request.client else "unknown"
+    logger.info("note_delete user_id=%s key=%r ip=%s", user_id, note_key[:80], client_ip)
+    return user_profile_service.remove_note(user_id, note_key)
+
+
 class LikedMerchantRequest(BaseModel):
     """Body for POST /liked-merchants — a single merchant_id to like."""
 
