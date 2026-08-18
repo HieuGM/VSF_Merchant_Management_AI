@@ -1,0 +1,87 @@
+Lượt 1
+
+User: "Chào, tôi hay tìm quán ăn qua đây. Tôi ăn chay trường nhé." Test gì: Ghi nhận fact vĩnh viễn (static profile) Kỳ vọng: Xác nhận đã ghi nhận diet = vegetarian.
+
+Lượt 2
+
+User: "Tôi cũng bị dị ứng đậu phộng, ăn vào là nổi mề đay." Test gì: Ghi nhận hard safety constraint Kỳ vọng: Xác nhận, đánh dấu mức ưu tiên cao nhất, không có hạn dùng.
+
+Lượt 3
+
+User: "Ngân sách của tôi thường dưới 200k một bữa thôi." Test gì: Ghi nhận fact vĩnh viễn thứ 2 Kỳ vọng: Ghi nhận budget ≈ 200k, không ghi đè lên 2 fact trước.
+
+Lượt 4
+
+User: "Hôm nay trời mưa, tìm giúp tôi quán gần đây ăn trưa." Test gì: Áp dụng đồng thời nhiều constraint (chay + ngân sách) + context real-time (mưa → ưu tiên trong nhà) Kỳ vọng: Gợi ý quán chay, giá phù hợp, ưu tiên không gian trong nhà vì trời mưa.
+
+Lượt 5
+
+User: "Thật ra hôm nay tôi đi ăn hộ bạn, nó thích đồ Hàn lắm, tìm quán Hàn ngon nhé." Test gì: Cách ly preference của người thứ 3 (không phải user) Kỳ vọng: Gợi ý quán Hàn cho dịp này, nhưng KHÔNG lưu "thích đồ Hàn" vào profile của user.
+
+Lượt 6
+
+User: "Cảm ơn, quán đó ổn đó, cho 3 sao thôi vì hơi ồn." Test gì: Ghi nhận rating/feedback vào episodic memory Kỳ vọng: Lưu rating 3★ cho quán vừa gợi ý, ghi chú lý do "ồn" (có thể liên hệ sau tới ambience preference).
+
+Lượt 7
+
+User: "Tôi thích ăn cay... à khoan, không, tôi không ăn cay được, hay đau bụng lắm." Test gì: Tự sửa lời trong cùng lượt (self-correction) Kỳ vọng: Chỉ lưu ý cuối: avoid_spicy = true. Không lưu cả 2 ý mâu thuẫn.
+
+Lượt 8
+
+User: "Tìm chỗ ăn tối cho tôi." Test gì: Tổng hợp nhiều fact đã tích lũy (multi-hop) Kỳ vọng: Gợi ý đồng thời thỏa: chay, ngân sách ~200k, không cay.
+
+Lượt 9
+
+User: "Tuần này tôi ăn kiêng ít dầu mỡ vì mới khám sức khỏe xong, ưu tiên món thanh đạm nhé." Test gì: Phân biệt constraint tạm thời (có thời hạn) vs vĩnh viễn Kỳ vọng: Ghi nhận là constraint có thời hạn ngắn (~1 tuần), không ghi đè lên profile vĩnh viễn.
+
+Lượt 10
+
+User: "Ê hôm nay tôi đi công tác Đà Nẵng, tìm quán ở đây giúp tôi." Test gì: Thay đổi địa điểm rõ ràng Kỳ vọng: Chuyển sang gợi ý theo Đà Nẵng, không dùng địa điểm mặc định cũ.
+
+Lượt 11
+
+User: "Tìm chỗ ăn sáng cho tôi." (giả lập: đã quay lại địa điểm mặc định, không nhắc gì tới Đà Nẵng nữa) Test gì: Không "dính" vào địa điểm tạm thời của lượt trước Kỳ vọng: Không mặc định vẫn ở Đà Nẵng; ưu tiên vị trí real-time hiện tại hoặc hỏi lại nếu không xác định được.
+
+Lượt 12
+
+(giả lập: đã qua 3 tuần kể từ lượt 9) User: "Gợi ý đồ ăn trưa cho tôi." Test gì: Constraint tạm thời tự hết hạn đúng lúc Kỳ vọng: Không còn áp dụng "ít dầu mỡ" (đã hết hạn 1 tuần từ lâu), nhưng vẫn áp dụng chay + ngân sách + không cay (vĩnh viễn).
+
+Lượt 13
+
+User: "Ôi món này cay quá, chết mất, cay dã man luôn!" (chỉ là than vãn về 1 món cụ thể, không phải khai báo preference) Test gì: Tránh false positive — không biến câu than vãn thành constraint mới Kỳ vọng: Không tạo thêm rule nào mới từ câu này; giữ nguyên avoid_spicy đã có từ lượt 7 (không thay đổi mức độ).
+
+Lượt 14
+
+User: "Thứ Hai hàng tuần tôi ăn chay tuyệt đối (không trứng không sữa), còn lại các ngày vẫn ăn chay bình thường như trước nhé." Test gì: Fact có điều kiện (theo ngày trong tuần) chồng lên fact nền đã có Kỳ vọng: Ghi nhận rule bổ sung có điều kiện: nếu là thứ Hai → chay tuyệt đối (vegan), ngày khác → chay thường (có thể trứng/sữa).
+
+Lượt 15
+
+(giả lập: hôm nay là thứ Hai) User: "Gợi ý bữa trưa cho tôi." Test gì: Áp dụng đúng điều kiện thời gian vừa khai báo Kỳ vọng: Gợi ý món chay tuyệt đối (không trứng, sữa) vì hôm nay là thứ Hai — không phải chay thường.
+
+Lượt 16
+
+User: "Tôi mới đi khám lại, hết dị ứng đậu phộng rồi, giờ ăn được bình thường." Test gì: Gỡ bỏ safety constraint — cần xác nhận lại trước khi gỡ Kỳ vọng: Agent hỏi xác nhận lại 1 lần ("bạn chắc chắn muốn gỡ cảnh báo dị ứng đậu phộng chứ?") trước khi cập nhật, vì đây là thông tin an toàn.
+
+Lượt 17
+
+User: "Đúng rồi, gỡ đi, giờ ăn đậu phộng thoải mái." Test gì: Hoàn tất việc gỡ constraint sau xác nhận Kỳ vọng: Cập nhật allergy = none. Từ nay không còn cảnh báo đậu phộng trong gợi ý.
+
+Lượt 18
+
+User: "Gợi ý món ăn vặt có đậu phộng ngon cho tôi." Test gì: Kiểm chứng constraint đã thực sự được gỡ đúng Kỳ vọng: Gợi ý bình thường các món có đậu phộng, không còn cảnh báo dị ứng (vì đã gỡ ở lượt 17).
+
+Lượt 19
+
+User: "Bạn nhớ những gì về tôi rồi, liệt kê hết ra xem." Test gì: Tính minh bạch, không hallucination Kỳ vọng: Liệt kê đúng và đủ: ăn chay (chay tuyệt đối thứ Hai, chay thường ngày khác), ngân sách ~200k, không ăn cay, hết dị ứng đậu phộng (đã gỡ). KHÔNG bịa thêm fact chưa từng nói, KHÔNG còn nhắc dị ứng đậu phộng như còn hiệu lực.
+
+Lượt 20
+
+User: "Quên chuyện ngân sách 200k đi, giờ tôi thoải mái hơn rồi, không giới hạn ngân sách nữa." Test gì: Xóa đúng 1 fact cụ thể, không ảnh hưởng fact khác Kỳ vọng: Xóa/cập nhật budget = không giới hạn. Các fact khác (chay, không cay, lịch thứ Hai) giữ nguyên, không bị xóa nhầm.
+
+Lượt 21
+
+User: "Tìm nhà hàng sang trọng cho tôi ăn tối cuối tuần này." Test gì: Kiểm chứng việc gỡ ngân sách + áp dụng đúng các fact còn lại Kỳ vọng: Có thể gợi ý nhà hàng cao cấp hơn mức 200k trước đây (vì đã gỡ giới hạn), nhưng vẫn tôn trọng chay + không cay.
+
+Lượt 22
+
+(giả lập: nhiễu — 10 lượt trước đó toàn hỏi về thời tiết, địa chỉ, giờ mở cửa, không liên quan preference) User: "Tìm giúp tôi quán lẩu ngon gần đây." Test gì: Fact cũ (từ lượt 1, 7, 14) không bị "trôi" dù cách xa và bị nhiễu bởi nhiều lượt không liên quan Kỳ vọng: Vẫn gợi ý lẩu chay, không cay (hoặc cảnh báo nếu lẩu vốn cay), đúng theo lịch thứ Hai nếu áp dụng — dù đã qua rất nhiều lượt hội thoại khác chen giữa.
