@@ -28,6 +28,25 @@ def test_unknown_role_returns_empty():
     assert tools_for_crew_agent("does_not_exist") == []
 
 
+# DB-gated: these tests exercise REAL queries (route → repo → Postgres). On CI (no
+# Postgres) they'd fail with connection refused — skip there, matching the pattern
+# integration tests already use (_require_db).
+import pytest
+from sqlalchemy import text
+from sqlalchemy.exc import OperationalError
+
+from database.connection import engine
+
+try:
+    with engine.connect() as _c:
+        _c.execute(text("SELECT 1;"))
+    _HAS_DB = True
+except OperationalError:
+    _HAS_DB = False
+
+pytestmark = pytest.mark.skipif(not _HAS_DB, reason="Postgres not reachable")
+
+
 def test_allow_list_enforced_per_agent():
     # preference_reasoning may NOT call merchant_search (not in its allow-list).
     names = {t.name for t in tools_for_crew_agent("preference_reasoning")}

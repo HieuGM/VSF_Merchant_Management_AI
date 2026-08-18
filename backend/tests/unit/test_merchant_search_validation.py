@@ -2,6 +2,25 @@
 from __future__ import annotations
 
 
+# DB-gated: these tests exercise REAL queries (route → repo → Postgres). On CI (no
+# Postgres) they'd fail with connection refused — skip there, matching the pattern
+# integration tests already use (_require_db).
+import pytest
+from sqlalchemy import text
+from sqlalchemy.exc import OperationalError
+
+from database.connection import engine
+
+try:
+    with engine.connect() as _c:
+        _c.execute(text("SELECT 1;"))
+    _HAS_DB = True
+except OperationalError:
+    _HAS_DB = False
+
+pytestmark = pytest.mark.skipif(not _HAS_DB, reason="Postgres not reachable")
+
+
 def test_search_rejects_invalid_lat(client):
     """Test that latitude > 90 is rejected (Fix 2)."""
     resp = client.get("/api/v1/merchants/search?lat=91&lng=0")
