@@ -4,6 +4,19 @@ This document tracks all significant changes, features, and security improvement
 
 ---
 
+## [2026-08-18] Polish — chat suggestions in Vietnamese, safe links, Explore count/sort, danger zone
+
+**Bối cảnh**: findings #6/#17/#24/#26 audit 2026-08-18 — batch 4 mục nhỏ FE.
+
+- **Gợi ý cập nhật khẩu vị (#6)**: `chat-message.tsx` map field → nhãn tiếng Việt (budget_level→"Ngân sách", dietary→"Chế độ ăn", spice_tolerance→"Độ cay"…), value enum map (student→"Tiết kiệm"…, list render từng phần tử), operation hiển thị động từ ("Thêm vào/Đặt thành/Bỏ khỏi") — user hiểu bấm "Lưu" sẽ làm gì thay vì "budget_level student 70%".
+- **Link trong câu trả lời (#26)**: ReactMarkdown override `a` → target=_blank rel=noopener noreferrer — bấm link không rời app/mất hội thoại.
+- **Explore (#24)**: hàng meta "Tìm thấy N quán" (từ `total` vốn bị vứt) + sort select client-side (Phù hợp nhất/Điểm cao nhất/Gần nhất); chips cuisine dùng constant chung `constants/cuisines.ts` (8 giá trị — trước Explore 6 vs Preference Center 8, lệch nhau).
+- **Nút phá hoại (#17)**: "Xóa toàn bộ hồ sơ" dời khỏi header xuống **danger zone cuối trang** (viền đứt đỏ, mô tả blast-radius + chỉ đường dùng nút × từng mục); path sửa chính xác giờ là per-note/per-allergen ×.
+
+**Verify**: tsc 0, vite build pass, oxlint sạch (1 warning tồn tại cũ ở use-preferences, không đụng).
+
+---
+
 ## [2026-08-18] Fix — Explore bypasses allergen hard-filter (safety gap closed)
 
 **Bối cảnh**: finding #3 audit 2026-08-18 — chat path bọc crew kickoff trong `constraints_scope` nên L1 allergen filter luôn chạy, nhưng `GET /api/v1/merchants/search` (trang Khám phá gọi) chạy NGOÀI flow → ContextVar không set → cùng user dị ứng hải sản: chat lọc sạch, Explore vẫn hiện đầy quán sushi/hải sản.

@@ -9,6 +9,7 @@ import { Ban, Database, Eraser, Heart, LocateFixed, MapPin, Salad, Wallet } from
 import type { LucideIcon } from "lucide-react";
 import { AllergySection } from "../components/allergy-section";
 import { NoteList } from "../components/note-list";
+import { CUISINES } from "../constants/cuisines";
 import { useCustomerIdentity } from "../hooks/use-customer-identity";
 import { useGeolocation } from "../hooks/use-geolocation";
 import { usePreferences } from "../hooks/use-preferences";
@@ -21,7 +22,6 @@ const BUDGETS: Array<{ v: Budget; label: string; hint: string }> = [
   { v: "premium", label: "Cao cấp", hint: "150k+" },
 ];
 const DIETARY = ["Chay", "Ít cay", "Không hành", "Ít dầu mỡ", "Không đường", "Healthy"];
-const CUISINES = ["Việt", "Nhật", "Hàn", "Ý", "Thái", "Trung", "Đồ uống", "Ăn vặt"];
 
 const SYNC_LABEL: Record<SyncStatus, string> = {
   idle: "Lưu cục bộ trên thiết bị",
@@ -73,16 +73,6 @@ export default function PreferenceCenter() {
             <h2 className="cpref__title">Hồ sơ cá nhân</h2>
             <p className="cpref__sub">Trợ lý dùng những lựa chọn này để gợi ý sát hơn.</p>
           </div>
-          <button
-            type="button"
-            className="cust-btn cust-btn-ghost cpref__clear"
-            onClick={onClear}
-            disabled={clearing || sync === "loading"}
-            title="Xóa ghi nhớ + khẩu vị trong hồ sơ để test lại"
-          >
-            <Eraser size={15} />
-            {clearing ? "Đang xóa…" : "Xóa ghi nhớ"}
-          </button>
         </header>
 
         <Section icon={Wallet} label="Ngân sách ưa thích">
@@ -214,6 +204,26 @@ export default function PreferenceCenter() {
 
         <section className="cpref__card cust-glass cpref__notes-card">
           <NoteList notes={notes} expiries={noteExpiries} onDelete={deleteNote} />
+        </section>
+
+        {/* Destructive zone — moved OUT of the header (audit #17): the nuke-all button sat
+         * one misclick away from daily edits, while per-note × / per-allergen × above are
+         * the precise correction path. Muted, explicit about its blast radius. */}
+        <section className="cpref__dangerzone">
+          <p>
+            Xóa TOÀN BỘ ghi nhớ + khẩu vị trong hồ sơ (dị ứng, ăn kiêng, sở thích, ghi nhớ của
+            trợ lý) để test lại từ đầu. Hành động này không thể hoàn tác — muốn bỏ một mục riêng
+            lẻ, dùng nút × trên từng mục phía trên.
+          </p>
+          <button
+            type="button"
+            className="cust-btn cust-btn-ghost cpref__clear"
+            onClick={onClear}
+            disabled={clearing || sync === "loading"}
+          >
+            <Eraser size={15} />
+            {clearing ? "Đang xóa…" : "Xóa toàn bộ hồ sơ"}
+          </button>
         </section>
 
         <p className="cpref__note" data-sync={sync}>

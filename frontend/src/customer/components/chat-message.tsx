@@ -54,7 +54,20 @@ function AgentTurn({ msg }: { msg: ChatMessage }) {
         {msg.text && (
           <>
             <div className="cmsg__text">
-              <ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.text}</ReactMarkdown>
+              <ReactMarkdown
+                remarkPlugins={[remarkGfm]}
+                components={{
+                  // Never navigate away from the app in-tab: an answer link opens in a new
+                  // tab so the conversation isn't lost mid-read.
+                  a: ({ href, children }) => (
+                    <a href={href} target="_blank" rel="noopener noreferrer">
+                      {children}
+                    </a>
+                  ),
+                }}
+              >
+                {msg.text}
+              </ReactMarkdown>
             </div>
             {!msg.streaming && !msg.error && (
               <button
@@ -147,8 +160,10 @@ type SuggestionStatus = "idle" | "saving" | "saved" | "dismissed";function Sugge
   return (
     <div className="cmsg__suggest">
       <div className="cmsg__suggest-main">
-        <b>{s.field}</b>
-        {s.value != null && <span className="cmsg__suggest-val">{String(s.value)}</span>}
+        <b>
+          {OP_LABEL[s.operation ?? "set"]} {fieldLabel(s.field)}
+        </b>
+        {s.value != null && <span className="cmsg__suggest-val">{valueLabel(s.value)}</span>}
         {pct != null && <span className="cmsg__suggest-pct">{pct}%</span>}
       </div>
       {s.rationale && <p className="cmsg__suggest-why">{s.rationale}</p>}
@@ -190,6 +205,47 @@ type SuggestionStatus = "idle" | "saving" | "saved" | "dismissed";function Sugge
 /** Normalize a suggestion operation to the confirm-route whitelist. */
 function toOperation(op: string | undefined): "set" | "add" | "remove" {
   return op === "add" || op === "remove" ? op : "set";
+}
+
+/** Backend profile field → Vietnamese label (the raw key reads as jargon to users). */
+const FIELD_LABEL: Record<string, string> = {
+  budget_level: "Ngân sách",
+  dietary: "Chế độ ăn",
+  liked_cuisines: "Ẩm thực yêu thích",
+  disliked_cuisines: "Ẩm thực không thích",
+  spice_tolerance: "Độ cay",
+  distance_preference_km: "Bán kính ưu tiên",
+  allergens: "Dị ứng / cần tránh",
+};
+
+/** Known enum values → Vietnamese (arrays render each element through this). */
+const VALUE_LABEL: Record<string, string> = {
+  student: "Tiết kiệm",
+  standard: "Trung cấp",
+  premium: "Cao cấp",
+  none: "Không cay",
+  mild: "Ít cay",
+  medium: "Vừa cay",
+  hot: "Cay",
+};
+
+/** Operation → verb so the user knows what "Lưu" will do (add vs replace vs remove). */
+const OP_LABEL: Record<string, string> = {
+  set: "Đặt thành",
+  add: "Thêm vào",
+  remove: "Bỏ khỏi",
+};
+
+/** Human label for a field; unknown fields fall back to the raw key. */
+function fieldLabel(field: string): string {
+  return FIELD_LABEL[field] ?? field;
+}
+
+/** Human label for a value (enum values mapped; arrays element-wise; scalars as-is). */
+function valueLabel(v: unknown): string {
+  if (Array.isArray(v)) return v.map(valueLabel).join(", ");
+  if (typeof v === "string") return VALUE_LABEL[v] ?? v;
+  return String(v);
 }
 
 /** "Trợ lý vừa ghi nhớ: …" — surfaces the memory diff for THIS turn (SSE memory_updated).

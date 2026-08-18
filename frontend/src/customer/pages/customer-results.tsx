@@ -9,12 +9,27 @@ import { LocateFixed, SearchX } from "lucide-react";
 import { RestaurantCard } from "../components/restaurant-card";
 import { searchMerchants } from "../api/explore-client";
 import type { Merchant, SearchFilters } from "../api/explore-client";
+import { CUISINES } from "../constants/cuisines";
 import { getCustomerUserId } from "../hooks/use-customer-identity";
 import { useGeolocation } from "../hooks/use-geolocation";
 import { usePreferences } from "../hooks/use-preferences";
 import "./customer-results.css";
 
-const CUISINES = ["Việt", "Nhật", "Hàn", "Ý", "Thái", "Chay"];
+/** Client-side sort modes — all keys already on the card payload. */
+type SortMode = "match" | "rating" | "distance";
+const SORTS: Array<{ v: SortMode; label: string }> = [
+  { v: "match", label: "Phù hợp nhất" },
+  { v: "rating", label: "Điểm cao nhất" },
+  { v: "distance", label: "Gần nhất" },
+];
+
+function sortResults(ms: Merchant[], mode: SortMode): Merchant[] {
+  const out = [...ms];
+  if (mode === "rating") out.sort((a, b) => (b.avg_rating ?? 0) - (a.avg_rating ?? 0));
+  else if (mode === "distance")
+    out.sort((a, b) => (a.distance_km ?? 1e9) - (b.distance_km ?? 1e9));
+  return out;
+}
 const BUDGETS: Array<{ v: string; label: string }> = [
   { v: "", label: "Mọi giá" },
   { v: "student", label: "Tiết kiệm" },
@@ -32,6 +47,8 @@ export default function CustomerResults() {
   const [cuisine, setCuisine] = useState("Việt");
   const [budget, setBudget] = useState("");
   const [nearby, setNearby] = useState(false);
+  const [sort, setSort] = useState<SortMode>("match");
+  const [total, setTotal] = useState(0);
   const [results, setResults] = useState<Merchant[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -79,7 +96,10 @@ export default function CustomerResults() {
         filters.radius_km = 5;
       }
       const res = await searchMerchants(filters, ac.signal);
-      if (!ac.signal.aborted) setResults(res.merchants);
+      if (!ac.signal.aborted) {
+        setResults(res.merchants);
+        setTotal(res.total);
+      }
     } catch (err) {
       if ((err as { name?: string }).name === "AbortError") return; // superseded by a newer search
       if (!ac.signal.aborted)
@@ -159,6 +179,24 @@ export default function CustomerResults() {
 
         {error && <div className="cres__error">{error}</div>}
 
+        {!loading && !error && results.length > 0 && (
+          <div className="cres__meta">
+            <span className="cres__count">
+              Tìm thấy <b>{total}</b> quán
+            </span>
+            <label className="cres__sort">
+              Sắp xếp
+              <select value={sort} onChange={(e) => setSort(e.target.value as SortMode)}>
+                {SORTS.map((s) => (
+                  <option key={s.v} value={s.v}>
+                    {s.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+        )}
+
         {loading ? (
           <div className="cres__grid">
             {[0, 1, 2, 3].map((i) => (
@@ -167,7 +205,7 @@ export default function CustomerResults() {
           </div>
         ) : results.length > 0 ? (
           <div className="cres__grid">
-            {results.map((m, i) => (
+            {sortResults(results, sort).map((m, i) => (
               <RestaurantCard key={m.merchant_id} item={m} rank={i + 1} />
             ))}
           </div>
