@@ -23,6 +23,14 @@ class MerchantCandidate(BaseModel):
     distance_km: float | None = None
     avg_rating: float | None = None
     match_score: float = 0.0
+    # Card enrichment (pass-through from SearchResult.to_dict so the FE card can render
+    # directions + open-now + top dishes on the CHAT path too, not just Explore).
+    lat: float | None = None
+    lng: float | None = None
+    opens_at: str | None = None
+    closes_at: str | None = None
+    image_url: str | None = None
+    top_dishes: list[dict[str, Any]] = Field(default_factory=list)
 
 
 class SearchTaskOutput(BaseModel):

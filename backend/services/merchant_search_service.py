@@ -63,19 +63,27 @@ class SearchResult:
 
     def to_dict(self) -> dict[str, Any]:
         """Convert to API/agent response format — enriched with profile data."""
+        m = self.merchant
         d: dict[str, Any] = {
-            "merchant_id": self.merchant.merchant_id,
-            "name": self.merchant.name,
-            "cuisine": self.merchant.cuisine,
-            "address": self.merchant.address,
-            "city": self.merchant.city,
+            "merchant_id": m.merchant_id,
+            "name": m.name,
+            "cuisine": m.cuisine,
+            "address": m.address,
+            "city": m.city,
             "distance_km": round(self.distance_km, 2) if self.distance_km else None,
             "avg_rating": self.avg_rating,
             "match_score": round(self.match_score, 3),
+            # Geo + hours — the FE card builds its Google-Maps directions deep-link from
+            # lat/lng and its open-now badge from opens_at/closes_at (merchant.timezone,
+            # default Asia/Ho_Chi_Minh). None-safe: merchants without coords/hours omit.
+            "lat": m.lat,
+            "lng": m.lng,
+            "opens_at": m.opens_at.isoformat() if m.opens_at else None,
+            "closes_at": m.closes_at.isoformat() if m.closes_at else None,
             # Enrichment fields — agent can reason about these directly
             "tier": self.tier,
             "price_level": self.price_level,
-            "taste_tags": list(self.merchant.taste_tags or []),
+            "taste_tags": list(m.taste_tags or []),
             "image_url": self.representative_image,
         }
         if self.top_menu_items:
@@ -321,10 +329,17 @@ class MerchantSearchService:
                         break
         out = results[:limit]
         if out:
-            images = self._repo.get_representative_images(
-                [r.merchant.merchant_id for r in out]
-            )
+            mids = [r.merchant.merchant_id for r in out]
+            # Same batch enrichment as search(): top dishes + representative image, 1 query
+            # each (previously only images loaded here — the CHAT path (nearby tool) had no
+            # top_dishes on its cards while Explore did).
+            top_items = self._repo.get_top_menu_items_batch(mids, per_merchant=3)
+            images = self._repo.get_representative_images(mids)
             for r in out:
+                r.top_menu_items = [
+                    {"name": it.name, "price": it.price, "likes": it.total_like}
+                    for it in top_items.get(r.merchant.merchant_id, [])
+                ]
                 r.representative_image = images.get(r.merchant.merchant_id)
         return out
 

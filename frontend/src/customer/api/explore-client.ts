@@ -15,6 +15,9 @@ export interface Merchant {
   avg_rating: number | null;
   match_score: number;
   image_url?: string | null;
+  opens_at?: string | null;
+  closes_at?: string | null;
+  top_dishes?: Array<{ name: string; price?: number | null; likes?: number | null }>;
 }
 
 export interface SearchFilters {

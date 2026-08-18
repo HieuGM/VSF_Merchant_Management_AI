@@ -25,6 +25,19 @@ export interface RestaurantResult {
   avg_rating?: number | null;
   match_score?: number | null;
   image_url?: string | null;
+  /** Geo + hours (FE directions deep-link + open-now badge). */
+  lat?: number | null;
+  lng?: number | null;
+  opens_at?: string | null;
+  closes_at?: string | null;
+  /** 3 signature dishes w/ price (rendered in the card's expanded detail). */
+  top_dishes?: TopDish[];
+}
+
+export interface TopDish {
+  name: string;
+  price?: number | null;
+  likes?: number | null;
 }
 
 /**

@@ -9,6 +9,7 @@ import type { CSSProperties, KeyboardEvent, MouseEvent } from "react";
 import {
   CakeSlice,
   Check,
+  Clock3,
   Coffee,
   Copy,
   Croissant,
@@ -18,6 +19,7 @@ import {
   Heart,
   IceCreamCone,
   MapPin,
+  Navigation,
   Pizza,
   Salad,
   Soup,
@@ -52,6 +54,30 @@ function iconFor(cuisine?: string | null, name?: string | null): LucideIcon {
   return Utensils;
 }
 
+/** "07:00" / "07:00:30.000" → "07:00" (backend sends Time.isoformat()). */
+function hhmm(iso?: string | null): string | null {
+  return iso ? iso.slice(0, 5) : null;
+}
+
+/** Open-now in the merchant's TZ (VN, UTC+7 — no DST) from ISO opens/closes.
+ * Handles the cross-midnight case (closes < opens → open late-night). */
+function openNow(opens?: string | null, closes?: string | null): boolean | null {
+  const o = hhmm(opens);
+  const c = hhmm(closes);
+  if (!o || !c) return null; // hours unknown → no badge (never guess)
+  const now = new Date(Date.now() + 7 * 3600_000); // VN time regardless of device TZ
+  const cur = `${String(now.getUTCHours()).padStart(2, "0")}:${String(now.getUTCMinutes()).padStart(2, "0")}`;
+  return o <= c ? cur >= o && cur < c : cur >= o || cur < c; // cross-midnight
+}
+
+/** Google Maps directions deep-link — coords when we have them, else name+address search. */
+function mapsUrl(item: RestaurantResult): string {
+  if (item.lat != null && item.lng != null)
+    return `https://www.google.com/maps/dir/?api=1&destination=${item.lat},${item.lng}`;
+  const q = encodeURIComponent([item.name, item.address].filter(Boolean).join(" "));
+  return `https://www.google.com/maps/search/?api=1&query=${q}`;
+}
+
 export function RestaurantCard({ item, rank }: { item: RestaurantResult; rank?: number }) {
   const [expanded, setExpanded] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -60,6 +86,10 @@ export function RestaurantCard({ item, rank }: { item: RestaurantResult; rank?: 
   const Icon = iconFor(item.cuisine, item.name);
   const showRank = rank != null && rank > 0 && rank <= 3;
   const showPhoto = !!item.image_url && !imgFailed;
+  const open = openNow(item.opens_at, item.closes_at);
+  const oH = hhmm(item.opens_at);
+  const cH = hhmm(item.closes_at);
+  const dishes = item.top_dishes?.filter((d) => d.name)?.slice(0, 3) ?? [];
 
   // Episodic memory: the heart. Shared state from LikedMerchantsProvider (CustomerHome) —
   // one load for all cards; toggle is optimistic + synced to the backend.
@@ -143,6 +173,11 @@ export function RestaurantCard({ item, rank }: { item: RestaurantResult; rank?: 
                 <MapPin size={13} /> {item.distance_km.toFixed(1)} km
               </span>
             )}
+            {open != null && (
+              <span className={`rcard__open ${open ? "is-open" : "is-closed"}`}>
+                <Clock3 size={12} /> {open ? "Đang mở" : "Đã đóng"}
+              </span>
+            )}
           </div>
         </div>
 
@@ -166,17 +201,44 @@ export function RestaurantCard({ item, rank }: { item: RestaurantResult; rank?: 
               <MapPin size={14} /> {item.address}
             </p>
           )}
-          <button type="button" className="rcard__copy" onClick={copy}>
-            {copied ? (
-              <>
-                <Check size={14} /> Đã sao chép
-              </>
-            ) : (
-              <>
-                <Copy size={14} /> Sao chép địa chỉ
-              </>
-            )}
-          </button>
+          {oH && cH && (
+            <p className="rcard__hours">
+              <Clock3 size={14} /> Giờ mở cửa: {oH}–{cH}
+              {open === false && " (đã đóng lúc này)"}
+            </p>
+          )}
+          {dishes.length > 0 && (
+            <ul className="rcard__dishes">
+              {dishes.map((d) => (
+                <li key={d.name}>
+                  <span>{d.name}</span>
+                  {d.price != null && <b>{d.price.toLocaleString("vi-VN")}đ</b>}
+                </li>
+              ))}
+            </ul>
+          )}
+          <div className="rcard__actions">
+            <a
+              className="rcard__nav"
+              href={mapsUrl(item)}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <Navigation size={14} /> Chỉ đường
+            </a>
+            <button type="button" className="rcard__copy" onClick={copy}>
+              {copied ? (
+                <>
+                  <Check size={14} /> Đã sao chép
+                </>
+              ) : (
+                <>
+                  <Copy size={14} /> Sao chép địa chỉ
+                </>
+              )}
+            </button>
+          </div>
         </div>
       )}
     </article>

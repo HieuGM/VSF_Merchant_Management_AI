@@ -1333,27 +1333,65 @@ def _empty_result_rewrite(emptiness_note: str, constraints: Any) -> str:
     return _EMPTY_RESULT_TEMPLATES[0].format(labels=labels)
 
 
-def _enrich_with_images(results: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    """Attach each agent candidate's real food photo (food_images) by merchant_id.
+def _enrich_card_details(results: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Attach each agent candidate's real food photo + geo/hours + top dishes by merchant_id.
 
-    SearchTaskOutput candidates come from the LLM (no image field); the FE card shows a
-    real merchant photo, so look it up here. Rows already carrying image_url (recovery
-    path, from the service) are skipped — no-op for them."""
-    missing = [r["merchant_id"] for r in results
-               if r.get("merchant_id") and not r.get("image_url")]
-    if not missing:
-        return results
+    SearchTaskOutput candidates come from the LLM — it reliably copies name/cuisine/rating
+    but DROPS enrichment fields (image, lat/lng, opens/closes, top_dishes) even when the
+    tool output carried them. The FE card needs those (directions deep-link, open-now
+    badge, signature dishes), so fill them here deterministically — one batch lookup for
+    whatever is missing. Rows already carrying a field are skipped for that field
+    (no-op for results coming from the service's to_dict)."""
     from database.connection import SessionLocal
     from repositories.merchant_repository import MerchantRepository
+
+    def _needs(r: dict[str, Any], key: str) -> bool:
+        return bool(r.get("merchant_id")) and not r.get(key)
+
+    mids = list({
+        r["merchant_id"] for r in results
+        if r.get("merchant_id") and any(_needs(r, k) for k in ("image_url", "lat", "lng", "opens_at", "closes_at"))
+        or (r.get("merchant_id") and not r.get("top_dishes"))
+    })
+    if not mids:
+        return results
     db = SessionLocal()
     try:
-        imgs = MerchantRepository(db).get_representative_images(missing)
+        repo = MerchantRepository(db)
+        imgs = repo.get_representative_images(mids)
+        dishes = repo.get_top_menu_items_batch(mids, per_merchant=3)
+        rows = {m.merchant_id: m for m in repo.get_by_ids(mids)}
     finally:
         db.close()
     for r in results:
-        if r.get("merchant_id") and not r.get("image_url"):
-            r["image_url"] = imgs.get(r["merchant_id"])
+        mid = r.get("merchant_id")
+        if not mid:
+            continue
+        if not r.get("image_url"):
+            r["image_url"] = imgs.get(mid)
+        if not r.get("top_dishes"):
+            r["top_dishes"] = [
+                {"name": it.name, "price": it.price, "likes": it.total_like}
+                for it in dishes.get(mid, [])
+            ]
+        m = rows.get(mid)
+        if m is not None:
+            if not r.get("lat"):
+                r["lat"] = m.lat
+            if not r.get("lng"):
+                r["lng"] = m.lng
+            if not r.get("opens_at") and m.opens_at is not None:
+                r["opens_at"] = m.opens_at.isoformat()
+            if not r.get("closes_at") and m.closes_at is not None:
+                r["closes_at"] = m.closes_at.isoformat()
+            if not r.get("opens_at") and not r.get("closes_at"):
+                r.pop("opens_at", None); r.pop("closes_at", None)
     return results
+
+
+def _enrich_with_images(results: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Back-compat alias — enrichment now covers image + geo/hours + top dishes."""
+    return _enrich_card_details(results)
 
 
 # --------------------------------------------------------------------------- #
@@ -1807,6 +1845,7 @@ def _resolve_followup_targets(query: str | None, prior_turns: list[dict]) -> lis
 def _followup_cards(merchant_ids: list[str]) -> list[dict[str, Any]]:
     """Re-fetch prior merchants as result cards (by id) so the FE shows the REFERRED
     merchant, not a fresh search list. Deterministic, real data (never fabricated)."""
+    from services.merchant_search_service import _platform_rating
     if not merchant_ids:
         return []
     from database.connection import SessionLocal
@@ -1816,6 +1855,8 @@ def _followup_cards(merchant_ids: list[str]) -> list[dict[str, Any]]:
     cards: list[dict[str, Any]] = []
     try:
         repo = MerchantRepository(db)
+        # Batch top-dishes for the rehydrated cards (same shape as the fresh-search path).
+        top_items = repo.get_top_menu_items_batch(merchant_ids, per_merchant=3)
         for mid in merchant_ids:
             m = repo.get_by_id(mid)
             if m is None:
@@ -1827,8 +1868,19 @@ def _followup_cards(merchant_ids: list[str]) -> list[dict[str, Any]]:
                 "address": getattr(m, "address", None),
                 "city": getattr(m, "city", None),
                 "distance_km": None,  # not recomputed on follow-up (FE card handles None)
-                "avg_rating": getattr(m, "avg_rating", None),
+                # BUG FIX: the ORM Merchant has NO avg_rating column — getattr(m, "avg_rating")
+                # was always None, so every follow-up card lost its stars. Read the platform
+                # rating from the ratings relationship like the search path does.
+                "avg_rating": _platform_rating(m),
                 "match_score": None,
+                "lat": getattr(m, "lat", None),
+                "lng": getattr(m, "lng", None),
+                "opens_at": m.opens_at.isoformat() if getattr(m, "opens_at", None) else None,
+                "closes_at": m.closes_at.isoformat() if getattr(m, "closes_at", None) else None,
+                "top_dishes": [
+                    {"name": it.name, "price": it.price, "likes": it.total_like}
+                    for it in top_items.get(mid, [])
+                ],
             })
     finally:
         db.close()

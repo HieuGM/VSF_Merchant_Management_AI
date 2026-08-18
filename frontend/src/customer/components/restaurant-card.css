@@ -257,3 +257,94 @@
   color: var(--gsm-400);
   background: rgba(16, 185, 129, 0.22);
 }
+
+/* --- Open-now badge (card body) + expanded detail: hours, top dishes, actions --- */
+.rcard__open {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.22rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  border-radius: var(--r-pill);
+  padding: 0.1rem 0.5rem;
+}
+.rcard__open.is-open {
+  color: #047857;
+  background: rgba(16, 185, 129, 0.13);
+}
+.rcard__open.is-closed {
+  color: #b45309;
+  background: rgba(245, 158, 11, 0.14);
+}
+[data-theme="dark"] .customer-root .rcard__open.is-open {
+  color: var(--gsm-300);
+}
+[data-theme="dark"] .customer-root .rcard__open.is-closed {
+  color: var(--warm-300);
+}
+
+.rcard__hours {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0.3rem 0 0;
+  font-size: 0.78rem;
+  color: var(--ink-600);
+}
+.rcard__dishes {
+  list-style: none;
+  margin: 0.55rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+.rcard__dishes li {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.6rem;
+  font-size: 0.78rem;
+  color: var(--ink-700);
+  border-bottom: 1px dashed rgba(100, 116, 139, 0.18);
+  padding-bottom: 0.2rem;
+}
+.rcard__dishes li:last-child {
+  border-bottom: 0;
+}
+.rcard__dishes b {
+  flex: none;
+  color: var(--gsm-700);
+  font-weight: 700;
+}
+[data-theme="dark"] .customer-root .rcard__dishes b {
+  color: var(--gsm-300);
+}
+.rcard__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.65rem;
+}
+.rcard__nav {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--gsm-700);
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.28);
+  border-radius: var(--r-sm);
+  padding: 0.35rem 0.7rem;
+  text-decoration: none;
+  transition: background 0.15s var(--ease);
+}
+.rcard__nav:hover {
+  background: rgba(16, 185, 129, 0.22);
+}
+[data-theme="dark"] .customer-root .rcard__nav {
+  color: var(--gsm-300);
+  background: rgba(52, 211, 153, 0.14);
+  border-color: rgba(52, 211, 153, 0.3);
+}

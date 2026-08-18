@@ -58,6 +58,13 @@ class MerchantRepository:
         """Fetch merchant by ID."""
         return self._db.get(Merchant, merchant_id)
 
+    def get_by_ids(self, merchant_ids: list[str]) -> list[Merchant]:
+        """Batch-fetch merchants by ID (one query). Missing ids are simply absent
+        from the result — callers match by merchant_id."""
+        if not merchant_ids:
+            return []
+        return list(self._db.query(Merchant).filter(Merchant.merchant_id.in_(merchant_ids)).all())
+
     def get_by_id_or_raise(self, merchant_id: str) -> Merchant:
         """Fetch merchant by ID or raise NotFoundError."""
         merchant = self.get_by_id(merchant_id)

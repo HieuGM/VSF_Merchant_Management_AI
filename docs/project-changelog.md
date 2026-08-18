@@ -4,6 +4,25 @@ This document tracks all significant changes, features, and security improvement
 
 ---
 
+## [2026-08-18] Feature — restaurant card: directions, open-now, top dishes (+2 bug fixes)
+
+**Bối cảnh**: findings #1/#4/#14/#16 audit 2026-08-18 — card mở rộng chỉ có địa chỉ text + copy (user phải tự dán sang Google Maps); `to_dict()` không trả lat/lng nên FE KHÔNG THỂ build deep-link; DB có opens_at/closes_at nhưng không badge mở cửa; top_dishes batch-load ở backend nhưng FE không render; bug `_followup_cards` lấy `getattr(m, "avg_rating")` — cột không tồn tại trên ORM → thẻ follow-up mất luôn sao.
+
+**BE**:
+- `SearchResult.to_dict()` + `lat/lng/opens_at/closes_at` (ISO từ Time columns).
+- `MerchantCandidate` (chat path) + 5 fields pass-through (lat/lng/opens/closes/image/top_dishes).
+- **Bug fix 1**: `_followup_cards` dùng `_platform_rating(m)` (đọc từ ratings relationship) thay getattr vô dụng; giờ còn trả hours + lat/lng + top_dishes batch.
+- **Bug fix 2**: `nearby_search()` KHÔNG load top_menu_items (chỉ `search()` làm) → chat path (dùng nearby tool) luôn rỗng top_dishes dù Explore có. Giờ cùng batch enrich như search().
+- `_enrich_card_details()` (mở rộng `_enrich_with_images`): LLM agent copy name/cuisine/rating nhưng DROP enrichment fields — flow deterministically fill theo merchant_id (1 batch: images + dishes + merchant rows). Áp mọi path (stream/blocking/direct-fallback). Repo +`get_by_ids()`.
+
+**FE** (`restaurant-card.tsx` + types):
+- Badge **"Đang mở/Đã đóng"** trên card body (giờ VN UTC+7 từ opens/closes, xử lý qua-midnight, unknown → không badge không đoán).
+- Expand: **giờ mở cửa**, **món nổi bật + giá** (top 3), nút **"Chỉ đường"** (Google Maps deep-link theo lat/lng, fallback name+address, target=_blank noopener) cạnh "Sao chép địa chỉ".
+
+**Verify**: 267 pass; tsc + vite sạch. Live E2E :8000 — Explore `/merchants/search` trả đủ lat/opens/dishes; chat path qua nearby tool giờ có lat + hours + 3 dishes (trước fix: rỗng); `_followup_cards('13849')` unit: rating **4.9** (trước: None), full fields. Ghi chú: guard routing câu follow-up thuần ("giờ mở cửa tới mấy giờ") nằm ở pre-search guard — hành vi có sẵn, không đổi.
+
+---
+
 ## [2026-08-18] Feature — memory transparency: `memory_updated` diff toast + "Đang lọc" constraint chips
 
 **Bối cảnh**: findings #3 + #4 audit 2026-08-18 — `maybe_persist` làm 4 việc ảnh hưởng niềm tin (append/retract/prune TTL/mirror allergen) nhưng **im lặng** (user nói "hết dị ứng" không biết thành công chưa); `ActiveConstraints` giàu (labels() tiếng Việt sẵn) nhưng chỉ dùng nội bộ — user thấy "0 quán" không biết ràng buộc nào đang lọc.
