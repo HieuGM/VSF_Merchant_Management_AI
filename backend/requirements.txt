@@ -20,3 +20,6 @@ crewai==1.15.5
 # Test harness (A-04 — runs without Docker via in-memory cache + SQLite)
 pytest>=8.0.0
 httpx>=0.27.0
+# Transitive-but-imported directly (missing on a fresh pip install — found by CI)
+openai>=1.30.0
+python-dotenv>=1.0.0
