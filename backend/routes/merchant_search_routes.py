@@ -1,6 +1,11 @@
 """Merchant search routes (Dev A) — UC-04 search API with cache integration.
 
 Phase 0b: Replace 501 stub with real implementation + cache candidate.
+
+Safety: the optional ``user_id`` param loads the caller's profile + active constraints and
+runs the search inside ``constraints_scope`` — the SAME always-on L1 allergen hard-filter
+the chat path applies. Without it, the Explore page would happily surface a seafood place
+to a seafood-allergic user the chat flow just filtered out.
 """
 from __future__ import annotations
 
@@ -13,6 +18,27 @@ from core.tracing import new_id
 
 
 router = APIRouter(prefix="/api/v1/merchants", tags=["merchant-search"])
+
+
+def _user_scopes(user_id: str | None):
+    """(profile, constraints) for the caller, or (None, None). Loads via the same
+    helpers the chat flow uses; a missing profile silently degrades to unfiltered
+    (identical to today's behavior) rather than 404-ing the whole Explore page."""
+    from contextlib import ExitStack
+
+    if not user_id:
+        return None, ExitStack()
+    from flows.customer_flow import _load_profile
+    from services.active_constraints_loader import build_active_constraints
+
+    profile = _load_profile(user_id)
+    constraints = build_active_constraints(profile, [], None)
+    from core.profile_context import constraints_scope, profile_scope
+
+    stack = ExitStack()
+    stack.enter_context(profile_scope(profile))
+    stack.enter_context(constraints_scope(constraints))
+    return profile, stack
 
 
 class MerchantSearchRequest(BaseModel):
@@ -48,6 +74,7 @@ def search_merchants(
     lng: float | None = Query(None, ge=-180, le=180, description="User longitude"),
     radius_km: float | None = Query(5.0, gt=0, le=500, description="Search radius km"),
     limit: int = Query(20, ge=1, le=100, description="Max results"),
+    user_id: str | None = Query(None, description="Caller's user id — applies their allergen/diet hard-filters"),
     cache: CachePort = Depends(get_cache),
 ) -> MerchantSearchResponse:
     """Search merchants with filters (UC-04).
@@ -58,11 +85,14 @@ def search_merchants(
     - Budget level → price range
     - Geo-spatial search (Haversine)
     - Cache integration (Phase 0b: in-memory adapter)
+    - ``user_id`` → the caller's allergen/diet constraints hard-filter the results
+      (same always-on L1 safety filter as the chat path)
 
     Returns:
         Ranked merchant list with trace metadata
     """
-    # Build cache key
+    # Build cache key — user_id included so a filtered result is NEVER served to another
+    # user (or an anonymous one) as a cache hit.
     cache_key = CacheKeys.merchant_search(
         query=query or "",
         cuisine=cuisine or "",
@@ -72,7 +102,7 @@ def search_merchants(
         lng=lng or 0.0,
         radius_km=radius_km or 0.0,
         limit=limit,
-    )
+    ) + f"|u:{user_id or 'anon'}"
 
     # Try cache
     cached = cache.get(cache_key)
@@ -97,17 +127,19 @@ def search_merchants(
     min_price, max_price = budget_ranges.get((budget or "").lower(), (None, None))
 
     trace_id = new_id("trace")
-    result = merchant_search(
-        query=query,
-        cuisine=cuisine,
-        city=city,
-        min_price=min_price,
-        max_price=max_price,
-        lat=lat,
-        lng=lng,
-        radius_km=radius_km,
-        limit=limit,
-    )
+    _profile, scopes = _user_scopes(user_id)
+    with scopes:
+        result = merchant_search(
+            query=query,
+            cuisine=cuisine,
+            city=city,
+            min_price=min_price,
+            max_price=max_price,
+            lat=lat,
+            lng=lng,
+            radius_km=radius_km,
+            limit=limit,
+        )
 
     # Cache result (TTL: 5 minutes)
     cache.set(
@@ -137,6 +169,7 @@ def nearby_merchants(
     radius_km: float = Query(5.0, gt=0, le=500, description="Search radius km"),
     cuisine: str | None = Query(None, description="Cuisine filter"),
     limit: int = Query(20, ge=1, le=100, description="Max results"),
+    user_id: str | None = Query(None, description="Caller's user id — applies their allergen/diet hard-filters"),
     cache: CachePort = Depends(get_cache),
 ) -> dict:
     """Find merchants near a location (Haversine-based).
@@ -145,10 +178,10 @@ def nearby_merchants(
     - Customer search (geo-filter)
     - Merchant competitor analysis (UC-03)
     """
-    # Build cache key
+    # Build cache key — user_id included (filtered results must not leak across users).
     cache_key = CacheKeys.nearby_search(
         lat=lat, lng=lng, radius_km=radius_km, cuisine=cuisine or "", limit=limit
-    )
+    ) + f"|u:{user_id or 'anon'}"
 
     # Try cache
     cached = cache.get(cache_key)
@@ -158,9 +191,11 @@ def nearby_merchants(
     # Execute search
     from tools.customer.merchant_tools import nearby_merchant_search
 
-    result = nearby_merchant_search(
-        lat=lat, lng=lng, radius_km=radius_km, cuisine=cuisine, limit=limit
-    )
+    _profile, scopes = _user_scopes(user_id)
+    with scopes:
+        result = nearby_merchant_search(
+            lat=lat, lng=lng, radius_km=radius_km, cuisine=cuisine, limit=limit
+        )
 
     # Cache result (TTL: 2 minutes - location queries change frequently)
     cache.set(cache_key, result, ttl_seconds=120)

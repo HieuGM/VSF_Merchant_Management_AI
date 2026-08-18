@@ -9,6 +9,7 @@ import { LocateFixed, SearchX } from "lucide-react";
 import { RestaurantCard } from "../components/restaurant-card";
 import { searchMerchants } from "../api/explore-client";
 import type { Merchant, SearchFilters } from "../api/explore-client";
+import { getCustomerUserId } from "../hooks/use-customer-identity";
 import { useGeolocation } from "../hooks/use-geolocation";
 import { usePreferences } from "../hooks/use-preferences";
 import "./customer-results.css";
@@ -68,6 +69,9 @@ export default function CustomerResults() {
         cuisine: cuisine || undefined,
         budget: budget || undefined,
         limit: 24,
+        // Allergen safety: same always-on hard-filter as the chat path — Explore must
+        // not surface a dish the user is allergic to just because it browses, not chats.
+        userId: getCustomerUserId() ?? undefined,
       };
       if (nearby) {
         filters.lat = prefs.lat;

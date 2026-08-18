@@ -29,6 +29,9 @@ export interface SearchFilters {
   lng?: number;
   radius_km?: number;
   limit?: number;
+  /** Caller's user id — the backend applies their allergen/diet hard-filters
+   * (the same always-on safety filter as the chat path). */
+  userId?: string;
 }
 
 export interface SearchResponse {
@@ -52,6 +55,7 @@ export async function searchMerchants(
   if (filters.lng != null) params.set("lng", String(filters.lng));
   if (filters.radius_km) params.set("radius_km", String(filters.radius_km));
   if (filters.limit) params.set("limit", String(filters.limit));
+  if (filters.userId) params.set("user_id", filters.userId);
 
   // `signal` lets the caller abort a superseded search (rapid filter changes) so a slower
   // earlier request can't resolve last and overwrite fresher results (stale-result race).

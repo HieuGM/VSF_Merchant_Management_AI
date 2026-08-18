@@ -4,6 +4,19 @@ This document tracks all significant changes, features, and security improvement
 
 ---
 
+## [2026-08-18] Fix — Explore bypasses allergen hard-filter (safety gap closed)
+
+**Bối cảnh**: finding #3 audit 2026-08-18 — chat path bọc crew kickoff trong `constraints_scope` nên L1 allergen filter luôn chạy, nhưng `GET /api/v1/merchants/search` (trang Khám phá gọi) chạy NGOÀI flow → ContextVar không set → cùng user dị ứng hải sản: chat lọc sạch, Explore vẫn hiện đầy quán sushi/hải sản.
+
+**Fix**:
+- `routes/merchant_search_routes.py`: param tùy chọn `user_id` trên `/search` + `/nearby`. Khi có: load profile (`_load_profile`) + `build_active_constraints(profile, [], None)` + bọc tìm kiếm trong `profile_scope` + `constraints_scope` — dùng ĐÚNG scope của flow, no duplicate logic. User chưa có profile → degrade im lặng thành unfiltered (không 404 Explore).
+- Cache key thêm suffix `|u:{user_id|anon}` — kết quả đã lọc không bao giờ served nhầm user khác qua cache hit.
+- FE: `explore-client.ts` gửi `user_id`; `customer-results.tsx` truyền `getCustomerUserId()`.
+
+**Verify**: 267 pass; tsc sạch. Live E2E :8000 — cuisine=Nhật limit=30: anon **30** (25 sushi/seafood) vs user dị ứng hải sản **13**, **0 leak**; gọi anon lại sau = vẫn 30 (cache không cross-user). TestClient in-process xác nhận trước đó (30→13).
+
+---
+
 ## [2026-08-18] Feature — restaurant card: directions, open-now, top dishes (+2 bug fixes)
 
 **Bối cảnh**: findings #1/#4/#14/#16 audit 2026-08-18 — card mở rộng chỉ có địa chỉ text + copy (user phải tự dán sang Google Maps); `to_dict()` không trả lat/lng nên FE KHÔNG THỂ build deep-link; DB có opens_at/closes_at nhưng không badge mở cửa; top_dishes batch-load ở backend nhưng FE không render; bug `_followup_cards` lấy `getattr(m, "avg_rating")` — cột không tồn tại trên ORM → thẻ follow-up mất luôn sao.
