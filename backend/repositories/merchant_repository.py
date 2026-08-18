@@ -190,22 +190,51 @@ class MerchantRepository:
     def get_top_menu_items_batch(
         self, merchant_ids: list[str], per_merchant: int = 3
     ) -> dict[str, list[MenuItem]]:
-        """Batch-fetch top menu items for multiple merchants in one query.
+        """Batch-fetch each merchant's SIGNATURE dishes (the card's "Món nổi bật") in one query.
 
-        Uses a window function to rank items per merchant, then filters.
+        DATA REALITY (verified 2026-08-18): ``total_like`` is 0 for ALL 99k rows and
+        ``dish_image_quality`` is NULL — there is NO real purchase/popularity signal in the
+        crawl. The old ``ORDER BY total_like DESC`` therefore returned arbitrary rows by
+        item_id — topping the list with sides/drinks ("01 Coca-Cola ly", "Chanh dây") while
+        the shop's actual signature dishes (its Phở) sat below.
+
+        Deterministic proxy ranking per merchant (best signal the data supports):
+          1. dish before side — 'Nước uống'/'Giải khát'/'Cà phê'/'Món Ăm Thêm'/topping
+             categories rank below every real dish (a Phở shop shows phở, not Coca-Cola),
+          2. has_photo DESC — items the merchant photographed are the marketed ones,
+          3. price DESC within a tier — signature mains (75k phở) above 5k add-ons,
+          4. item_id — stable tiebreak so the list never shuffles between requests.
+        When real popularity data lands (order counts / likes backfill), replace the
+        ordering with that column — the window-function shape stays the same.
         Returns {merchant_id: [items]}."""
         if not merchant_ids:
             return {}
+        # Non-dish categories a signature ranking must push BELOW mains. Case-insensitive
+        # (crawl categories are inconsistently cased: 'Món Ăn Thêm' / 'Nước uống').
+        side_cat = func.lower(MenuItem.category)
+        is_side = side_cat.in_([
+            "nuoc uong", "giai khat", "ca phe", "mon an them", "topping",
+            "mon them", "kem", "do uong",
+        ])
         rank_col = func.row_number().over(
             partition_by=MenuItem.merchant_id,
-            order_by=MenuItem.total_like.desc(),
+            order_by=(
+                is_side.asc(),                      # real dishes before sides/drinks
+                MenuItem.has_photo.desc().nulls_last(),
+                MenuItem.price.desc().nulls_last(), # signature mains above cheap add-ons
+                MenuItem.item_id.asc(),             # stable tiebreak
+            ),
         ).label("rn")
         sub = (
-            select(MenuItem, rank_col)
+            select(MenuItem.item_id.label("sid"), rank_col)
             .where(MenuItem.merchant_id.in_(merchant_ids))
             .subquery()
         )
-        stmt = select(MenuItem).join(sub, MenuItem.item_id == sub.c.item_id).where(sub.c.rn <= per_merchant)
+        stmt = (
+            select(MenuItem)
+            .join(sub, MenuItem.item_id == sub.c.sid)
+            .where(sub.c.rn <= per_merchant)
+        )
         items = list(self._db.execute(stmt).scalars().all())
         result: dict[str, list[MenuItem]] = {mid: [] for mid in merchant_ids}
         for item in items:
