@@ -246,6 +246,43 @@ def run_bronze_stage(sources: list[dict]):
             processed_sources.add(sid)
 
 
+def _resolve_source_meta(source_id: str, md_file: Path) -> dict[str, str]:
+    """Resolve source url, title, and category from metadata JSON, SOURCES_YAML, or manifest."""
+    # 1. Look for metadata JSON next to markdown
+    meta_files = list(md_file.parent.glob(f"{md_file.stem}*metadata.json"))
+    if meta_files:
+        try:
+            mdata = json.loads(meta_files[0].read_text(encoding="utf-8"))
+            return {
+                "url": mdata.get("source_url") or f"https://www.greensm.com/vn-vi/{source_id}",
+                "title": mdata.get("title") or f"Chính sách {source_id}",
+                "category": mdata.get("category") or ("merchant_faq" if "helps" in source_id else "general_terms"),
+            }
+        except Exception:
+            pass
+
+    # 2. Look in SOURCES_YAML
+    if SOURCES_YAML.exists():
+        try:
+            ydata = yaml.safe_load(SOURCES_YAML.read_text(encoding="utf-8")) or {}
+            for s in ydata.get("sources", []):
+                if s.get("id") == source_id:
+                    return {
+                        "url": s.get("canonical_url", f"https://www.greensm.com/vn-vi/{source_id}"),
+                        "title": s.get("title", f"Chính sách {source_id}"),
+                        "category": s.get("category", "merchant_faq" if "helps" in source_id else "general_terms"),
+                    }
+        except Exception:
+            pass
+
+    # 3. Fallback
+    return {
+        "url": f"https://www.greensm.com/vn-vi/{source_id}",
+        "title": f"Chính sách {source_id}",
+        "category": "merchant_faq" if "helps" in source_id or "faq" in source_id else "general_terms",
+    }
+
+
 def run_silver_stage(source_filter: str | None = None) -> list[dict]:
     """Silver Stage: Read raw files, clean & normalize into canonical markdown under data/policy/processed/."""
     print("\n=== Silver Stage: Cleaning & Normalizing Canonical Markdown ===")
@@ -270,8 +307,10 @@ def run_silver_stage(source_filter: str | None = None) -> list[dict]:
         md_files = sorted(source_dir.glob("*.md"))
         for md_file in md_files:
             raw_content = md_file.read_text(encoding="utf-8")
+            meta = _resolve_source_meta(source_id, md_file)
+            
             title, canonical_md, digest = normalize_markdown(
-                raw_content, default_title=f"Chính sách {source_id}", source_id=source_id
+                raw_content, default_title=meta["title"], source_id=source_id
             )
 
             out_file = out_source_dir / md_file.name
@@ -281,12 +320,47 @@ def run_silver_stage(source_filter: str | None = None) -> list[dict]:
             results.append({
                 "source_id": source_id,
                 "file_name": md_file.name,
-                "title": title,
+                "url": meta["url"],
+                "title": title or meta["title"],
+                "category": meta["category"],
                 "processed_path": str(out_file.relative_to(ROOT)),
                 "content_hash": digest,
                 "canonical_md": canonical_md,
             })
 
+    return results
+
+
+def load_processed_docs(source_filter: str | None = None) -> list[dict]:
+    """Read existing processed markdown files from data/policy/processed/ without re-crawling or overwriting."""
+    results = []
+    if not PROCESSED_DIR.exists():
+        print(f"[Warning] Processed dir {PROCESSED_DIR} does not exist.")
+        return results
+
+    for source_dir in sorted(PROCESSED_DIR.iterdir()):
+        if not source_dir.is_dir():
+            continue
+        source_id = source_dir.name
+        if source_filter and source_id != source_filter:
+            continue
+
+        for md_file in sorted(source_dir.glob("*.md")):
+            canonical_md = md_file.read_text(encoding="utf-8")
+            meta = _resolve_source_meta(source_id, md_file)
+            first_line = canonical_md.splitlines()[0].replace("#", "").strip() if canonical_md else ""
+            title = first_line or meta["title"]
+            digest = hashlib.sha256(canonical_md.encode("utf-8")).hexdigest()
+            results.append({
+                "source_id": source_id,
+                "file_name": md_file.name,
+                "url": meta["url"],
+                "title": title,
+                "category": meta["category"],
+                "processed_path": str(md_file.relative_to(ROOT)),
+                "content_hash": digest,
+                "canonical_md": canonical_md,
+            })
     return results
 
 
@@ -303,36 +377,16 @@ def run_golden_stage(silver_docs: list[dict] | None = None, source_filter: str |
     try:
         rag_service = PolicyRagService(db=db)
 
-        # If silver_docs not supplied, read from PROCESSED_DIR
         if silver_docs is None:
-            silver_docs = []
-            for source_dir in sorted(PROCESSED_DIR.iterdir()):
-                if not source_dir.is_dir():
-                    continue
-                source_id = source_dir.name
-                if source_filter and source_id != source_filter:
-                    continue
-
-                for md_file in sorted(source_dir.glob("*.md")):
-                    canonical_md = md_file.read_text(encoding="utf-8")
-                    title = canonical_md.splitlines()[0].replace("#", "").strip() if canonical_md else source_id
-                    digest = hashlib.sha256(canonical_md.encode("utf-8")).hexdigest()
-                    silver_docs.append({
-                        "source_id": source_id,
-                        "file_name": md_file.name,
-                        "title": title,
-                        "processed_path": str(md_file.relative_to(ROOT)),
-                        "content_hash": digest,
-                        "canonical_md": canonical_md,
-                    })
+            silver_docs = load_processed_docs(source_filter=source_filter)
 
         for item in silver_docs:
             source_id = item["source_id"]
             title = item["title"]
             canonical_md = item["canonical_md"]
-            category = "merchant_faq" if "helps" in source_id or "faq" in source_id else "general_terms"
+            category = item.get("category") or ("merchant_faq" if "helps" in source_id or "faq" in source_id else "general_terms")
 
-            nodes = rag_service._parse_markdown_nodes(source_id, title, category, canonical_md, None, source_id)
+            nodes = rag_service._parse_markdown_nodes(source_id, title, category, canonical_md, None, item.get("url") or source_id)
             chunk_records = []
 
             for idx, node in enumerate(nodes):
@@ -374,11 +428,11 @@ def run_golden_stage(silver_docs: list[dict] | None = None, source_filter: str |
 
 
 def run_store_stage(silver_docs: list[dict] | None = None, source_filter: str | None = None):
-    """Store Stage: Force reindex processed markdown and chunks into PostgreSQL DB & ChromaDB Vector Store."""
-    print("\n=== Store Stage: Forced Reindexing into PostgreSQL DB & ChromaDB Vector Store ===")
+    """Store Stage: Force reindex processed markdown and chunks into PostgreSQL DB (pgvector) & Vector Store."""
+    print("\n=== Store Stage: Forced Reindexing into PostgreSQL DB (pgvector) & Vector Store ===")
     
     if silver_docs is None:
-        silver_docs = run_silver_stage(source_filter=source_filter)
+        silver_docs = load_processed_docs(source_filter=source_filter)
 
     db_gen = get_db_session()
     db = next(db_gen)
@@ -388,13 +442,13 @@ def run_store_stage(silver_docs: list[dict] | None = None, source_filter: str | 
 
         for item in silver_docs:
             source_id = item["source_id"]
-            title = item["title"]
+            title = item.get("title") or f"Chính sách {source_id}"
             canonical_md = item["canonical_md"]
             digest = item["content_hash"]
-            category = "merchant_faq" if "helps" in source_id or "faq" in source_id else "general_terms"
-            source_url = f"https://www.greensm.com/vn-vi/{source_id}"
+            category = item.get("category") or ("merchant_faq" if "helps" in source_id or "faq" in source_id else "general_terms")
+            source_url = item.get("url") or f"https://www.greensm.com/vn-vi/{source_id}"
 
-            print(f"[Store] Forced reindexing {source_id} into PostgreSQL & ChromaDB...")
+            print(f"[Store] Ingesting {source_id} ({category}) -> {source_url}")
             res = rag_service.ingest_document(
                 document_id=source_id,
                 title=title,
@@ -425,7 +479,7 @@ def main():
         "--store",
         action="store_true",
         default=False,
-        help="Store document & chunks into PostgreSQL DB and ChromaDB vector store",
+        help="Store document & chunks into PostgreSQL DB and vector store",
     )
     args = parser.parse_args()
 
@@ -444,10 +498,15 @@ def main():
     if args.stage in ["silver", "all"]:
         silver_docs = run_silver_stage(source_filter=args.source_filter)
 
-    if args.stage in ["golden", "all"]:
+    if args.stage == "golden":
+        silver_docs = load_processed_docs(source_filter=args.source_filter)
+        run_golden_stage(silver_docs=silver_docs, source_filter=args.source_filter)
+    elif args.stage == "all":
         run_golden_stage(silver_docs=silver_docs, source_filter=args.source_filter)
 
     if args.store:
+        if silver_docs is None:
+            silver_docs = load_processed_docs(source_filter=args.source_filter)
         run_store_stage(silver_docs=silver_docs, source_filter=args.source_filter)
 
 

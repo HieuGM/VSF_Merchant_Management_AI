@@ -61,8 +61,15 @@ class _GatewayTool(BaseTool):
     agent_name: str
 
     def _invoke(self, kwargs: dict[str, Any], operation: Callable[[], str]) -> str:
-        with self.gateway.trace_tool_invocation(self.agent_name, self.name, kwargs):
-            return operation()
+        with self.gateway.trace_tool_invocation(self.agent_name, self.name, kwargs) as observation:
+            result_str = operation()
+            if observation is not None and hasattr(observation, "update"):
+                try:
+                    parsed = json.loads(result_str)
+                    observation.update(output=parsed)
+                except Exception:
+                    observation.update(output=result_str)
+            return result_str
 
 
 class GatewaySearchMerchantsTool(_GatewayTool):
@@ -323,16 +330,17 @@ class RunScopedMerchantToolGateway:
         self,
         *,
         context: AgenticRunContext,
-        db: Session,
-        cache: CachePort | None,
-        emit: Any,
+        db: Session | None = None,
+        cache: CachePort | None = None,
+        emit: Any = None,
         db_factory: Callable[[], Session] | None = None,
+        db_session_factory: Callable[[], Session] | None = None,
     ) -> None:
         self.context = context
         self._db = db
-        self._db_factory = db_factory
+        self._db_factory = db_factory or db_session_factory
         self._cache = cache
-        self._emit_callback = emit
+        self._emit_callback = emit or (lambda _e: None)
         self._policy = MerchantDataPolicy(context.owner_merchant_id)
         self._cohort_refs: dict[str, list[str]] = {}
         self._cohort_members: dict[str, list[dict[str, Any]]] = {}
@@ -347,6 +355,11 @@ class RunScopedMerchantToolGateway:
         """Return the public discovery evidence most recently observed this run."""
         return list(self._latest_public_search_members)
 
+    @property
+    def collected_public_merchants(self) -> list[dict[str, Any]]:
+        return list(self._latest_public_search_members)
+
+    @property
     def completed_tool_calls(self) -> int:
         return self._completed_tool_calls
 
@@ -373,10 +386,43 @@ class RunScopedMerchantToolGateway:
     @contextmanager
     def trace_tool_invocation(
         self, agent_name: str, tool_name: str, raw_args: dict[str, Any]
-    ) -> Iterator[None]:
-        """Bind a run-local SDK correlation record to this concrete invocation."""
-        yield
-        self._completed_tool_calls += 1
+    ) -> Iterator[Any]:
+        """Produce canonical Langfuse tool observation."""
+        obs_cm = None
+        try:
+            from langfuse import get_client
+            client = get_client()
+            sanitized_input = {
+                k: v for k, v in raw_args.items()
+                if not str(k).lower().endswith("key") and "secret" not in str(k).lower() and not str(k).lower().endswith("password")
+            }
+            obs_cm = client.start_as_current_observation(
+                name=f"merchant.{tool_name}",
+                as_type="tool",
+                input=sanitized_input,
+                metadata={"capability": agent_name},
+            )
+        except Exception:
+            obs_cm = None
+
+        if obs_cm is not None:
+            with obs_cm as observation:
+                try:
+                    yield observation
+                except Exception as exc:
+                    if hasattr(observation, "update"):
+                        observation.update(
+                            output={"status": "error", "error": type(exc).__name__},
+                            level="ERROR",
+                        )
+                    raise
+                finally:
+                    self._completed_tool_calls += 1
+        else:
+            try:
+                yield None
+            finally:
+                self._completed_tool_calls += 1
 
     def tools_for(self, agent_name: str) -> list[BaseTool]:
         market_tools: list[BaseTool] = [

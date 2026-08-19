@@ -1,4 +1,4 @@
-"""Merchant advisory flow traced by Langfuse and CrewAI OpenInference."""
+"""Merchant advisory flow driven by Mem0 semantic retrieval and single-call planner."""
 from __future__ import annotations
 
 import json
@@ -7,35 +7,32 @@ import re
 import threading
 import time
 from datetime import datetime, timezone
-from typing import Any, Generator
+from typing import Any, Callable, Generator
 
 from crewai import LLM
-from langfuse import get_client, observe, propagate_attributes
-from sqlalchemy import func, literal, select
+from langfuse import get_client, observe
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from agents.merchant.native_crew import NativeMerchantAdvisorCrew, build_coordinator_prompt
+from agents.merchant.planner import plan_request
+from agents.merchant.synthesis import synthesize_results
 from core.dependencies import get_cache
-from core.logging import get_logger, safe_exception_trace
+from core.logging import get_logger
 from core.settings import get_settings
 from database.connection import SessionLocal
 from database.models import Merchant
-from models.merchant_agentic import AgenticRunContext, NativeCrewOutcome, normalize_text
-from models.merchant_input import PreparedRequest
+from models.merchant_agentic import AgenticRunContext
+from models.merchant_execution import PlannerDelegate, PlannerRespond
 from services.chat_session_service import ChatSessionService
-from services.merchant_data_policy import MerchantDataPolicy
-from services.merchant_input_preparation import InputPreparationError, InputPreparationService
-from services.merchant_input_router import (
-    decide_route,
-    effective_query_policy,
-    immutable_session_facts,
+from services.mem0_service import Mem0Service, Mem0WriteDispatcher, memory_identity
+from services.merchant_execution_executor import (
+    SpecialistResult,
+    execute_parallel,
+    execute_specialist,
 )
-
 from tools.merchant.gateway import RunScopedMerchantToolGateway
 
 logger = get_logger(__name__)
-_SELECTED_PUBLIC_MERCHANT = "merchant_agentic.selected_public_merchant"
-_LAST_PUBLIC_SEARCH = "merchant_agentic.last_public_search"
 
 
 def _utc_now_iso() -> str:
@@ -48,103 +45,55 @@ def _require_trace_id(value: str | None) -> str:
     return value
 
 
-def _selected_public_merchant(snapshot: dict[str, Any]) -> dict[str, Any] | None:
-    selected = snapshot.get(_SELECTED_PUBLIC_MERCHANT)
-    return selected if isinstance(selected, dict) and selected.get("merchant_id") else None
-
-
-def _deduplicate_merchants(merchants: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    seen = set()
-    result = []
-    for item in merchants:
-        mid = str(item.get("merchant_id")) if item.get("merchant_id") is not None else None
-        if mid and mid not in seen:
-            seen.add(mid)
-            result.append(item)
-    return result
-
-
-def _public_merchant_selection_update(answer: str, candidates: list[dict[str, Any]]) -> dict[str, Any]:
-    public_candidates = [
-        {
-            key: candidate[key]
-            for key in (
-                "merchant_id", "name", "cuisine", "address", "ratings",
-                "distance_km", "menu_price_min", "menu_price_median", "menu_price_max",
-            )
-            if candidate.get(key) is not None
-        }
-        for candidate in candidates[:5]
-        if candidate.get("merchant_id") and candidate.get("name")
-    ]
-    update: dict[str, Any] = {_LAST_PUBLIC_SEARCH: public_candidates}
-    normalized_answer = normalize_text(answer)
-    mentioned = [
-        candidate for candidate in public_candidates
-        if str(candidate["merchant_id"]) in answer
-        or normalize_text(str(candidate["name"])) in normalized_answer
-    ]
-    if len(mentioned) == 1:
-        update[_SELECTED_PUBLIC_MERCHANT] = mentioned[0]
-    elif len(public_candidates) == 1:
-        update[_SELECTED_PUBLIC_MERCHANT] = public_candidates[0]
-    return update
-
-
-def _named_other_merchant(session: Session, query: str, owner_id: str) -> Merchant | None:
-    return session.execute(
-        select(Merchant)
-        .where(
-            Merchant.merchant_id != str(owner_id),
-            Merchant.is_active.is_(True),
-            func.length(Merchant.name) >= 6,
-            func.strpos(func.lower(literal(query)), func.lower(Merchant.name)) > 0,
-        )
-        .limit(1)
-    ).scalar_one_or_none()
-
-
-def _correct_named_public_request(
-    prepared: PreparedRequest, raw_query: str, names_other_merchant: bool
-) -> PreparedRequest:
-    if not names_other_merchant:
-        return prepared
-    return prepared.model_copy(update={
-        "rewritten_query": raw_query[:1200],
-        "scope_candidate": "allowed",
-        "resolved_references": [],
-    })
-
-
-def get_configured_llm(tier: str = "large") -> LLM | None:
-    settings = get_settings()
-    if not settings.llm_api_key:
-        return None
-    model = settings.llm_model_small if tier == "small" else settings.llm_model_large
-    if not model:
-        logger.error("llm_model_missing tier=%s", tier)
-        return None
-    options: dict[str, Any] = {
-        "model": model,
-        "api_key": settings.llm_api_key,
-        "temperature": 0,
-        "timeout": 300,
-    }
-    if settings.llm_base_url:
-        options.update(base_url=settings.llm_base_url, provider="openai")
-    elif settings.llm_provider != "openai":
-        options["provider"] = settings.llm_provider
-    try:
-        return LLM(**options)
-    except Exception as error:
-        logger.error("llm_construction_failed tier=%s\n%s", tier, safe_exception_trace(error))
-        return None
-
-
 class MerchantFlowDispatcher:
+    """Dispatches merchant advisory chat through Mem0 retrieval and planner reasoning."""
+
+    def __init__(
+        self,
+        memory_service: Mem0Service | None = None,
+        memory_writer: Mem0WriteDispatcher | None = None,
+        planner_fn: Callable[..., Any] | None = None,
+        execute_specialist_fn: Callable[..., Any] | None = None,
+        execute_parallel_fn: Callable[..., Any] | None = None,
+        synthesize_fn: Callable[..., Any] | None = None,
+    ) -> None:
+        self.memory_service = memory_service or Mem0Service()
+        self.memory_writer = memory_writer or Mem0WriteDispatcher(service=self.memory_service)
+        self.planner = planner_fn or plan_request
+        self.execute_specialist = execute_specialist_fn or execute_specialist
+        self.execute_parallel = execute_parallel_fn or execute_parallel
+        self.synthesize = synthesize_fn or synthesize_results
+
+    def _get_llm(self, model_override: str | None = None) -> Any:
+        settings = get_settings()
+        api_key = settings.llm_api_key or "dummy"
+        base_url = settings.llm_base_url
+        model = model_override or settings.llm_model_small or "v-llm-v1-small"
+        return LLM(
+            model=f"openai/{model}",
+            api_key=api_key,
+            base_url=base_url,
+            temperature=0.2,
+        )
+
+    def _load_owner_context(self, session: Session, merchant_id: str) -> dict[str, Any]:
+        merchant = session.execute(
+            select(Merchant).where(Merchant.merchant_id == merchant_id)
+        ).scalar_one_or_none()
+        if merchant is None:
+            return {"merchant_id": merchant_id}
+        return {
+            "merchant_id": merchant.merchant_id,
+            "name": merchant.name,
+            "city": merchant.city_slug or merchant.city,
+            "cuisine": merchant.cuisine,
+        }
+
     @observe(
         name="merchant-advisor-flow",
-        as_type="agent"
+        as_type="agent",
+        capture_input=False,
+        capture_output=False,
     )
     def chat(
         self,
@@ -153,368 +102,214 @@ class MerchantFlowDispatcher:
         session_id: str | None = None,
         user_id: str | None = None,
         db: Session | None = None,
-        **_obsolete_callbacks: Any,
+        label: str | None = None,
     ) -> dict[str, Any]:
-        session = db or SessionLocal()
+        start_time = time.monotonic()
+        client = get_client()
+        client.update_current_span(input=message)
+
+        origin_trace_id = None
         try:
-            session_service = ChatSessionService(session)
-            chat_session = session_service.get_or_create_session(
+            origin_trace_id = client.get_current_trace_id()
+        except Exception:
+            pass
+
+        owned_db = False
+        session = db
+        if session is None:
+            session = SessionLocal()
+            owned_db = True
+
+        try:
+            # 1. Resolve / create PostgreSQL session & persist user message
+            session_svc = ChatSessionService(session)
+            chat_sess = session_svc.get_or_create_session(
                 session_id=session_id,
                 user_id=user_id,
                 context_snapshot={"merchant_id": merchant_id},
             )
-            trace_id = _require_trace_id(get_client().get_current_trace_id())
-            settings = get_settings()
-            with propagate_attributes(
-                user_id=user_id or merchant_id,
-                session_id=chat_session.session_id,
-                tags=["merchant-agent", "crewai"],
-                metadata={"merchant_id": merchant_id},
-                trace_name="merchant-advisor-flow",
-                environment=settings.environment,
-            ):
-                return self._execute(
-                    session=session,
-                    session_service=session_service,
-                    trace_id=trace_id,
-                    session_id=chat_session.session_id,
-                    merchant_id=merchant_id,
-                    message=message,
-                    user_id=user_id,
-                    owns_session=db is None,
-                )
-        except Exception as error:
-            logger.error(
-                "merchant_chat_failed error_code=%s\n%s",
-                type(error).__name__,
-                safe_exception_trace(error),
+            actual_session_id = chat_sess.session_id
+            session_svc.append_message(
+                session_id=actual_session_id,
+                sender="user",
+                text=message,
+                trace_id=origin_trace_id,
             )
-            raise
+
+            # 2. Build MemoryIdentity & retrieve from Mem0
+            identity = memory_identity(user_id=user_id, merchant_id=merchant_id, session_id=actual_session_id)
+            with client.start_as_current_observation(
+                name="memory.search",
+                as_type="retriever",
+                input=message,
+                metadata={"user_id": identity.user_id, "agent_id": identity.agent_id},
+            ) as mem_obs:
+                memories = self.memory_service.search(message, identity)
+                mem_obs.update(output=[{"memory": hit.memory, "score": hit.score} for hit in memories])
+
+            # 3. Load owner context & plan request
+            owner_context = self._load_owner_context(session, merchant_id)
+            planner_llm = self._get_llm()
+            decision = self.planner(
+                query=message,
+                memories=memories,
+                owner_context=owner_context,
+                llm=planner_llm,
+                label=label,
+            )
+
+            # 4. Route execution
+            execution_mode = "respond"
+            capabilities_run: list[str] = []
+            public_merchants: list[dict[str, Any]] = []
+            reply = ""
+
+            trace_ctx = {"trace_id": origin_trace_id} if origin_trace_id else None
+
+            if isinstance(decision, PlannerRespond):
+                execution_mode = "respond"
+                reply = decision.answer
+
+            elif isinstance(decision, PlannerDelegate):
+                tasks = decision.tasks
+                capabilities_run = [t.capability for t in tasks]
+
+                def gateway_factory() -> tuple[RunScopedMerchantToolGateway, Session | None]:
+                    ctx = AgenticRunContext(
+                        session_id=actual_session_id,
+                        trace_id=origin_trace_id or "0" * 32,
+                        owner_merchant_id=merchant_id,
+                        user_id=user_id,
+                        user_query=message,
+                    )
+                    gw = RunScopedMerchantToolGateway(
+                        context=ctx,
+                        db_session_factory=SessionLocal,
+                        cache=get_cache(),
+                    )
+                    return gw, None
+
+                if len(tasks) == 1:
+                    execution_mode = "single"
+                    gw, branch_db = gateway_factory()
+                    try:
+                        spec_res = self.execute_specialist(
+                            tasks[0],
+                            gateway=gw,
+                            llm=planner_llm,
+                            trace_context=trace_ctx,
+                            label=label,
+                        )
+                        reply = spec_res.content
+                        public_merchants.extend(spec_res.public_merchants)
+                    finally:
+                        if branch_db is not None:
+                            branch_db.close()
+                else:
+                    execution_mode = "parallel"
+                    results = self.execute_parallel(
+                        tasks,
+                        gateway_factory=gateway_factory,
+                        llm=planner_llm,
+                        trace_context=trace_ctx,
+                        label=label,
+                    )
+                    for r in results:
+                        public_merchants.extend(r.public_merchants)
+                    reply = self.synthesize(query=message, results=results, llm=planner_llm, label=label)
+
+            # 5. Persist assistant message
+            session_svc.append_message(
+                session_id=actual_session_id,
+                sender="agent",
+                text=reply,
+                trace_id=origin_trace_id,
+            )
+
+            # 6. Background write to Mem0
+            self.memory_writer.submit(
+                user_text=message,
+                assistant_text=reply,
+                identity=identity,
+                origin_trace_id=origin_trace_id,
+            )
+
+            duration_ms = (time.monotonic() - start_time) * 1000
+            client.update_current_span(
+                output=reply,
+                metadata={
+                    "merchant_id": merchant_id,
+                    "execution_mode": execution_mode,
+                    "capabilities": capabilities_run,
+                    "status": "completed",
+                    "memory_count": len(memories),
+                    "duration_ms": duration_ms,
+                },
+            )
+
+            return {
+                "reply": reply,
+                "session_id": actual_session_id,
+                "trace_id": origin_trace_id,
+                "execution_mode": execution_mode,
+                "public_merchants": public_merchants,
+                "created_at": _utc_now_iso(),
+            }
         finally:
-            if db is None:
+            if owned_db and session is not None:
                 session.close()
 
-    def _execute(
+    def stream_chat(
         self,
-        *,
-        session: Session,
-        session_service: ChatSessionService,
-        trace_id: str,
-        session_id: str,
         merchant_id: str,
         message: str,
-        user_id: str | None,
-        owns_session: bool,
-    ) -> dict[str, Any]:
-        started = time.perf_counter()
-        history = session_service.get_compact_history(session_id=session_id, max_turns=3)
-        snapshot = session_service.get_session_snapshot(session_id)
-        session_service.append_message(
-            session_id=session_id, sender="user", text=message, trace_id=trace_id
-        )
-        owner = session.get(Merchant, merchant_id)
-        owner_context = {
-            "merchant_id": merchant_id,
-            "name": owner.name if owner else None,
-            "city": owner.city if owner else None,
-            "city_slug": owner.city_slug if owner else None,
-            "has_stored_location": bool(owner and owner.lat is not None and owner.lng is not None),
-        }
-        named_target = _named_other_merchant(session, message, merchant_id)
-        analyzer = get_configured_llm("small")
-        if analyzer is None:
-            return self._complete(
-                session_service, trace_id, session_id, merchant_id, message,
-                "Input Analyzer chưa được cấu hình.", "failed", [], started,
-            )
-        try:
-            prepared = InputPreparationService(llm=analyzer).prepare(
-                raw_query=message,
-                history=history,
-                session_state=snapshot,
-                owner_context=owner_context,
-            )
-        except InputPreparationError as error:
-            blocked = str(error) == "prompt_injection_blocked"
-            return self._complete(
-                session_service, trace_id, session_id, merchant_id, message,
-                "Yêu cầu bị chặn bởi bộ lọc an toàn đầu vào."
-                if blocked else "Input Analyzer trả về kết quả không hợp lệ.",
-                "completed" if blocked else "failed", [], started,
-            )
-        logger.info(f"NLU: {prepared}")
-        prepared = _correct_named_public_request(prepared, message, named_target is not None)
-        raw_policy = MerchantDataPolicy(merchant_id).query_decision(
-            message, targets_other_merchant=named_target is not None
-        )
-        rewritten_policy = MerchantDataPolicy(merchant_id).query_decision(
-            prepared.rewritten_query, targets_other_merchant=named_target is not None
-        )
-        policy, _authority = effective_query_policy(raw_policy, rewritten_policy)
-        route = decide_route(
-            prepared=prepared,
-            policy=policy,
-            immutable_facts=immutable_session_facts(snapshot),
-        )
-        if route.outcome == "reject":
-            return self._complete(
-                session_service, trace_id, session_id, merchant_id, prepared.rewritten_query,
-                route.reply or "Câu hỏi nằm ngoài phạm vi hỗ trợ của Merchant Advisor AI.",
-                "completed", [], started,
-            )
-        # if route.outcome == "clarify":
-        #     missing = ", ".join(prepared.missing_context[:3])
-        #     reply = f"Vâng, tôi cần thêm thông tin để trả lời chính xác: {missing}." if missing else "Bạn có thể cung cấp thêm chi tiết không?"
-        #     return self._complete(
-        #         session_service, trace_id, session_id, merchant_id, prepared.rewritten_query,
-        #         reply, "completed", [], started,
-        #     )
+        session_id: str | None = None,
+        user_id: str | None = None,
+    ) -> Generator[dict[str, Any], None, None]:
+        """Stream events to client via Queue and yield SSE chunks."""
+        q: queue.Queue[dict[str, Any] | None] = queue.Queue()
 
-        gateway = RunScopedMerchantToolGateway(
-            context=AgenticRunContext(
-                trace_id=trace_id,
-                session_id=session_id,
-                owner_merchant_id=str(merchant_id),
-                user_id=user_id,
-                user_query=message,
-            ),
-            db=session,
-            cache=get_cache(),
-            emit=lambda _payload: None,
-            db_factory=SessionLocal if owns_session else None,
-        )
-        gateway.allow_public_merchant_ids([
-            str(reference.merchant_id)
-            for reference in prepared.resolved_references
-            if reference.kind == "public_merchant" and reference.merchant_id
-        ])
-
-        settings = get_settings()
-        mode_setting = settings.merchant_execution_mode.lower()
-        coordinator_llm = get_configured_llm("large")
-        small_llm = get_configured_llm("small") or coordinator_llm
-
-        if mode_setting in ("legacy", "shadow") and coordinator_llm is None:
-            return self._complete(
-                session_service, trace_id, session_id, merchant_id, prepared.rewritten_query,
-                "LLM điều phối chưa được cấu hình.", "failed", ["coordinator"], started,
-                execution_mode=mode_setting,
-            )
-
-        # 1. Shadow or Active mode: generate ExecutionPlan
-        plan: ExecutionPlan | None = None
-        if mode_setting in ("shadow", "active"):
+        def _run() -> None:
             try:
-                from agents.merchant.native_crew import plan_execution
-                plan = plan_execution(prepared, history, owner_context, llm=small_llm or coordinator_llm)
-                logger.info("execution_plan_generated mode=%s plan_mode=%s tasks_count=%d", mode_setting, plan.mode, len(plan.tasks))
-            except Exception as plan_err:
-                logger.warning("execution_plan_generation_failed mode=%s error=%s", mode_setting, plan_err)
-                if mode_setting == "active":
-                    return self._complete(
-                        session_service, trace_id, session_id, merchant_id, prepared.rewritten_query,
-                        "Không thể lập kế hoạch xử lý cho yêu cầu này.", "failed", ["coordinator"], started,
-                        execution_mode=mode_setting,
-                    )
-
-        # 2. Active Mode: Execute direct, parallel, or hierarchical based on plan
-        if mode_setting == "active" and plan is not None:
-            from services.merchant_execution_executor import execute_direct, execute_parallel, merge_parallel_results
-
-            if plan.mode == "direct":
-                task = plan.tasks[0]
-                spec_res = execute_direct(task, gateway=gateway, llm=small_llm, response_type=plan.response_type)
-                reply = spec_res.content if spec_res.status == "completed" else "Không thể xử lý yêu cầu trực tiếp."
-                merchants = _deduplicate_merchants(spec_res.public_merchants or gateway.latest_public_search_members())
-                if merchants:
-                    session_service.update_session_snapshot(
-                        session_id,
-                        _public_merchant_selection_update(reply, merchants),
-                        last_trace_id=trace_id,
-                    )
-                return self._complete(
-                    session_service, trace_id, session_id, merchant_id, prepared.rewritten_query,
-                    reply, "completed" if spec_res.status == "completed" else "failed",
-                    [task.capability], started, merchants=merchants, execution_mode=plan.mode,
+                result = self.chat(
+                    merchant_id=merchant_id,
+                    message=message,
+                    session_id=session_id,
+                    user_id=user_id,
                 )
+                reply_text = result.get("reply", "")
+                q.put({"type": "message", "content": reply_text})
+                q.put({
+                    "type": "finish",
+                    "status": "COMPLETED",
+                    "session_id": result.get("session_id"),
+                    "trace_id": result.get("trace_id"),
+                    "merchants": result.get("public_merchants", []),
+                    "public_merchants": result.get("public_merchants", []),
+                    "evidence_status": "grounded",
+                })
+            except Exception as exc:
+                logger.error("stream_chat_error in background runner: %s", exc, exc_info=True)
+                q.put({"type": "agent_error", "error": type(exc).__name__, "message": "An error occurred during execution"})
+                q.put({
+                    "type": "finish",
+                    "status": "FAILED",
+                    "session_id": session_id,
+                    "trace_id": None,
+                    "public_merchants": [],
+                    "merchants": [],
+                })
+            finally:
+                q.put(None)
 
-            elif plan.mode == "parallel":
-                def gateway_factory() -> tuple[RunScopedMerchantToolGateway, Session | None]:
-                    branch_session = SessionLocal()
-                    branch_gw = RunScopedMerchantToolGateway(
-                        context=AgenticRunContext(
-                            trace_id=trace_id,
-                            session_id=session_id,
-                            owner_merchant_id=str(merchant_id),
-                            user_id=user_id,
-                            user_query=message,
-                        ),
-                        db=branch_session,
-                        cache=get_cache(),
-                        emit=lambda _payload: None,
-                        db_factory=None,  # reuse branch_session without opening 2nd session
-                    )
-                    branch_gw.allow_public_merchant_ids([
-                        str(r.merchant_id) for r in prepared.resolved_references
-                        if r.kind == "public_merchant" and r.merchant_id
-                    ])
-                    return branch_gw, branch_session
+        t = threading.Thread(target=_run, daemon=True)
+        t.start()
 
-                par_results = execute_parallel(plan.tasks, gateway_factory=gateway_factory, llm=small_llm, response_type=plan.response_type)
-                reply = merge_parallel_results(par_results)
-
-                # Combine & deduplicate public search members across all parallel branches
-                all_merchants = []
-                for res in par_results:
-                    if res.public_merchants:
-                        all_merchants.extend(res.public_merchants)
-                merchants = _deduplicate_merchants(all_merchants)
-
-                if merchants:
-                    session_service.update_session_snapshot(
-                        session_id,
-                        _public_merchant_selection_update(reply, merchants),
-                        last_trace_id=trace_id,
-                    )
-
-                # Determine status
-                if all(r.status == "failed" for r in par_results):
-                    final_status = "failed"
-                elif any(r.status == "failed" for r in par_results):
-                    final_status = "partial"
-                else:
-                    final_status = "completed"
-
-                caps = [t.capability for t in plan.tasks]
-                return self._complete(
-                    session_service, trace_id, session_id, merchant_id, prepared.rewritten_query,
-                    reply, final_status, caps, started, merchants=merchants, execution_mode=plan.mode,
-                )
-
-            elif plan.mode == "hierarchical":
-                if coordinator_llm is None:
-                    return self._complete(
-                        session_service, trace_id, session_id, merchant_id, prepared.rewritten_query,
-                        "LLM điều phối chưa được cấu hình.", "failed", ["coordinator"], started,
-                        execution_mode=plan.mode,
-                    )
-                context = build_coordinator_prompt(prepared, history, owner_context)
-                result = NativeMerchantAdvisorCrew(gateway=gateway, llm=coordinator_llm).kickoff(
-                    prepared_request=prepared,
-                    compact_history=context.compact_history,
-                    owner_context=context.owner_context,
-                    coordinator_prompt=context,
-                    plan_tasks=plan.tasks,
-                )
-                raw = str(result.raw if hasattr(result, "raw") else result).strip()
-                outcome = self._parse_native_outcome(raw)
-                if outcome is None:
-                    return self._complete(
-                        session_service, trace_id, session_id, merchant_id, prepared.rewritten_query,
-                        "Điều phối viên trả về định dạng không hợp lệ.", "failed", ["coordinator"], started,
-                        execution_mode=plan.mode,
-                    )
-                merchants = _deduplicate_merchants(gateway.latest_public_search_members())
-                if merchants:
-                    session_service.update_session_snapshot(
-                        session_id,
-                        _public_merchant_selection_update(outcome.answer, merchants),
-                        last_trace_id=trace_id,
-                    )
-                caps = [t.capability for t in plan.tasks]
-                return self._complete(
-                    session_service, trace_id, session_id, merchant_id, prepared.rewritten_query,
-                    outcome.answer, "completed", caps, started, merchants=merchants, execution_mode=plan.mode,
-                )
-
-        # 3. Legacy mode or Shadow fallback mode: Execute native crew hierarchy
-        if coordinator_llm is None:
-            return self._complete(
-                session_service, trace_id, session_id, merchant_id, prepared.rewritten_query,
-                "LLM điều phối chưa được cấu hình.", "failed", ["coordinator"], started,
-                execution_mode="legacy",
-            )
-        context = build_coordinator_prompt(prepared, history, owner_context)
-        result = NativeMerchantAdvisorCrew(gateway=gateway, llm=coordinator_llm).kickoff(
-            prepared_request=prepared,
-            compact_history=context.compact_history,
-            owner_context=context.owner_context,
-            coordinator_prompt=context,
-        )
-        raw = str(result.raw if hasattr(result, "raw") else result).strip()
-        outcome = self._parse_native_outcome(raw)
-        if outcome is None:
-            logger.error("invalid_native_outcome")
-            return self._complete(
-                session_service, trace_id, session_id, merchant_id, prepared.rewritten_query,
-                "Điều phối viên trả về định dạng không hợp lệ.",
-                "failed", ["coordinator"], started,
-                execution_mode="legacy",
-            )
-        merchants = gateway.latest_public_search_members()
-        if merchants:
-            session_service.update_session_snapshot(
-                session_id,
-                _public_merchant_selection_update(outcome.answer, merchants),
-                last_trace_id=trace_id,
-            )
-        return self._complete(
-            session_service, trace_id, session_id, merchant_id, prepared.rewritten_query,
-            outcome.answer, "completed", ["coordinator", "final_synthesis"], started,
-            merchants=merchants, execution_mode="legacy",
-        )
-
-    @staticmethod
-    def _parse_native_outcome(raw: str) -> NativeCrewOutcome | None:
-        decoder = json.JSONDecoder()
-        for index, character in enumerate(raw):
-            if character != "{":
-                continue
-            try:
-                payload, _ = decoder.raw_decode(raw[index:])
-            except json.JSONDecodeError:
-                continue
-            if isinstance(payload, dict) and payload.get("status") == "completed":
-                return NativeCrewOutcome.model_validate(payload)
-        return None
-
-    @staticmethod
-    def _complete(
-        session_service: ChatSessionService,
-        trace_id: str,
-        session_id: str,
-        merchant_id: str,
-        query: str,
-        reply: str,
-        status: str,
-        capabilities: list[str],
-        started: float,
-        *,
-        merchants: list[dict[str, Any]] | None = None,
-        execution_mode: str = "legacy",
-    ) -> dict[str, Any]:
-        duration_ms = round((time.perf_counter() - started) * 1000)
-        session_service.append_message(
-            session_id=session_id,
-            sender="agent",
-            text=reply,
-            trace_id=trace_id,
-            structured_payload={"capabilities": capabilities, "status": status, "execution_mode": execution_mode},
-        )
-        return {
-            "trace_id": trace_id,
-            "session_id": session_id,
-            "merchant_id": merchant_id,
-            "capabilities": capabilities,
-            "execution_mode": execution_mode,
-            "rewritten_query": query,
-            "reply": reply,
-            "duration_ms": duration_ms,
-            "status": status,
-            "merchants": merchants or [],
-            "competitors": [],
-            "evidence_status": "langfuse",
-        }
+        while True:
+            item = q.get()
+            if item is None:
+                break
+            yield item
 
     def chat_stream(
         self,
@@ -524,57 +319,33 @@ class MerchantFlowDispatcher:
         user_id: str | None = None,
         db: Session | None = None,
     ) -> Generator[str, None, None]:
-        del db
-        result: dict[str, Any] = {}
-
-        def worker() -> None:
-            try:
-                result["response"] = self.chat(
-                    merchant_id=merchant_id,
-                    message=message,
-                    session_id=session_id,
-                    user_id=user_id,
-                )
-            except Exception as error:
-                result["error"] = error
-
-        thread = threading.Thread(target=worker, daemon=True)
-        thread.start()
-        last_heartbeat = time.monotonic()
-        while thread.is_alive():
-            thread.join(timeout=0.5)
-            if thread.is_alive() and time.monotonic() - last_heartbeat >= 15:
-                yield ": keep-alive\n\n"
-                last_heartbeat = time.monotonic()
-        if "response" in result:
-            response = result["response"]
-            reply = response.get("reply", "")
-            for index in range(0, len(reply), 24):
-                yield "event: token_chunk\n" + "data: " + json.dumps(
-                    {"text": reply[index:index + 24]}, ensure_ascii=False
-                ) + "\n\n"
-            finish = {
-                "trace_id": response["trace_id"],
-                "status": str(response.get("status", "completed")).upper(),
-                "merchants": response.get("merchants", []),
-                "competitors": response.get("competitors", []),
-                "evidence_status": response.get("evidence_status"),
-            }
-            yield "event: execution_finish\n" + "data: " + json.dumps(
-                finish, ensure_ascii=False
-            ) + "\n\n"
-            return
-        error = result.get("error")
-        error_code = type(error).__name__ if isinstance(error, Exception) else "ExecutionError"
-        safe_message = "Không thể hoàn tất yêu cầu. Vui lòng thử lại."
-        yield "event: agent_error\n" + "data: " + json.dumps({
-            "detail": safe_message,
-            "error_code": error_code,
-            "timestamp": _utc_now_iso(),
-        }, ensure_ascii=False) + "\n\n"
-        yield "event: execution_finish\n" + "data: " + json.dumps({
-            "status": "FAILED", "error": safe_message, "error_code": error_code
-        }, ensure_ascii=False) + "\n\n"
+        """Yield Server-Sent Events (SSE) for chat stream."""
+        for event in self.stream_chat(
+            merchant_id=merchant_id,
+            message=message,
+            session_id=session_id,
+            user_id=user_id,
+        ):
+            event_type = event.get("type", "message")
+            if event_type == "message":
+                event_name = "token_chunk"
+                payload = {
+                    "text": event.get("content", ""),
+                    "chunk": event.get("content", ""),
+                }
+            elif event_type == "finish":
+                event_name = "execution_finish"
+                payload = event
+            elif event_type == "agent_error":
+                event_name = "agent_error"
+                payload = event
+            elif event_type == "error":
+                event_name = "error"
+                payload = event
+            else:
+                event_name = event_type
+                payload = event
+            yield f"event: {event_name}\ndata: {json.dumps(payload, ensure_ascii=False)}\n\n"
 
 
 merchant_flow = MerchantFlowDispatcher()

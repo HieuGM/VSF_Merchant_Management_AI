@@ -8,14 +8,14 @@ services:
     ports:
       - "127.0.0.1:${DB_PORT:-5432}:5432"
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_USER: ${POSTGRES_USER:?Set POSTGRES_USER in .env}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
-      POSTGRES_DB: merchant_platform
+      POSTGRES_DB: ${POSTGRES_DB:?Set POSTGRES_DB in .env}
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./docker/postgres/init-databases.sh:/docker-entrypoint-initdb.d/10-init-databases.sh:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -q -U ${POSTGRES_USER:-postgres} -d merchant_platform"]
+      test: ["CMD-SHELL", "pg_isready -q -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -34,57 +34,60 @@ services:
       retries: 10
 
   mem0:
-    image: ${MEM0_IMAGE:-vsf-mem0:v2.0.18-custom.1}
+    image: vsf-mem0-server
     restart: unless-stopped
-    ports:
-      - "127.0.0.1:${MEM0_PORT:-8888}:8000"
+    network_mode: host
+    command: sh -c "alembic upgrade head && exec uvicorn main:app --host 0.0.0.0 --port ${MEM0_PORT:-8888}"
     environment:
-      POSTGRES_HOST: db
-      POSTGRES_PORT: 5432
-      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_HOST: "127.0.0.1"
+      POSTGRES_PORT: "5432"
+      POSTGRES_USER: ${POSTGRES_USER:?Set POSTGRES_USER in .env}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
-      POSTGRES_DB: mem0
-      APP_DB_NAME: mem0
-      POSTGRES_COLLECTION_NAME: ${POSTGRES_COLLECTION_NAME:-memories}
-      LLM_BASE_URL: ${LLM_BASE_URL:?Set v-llm-v1 LLM_BASE_URL in .env}
-      LLM_API_KEY: ${LLM_API_KEY:?Set v-llm-v1 LLM_API_KEY in .env}
-      MEM0_DEFAULT_LLM_MODEL: ${LLM_MODEL_SMALL:-v-llm-v1-small}
-      MEM0_DISABLE_RESPONSE_FORMAT: ${MEM0_DISABLE_RESPONSE_FORMAT:-true}
-      RAG_EMBEDDING_BASE_URL: ${RAG_EMBEDDING_BASE_URL:?Set v-llm-v1 embedding base URL in .env}
-      RAG_EMBEDDING_API_KEY: ${RAG_EMBEDDING_API_KEY:?Set v-llm-v1 embedding API key in .env}
-      RAG_EMBEDDING_MODEL: ${RAG_EMBEDDING_MODEL:-v-llm-v1-embed-medium}
-      RAG_EMBEDDING_DIMENSIONS: ${RAG_EMBEDDING_DIMENSIONS:-384}
-      HISTORY_DB_PATH: /app/history/history.db
+      POSTGRES_DB: ${APP_DB_NAME:?Set APP_DB_NAME in .env}
+      APP_DB_NAME: ${APP_DB_NAME:?Set APP_DB_NAME in .env}
+      POSTGRES_COLLECTION_NAME: ${POSTGRES_COLLECTION_NAME:?Set POSTGRES_COLLECTION_NAME in .env}
+      
+      LLM_PROVIDER: ${LLM_PROVIDER:?Set LLM_PROVIDER in .env}
+      LLM_BASE_URL: ${LLM_BASE_URL:?Set LLM_BASE_URL in .env}
+      LLM_API_KEY: ${LLM_API_KEY:?Set LLM_API_KEY in .env}
+      MEM0_DEFAULT_LLM_MODEL: ${MEM0_DEFAULT_LLM_MODEL:?Set MEM0_DEFAULT_LLM_MODEL in .env}
+      MEM0_DISABLE_RESPONSE_FORMAT: ${MEM0_DISABLE_RESPONSE_FORMAT:?Set MEM0_DISABLE_RESPONSE_FORMAT in .env}
+      
+      MEM0_EMBEDDER_PROVIDER: ${MEM0_EMBEDDER_PROVIDER:?Set MEM0_EMBEDDER_PROVIDER in .env}
+      EMBEDDER_MODEL: ${EMBEDDER_MODEL:?Set EMBEDDER_MODEL in .env}
+      RAG_EMBEDDING_DIMENSIONS: ${RAG_EMBEDDING_DIMENSIONS:?Set RAG_EMBEDDING_DIMENSIONS in .env}
+      
+      HF_HUB_OFFLINE: ${HF_HUB_OFFLINE:?Set HF_HUB_OFFLINE in .env}
+      TRANSFORMERS_OFFLINE: ${TRANSFORMERS_OFFLINE:?Set TRANSFORMERS_OFFLINE in .env}
+      
+      HF_HOME: /root/.cache/huggingface
+      SENTENCE_TRANSFORMERS_HOME: /root/.cache/huggingface
+      HISTORY_DB_PATH: ${HISTORY_DB_PATH:?Set HISTORY_DB_PATH in .env}
       ADMIN_API_KEY: ${ADMIN_API_KEY:?Set ADMIN_API_KEY in .env}
       JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET in .env}
-      AUTH_DISABLED: ${AUTH_DISABLED:-false}
-      DASHBOARD_URL: http://localhost:${MEM0_DASHBOARD_PORT:-3000}
-      MEM0_TELEMETRY: ${MEM0_TELEMETRY:-false}
+      AUTH_DISABLED: ${AUTH_DISABLED:?Set AUTH_DISABLED in .env}
+      DASHBOARD_URL: ${DASHBOARD_URL:?Set DASHBOARD_URL in .env}
+      MEM0_TELEMETRY: ${MEM0_TELEMETRY:?Set MEM0_TELEMETRY in .env}
     volumes:
       - mem0_history:/app/history
-    depends_on:
-      db:
-        condition: service_healthy
+      - /home/minhnv63/.cache/llama_index:/root/.cache/huggingface/hub:ro
+      - /home/minhnv63/.cache/llama_index:/root/.cache/llama_index:ro
     healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/health', timeout=3)"]
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:${MEM0_PORT:-8888}/api/health', timeout=3)"]
       interval: 5s
       timeout: 5s
       retries: 20
-
   mem0-dashboard:
-    image: ${MEM0_DASHBOARD_IMAGE:-vsf-mem0-dashboard:v2.0.18-custom.1}
+    image: vsf-mem0-dashboard
     restart: unless-stopped
-    ports:
-      - "127.0.0.1:${MEM0_DASHBOARD_PORT:-3000}:3000"
+    network_mode: host
     environment:
+      PORT: ${MEM0_DASHBOARD_PORT:-3000}
       NEXT_PUBLIC_API_URL: http://localhost:${MEM0_PORT:-8888}
-      API_INTERNAL_URL: http://mem0:8000
+      API_INTERNAL_URL: http://localhost:${MEM0_PORT:-8888}
       NEXT_PUBLIC_INSTANCE_NAME: VSF Merchant Memory
-    depends_on:
-      mem0:
-        condition: service_healthy
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3000/api/health"]
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:${MEM0_DASHBOARD_PORT:-3000}/api/health"]
       interval: 10s
       timeout: 5s
       retries: 10

@@ -239,9 +239,10 @@ class PolicyRagService:
     def search(
         self,
         query: str,
+        categories: list[str] | None = None,
     ) -> dict[str, Any]:
         """Fuse the top BM25 and dense policy chunks with reciprocal rank fusion."""
-        rows = self._chunk_rows()
+        rows = self._chunk_rows(categories=categories)
         if not rows:
             return self._hydrate_matches([])
         bm25 = BM25Retriever.from_texts(
@@ -359,18 +360,19 @@ class PolicyRagService:
 
     def _get_embedder(self) -> Any:
         """Return HuggingFace BGE lightweight embedding model instance."""
-        import os
-        os.environ["HF_HUB_OFFLINE"] = "1"
-        os.environ["TRANSFORMERS_OFFLINE"] = "1"
         if self._embed_model_obj is not None:
             return self._embed_model_obj
         self._embed_model_obj = HuggingFaceEmbedding(
-            model_name=DEFAULT_EMBED_MODEL,
+            model_name=self._settings.rag_embedding_model,
             local_files_only=True,
         )
         return self._embed_model_obj
 
-    def _chunk_rows(self, chunk_ids: list[str] | None = None) -> list[tuple[PolicyDocumentChunk, PolicyDocument]]:
+    def _chunk_rows(
+        self,
+        chunk_ids: list[str] | None = None,
+        categories: list[str] | None = None,
+    ) -> list[tuple[PolicyDocumentChunk, PolicyDocument]]:
         stmt = (
             select(PolicyDocumentChunk, PolicyDocument)
             .join(PolicyDocument, PolicyDocument.document_id == PolicyDocumentChunk.document_id)
@@ -380,6 +382,8 @@ class PolicyRagService:
             if not chunk_ids:
                 return []
             stmt = stmt.where(PolicyDocumentChunk.chunk_id.in_(chunk_ids))
+        if categories:
+            stmt = stmt.where(PolicyDocument.category.in_(categories))
         return list(self._db.execute(stmt).all())
 
     def _collection(self) -> Any:

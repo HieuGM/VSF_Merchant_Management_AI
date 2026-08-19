@@ -1,5 +1,4 @@
-"""Direct and parallel execution of coordinator-planned specialist tasks."""
-
+"""Terminal specialist execution and parallel dispatch."""
 from __future__ import annotations
 
 import time
@@ -8,19 +7,19 @@ from dataclasses import dataclass, field
 from typing import Any, Callable, Literal
 
 from crewai import Agent, Crew, Process, Task
+from langfuse import get_client
+from sqlalchemy.orm import Session
 
 from models.merchant_execution import CapabilityName, PlannedTask
+from services.merchant_prompts import get_merchant_prompt
 from tools.merchant.gateway import RunScopedMerchantToolGateway
 
-
-from services.merchant_prompts import get_merchant_prompt
-
 CAPABILITY_PROMPT_KEYS: dict[CapabilityName, str] = {
-    "owner": "SELF_ANALYSIS_PROMPT",
-    "market": "MARKET_SEARCH_PROMPT",
-    "policy": "POLICY_RAG_PROMPT",
-    "review": "SELF_ANALYSIS_PROMPT",
-    "cohort": "COHORT_ANALYSIS_PROMPT",
+    "owner": "owner",
+    "market": "market",
+    "policy": "policy",
+    "review": "review",
+    "cohort": "cohort",
 }
 
 CAPABILITY_ROLES: dict[CapabilityName, tuple[str, str]] = {
@@ -46,6 +45,8 @@ CAPABILITY_ROLES: dict[CapabilityName, tuple[str, str]] = {
     ),
 }
 
+GatewayFactory = Callable[[], tuple[RunScopedMerchantToolGateway, Session | None]]
+
 
 @dataclass(frozen=True)
 class SpecialistResult:
@@ -55,214 +56,158 @@ class SpecialistResult:
     instruction: str
     status: Literal["completed", "failed"]
     content: str
-    duration_ms: float
+    duration_ms: float = 0.0
     error: str | None = None
     public_merchants: list[dict[str, Any]] = field(default_factory=list)
     tool_calls: int = 0
 
 
-def _build_specialist_agent(
+def build_specialist(
     capability: CapabilityName,
     *,
     gateway: RunScopedMerchantToolGateway,
     llm: Any,
+    label: str | None = None,
 ) -> Agent:
-    prompt_key = CAPABILITY_PROMPT_KEYS.get(capability)
-    goal = None
-    if prompt_key:
-        try:
-            prompt_obj = get_merchant_prompt(prompt_key)
-            goal = prompt_obj.prompt.strip()
-        except Exception:
-            pass
+    """Build a terminal CrewAI specialist agent bounded by capability tools."""
+    prompt_key = CAPABILITY_PROMPT_KEYS[capability]
+    prompt_obj = get_merchant_prompt(prompt_key, label=label)
 
     default_role, default_goal = CAPABILITY_ROLES.get(
         capability, (f"{capability} Specialist", f"Execute {capability} tasks")
     )
-    role = default_role
-    if not goal:
-        goal = default_goal
-
+    goal = prompt_obj.prompt.strip() if hasattr(prompt_obj, "prompt") else default_goal
     tools = gateway.tools_for(capability)
+
     return Agent(
-        role=role,
+        role=default_role,
         goal=goal,
-        backstory="You work only from the conversation context and gateway tool observations. You must never assume unverified facts.",
+        backstory="You work only from the conversation context and gateway tool observations. You must never assume unverified facts. You cannot delegate.",
         tools=tools,
         llm=llm,
         allow_delegation=False,
-        max_iter=2,
-        max_execution_time=120,
+        max_iter=4,
         verbose=False,
     )
 
 
-def execute_direct(
+def execute_specialist(
     task: PlannedTask,
     *,
     gateway: RunScopedMerchantToolGateway,
     llm: Any,
-    response_type: Literal["fact", "summary", "analysis"] = "summary",
+    trace_context: dict[str, str] | None = None,
+    label: str | None = None,
 ) -> SpecialistResult:
-    """Execute a single specialist task directly without manager delegation."""
-    started_at = time.perf_counter()
-    try:
-        specialist = _build_specialist_agent(task.capability, gateway=gateway, llm=llm)
-        expected_outputs = {
-            "fact": "A concise, single-part factual answer based strictly on retrieved tool evidence.",
-            "summary": "A clear, structured summary based strictly on retrieved tool evidence.",
-            "analysis": "A detailed, grounded analysis backed by evidence from tools.",
-        }
-        expected_output = expected_outputs.get(response_type, "A grounded answer based strictly on tool evidence.")
+    """Execute a single specialist task and return bounded SpecialistResult."""
+    client = get_client()
+    start_time = time.monotonic()
 
-        evidence_contract = (
-            f"{task.instruction}\n\n"
-            "STRICT GROUNDING CONTRACT:\n"
-            "1. You MUST use available tools to retrieve necessary data.\n"
-            "2. Rely ONLY on data returned by tool observations.\n"
-            "3. Do NOT invent, assume, or output unverified numbers or merchant details."
+    with client.start_as_current_observation(
+        trace_context=trace_context,
+        name=f"specialist.{task.capability}",
+        as_type="agent",
+        input=task.instruction,
+        metadata={"capability": task.capability},
+    ) as observation:
+        agent = build_specialist(task.capability, gateway=gateway, llm=llm, label=label)
+        crew_task = Task(
+            description=task.instruction,
+            expected_output="A bounded, self-contained user-facing answer based only on tool evidence.",
+            agent=agent,
+        )
+        crew = Crew(
+            agents=[agent],
+            tasks=[crew_task],
+            process=Process.sequential,
+            memory=False,
+            verbose=False,
         )
 
-        output_text = _kickoff_specialist(specialist, evidence_contract, expected_output)
-        duration_ms = round((time.perf_counter() - started_at) * 1000, 2)
-        tool_calls = _completed_tool_calls(gateway)
-        public_merchants = (
-            gateway.latest_public_search_members()
-            if hasattr(gateway, "latest_public_search_members")
-            else []
-        )
+        try:
+            output = crew.kickoff()
+            content = output.raw if hasattr(output, "raw") else str(output)
+            tool_calls = gateway.completed_tool_calls
 
-        # Output validation check: non-empty grounded output required
-        if not output_text:
-            return SpecialistResult(
+            # Failure rule: zero observed tool calls -> no_tool_evidence
+            if tool_calls == 0 and not content:
+                status = "failed"
+                error = "no_tool_evidence"
+            else:
+                status = "completed"
+                error = None
+
+            duration_ms = (time.monotonic() - start_time) * 1000
+            res = SpecialistResult(
                 capability=task.capability,
                 instruction=task.instruction,
-                status="failed",
-                content="Specialist execution returned empty content.",
+                status=status,
+                content=content,
                 duration_ms=duration_ms,
-                error="empty_output",
-                public_merchants=public_merchants,
+                error=error,
+                public_merchants=gateway.collected_public_merchants,
                 tool_calls=tool_calls,
             )
-
-        if tool_calls == 0:
-            return SpecialistResult(
+            observation.update(
+                output=res.content,
+                level="ERROR" if res.status == "failed" else "DEFAULT",
+            )
+            return res
+        except Exception as exc:
+            duration_ms = (time.monotonic() - start_time) * 1000
+            res = SpecialistResult(
                 capability=task.capability,
                 instruction=task.instruction,
                 status="failed",
-                content="Specialist execution returned no tool evidence.",
+                content="",
                 duration_ms=duration_ms,
-                error="no_tool_evidence",
-                public_merchants=public_merchants,
+                error=str(exc),
+                public_merchants=gateway.collected_public_merchants,
+                tool_calls=gateway.completed_tool_calls,
             )
-
-        return SpecialistResult(
-            capability=task.capability,
-            instruction=task.instruction,
-            status="completed",
-            content=output_text,
-            duration_ms=duration_ms,
-            public_merchants=public_merchants,
-            tool_calls=tool_calls,
-        )
-    except Exception as error:
-        duration_ms = round((time.perf_counter() - started_at) * 1000, 2)
-        return SpecialistResult(
-            capability=task.capability,
-            instruction=task.instruction,
-            status="failed",
-            content=f"Subsystem error executing capability '{task.capability}'.",
-            duration_ms=duration_ms,
-            error=str(error),
-        )
-
-
-def _kickoff_specialist(specialist: Agent, description: str, expected_output: str) -> str:
-    task = Task(description=description, expected_output=expected_output, agent=specialist)
-    result = Crew(
-        agents=[specialist],
-        tasks=[task],
-        process=Process.sequential,
-        verbose=False,
-    ).kickoff()
-    return str(result.raw if hasattr(result, "raw") else result).strip()
-
-
-def _completed_tool_calls(gateway: Any) -> int:
-    counter = getattr(gateway, "completed_tool_calls", None)
-    if callable(counter):
-        return int(counter())
-    return int(getattr(gateway, "tool_calls", 0))
-
-
-def _execute_parallel_branch(
-    task: PlannedTask,
-    gateway_factory: Callable[[], tuple[RunScopedMerchantToolGateway, Any | None]],
-    llm: Any,
-    response_type: Literal["fact", "summary", "analysis"] = "summary",
-) -> SpecialistResult:
-    gateway, session = gateway_factory()
-    try:
-        return execute_direct(task, gateway=gateway, llm=llm, response_type=response_type)
-    finally:
-        if session is not None and hasattr(session, "close"):
-            try:
-                session.close()
-            except Exception:
-                pass
+            observation.update(
+                output=f"Specialist {task.capability} failed: {exc}",
+                level="ERROR",
+            )
+            return res
 
 
 def execute_parallel(
     tasks: list[PlannedTask],
     *,
-    gateway_factory: Callable[[], tuple[RunScopedMerchantToolGateway, Any | None]],
+    gateway_factory: GatewayFactory,
     llm: Any,
-    response_type: Literal["fact", "summary", "analysis"] = "summary",
+    trace_context: dict[str, str] | None = None,
+    label: str | None = None,
 ) -> list[SpecialistResult]:
-    """Execute independent specialist tasks concurrently in isolated environments."""
+    """Execute multiple specialist tasks concurrently and preserve task order."""
     if not tasks:
         return []
 
-    max_workers = min(4, len(tasks))
-    futures_map = {}
-
-    with ThreadPoolExecutor(max_workers=max_workers) as executor:
-        for idx, task in enumerate(tasks):
-            future = executor.submit(
-                _execute_parallel_branch,
-                task,
-                gateway_factory,
-                llm,
-                response_type,
-            )
-            futures_map[future] = idx
-
-    results: list[SpecialistResult | None] = [None] * len(tasks)
-    for future in as_completed(futures_map):
-        idx = futures_map[future]
-        task = tasks[idx]
+    if len(tasks) == 1:
+        gw, db = gateway_factory()
         try:
-            results[idx] = future.result()
-        except Exception as error:
-            results[idx] = SpecialistResult(
-                capability=task.capability,
-                instruction=task.instruction,
-                status="failed",
-                content=f"Subsystem error executing parallel capability '{task.capability}'.",
-                duration_ms=0.0,
-                error=str(error),
-            )
+            return [execute_specialist(tasks[0], gateway=gw, llm=llm, trace_context=trace_context, label=label)]
+        finally:
+            if db is not None:
+                db.close()
 
-    return [r for r in results if r is not None]
+    results_by_index: dict[int, SpecialistResult] = {}
+    workers = min(4, len(tasks))
 
+    def _run_branch(idx: int, t: PlannedTask) -> tuple[int, SpecialistResult]:
+        branch_gw, branch_db = gateway_factory()
+        try:
+            res = execute_specialist(t, gateway=branch_gw, llm=llm, trace_context=trace_context, label=label)
+            return idx, res
+        finally:
+            if branch_db is not None:
+                branch_db.close()
 
-def merge_parallel_results(results: list[SpecialistResult]) -> str:
-    """Merge specialist outputs deterministically into a single summary response."""
-    parts = []
-    for res in results:
-        cap_title = res.capability.upper()
-        if res.status == "completed":
-            parts.append(f"### {cap_title}\n{res.content}")
-        else:
-            parts.append(f"### {cap_title}\n*(Thông tin chưa khả dụng cho tính năng này)*")
-    return "\n\n".join(parts)
+    with ThreadPoolExecutor(max_workers=workers) as executor:
+        futures = [executor.submit(_run_branch, i, task) for i, task in enumerate(tasks)]
+        for fut in as_completed(futures):
+            idx, result = fut.result()
+            results_by_index[idx] = result
+
+    return [results_by_index[i] for i in range(len(tasks))]

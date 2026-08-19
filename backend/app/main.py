@@ -10,13 +10,17 @@ import base64
 import os
 os.environ["CREWAI_DISABLE_TELEMETRY"] = "true"
 os.environ["CREWAI_TRACING_ENABLED"] = "false"
+os.environ["OTEL_EXPORTER_OTLP_TRACES_TIMEOUT"] = "1"
+os.environ["OTEL_EXPORTER_OTLP_TIMEOUT"] = "1"
+
+import urllib3
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 from contextlib import asynccontextmanager
 import httpx
 import requests
 from fastapi import FastAPI
 from langfuse import Langfuse, __version__ as langfuse_version
-from openinference.instrumentation.crewai import CrewAIInstrumentor
 from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
 
 from app import extensions
@@ -86,6 +90,7 @@ def initialize_langfuse():
         auth = base64.b64encode(
             f"{public_key}:{secret_key}".encode("utf-8")
         ).decode("ascii")
+        timeout_val = float(os.getenv("LANGFUSE_TIMEOUT", "10"))
         client_options["span_exporter"] = OTLPSpanExporter(
             endpoint=f"{base_url}/api/public/otel/v1/traces",
             headers={
@@ -94,6 +99,7 @@ def initialize_langfuse():
                 "x-langfuse-sdk-version": langfuse_version,
                 "x-langfuse-public-key": public_key,
             },
+            timeout=timeout_val,
             session=create_session(),
         )
         logger.warning(
@@ -104,10 +110,6 @@ def initialize_langfuse():
 
     if not client.auth_check():
         raise RuntimeError("Langfuse authentication failed")
-
-    CrewAIInstrumentor().instrument(
-        skip_dep_check=True,
-    )
 
     logger.info(
         "langfuse_initialized insecure_ssl=%s",

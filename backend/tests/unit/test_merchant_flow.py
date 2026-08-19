@@ -1,40 +1,22 @@
-from models.merchant_input import PreparedRequest
-from flows.merchant_flow import (
-    MerchantFlowDispatcher,
-    _correct_named_public_request,
-    _public_merchant_selection_update,
-)
+from __future__ import annotations
+
+from pathlib import Path
+import pytest
 
 
-def test_public_merchant_selection_is_bounded_and_requires_one_match():
-    candidates = [
-        {"merchant_id": str(index), "name": f"Quan {index}"}
-        for index in range(7)
-    ]
-    update = _public_merchant_selection_update("Toi chon Quan 3", candidates)
-    assert len(update["merchant_agentic.last_public_search"]) == 5
-    assert update["merchant_agentic.selected_public_merchant"]["merchant_id"] == "3"
-
-
-def test_named_public_request_preserves_raw_target():
-    prepared = PreparedRequest(
-        rewritten_query="owner target",
-        scope_candidate="allowed",
+def test_no_legacy_routing_symbols_in_runtime_source():
+    backend_root = Path(__file__).resolve().parents[2]
+    forbidden_symbols = (
+        "InputPreparationService",
+        "decide_route(",
+        "query_decision(",
+        "NativeMerchantAdvisorCrew",
+        "merchant_execution_mode",
     )
-    corrected = _correct_named_public_request(prepared, "Compare exact public merchant", True)
-    assert corrected.rewritten_query == "Compare exact public merchant"
-    assert corrected.resolved_references == []
-
-
-def test_native_outcome_parser_accepts_completed_json_after_prose():
-    result = MerchantFlowDispatcher._parse_native_outcome(
-        'prefix {"status":"completed","answer":"Grounded answer"}'
-    )
-    assert result is not None
-    assert result.answer == "Grounded answer"
-
-
-def test_native_outcome_parser_rejects_non_completed_json():
-    assert MerchantFlowDispatcher._parse_native_outcome(
-        '{"status":"failed","answer":"unsafe"}'
-    ) is None
+    for py_file in backend_root.rglob("*.py"):
+        rel_str = str(py_file.relative_to(backend_root))
+        if rel_str.startswith("tests/") or rel_str.startswith("evals/") or "alembic" in rel_str or ".venv" in rel_str:
+            continue
+        content = py_file.read_text(encoding="utf-8")
+        for forbidden in forbidden_symbols:
+            assert forbidden not in content, f"Found forbidden '{forbidden}' in {rel_str}"

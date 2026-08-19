@@ -12,7 +12,6 @@ from app.main import create_app, initialize_langfuse
 
 def _patch_langfuse_dependencies(monkeypatch, client):
     langfuse = MagicMock(return_value=client)
-    instrumentor = MagicMock()
     settings = MagicMock(
         langfuse_public_key="pk-test",
         langfuse_secret_key="sk-test",
@@ -21,21 +20,19 @@ def _patch_langfuse_dependencies(monkeypatch, client):
     monkeypatch.setattr("app.main.get_settings", lambda: settings)
     monkeypatch.setattr("app.main.sync_langfuse_env", lambda settings: None)
     monkeypatch.setattr("app.main.Langfuse", langfuse)
-    monkeypatch.setattr("app.main.CrewAIInstrumentor", lambda: instrumentor)
-    return langfuse, instrumentor
+    return langfuse
 
 
-def test_lifespan_authenticates_instruments_and_shuts_down(monkeypatch):
+def test_lifespan_authenticates_and_shuts_down(monkeypatch):
     client = MagicMock()
     client.auth_check.return_value = True
-    _, instrumentor = _patch_langfuse_dependencies(monkeypatch, client)
+    _patch_langfuse_dependencies(monkeypatch, client)
     monkeypatch.setenv("LANGFUSE_INSECURE_SSL", "false")
 
     with TestClient(create_app()):
         pass
 
     client.auth_check.assert_called_once_with()
-    instrumentor.instrument.assert_called_once_with(skip_dep_check=True)
     client.shutdown.assert_called_once_with()
 
 
@@ -53,7 +50,7 @@ def test_lifespan_rejects_failed_authentication(monkeypatch):
 def test_secure_langfuse_uses_default_otel_tls_verification(monkeypatch):
     client = MagicMock()
     client.auth_check.return_value = True
-    langfuse, _ = _patch_langfuse_dependencies(monkeypatch, client)
+    langfuse = _patch_langfuse_dependencies(monkeypatch, client)
     monkeypatch.setenv("LANGFUSE_INSECURE_SSL", "false")
 
     initialize_langfuse()
@@ -72,7 +69,7 @@ def test_insecure_langfuse_scopes_disabled_tls_to_its_clients(
 ):
     client = MagicMock()
     client.auth_check.return_value = True
-    langfuse, _ = _patch_langfuse_dependencies(monkeypatch, client)
+    langfuse = _patch_langfuse_dependencies(monkeypatch, client)
     monkeypatch.setenv("LANGFUSE_INSECURE_SSL", "true")
 
     with caplog.at_level(logging.WARNING):
@@ -97,10 +94,10 @@ def test_insecure_langfuse_scopes_disabled_tls_to_its_clients(
 def test_insecure_otel_exporter_uses_langfuse_timeout(monkeypatch):
     client = MagicMock()
     client.auth_check.return_value = True
-    langfuse, _ = _patch_langfuse_dependencies(monkeypatch, client)
+    langfuse = _patch_langfuse_dependencies(monkeypatch, client)
     monkeypatch.setenv("LANGFUSE_INSECURE_SSL", "true")
     monkeypatch.setenv("LANGFUSE_TIMEOUT", "30")
 
     initialize_langfuse()
 
-    assert langfuse.call_args.kwargs["span_exporter"]._timeout == 30
+    assert langfuse.call_args.kwargs["span_exporter"]._timeout == 30.0

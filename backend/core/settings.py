@@ -38,9 +38,6 @@ class Settings(BaseSettings):
     llm_model_large: str | None = None  # Model lớn / heavy (Synthesis, Audit, Diagnosis)
     llm_base_url: str | None = None
 
-    # --- Execution Mode ---
-    merchant_execution_mode: Literal["legacy", "shadow", "active"] = "legacy"
-
     # --- Policy RAG ---
     rag_embedding_api_key: str | None = None
     rag_embedding_base_url: str | None = None
@@ -49,6 +46,17 @@ class Settings(BaseSettings):
     rag_chroma_path: str = ".runtime/policy-rag"
     rag_collection: str = "green-sm-policy"
     rag_score_threshold: float = 0.6
+
+    # --- Mem0 Service ---
+    mem0_base_url: str = "http://localhost:8888"
+    mem0_api_key: str = ""
+    admin_api_key: str = ""
+    mem0_search_top_k: int = 5
+    mem0_timeout_seconds: float = 20.0
+
+    @property
+    def effective_mem0_api_key(self) -> str:
+        return self.mem0_api_key or self.admin_api_key or os.getenv("ADMIN_API_KEY", "") or os.getenv("MEM0_API_KEY", "")
 
     # Langfuse 
     langfuse_secret_key: str = ""

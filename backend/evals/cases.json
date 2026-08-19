@@ -1,0 +1,369 @@
+[
+  {
+    "case_id": "DIRECT_01",
+    "category": "direct_answer",
+    "subcategory": "greeting",
+    "query": "Xin chào bạn, chúc bạn một ngày tốt lành!",
+    "expected_outcome": "respond",
+    "expected_delegations": [],
+    "ground_truth_answer": "Chào Quý Đối tác! Tôi là Merchant Advisor, tôi có thể hỗ trợ gì cho quán của bạn hôm nay?"
+  },
+  {
+    "case_id": "DIRECT_02",
+    "category": "direct_answer",
+    "subcategory": "thank_you",
+    "query": "Cảm ơn bạn nhiều nhé, thông tin rất hữu ích!",
+    "expected_outcome": "respond",
+    "expected_delegations": [],
+    "ground_truth_answer": "Dạ không có gì ạ! Rất vui được đồng hành cùng Quý Đối tác."
+  },
+  {
+    "case_id": "DIRECT_03",
+    "category": "direct_answer",
+    "subcategory": "out_of_scope",
+    "query": "Thời tiết hôm nay ở Hà Nội có mưa không?",
+    "expected_outcome": "respond",
+    "expected_delegations": [],
+    "ground_truth_answer": "Câu hỏi nằm ngoài phạm vi hỗ trợ kinh doanh của Merchant Advisor."
+  },
+  {
+    "case_id": "DIRECT_04",
+    "category": "direct_answer",
+    "subcategory": "capabilities",
+    "query": "Bạn có thể hỗ trợ những nghiệp vụ gì cho quán của tôi?",
+    "expected_outcome": "respond",
+    "expected_delegations": [],
+    "ground_truth_answer": "Tôi hỗ trợ phân tích hiệu suất quán, tra cứu chính sách Green SM, tìm kiếm đối thủ cạnh tranh, phân tích đánh giá và so sánh benchmark."
+  },
+
+  {
+    "case_id": "SINGLE_OWNER_01",
+    "category": "single_owner",
+    "subcategory": "revenue",
+    "query": "Doanh thu của quán tôi trong 7 ngày gần nhất đạt bao nhiêu?",
+    "expected_outcome": "delegate",
+    "expected_delegations": ["owner"],
+    "ground_truth_answer": "Doanh thu 7 ngày qua của quán đạt số liệu từ database."
+  },
+  {
+    "case_id": "SINGLE_OWNER_02",
+    "category": "single_owner",
+    "subcategory": "orders",
+    "query": "Số lượng đơn hàng tuần trước của tôi là bao nhiêu đơn?",
+    "expected_outcome": "delegate",
+    "expected_delegations": ["owner"],
+    "ground_truth_answer": "Số đơn hàng tuần trước được trích xuất từ database."
+  },
+  {
+    "case_id": "SINGLE_OWNER_03",
+    "category": "single_owner",
+    "subcategory": "operating_metrics",
+    "query": "Tỉ lệ hủy đơn và thời gian chuẩn bị món trung bình của quán tôi hiện tại thế nào?",
+    "expected_outcome": "delegate",
+    "expected_delegations": ["owner"],
+    "ground_truth_answer": "Tỉ lệ hủy đơn và thời gian chuẩn bị món của quán."
+  },
+  {
+    "case_id": "SINGLE_OWNER_04",
+    "category": "single_owner",
+    "subcategory": "menu_diagnosis",
+    "query": "Kiểm tra danh sách món ăn và chất lượng hình ảnh menu của quán tôi xem có món nào thiếu ảnh không?",
+    "expected_outcome": "delegate",
+    "expected_delegations": ["owner"],
+    "ground_truth_answer": "Danh sách món ăn và tình trạng hình ảnh menu của quán."
+  },
+
+  {
+    "case_id": "SINGLE_MARKET_01",
+    "category": "single_market",
+    "subcategory": "nearby_competitors",
+    "query": "Tìm giúp tôi các quán cơm tấm đối thủ trong bán kính 3km xung quanh quán?",
+    "expected_outcome": "delegate",
+    "expected_delegations": ["market"],
+    "ground_truth_answer": "Danh sách các quán cơm tấm trong bán kính 3km."
+  },
+  {
+    "case_id": "SINGLE_MARKET_02",
+    "category": "single_market",
+    "subcategory": "competitor_detail",
+    "query": "Quán Cơm Tấm Ba Ghiền ở gần tôi đang bán các món gì và giá trung bình bao nhiêu?",
+    "expected_outcome": "delegate",
+    "expected_delegations": ["market"],
+    "ground_truth_answer": "Thông tin chi tiết menu và mức giá của quán đối thủ."
+  },
+  {
+    "case_id": "SINGLE_MARKET_03",
+    "category": "single_market",
+    "subcategory": "category_search",
+    "query": "Khu vực quận 1 hiện tại có những quán trà sữa nào đang có rating trên 4.5 sao?",
+    "expected_outcome": "delegate",
+    "expected_delegations": ["market"],
+    "ground_truth_answer": "Danh sách các quán trà sữa rating cao tại quận 1."
+  },
+  {
+    "case_id": "SINGLE_MARKET_04",
+    "category": "single_market",
+    "subcategory": "popular_dishes",
+    "query": "Xung quanh đây các quán bún bò đang bán chạy những món phụ hay combo nào?",
+    "expected_outcome": "delegate",
+    "expected_delegations": ["market"],
+    "ground_truth_answer": "Thông tin món bán chạy của các quán đối thủ xung quanh."
+  },
+
+  {
+    "case_id": "SINGLE_POLICY_01",
+    "category": "single_policy",
+    "subcategory": "penalty_rules",
+    "query": "Trường hợp nào nhà hàng bị áp dụng chế tài tạm khóa gian hàng trên Green SM Food?",
+    "expected_outcome": "delegate",
+    "expected_delegations": ["policy"],
+    "ground_truth_answer": "Quy định chế tài tạm khóa gian hàng theo chính sách Green SM."
+  },
+  {
+    "case_id": "SINGLE_POLICY_02",
+    "category": "single_policy",
+    "subcategory": "settlement_cycle",
+    "query": "Chu kỳ đối soát và thanh toán doanh thu cho nhà hàng của Green SM diễn ra vào những ngày nào?",
+    "expected_outcome": "delegate",
+    "expected_delegations": ["policy"],
+    "ground_truth_answer": "Chu kỳ thanh toán và đối soát của Green SM."
+  },
+  {
+    "case_id": "SINGLE_POLICY_03",
+    "category": "single_policy",
+    "subcategory": "re_education",
+    "query": "Khi nào đối tác nhà hàng bắt buộc phải tham gia chương trình tái đào tạo của sàn?",
+    "expected_outcome": "delegate",
+    "expected_delegations": ["policy"],
+    "ground_truth_answer": "Quy định về chương trình tái đào tạo bắt buộc."
+  },
+  {
+    "case_id": "SINGLE_POLICY_04",
+    "category": "single_policy",
+    "subcategory": "food_safety",
+    "query": "Quy định về tiêu chuẩn an toàn thực phẩm và bao bì đóng gói khi giao món trên Green SM Food là gì?",
+    "expected_outcome": "delegate",
+    "expected_delegations": ["policy"],
+    "ground_truth_answer": "Quy chuẩn đóng gói và an toàn vệ sinh thực phẩm."
+  },
+
+  {
+    "case_id": "SINGLE_REVIEW_01",
+    "category": "single_review",
+    "subcategory": "bad_service_complaints",
+    "query": "Quán của tôi gần đây có bị khách hàng phàn nàn gì về thái độ phục vụ hay giao thiếu món không?",
+    "expected_outcome": "delegate",
+    "expected_delegations": ["review"],
+    "ground_truth_answer": "Các phản hồi tiêu cực và khiếu nại của khách hàng."
+  },
+  {
+    "case_id": "SINGLE_REVIEW_02",
+    "category": "single_review",
+    "subcategory": "driver_feedback",
+    "query": "Tài xế có phản ánh gì về thời gian chờ lấy đồ ăn tại quán tôi không?",
+    "expected_outcome": "delegate",
+    "expected_delegations": ["review"],
+    "ground_truth_answer": "Ý kiến phản ánh từ tài xế về thời gian chờ."
+  },
+  {
+    "case_id": "SINGLE_REVIEW_03",
+    "category": "single_review",
+    "subcategory": "rating_trend",
+    "query": "Khách hàng đánh giá sao thế nào về chất lượng hương vị món ăn của tôi trong tháng này?",
+    "expected_outcome": "delegate",
+    "expected_delegations": ["review"],
+    "ground_truth_answer": "Đánh giá chi tiết của khách hàng về hương vị món ăn."
+  },
+  {
+    "case_id": "SINGLE_REVIEW_04",
+    "category": "single_review",
+    "subcategory": "packaging_reviews",
+    "query": "Có review nào chê hộp đựng thức ăn bị đổ vỡ hoặc không giữ nhiệt tốt không?",
+    "expected_outcome": "delegate",
+    "expected_delegations": ["review"],
+    "ground_truth_answer": "Phản hồi của khách về bao bì đóng gói."
+  },
+
+  {
+    "case_id": "SINGLE_COHORT_01",
+    "category": "single_cohort",
+    "subcategory": "district_benchmark",
+    "query": "Doanh thu trung bình của các quán cùng phân khúc trong quận của tôi là bao nhiêu?",
+    "expected_outcome": "delegate",
+    "expected_delegations": ["cohort"],
+    "ground_truth_answer": "Số liệu benchmark doanh thu trung bình toàn quận."
+  },
+  {
+    "case_id": "SINGLE_COHORT_02",
+    "category": "single_cohort",
+    "subcategory": "order_benchmark",
+    "query": "Số lượng đơn hàng mỗi ngày của các quán đối thủ cùng ngành hàng trong khu vực đạt mức nào?",
+    "expected_outcome": "delegate",
+    "expected_delegations": ["cohort"],
+    "ground_truth_answer": "Mức đơn hàng trung bình của nhóm quán cùng ngành hàng."
+  },
+  {
+    "case_id": "SINGLE_COHORT_03",
+    "category": "single_cohort",
+    "subcategory": "prep_time_benchmark",
+    "query": "Thời gian chuẩn bị món của các quán ăn nhanh trong thành phố trung bình là bao nhiêu phút?",
+    "expected_outcome": "delegate",
+    "expected_delegations": ["cohort"],
+    "ground_truth_answer": "Thời gian chuẩn bị món trung bình của cohort."
+  },
+  {
+    "case_id": "SINGLE_COHORT_04",
+    "category": "single_cohort",
+    "subcategory": "cancellation_benchmark",
+    "query": "Tỉ lệ hủy đơn của phân khúc quán Nhật trong khu vực đang ở mức bao nhiêu phần trăm?",
+    "expected_outcome": "delegate",
+    "expected_delegations": ["cohort"],
+    "ground_truth_answer": "Tỉ lệ hủy đơn trung bình của nhóm nhà hàng Nhật."
+  },
+
+  {
+    "case_id": "COMPLEX_2CAP_01",
+    "category": "complex",
+    "subcategory": "owner_and_market",
+    "query": "So sánh giá bán món Cơm Sườn của quán tôi với mức giá của các quán cơm tấm xung quanh?",
+    "expected_outcome": "delegate",
+    "expected_delegations": ["owner", "market"],
+    "ground_truth_answer": "So sánh giá món của quán với thị trường xung quanh."
+  },
+  {
+    "case_id": "COMPLEX_2CAP_02",
+    "category": "complex",
+    "subcategory": "owner_and_policy",
+    "query": "Tỉ lệ hủy đơn hiện tại của quán tôi là bao nhiêu và có đang vượt quá giới hạn phạt của sàn Green SM không?",
+    "expected_outcome": "delegate",
+    "expected_delegations": ["owner", "policy"],
+    "ground_truth_answer": "Tỉ lệ hủy đơn của quán và đối chiếu với mức quy định trong chính sách sàn."
+  },
+  {
+    "case_id": "COMPLEX_2CAP_03",
+    "category": "complex",
+    "subcategory": "owner_and_review",
+    "query": "Tại sao rating của quán tôi tuần này bị giảm và khách hàng đang khiếu nại về vấn đề gì?",
+    "expected_outcome": "delegate",
+    "expected_delegations": ["owner", "review"],
+    "ground_truth_answer": "Biến động rating và chi tiết các phản hồi khiếu nại của khách."
+  },
+  {
+    "case_id": "COMPLEX_2CAP_04",
+    "category": "complex",
+    "subcategory": "owner_and_cohort",
+    "query": "Thời gian chuẩn bị món của quán tôi đang nhanh hơn hay chậm hơn mức trung bình của quận?",
+    "expected_outcome": "delegate",
+    "expected_delegations": ["owner", "cohort"],
+    "ground_truth_answer": "So sánh thời gian chuẩn bị món của quán với benchmark toàn quận."
+  },
+  {
+    "case_id": "COMPLEX_2CAP_05",
+    "category": "complex",
+    "subcategory": "market_and_policy",
+    "query": "Các quán trà sữa đối thủ đang tính phí ship bao nhiêu và quy định trợ giá vận chuyển của Green SM như thế nào?",
+    "expected_outcome": "delegate",
+    "expected_delegations": ["market", "policy"],
+    "ground_truth_answer": "Thông tin phí ship đối thủ và chính sách hỗ trợ vận chuyển của sàn."
+  },
+  {
+    "case_id": "COMPLEX_2CAP_06",
+    "category": "complex",
+    "subcategory": "owner_and_market",
+    "query": "Quán tôi đang bán những món gì và có món nào đối thủ xung quanh đang bán chạy mà quán tôi chưa có?",
+    "expected_outcome": "delegate",
+    "expected_delegations": ["owner", "market"],
+    "ground_truth_answer": "Đối chiếu menu quán với các món hot của đối thủ."
+  },
+  {
+    "case_id": "COMPLEX_2CAP_07",
+    "category": "complex",
+    "subcategory": "review_and_policy",
+    "query": "Khách hàng khiếu nại món ăn bị nguội thì quy trình bồi hoàn và chế tài của Green SM quy định ra sao?",
+    "expected_outcome": "delegate",
+    "expected_delegations": ["review", "policy"],
+    "ground_truth_answer": "Xem xét khiếu nại chất lượng món và chính sách xử lý bồi hoàn của sàn."
+  },
+  {
+    "case_id": "COMPLEX_2CAP_08",
+    "category": "complex",
+    "subcategory": "owner_and_cohort",
+    "query": "Doanh thu tháng này của tôi có tăng trưởng tốt hơn mức tăng trưởng chung của các quán cùng phân khúc không?",
+    "expected_outcome": "delegate",
+    "expected_delegations": ["owner", "cohort"],
+    "ground_truth_answer": "So sánh tốc độ tăng trưởng doanh thu của quán với cohort."
+  },
+  {
+    "case_id": "COMPLEX_2CAP_09",
+    "category": "complex",
+    "subcategory": "market_and_cohort",
+    "query": "Tìm top 5 quán ăn bán chạy nhất quận và cho tôi biết doanh thu trung bình của nhóm này?",
+    "expected_outcome": "delegate",
+    "expected_delegations": ["market", "cohort"],
+    "ground_truth_answer": "Danh sách top 5 quán và chỉ số doanh thu trung bình."
+  },
+  {
+    "case_id": "COMPLEX_2CAP_10",
+    "category": "complex",
+    "subcategory": "review_and_cohort",
+    "query": "Đánh giá của khách hàng về quán tôi có nhiều phản hồi tiêu cực hơn mức trung bình của ngành hàng không?",
+    "expected_outcome": "delegate",
+    "expected_delegations": ["review", "cohort"],
+    "ground_truth_answer": "So sánh tỉ lệ review tiêu cực của quán với mức trung bình ngành."
+  },
+
+  {
+    "case_id": "COMPLEX_3CAP_01",
+    "category": "complex",
+    "subcategory": "owner_market_cohort",
+    "query": "Hãy so sánh doanh thu và số đơn của quán tôi với đối thủ gần nhất và mức trung bình toàn quận?",
+    "expected_outcome": "delegate",
+    "expected_delegations": ["owner", "market", "cohort"],
+    "ground_truth_answer": "Phân tích số liệu nội bộ quán, thông tin đối thủ và benchmark quận."
+  },
+  {
+    "case_id": "COMPLEX_3CAP_02",
+    "category": "complex",
+    "subcategory": "owner_review_policy",
+    "query": "Gần đây quán tôi có bị khách chê giao trễ không, thời gian chuẩn bị thực tế là bao nhiêu và chính sách phạt đơn trễ của sàn thế nào?",
+    "expected_outcome": "delegate",
+    "expected_delegations": ["owner", "review", "policy"],
+    "ground_truth_answer": "Kiểm tra review giao trễ, chỉ số thời gian làm món và chính sách chế tài sàn."
+  },
+  {
+    "case_id": "COMPLEX_3CAP_03",
+    "category": "complex",
+    "subcategory": "owner_market_policy",
+    "query": "Tôi muốn thêm món mới giống các quán đối thủ xung quanh, menu hiện tại của tôi thế nào và quy định kiểm duyệt món mới của sàn ra sao?",
+    "expected_outcome": "delegate",
+    "expected_delegations": ["owner", "market", "policy"],
+    "ground_truth_answer": "Phân tích menu quán, tham khảo đối thủ và chính sách duyệt món mới."
+  },
+  {
+    "case_id": "COMPLEX_3CAP_04",
+    "category": "complex",
+    "subcategory": "owner_market_cohort",
+    "query": "Giá bán và số lượng đơn hàng của quán tôi đang đứng ở vị trí nào so với các quán lân cận và mặt bằng chung của thành phố?",
+    "expected_outcome": "delegate",
+    "expected_delegations": ["owner", "market", "cohort"],
+    "ground_truth_answer": "Tổng hợp vị thế giá và đơn hàng so với đối thủ và cohort."
+  },
+  {
+    "case_id": "COMPLEX_3CAP_05",
+    "category": "complex",
+    "subcategory": "owner_review_cohort",
+    "query": "Đánh giá chất lượng phục vụ và điểm rating của quán tôi so với mức trung bình của các quán cùng phân khúc?",
+    "expected_outcome": "delegate",
+    "expected_delegations": ["owner", "review", "cohort"],
+    "ground_truth_answer": "Tổng hợp chỉ số rating quán, phản hồi khách hàng và benchmark cohort."
+  },
+  {
+    "case_id": "COMPLEX_3CAP_06",
+    "category": "complex",
+    "subcategory": "market_policy_cohort",
+    "query": "Các quán đối thủ trong khu vực có tham gia chương trình khuyến mãi của Green SM không và điều kiện tham gia chương trình là gì?",
+    "expected_outcome": "delegate",
+    "expected_delegations": ["market", "policy", "cohort"],
+    "ground_truth_answer": "Tìm hiểu tình hình tham gia khuyến mãi của thị trường và chính sách sàn."
+  }
+]

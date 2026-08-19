@@ -1,88 +1,82 @@
-"""Execution plan contracts produced by the coordinator.
+"""Planner execution contracts.
 
-The coordinator is the only entity that produces an ExecutionPlan.
-Runtime code validates and executes it as-is — it never re-interprets
-user prose to change mode, capability, or task content.
+The planner is the sole entity that produces a PlannerDecision.
+It outputs either a direct response (PlannerRespond) or a set of 1-4 distinct
+delegated tasks (PlannerDelegate).
 """
 from __future__ import annotations
 
-from typing import Literal
+from typing import Annotated, Literal
+from pydantic import BaseModel, ConfigDict, Field, TypeAdapter, model_validator
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
-
-
-CapabilityName = Literal[
-    "owner",
-    "market",
-    "policy",
-    "review",
-    "cohort",
-]
+CapabilityName = Literal["owner", "market", "policy", "review", "cohort"]
 
 
 class PlannedTask(BaseModel):
-    """One unit of work assigned to a single registered capability."""
-
     model_config = ConfigDict(extra="forbid")
-
     capability: CapabilityName
     instruction: str = Field(min_length=1, max_length=600)
 
 
-class ExecutionPlan(BaseModel):
-    """A bounded, validated coordinator plan.
-
-    Validation rules (enforced by Pydantic validators):
-      direct       -> exactly 1 task
-      parallel     -> 2 to 4 tasks with distinct capabilities
-      hierarchical -> 2 to 4 tasks (capabilities may repeat across agents)
-      fact         -> direct only
-      analysis     -> direct or hierarchical; parallel may return summary only
-    """
-
+class PlannerRespond(BaseModel):
     model_config = ConfigDict(extra="forbid")
+    mode: Literal["respond"]
+    answer: str = Field(min_length=1, max_length=4000)
 
-    mode: Literal["direct", "parallel", "hierarchical"]
+
+class PlannerDelegate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    mode: Literal["delegate"]
     tasks: list[PlannedTask] = Field(min_length=1, max_length=4)
-    response_type: Literal["fact", "summary", "analysis"]
 
     @model_validator(mode="after")
-    def validate_plan(self) -> "ExecutionPlan":
-        tasks = self.tasks
-        mode = self.mode
-        response_type = self.response_type
-
-        if mode == "direct":
-            if len(tasks) != 1:
-                raise ValueError(
-                    f"direct mode requires exactly 1 task, got {len(tasks)}"
-                )
-
-        elif mode == "parallel":
-            if len(tasks) < 2:
-                raise ValueError(
-                    f"parallel mode requires 2-4 tasks, got {len(tasks)}"
-                )
-            capabilities = [t.capability for t in tasks]
-            if len(capabilities) != len(set(capabilities)):
-                raise ValueError(
-                    "parallel mode tasks must have distinct capabilities"
-                )
-
-        elif mode == "hierarchical":
-            if len(tasks) < 2:
-                raise ValueError(
-                    f"hierarchical mode requires 2-4 tasks, got {len(tasks)}"
-                )
-
-        # response_type constraints
-        if response_type == "fact" and mode != "direct":
-            raise ValueError(
-                f"response_type 'fact' is only allowed with direct mode, got mode='{mode}'"
-            )
-        if response_type == "analysis" and mode == "parallel":
-            raise ValueError(
-                "response_type 'analysis' is not allowed with parallel mode; use 'summary'"
-            )
-
+    def distinct_capabilities(self) -> "PlannerDelegate":
+        capabilities = [task.capability for task in self.tasks]
+        if len(capabilities) != len(set(capabilities)):
+            raise ValueError("delegated capabilities must be distinct")
         return self
+
+
+PlannerDecision = Annotated[PlannerRespond | PlannerDelegate, Field(discriminator="mode")]
+_DECISION_ADAPTER = TypeAdapter(PlannerDecision)
+
+
+def _extract_json_substring(raw: str) -> str:
+    text = raw.strip()
+    if not text:
+        return ""
+
+    # Strip <think>...</think> reasoning blocks if present
+    if "<think>" in text and "</think>" in text:
+        text = text.split("</think>", 1)[1].strip()
+
+    # Strip markdown code blocks: ```json ... ``` or ``` ... ```
+    if text.startswith("```"):
+        lines = text.splitlines()
+        if len(lines) >= 2:
+            first_idx = 1
+            last_idx = len(lines) - 1 if lines[-1].strip() == "```" else len(lines)
+            text = "\n".join(lines[first_idx:last_idx]).strip()
+
+    if text.startswith("{") and text.endswith("}"):
+        return text
+
+    first_brace = text.find("{")
+    last_brace = text.rfind("}")
+    if first_brace != -1 and last_brace != -1 and last_brace > first_brace:
+        return text[first_brace : last_brace + 1]
+
+    return text
+
+
+def parse_planner_decision(raw: str) -> PlannerDecision:
+    cleaned = _extract_json_substring(raw)
+
+    if cleaned.startswith("{") and cleaned.endswith("}"):
+        return _DECISION_ADAPTER.validate_json(cleaned)
+
+    plain_text = raw.strip()
+    if plain_text:
+        return PlannerRespond(mode="respond", answer=plain_text)
+
+    raise ValueError("Planner returned empty response")

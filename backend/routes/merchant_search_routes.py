@@ -10,6 +10,11 @@ from pydantic import BaseModel, Field
 from core.cache import CacheKeys, CachePort
 from core.dependencies import get_cache
 
+try:
+    from flows.customer_flow import customer_flow
+except ImportError:
+    customer_flow = None
+
 
 router = APIRouter(prefix="/api/v1/merchants", tags=["merchant-search"])
 

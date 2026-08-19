@@ -33,10 +33,18 @@ def health(
     except Exception:  # noqa: BLE001
         redis = "error"
 
-    overall = "ok" if database == "ok" and redis == "ok" else "degraded"
+    mem0 = "ok"
+    try:
+        from services.mem0_service import Mem0Service
+        mem0 = "ok" if Mem0Service().health() else "error"
+    except Exception:  # noqa: BLE001
+        mem0 = "error"
+
+    overall = "ok" if database == "ok" and redis == "ok" and mem0 == "ok" else "degraded"
     return {
         "status": overall,
         "database": database,
         "redis": redis,
+        "mem0": mem0,
         "llm_configured": settings.llm_configured,
     }

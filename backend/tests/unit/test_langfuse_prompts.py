@@ -1,5 +1,4 @@
 from unittest.mock import MagicMock
-
 import pytest
 
 from core.settings import get_settings
@@ -16,11 +15,11 @@ def test_prompt_registry_uses_namespace_label_and_ttl(monkeypatch):
     get_settings.cache_clear()
 
     text, linked_prompt = merchant_prompts.compile_merchant_prompt(
-        "FAST_GREETING_PROMPT", query="xin chao"
+        "planner", query="xin chao"
     )
 
     client.get_prompt.assert_called_once_with(
-        "gsm_merchant/FAST_GREETING_PROMPT",
+        "merchant/planner",
         label="production",
         cache_ttl_seconds=60,
     )
@@ -36,4 +35,10 @@ def test_prompt_registry_has_no_fallback(monkeypatch):
     monkeypatch.setattr(merchant_prompts, "get_client", lambda: client)
 
     with pytest.raises(RuntimeError, match="unavailable"):
-        merchant_prompts.get_merchant_prompt("INPUT_ANALYZER_PROMPT")
+        merchant_prompts.get_merchant_prompt("planner")
+
+
+def test_unknown_prompt_key_raises_key_error():
+    from services import merchant_prompts
+    with pytest.raises(KeyError):
+        merchant_prompts.get_merchant_prompt("unknown_key")
