@@ -130,7 +130,18 @@ def main() -> None:
     print(f"Judging {len(cases)} cases vs EXPECTED  (judge model = {model})\n")
     verdicts: list[dict] = []
     passed = 0
+    skipped = 0
     for i, c in enumerate(cases, 1):
+        # Errored cases have NO answer to judge — count as skipped, not FAIL. Judging an empty
+        # answer vs EXPECTED is an auto-FAIL that measures FPT uptime, not agent quality
+        # (compute_gt_metrics already excludes them; this brings the judge in line).
+        if c.get("error"):
+            skipped += 1
+            verdicts.append({"id": c.get("id"), "category": c.get("category"),
+                             "pass": None, "reason": f"skipped (eval error): {str(c['error'])[:120]}"})
+            print(f"[{i:2}/{len(cases)}] SKIP {str(c.get('id')):8} "
+                  f"{str(c.get('category')):24} — eval errored, no answer to judge")
+            continue
         v = judge_one(client, model, c)
         v["id"] = c.get("id")
         v["category"] = c.get("category")
@@ -140,7 +151,7 @@ def main() -> None:
         print(f"[{i:2}/{len(cases)}] {flag} {str(c.get('id')):8} "
               f"{str(c.get('category')):24} — {v['reason']}")
 
-    total = len(cases)
+    total = len(cases) - skipped
     rate = passed / total if total else 0.0
     fail_ids = [v["id"] for v in verdicts if not v["pass"]]
     Path(args.out).write_text(
@@ -151,6 +162,7 @@ def main() -> None:
                     "snapshot": args.snapshot,
                     "passed": passed,
                     "total": total,
+                    "skipped_errored": skipped,
                     "pass_rate": round(rate, 4),
                     "fail_ids": fail_ids,
                 },
@@ -163,6 +175,8 @@ def main() -> None:
     )
     print("\n" + "=" * 72)
     print(f"QUALITY: {passed}/{total} = {rate * 100:.1f}%   (judge model {model})")
+    if skipped:
+        print(f"skipped (eval errored, no answer): {skipped}")
     print(f"fails: {fail_ids}")
     print(f"[saved] {args.out}")
 

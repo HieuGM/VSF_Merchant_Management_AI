@@ -198,6 +198,17 @@ def _ensure_prior_referent(engine, session_id: str, prior_turns: list[dict], cit
     return True
 
 
+# Transient (infra) error signatures — FPT timeouts / connection resets / gateway blips.
+# These are NOT agent-quality signals: retry them, and if still failing bucket the case as
+# "transient" so the judge can exclude it instead of counting an empty answer as FAIL.
+_TRANSIENT_MARKERS = ("Timeout", "timed out", "ConnectionError", "ConnectionReset",
+                      "ChunkedEncoding", "502", "503", "504")
+
+
+def _is_transient(err: str | None) -> bool:
+    return any(m in (err or "") for m in _TRANSIENT_MARKERS)
+
+
 def _post_sse(payload: dict, t0: float) -> dict:
     """POST to /chat/stream; return captured timing + answer + results + trace_id."""
     out = {"total_ms": 0.0, "ttft_ms": None, "explain_ms": None, "answer": "",
@@ -303,15 +314,22 @@ def run_case(case: dict, engine) -> dict:
     if seeded:
         print(f"   [seed] {cid}: prior referent seeded from real DB merchants")
 
-    # Test turn (timed).
+    # Test turn (timed) — retry transient infra errors once (FPT timeout/reset blips are not
+    # agent-quality signals; a single retry keeps them from poisoning the snapshot).
     t0 = time.perf_counter()
     res = _post_sse({**base, "message": msg}, t0)
+    if res["error"] and _is_transient(res["error"]):
+        print(f"   [retry] {cid}: transient ({res['error'][:60]}) — retrying once")
+        time.sleep(5)
+        t0 = time.perf_counter()
+        res = _post_sse({**base, "message": msg}, t0)
     search_ms, pref_ms, tools = _server_durations(res["trace_id"])
     res.update({"id": cid, "category": case["category"], "difficulty": case.get("difficulty"),
                 "query": msg, "expected": case.get("expected"),
                 "search_ms": search_ms, "preference_ms": pref_ms, "tools": tools,
                 "coords_sent": coords is not None, "weather_sent": wov is not None,
-                "had_prior_turns": bool(ctx.get("prior_turns")), "prior_seeded": seeded})
+                "had_prior_turns": bool(ctx.get("prior_turns")), "prior_seeded": seeded,
+                "transient_error": bool(res["error"]) and _is_transient(res["error"])})
     return res
 
 
@@ -320,8 +338,16 @@ def _s(x: float | None) -> str:
 
 
 def main() -> None:
+    import argparse
     import statistics
     from database.connection import engine
+
+    ap = argparse.ArgumentParser(description="GT eval — replay ground_truth_customer.json on /chat/stream.")
+    # D4 gotcha: the default OUT_PATH OVERWRITES the canonical baseline snapshot. Always pass
+    # --out for A/B runs; the default stays for compatibility with existing docs/workflows.
+    ap.add_argument("--out", default=str(OUT_PATH),
+                    help="snapshot output path (default OVERWRITES gt-eval-results.json!)")
+    args = ap.parse_args()
 
     cases = [c for c in json.loads(GT_PATH.read_text(encoding="utf-8"))["test_cases"]
              if c["id"] not in SKIP_IDS]
@@ -344,9 +370,10 @@ def main() -> None:
             if r["answer"]:
                 print(f"   ANS: {r['answer'][:200]}")
 
-    OUT_PATH.parent.mkdir(parents=True, exist_ok=True)
-    OUT_PATH.write_text(json.dumps(results, ensure_ascii=False, indent=2), encoding="utf-8")
-    print(f"\n[saved] {OUT_PATH}")
+    out_path = Path(args.out)
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    out_path.write_text(json.dumps(results, ensure_ascii=False, indent=2), encoding="utf-8")
+    print(f"\n[saved] {out_path}")
 
     ok = [r for r in results if r["total_ms"]]
     print("\n" + "=" * 96)
@@ -361,8 +388,15 @@ def main() -> None:
         print(f"  median {label:32s}: {_s(statistics.median(vals) if vals else None)}  "
               f"(n={len(vals)})")
     interrupted = sum(1 for r in results if any("explanation_stream_interrupted" in w for w in r["warnings"]))
+    n_err = sum(1 for r in results if r["error"])
+    n_transient = sum(1 for r in results if r.get("transient_error"))
+    n_clean = len(results) - n_err
     print(f"\n  explanation_stream_interrupted: {interrupted}/{len(results)}")
-    print(f"  errors: {sum(1 for r in results if r['error'])}/{len(results)}")
+    print(f"  errors: {n_err}/{len(results)} (transient-after-retry: {n_transient})")
+    if n_err:
+        # Error-bucket: the judge must SKIP errored cases (no answer to judge), so the honest
+        # denominator is the clean-case count — print it so the pass-rate math is reproducible.
+        print(f"  clean cases (judgable): {n_clean}/{len(results)}")
 
 
 if __name__ == "__main__":

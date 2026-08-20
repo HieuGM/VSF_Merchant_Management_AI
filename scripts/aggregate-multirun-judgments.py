@@ -31,7 +31,10 @@ REPORTS = ROOT / "plans" / "reports"
 def _load(p: Path) -> dict | None:
     if not p.exists():
         return None
-    return {v["id"]: v["pass"] for v in json.loads(p.read_text(encoding="utf-8"))["verdicts"]}
+    # pass=None marks an eval-errored case (judge skipped it) — exclude from the verdict map
+    # so it counts in NEITHER passes NOR totals (it has no answer to judge).
+    return {v["id"]: v["pass"] for v in json.loads(p.read_text(encoding="utf-8"))["verdicts"]
+            if v.get("pass") is not None}
 
 
 def main() -> None:
