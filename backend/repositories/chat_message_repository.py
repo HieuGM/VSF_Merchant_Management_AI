@@ -179,7 +179,27 @@ class ChatMessageRepository:
         user_id is now provided → backfill (covers a session first seen anonymously). Title
         is only set on CREATE — existing rows keep their (possibly user-edited) title.
         Anonymous-safe when user_id is None (chat_sessions.user_id is nullable / ON DELETE
-        SET NULL, so no FK violation when no user_profiles row exists)."""
+        SET NULL, so no FK violation when no user_profiles row exists).
+
+        First-turn FK fix (audit 260820): a BRAND-NEW user's first plain message used to
+        lose its turn silently — this INSERT requires a user_profiles row, which only
+        maybe_persist creates, and maybe_persist no-ops when the message declares nothing.
+        Ensure the minimal profile row FIRST (same shape as the profile repo's upsert)."""
+        if user_id:
+            from database.models import UserProfile
+
+            if self._db.get(UserProfile, user_id) is None:
+                self._db.add(
+                    UserProfile(
+                        user_id=user_id,
+                        liked_cuisines=[],
+                        disliked_cuisines=[],
+                        dietary=[],
+                        allergens=[],
+                        distance_preference_km=5.0,
+                    )
+                )
+                self._db.flush()
         existing = self._db.get(ChatSession, session_id)
         if existing is None:
             self._db.add(

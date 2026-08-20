@@ -33,6 +33,13 @@ from tools.registry import registry
 from services import context_memory_service
 from services.active_constraints_enforcer import apply_constraints, query_requests_restriction
 from services.active_constraints_loader import active_constraints_block, build_active_constraints
+from flows.followup_resolution import (
+    carries_negated_term,
+    followup_needs_skip_search,
+    negation_filter_terms,
+    refined_max_price,
+    strip_negations,
+)
 
 _CREW_NAME = "customer_discovery"
 _LOG = logging.getLogger(__name__)
@@ -802,7 +809,12 @@ class CustomerFlow:
             name_followup = bool(name_targets) and (
                 bool(_DEMONSTRATIVE_RE.search(qn)) or bool(_FOLLOWUP_ATTR_RE.search(qn))
             ) and not bool(_REFINEMENT_RE.search(qn))
-            is_followup = bool(prior_turns) and (_is_anaphora_followup(query) or name_followup)
+            # followup_needs_skip_search (audit 260820): also catches BARE-referent turns
+            # ('Cái đầu tiên đó', 'Quán này có ổn không?') that carry no attribute word —
+            # previously these fell through to a fresh search and confabulated (TC-25/39/41).
+            is_followup = bool(prior_turns) and (
+                _is_anaphora_followup(query) or name_followup or followup_needs_skip_search(query)
+            )
             profile_hints = ""
             preference = None
             suggestions: list[dict[str, Any]] = []
@@ -882,6 +894,12 @@ class CustomerFlow:
             # Unified active-constraints filter (allergies + diet, all origins): drop any result
             # violating a hard constraint (cuisine/name L1 + dish-level L2 partial-overlap).
             results = apply_constraints(results, constraints)
+            # Explicit negation filter (TC-28 'không cay, không phải đồ chiên'): the search tool
+            # has no exclude_tags param, so drop results carrying a negated term post-search —
+            # deterministic, mirrors what the user asked to EXCLUDE this turn.
+            _neg_terms = negation_filter_terms(query)
+            if _neg_terms:
+                results = [r for r in results if not carries_negated_term(r, _neg_terms)]
             # Empty-result honesty: attribute the emptiness to the user's own constraint when
             # that is the actual cause (probe the unfiltered search), never confabulate.
             emptiness_note = _constraint_emptiness_note(
@@ -1079,6 +1097,22 @@ def _location_hint(lat: float | None, lng: float | None) -> str:
     )
 
 
+def _search_query_with_refined_price(
+    query: str | None, prior_turns: list[dict] | None
+) -> str:
+    """query_search = negation-stripped, price-word-normalized query (+ an explicit max_price
+    note when this is a cheaper-refinement over a prior explicit cap). See _build_inputs for
+    the TC-10/TC-28 rationale: the keyword leg must never receive the literal 'không cay không
+    chiên' string (matches no merchant name) — exclusions go through the post-search filter."""
+    base = strip_negations(normalize_price_words(query) or "")
+    prior_user = [t.get("text") or "" for t in (prior_turns or [])
+                  if (t.get("sender") or t.get("role")) == "user"]
+    cap = refined_max_price(query, prior_user)
+    if cap is None:
+        return base
+    return f"{base} (giá tối đa {cap}đ — thấp hơn mức trước)"
+
+
 def _build_inputs(
     *,
     query: str | None,
@@ -1120,7 +1154,10 @@ def _build_inputs(
         "query": query or "",
         # Price-word → digit (TC-34): the search agent gets "50000" for "năm chục nghìn" so it can
         # pass max_price (the explanation keeps the original {query} — user-facing, unchanged).
-        "query_search": normalize_price_words(query) or "",
+        # Cheaper-refinement (TC-10 'Rẻ hơn nữa được không'): when the prior USER turn carried an
+        # explicit cap, append the DERIVED lower cap so the search LLM has a concrete max_price —
+        # prior_context alone was not reliably lowering it (stable-fail across 3 eval runs).
+        "query_search": _search_query_with_refined_price(query, prior_turns),
         "cuisine": cuisine or "",
         "city": city or "",
         "budget": budget or "",
