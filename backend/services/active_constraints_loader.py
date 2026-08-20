@@ -25,13 +25,16 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import Any
 
-from core.constraint_catalog import CATALOG, scope_present
+from core.constraint_catalog import CATALOG, expand_child_scopes, normalize_abbreviations, scope_present
 from core.text_norm import fold_diacritics
 
 # Allergy verbs (diacritics-folded). A food term counts as an AVOID restriction only when one of
 # these co-occurs — so a plain "tôm hồ" / "quán hải sản" mention (no allergy verb) is NOT treated
-# as an exclusion.
-_ALLERGY_VERB_RE = re.compile(r"di ung|khong an duoc|ko an duoc|kien|bi dau|benh")
+# as an exclusion. 'không ăn X' (bare, no 'được') + 'không uống (được) X' cover the natural
+# dairy/organ declarations ("tôi không uống được sữa", "tôi không ăn nội tạng").
+_ALLERGY_VERB_RE = re.compile(
+    r"di ung|khong (an|uong)( duoc)?|ko (an|uong)( duoc)?|kien|bi dau|benh"
+)
 # Durable-declaration markers (folded). When present, a diet declaration persists cross-session;
 # otherwise it is session-scoped.
 _DURABLE_RE = re.compile(r"tu gio|tu nay|luon luon|trong tuong lai|truong")
@@ -57,10 +60,19 @@ _RECOVERY_RE = re.compile(
 # ALLERGIES are KEPT (safety posture: ordering for someone else still passes through the user's
 # own allergen awareness; dropping a seafood-allergy here would be indefensible). Suppression is
 # TURN-SCOPED (regex on the current query only) — the durable note itself is untouched.
+# POSITION RULE (eval 3.2): 'gia dinh'/'nguoi than' alone is CONTEXT, not delegation — a bare
+# family mention ("gia dinh hom nay la thu Hai, goi y do an trua cho toi" — the USER eats) must
+# NOT suspend the diet. They only count when an explicit FOR-SOMEONE construction co-occurs
+# (hộ/cho/thay/cty... + recipient), which the alternations below already spell out.
 _THIRD_PARTY_RE = re.compile(
-    r"an ho|ho ban|ban (toi|to|minh|cua toi)|ban ay|nguoi khac|gia dinh|cho (me|bo|chong|vo|ong|ba) "
-    r"|ban cua (toi|to|minh)|ket ban|dong nghiep|nguoi than"
+    r"an ho|ho ban|ban (toi|to|minh|cua toi)|ban ay|nguoi khac"
+    r"|cho (me|bo|chong|vo|ong|ba|con|em|anh|chi) "
+    r"|ban cua (toi|to|minh)|ket ban|dong nghiep"
+    r"|(gia dinh|nguoi than).{0,25}(an gi|thich|thom|muon an|goi y cho)"
 )
+# Contrast/caveat markers (folded) — END the post-verb allergy zone. 'dị ứng tôm NHƯNG vẫn
+# thích hải sản': the allergen is 'tôm'; the liking tail after 'nhưng' is not an allergen list.
+_CONTRAST_RE = re.compile(r"nhung|nhung ma|con (thich|muon)|van (thich|me|an)|ma van|nhe ra|doi lai")
 
 _SESSION_WINDOW = 8  # floor: recent USER turns scanned (covers transient "nay ăn chay" not in notes)
 
@@ -112,12 +124,31 @@ class ActiveConstraints:
 
 
 def _avoid_scopes(text_raw: str, text_folded: str) -> list[str]:
-    """Catalog 'avoid' scopes present (only when an allergy verb co-occurs; recovery suppresses)."""
-    if not text_folded or not _ALLERGY_VERB_RE.search(text_folded):
+    """Catalog 'avoid' scopes present (only when an allergy verb co-occurs; recovery suppresses).
+
+    POSITION-AWARE (eval 2.2): the allergen term must appear AFTER the first allergy verb and
+    BEFORE any contrast/liking tail. Vietnamese declarative order puts the allergen directly
+    behind the verb ('tôi bị dị ứng tôm'); a stated liking may sit before ('tôi thích hải sản
+    ... nhưng tôi dị ứng tôm') or after ('tôi dị ứng tôm nhưng vẫn thích hải sản'). Both
+    surrounding liking clauses must stay neutral — only the clause adjacent to the verb counts.
+    The allergy zone therefore ends at the first CONTRAST/CAVEAT marker (nhưng/nhỉ/mà...)."""
+    if not text_folded:
+        return []
+    m = _ALLERGY_VERB_RE.search(text_folded)
+    if not m:
         return []
     if _RECOVERY_RE.search(text_folded):
         return []  # user recovered from the allergy — do not impose
-    return [s for s, d in CATALOG.items() if d.kind == "avoid" and scope_present(d, text_raw, text_folded)]
+    zone_folded = text_folded[m.end():]             # everything after the verb …
+    cut = _CONTRAST_RE.search(zone_folded)          # … up to the first contrast/liking tail
+    if cut:
+        zone_folded = zone_folded[: cut.start()]
+    # RAW slice aligned to the TAIL (folding never lengthens text, so the last N chars of the
+    # raw text correspond to the folded tail — diacritics are only stripped/combined, never added).
+    n_raw = len(text_raw or "")
+    zone_raw = (text_raw or "")[max(0, n_raw - len(zone_folded)):] if zone_folded else ""
+    return [s for s, d in CATALOG.items()
+            if d.kind == "avoid" and scope_present(d, zone_raw, zone_folded)]
 
 
 def _want_scopes(text_raw: str, text_folded: str) -> list[tuple[str, bool]]:
@@ -136,9 +167,12 @@ def _want_scopes(text_raw: str, text_folded: str) -> list[tuple[str, bool]]:
 
 def _from_text(text_raw: str, origin: str, persistence: str) -> list[Constraint]:
     """Extract constraints from one text blob (raw + its fold) with a known origin/persistence."""
+    text_raw = normalize_abbreviations(text_raw)  # 'dị ứng HS' → 'dị ứng hải sản' (eval 8.3)
     text_folded = fold_diacritics(text_raw)
     out: list[Constraint] = []
-    for scope in _avoid_scopes(text_raw, text_folded):  # allergy → hard
+    # Parent→children (seafood ⊃ shrimp): a general declaration enforces the narrower scope too.
+    avoid_scopes = expand_child_scopes(_avoid_scopes(text_raw, text_folded))
+    for scope in avoid_scopes:  # allergy → hard
         out.append(Constraint("allergy", scope, "hard_filter", origin, persistence,
                               f"dị ứng/không ăn được {CATALOG[scope].label_vi}"))
     for scope, durable in _want_scopes(text_raw, text_folded):  # diet → hard (want)
@@ -194,7 +228,7 @@ def _process_declaration(
     (Layer 2) and the no-cap ``allergens`` loop (Phase 2) so both paths enforce + warn identically
     — a permanent allergy thus survives even when its note twin was FIFO-evicted (6.1).
     ``suppress_diet`` (third-party turn) skips ONLY diet constraints — allergies still enforce."""
-    note_str = str(text)
+    note_str = normalize_abbreviations(str(text))  # abbreviations (HS→hải sản) before matching
     folded_note = fold_diacritics(note_str)
     produced = _from_text(note_str, origin, "durable")
     for c in produced:

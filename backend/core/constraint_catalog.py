@@ -42,7 +42,16 @@ _HOMOPHONE_CANONICAL: dict[str, str] = {
     "muc": "mực",   # squid vs mục (purpose) / mức (level)
     "so": "sò",     # clam vs so (compare 'so sánh') — also killed as a substring of sốt by tokenizing
     "chay": "chay", # vegetarian (toneless) vs chạy (run 'chạy bộ')
+    "sua": "sữa",   # milk vs sửa (fix 'sửa xe') / sủa (bark) — dairy needs the diacritic form
+    "lac": "lạc",   # peanut vs lạc (obsolete 'lạc hậu') / lắc (shake 'lắc phô mai') — see note below
 }
+
+# Common ABBREVIATIONS users type (8.3 stress case: 'HS' = hải sản). Expanded BEFORE folding so
+# the catalog matcher sees the full form. Keys folded; whole-word replace only (avoid hitting
+# inside longer words); applied on the RAW text (lowercased) in normalize_abbreviations().
+_ABBREVIATIONS: tuple[tuple[str, str], ...] = (
+    ("hs", "hải sản"),
+)
 
 
 @dataclass(frozen=True)
@@ -59,18 +68,77 @@ class ConstraintDef:
 # Bare "cá" (fish) is intentionally excluded — too broad; shellfish/sushi are the medically
 # high-risk carriers a seafood-allergic user must avoid.
 _SEAFOOD_TERMS: tuple[str, ...] = (
-    "hải sản", "tôm", "cua", "ghẹ", "mực", "ngao", "nghêu", "ốc", "sò",  # shellfish
-    "tôm hùm",                                                          # lobster
-    "sushi", "sashimi",                                                 # sushi-grade (high seafood cross-risk)
+    "hải sản", "cua", "ghẹ", "mực", "ngao", "nghêu", "ốc", "sò",  # shellfish (NO tôm — own scope)
+    "sushi", "sashimi",                                            # sushi-grade (high seafood cross-risk)
 )
 _CHAY_TERMS: tuple[str, ...] = ("chay", "vegetarian")
+
+# --- NEW SCOPES (memory-eval 260813 khuyến nghị #1 + #5; data-probed against the 1625-merchant
+# corpus + 99k menu_items before term selection — homophone-prone tokens measured and EXCLUDED):
+#   - peanut: NO 'lạc' despite being a common synonym — folds to 'lac' which collides with
+#     'lắc' (lắc phô mai, ~1000 false dish hits) and street names (Lạc Trung, Lạc Long Quân).
+#     'đậu phộng' (phrase, unambiguous) + 'peanut' cover the real carriers (55 true dishes).
+#   - dairy: 'sữa' kept as a HOMOPHONE canonical (needs diacritic — sửa/sủa false positives);
+#     'phô mai'/'cheese' phrase+token are unambiguous (4857 dishes, all true).
+#   - gluten: no 'mì' alone (mì = noodles generally, folds 'mi' ⊂ mien/mien… too broad);
+#     phrase forms only ('mì Ý', 'spaghetti', 'bánh mì kẹp' — 66 merchants, 340 dishes).
+#   - organ_meat: NO 'lòng' — collides with Ô long tea + proper names (Hoàng Long, 20 mostly-false
+#     merchant hits); 'nội tạng'/'tiết canh'/'trứng vịt lộn' are unambiguous phrases.
+#   - shrimp: split OUT of seafood (eval 2.2 — dị ứng tôm but likes other seafood was
+#     over-excluded). seafood no longer carries 'tôm'/'tôm hùm'; this scope does.
+_PEANUT_TERMS: tuple[str, ...] = ("đậu phộng", "bơ đậu phộng", "peanut")
+_DAIRY_TERMS: tuple[str, ...] = ("sữa", "phô mai", "bơ sữa", "cheese")
+_GLUTEN_TERMS: tuple[str, ...] = ("gluten", "bánh mì kẹp", "mì Ý", "spaghetti")
+_ORGAN_MEAT_TERMS: tuple[str, ...] = ("nội tạng", "tim gan", "tiết canh", "trứng vịt lộn")
+_SHRIMP_TERMS: tuple[str, ...] = ("tôm", "tôm hùm")
 
 # The catalog. Extensible — new restriction = new row. Terms kept in their canonical diacritic
 # form (NOT pre-folded) so the collision-safe matcher can re-check homophones against raw text.
 CATALOG: dict[str, ConstraintDef] = {
     "seafood": ConstraintDef("seafood", "hải sản", _SEAFOOD_TERMS, "avoid"),
     "chay": ConstraintDef("chay", "đồ chay", _CHAY_TERMS, "want"),
+    "shrimp": ConstraintDef("shrimp", "tôm", _SHRIMP_TERMS, "avoid"),
+    "peanut": ConstraintDef("peanut", "đậu phộng", _PEANUT_TERMS, "avoid"),
+    "dairy": ConstraintDef("dairy", "sữa/phô mai", _DAIRY_TERMS, "avoid"),
+    "gluten": ConstraintDef("gluten", "gluten/bánh mì", _GLUTEN_TERMS, "avoid"),
+    "organ_meat": ConstraintDef("organ_meat", "nội tạng", _ORGAN_MEAT_TERMS, "avoid"),
 }
+
+
+# Scope HIERARCHY: declaring a PARENT allergy also enforces the CHILD scopes (medical reality —
+# a general seafood allergy includes shellfish, so 'dị ứng hải sản' must still drop tôm places
+# even though 'tôm' moved to its own scope for the 2.2 shrimp-only case). One direction only:
+# declaring the CHILD ('dị ứng tôm') does NOT impose the parent — that is exactly the 2.2 fix.
+_SCOPE_CHILDREN: dict[str, tuple[str, ...]] = {
+    "seafood": ("shrimp",),
+}
+
+
+def expand_child_scopes(scopes: list[str]) -> list[str]:
+    """Add each fired scope's children (dedup, order-stable). Used by the loader after scope
+    detection so parent declarations enforce the narrower scopes too."""
+    out = list(scopes)
+    for s in scopes:
+        for child in _SCOPE_CHILDREN.get(s, ()):
+            if child in CATALOG and child not in out:
+                out.append(child)
+    return out
+
+
+def normalize_abbreviations(text: str | None) -> str:
+    """Expand user-typed abbreviations (whole-word) so the catalog matcher sees full forms.
+
+    Eval 8.3: 'mình dị ứng HS' — the note stored fine but no scope fired because the catalog
+    matcher looks for 'hải sản'/'tôm'… tokens. Expansion matches on the LOWERCASED text but
+    returns the ORIGINAL text unchanged when nothing fires — health-notes are surfaced
+    verbatim (test: 'Tôi bị dị ứng tôm' must not come back lowercased)."""
+    if not text:
+        return text or ""
+    import re as _re
+    for short, full in _ABBREVIATIONS:
+        if _re.search(rf"\b{_re.escape(short)}\b", text.lower()):
+            return _re.sub(rf"\b{_re.escape(short)}\b", full, text.lower())
+    return text
 
 
 def _term_present(

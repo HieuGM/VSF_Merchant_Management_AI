@@ -27,7 +27,11 @@ def M(name, cuisine, tags=None, dishes=None):
 # --- LOADER: derives constraints from all 3 memory layers ---
 def test_seafood_allergy_from_note_is_hard():
     cs = build(NS(dietary=[], disliked_cuisines=[], context_memory={"notes": ["Tôi không ăn được hải sản"]}), [], "xin chào")
-    assert [(c.type, c.scope, c.enforce, c.persistence) for c in cs.hard] == [("allergy", "seafood", "hard_filter", "durable")]
+    # seafood declaration now ALSO enforces child scope shrimp (parent→children hierarchy).
+    assert [(c.type, c.scope, c.enforce, c.persistence) for c in cs.hard] == [
+        ("allergy", "seafood", "hard_filter", "durable"),
+        ("allergy", "shrimp", "hard_filter", "durable"),
+    ]
 
 
 def test_chay_durable_from_profile_dietary():
@@ -198,3 +202,101 @@ def test_durable_marker_in_session_turn_honored():
     # 'từ giờ ... chay trường' in the current message → persistence durable (flag no longer discarded).
     cs = build(None, [], "Từ giờ nhớ tôi ăn chay trường nhé")
     assert any(c.scope == "chay" and c.persistence == "durable" for c in cs.hard)
+
+
+# --- CATALOG EXPANSION (260820): peanut/dairy/gluten/organ_meat + shrimp split + HS abbrev ---
+def test_peanut_allergy_hard_filters_buffet_dish():
+    cs = build(NS(dietary=[], disliked_cuisines=[],
+                  context_memory={"notes": ["Tôi dị ứng đậu phộng"]}), [], "gợi ý buffet")
+    assert any(c.scope == "peanut" for c in cs.hard)
+    # L2 every-dish check: an all-peanut menu drops, a mixed one survives.
+    assert violates_hard(M("Buffet ABC", "Buffet", dishes=["Gỏi đậu phộng"]), cs) is not None
+    assert violates_hard(M("Buffet ABC", "Buffet", dishes=["Gỏi đậu phộng", "Bún chả"]), cs) is None
+
+def test_peanut_lac_homophone_not_fired():
+    # 'lắc phô mai' (shake) and street 'Lạc Trung' must NOT fire peanut — that is why 'lạc'
+    # is excluded from the terms despite being a common peanut synonym.
+    cs = build(NS(dietary=[], disliked_cuisines=[],
+                  context_memory={"notes": ["Tôi dị ứng đậu phộng"]}), [], "gợi ý")
+    assert violates_hard(M("Khoai Lắc Phô Mai", "Ăn vặt"), cs) is None
+    assert violates_hard(M("Rovis Cafe - Lạc Trung", "Cafe"), cs) is None
+
+def test_dairy_allergy_filters_milk_tea():
+    cs = build(NS(dietary=[], disliked_cuisines=[],
+                  context_memory={"notes": ["Tôi không uống được sữa"]}), [], "trà gì ngon")
+    assert any(c.scope == "dairy" for c in cs.hard)
+    assert violates_hard(M("Trà Sữa Tocotoco", "Café/Dessert"), cs) is not None
+
+def test_dairy_sua_homophone_requires_diacritic():
+    # 'sửa xe' (repair) folds to 'sua' = 'sữa' — the homophone re-check must not fire dairy.
+    cs = build(NS(dietary=[], disliked_cuisines=[],
+                  context_memory={"notes": ["Tôi dị ứng sữa"]}), [], "gợi ý")
+    assert violates_hard(M("Tiệm Sửa Xe Huy", "Quán ăn"), cs) is None
+
+def test_gluten_allergy_filters_spaghetti_place():
+    cs = build(NS(dietary=[], disliked_cuisines=[],
+                  context_memory={"notes": ["Tôi dị ứng gluten"]}), [], "gợi ý Ý")
+    assert any(c.scope == "gluten" for c in cs.hard)
+    assert violates_hard(M("Hô Hô Kitchen - Pizza & Mì Ý", "Ý"), cs) is not None
+    assert violates_hard(M("Bún Đậu Bếp Tiên", "Món Việt"), cs) is None  # rice noodle — safe
+
+def test_organ_meat_filters_nội_tạng_not_o_long():
+    cs = build(NS(dietary=[], disliked_cuisines=[],
+                  context_memory={"notes": ["Tôi không ăn nội tạng"]}), [], "gợi ý")
+    assert any(c.scope == "organ_meat" for c in cs.hard)
+    assert violates_hard(M("Nhà hàng Nội tạng hấp", "Món Việt"), cs) is not None
+    assert violates_hard(M("TRÀ Ô LONG ướp lạnh", "Café/Dessert"), cs) is None
+
+def test_shrimp_split_seafood_scope_2_2():
+    # Eval 2.2: dị ứng TÔM nhưng vẫn thích hải sản nói chung → chỉ shrimp enforce, seafood không.
+    cs = build(NS(dietary=[], disliked_cuisines=[],
+                  context_memory={"notes": ["Tôi dị ứng tôm"]}), [], "gợi ý hải sản")
+    assert any(c.scope == "shrimp" for c in cs.hard)
+    assert not any(c.scope == "seafood" for c in cs.hard)
+    assert violates_hard(M("Bún Tôm Nước Cua", "Món Việt"), cs) is not None     # tôm place drops
+    assert violates_hard(M("Lẩu Hải Sản Bờ Hồ", "Hải sản"), cs) is None        # other seafood survives
+
+def test_seafood_declaration_enforces_child_shrimp():
+    # Parent seafood ⊃ child shrimp: general declaration still drops tôm places (safety).
+    cs = build(NS(dietary=[], disliked_cuisines=[],
+                  context_memory={"notes": ["Tôi dị ứng hải sản"]}), [], "gợi ý")
+    assert {c.scope for c in cs.hard} == {"seafood", "shrimp"}
+    assert violates_hard(M("Bún Tôm Nước Cua", "Món Việt"), cs) is not None
+
+def test_hs_abbreviation_expands_to_seafood_8_3():
+    # Eval 8.3: 'mình dị ứng HS' — abbreviation must produce the seafood scope (both + shrimp).
+    cs = build(NS(dietary=[], disliked_cuisines=[],
+                  context_memory={"notes": ["mình dị ứng HS"]}), [], "gợi ý")
+    assert "seafood" in {c.scope for c in cs.hard}
+
+def test_abbreviation_no_rewrite_when_absent():
+    # normalize_abbreviations returns the text UNCHANGED (original case) when no abbrev fires —
+    # health-notes are surfaced verbatim.
+    from core.constraint_catalog import normalize_abbreviations
+    assert normalize_abbreviations("Tôi bị dị ứng tôm") == "Tôi bị dị ứng tôm"
+    assert normalize_abbreviations("quán HS ngon") == "quán hải sản ngon"
+
+
+# --- 3.2 fix: bare family/relative CONTEXT must not suspend the diet; delegation phrases must ---
+def test_family_context_note_keeps_diet():
+    # Eval 3.2: 'gia dinh hom nay la thu Hai' is CONTEXT (the user eats), not eating-for-someone.
+    prof = NS(dietary=[], disliked_cuisines=[],
+              context_memory={"notes": ["Toi an chay vao thu Hai hang tuan"]})
+    cs = build(prof, [], "Gia dinh hom nay la thu Hai, goi y do an trua cho toi")
+    assert any(c.scope == "chay" for c in cs.hard)
+
+def test_family_delegation_phrase_still_suspends_diet():
+    # Explicit for-someone construction ('gia dinh ... goi y cho' / 'an ho') still suspends.
+    prof = NS(dietary=[], disliked_cuisines=[],
+              context_memory={"notes": ["Tôi ăn chay trường nhé"]})
+    cs = build(prof, [], "Gia dinh toi muon an do nuong, goi y cho")
+    assert not any(c.scope == "chay" for c in cs.hard)
+
+def test_mixed_like_then_allergy_sentence_2_2():
+    # 'thích hải sản ... nhưng dị ứng tôm' — the liking term BEFORE the verb must NOT fire
+    # seafood; only the post-verb allergen (shrimp) does.
+    cs = build(NS(dietary=[], disliked_cuisines=[],
+                  context_memory={"notes": ["Toi thich hai san lam... a khoan, toi bi di ung tom nhe."]}),
+               [], "gợi ý hải sản")
+    scopes = {c.scope for c in cs.hard}
+    assert scopes == {"shrimp"}
