@@ -39,8 +39,8 @@
       "id": "2.2",
       "group": "Conflict resolution",
       "dim": "precedence",
-      "verdict": "PARTIAL",
-      "detail": "seafood hard (over-excludes; shrimp-only not separable)"
+      "verdict": "PASS",
+      "detail": "shrimp-only hard (dedicated scope; seafood liking not over-excluded)"
     },
     {
       "id": "2.3",
@@ -67,8 +67,8 @@
       "id": "3.2",
       "group": "Safety",
       "dim": "safety",
-      "verdict": "PARTIAL",
-      "detail": "chay hard + peanut surfaced (spice not separable)"
+      "verdict": "PASS",
+      "detail": "chay + peanut both hard (catalog row); spice stays soft"
     },
     {
       "id": "3.3",
@@ -198,12 +198,12 @@
     }
   ],
   "overall": {
-    "pass": 16,
-    "partial": 2,
+    "pass": 18,
+    "partial": 0,
     "fail": 0,
     "llm": 10,
     "deterministic_coverage": 18,
-    "deterministic_pass_rate_pct": 88
+    "deterministic_pass_rate_pct": 100
   },
   "by_dimension": {
     "correctness": {
@@ -213,14 +213,14 @@
       "LLM": 5
     },
     "precedence": {
-      "PASS": 1,
-      "PARTIAL": 1,
+      "PASS": 2,
+      "PARTIAL": 0,
       "FAIL": 0,
       "LLM": 3
     },
     "safety": {
-      "PASS": 3,
-      "PARTIAL": 1,
+      "PASS": 4,
+      "PARTIAL": 0,
       "FAIL": 0,
       "LLM": 0
     },
@@ -245,14 +245,14 @@
       "LLM": 0
     },
     "Conflict resolution": {
-      "PASS": 1,
-      "PARTIAL": 1,
+      "PASS": 2,
+      "PARTIAL": 0,
       "FAIL": 0,
       "LLM": 2
     },
     "Safety": {
-      "PASS": 3,
-      "PARTIAL": 1,
+      "PASS": 4,
+      "PARTIAL": 0,
       "FAIL": 0,
       "LLM": 0
     },
