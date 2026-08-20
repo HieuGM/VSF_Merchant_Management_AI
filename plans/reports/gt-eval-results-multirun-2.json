@@ -1,46 +1,15 @@
 [
   {
-    "total_ms": 18394.934699870646,
-    "ttft_ms": 17288.83700002916,
-    "explain_ms": 1106.0976998414844,
-    "answer": "Ồ, quán cơm gần Cầu Giấy giá dưới 50k mà rating trên 4 sao hả? Mình thấy có mấy quán khá hợp lý nè: **Cơm Rang Gà Sốt 30K** ở Nghĩa Tân (cách bạn ~0.7km, rating 4.5), **Le Pain Lee** và **Doo Foods** ở Dịch Vọng (cũng ~0.8km, rating 4.6 và 4.7). Cả ba đều là quán ăn, nhưng mình chưa có thông tin giá cụ thể — bạn muốn mình check thêm không?",
-    "results": [
-      {
-        "merchant_id": "246072",
-        "name": "Cơm Rang Gà Sốt 30K - Khu Tập Thể Nghĩa Tân",
-        "cuisine": "Quán ăn",
-        "address": "104 C3 Khu Tập Thể Nghĩa Tân, P. Nghĩa Tân, Cầu Giấy, Hà Nội",
-        "distance_km": 0.74,
-        "avg_rating": 4.5,
-        "match_score": 1.0,
-        "image_url": "https://mms.img.susercontent.com/vn-11134517-7r98o-lr0gpf4qtcxw77@resize_ss1242x1242!@crop_w1242_h1242_cT"
-      },
-      {
-        "merchant_id": "275382",
-        "name": "Le Pain Lee - Burger, Gà Rán & Cơm Gà - Dịch Vọng",
-        "cuisine": "Quán ăn",
-        "address": "Số 48 Ngõ 37 Dịch Vọng, P. Dịch Vọng, Cầu Giấy, Hà Nội",
-        "distance_km": 0.81,
-        "avg_rating": 4.6,
-        "match_score": 1.0,
-        "image_url": "https://mms.img.susercontent.com/vn-11134517-7ra0g-m724us4o1kyv92@resize_ss1242x1242!@crop_w1242_h1242_cT"
-      },
-      {
-        "merchant_id": "341471",
-        "name": "Doo Foods - Burger, Gà Rán & Cơm Gà - Cầu Giấy",
-        "cuisine": "Quán ăn",
-        "address": "50/110 Ngõ 165 Đường Cầu Giấy, P. Dịch Vọng, Cầu Giấy, Hà Nội",
-        "distance_km": 0.81,
-        "avg_rating": 4.7,
-        "match_score": 1.0,
-        "image_url": "https://mms.img.susercontent.com/vn-11134517-7r98o-lx7zzdb0vgm3cb@resize_ss1242x1242!@crop_w1242_h1242_cT"
-      }
-    ],
+    "total_ms": 0.0,
+    "ttft_ms": null,
+    "explain_ms": null,
+    "answer": "",
+    "results": [],
     "suggestions": [],
     "warnings": [],
-    "trace_id": "trace_b6e0e6d7de944a69",
-    "token_chunks": 82,
-    "error": null,
+    "trace_id": null,
+    "token_chunks": 0,
+    "error": "{'error_code': 'TimeoutError', 'message': 'Task \\'Tìm quán ăn phù hợp với yêu cầu: \"Tìm quán cơm gần Cầu Giấy, giá dưới 50k, rating trên 4 sao\". Ràng buộc: cuisine=, thành phố=, ngân sách=, vị trí=(lat=21.036, lng=105.79), bán kính=5.0 km.\\nQUY TRÌNH: 1. Chọn ĐÚNG 1 công cụ, gọi ĐÚNG 1 LẦN rồi DỪNG:\\n   - nearby_merchant_search: CHỈ khi lat VÀ lng đều có giá trị số. Cần radius_km.\\n     Dùng cho \"gần đây\", \"xung quanh\", \"trong X km\".\\n   - merchant_search: mọi trường hợp còn lại (theo city / cuisine / query text), không cần lat/lng.\\n   Quy tắc: lat/lng rỗng (\"\") → merchant_search.\\n2. Truyền ràng buộc NGUYÊN VẸN như người dùng đưa (min_rating, price_max, city, cuisine).\\n   KHÔNG tự hạ/raise ngưỡng, KHÔNG nới lỏng để \"có kết quả\". Bỏ qua (None) min_price /\\n   max_price / min_rating nếu người dùng không nói đến.\\n   **ĐỊA ĐIỂM (RẤT QUAN TRỌNG):** nếu query nhắc khu vực/quận/phường/thành phố nào\\n   (Cầu Giấy, Tây Hồ, Đống Đa, Mỹ Đình, Q.1, Hà Nội, Sài Gòn...) → PHẢI truyền vào `city`.\\n   \"gần X / ở X / khu X / quận X\" → city=X. KHÔNG được bỏ qua địa điểm — không truyền city\\n   sẽ trả quán SAU khu vực, sai nhu cầu người dùng.\\n3. Phân biệt MÓN vs LOẠI: tên món (\"phở\", \"sushi\", \"trà sữa\") → tham số `query`;\\n   loại ẩm thực rộng (\"Món Việt\", \"Nhật\", \"Hàn\") → `cuisine`. KHÔNG nhét tên món vào cuisine.\\n\\nNGUYÊN TẮC TRUNG THỰC (QUAN TRỌNG NHẤT): - CHỈ trả quán CÓ THẬT trong kết quả công cụ trả về. KHÔNG bịa tên / địa chỉ / rating /\\n  merchant_id, kể cả khi nghe hợp lý.\\n- Nếu công cụ trả rỗng → trả candidates=[] (rỗng). Ít kết quả thật tốt hơn nhiều kết quả giả. - KHÔNG gọi lặp công cụ, KHÔNG xen kẽ nearby/merchant_search để \"lấy thêm\". - KHÔNG TỰ BỎ kết quả thật vì lý do khoảng cách. Với query \"gần đây\"/\"xung quanh\", công cụ\\n  có thể tự mở rộng bán kính và trả về các quán GẦN NHẤT (đã sắp xếp theo khoảng cách) kể\\n  cả khi hơi xa. Hãy VẪN TRẢ các quán đó để câu trả lời nói thật khoảng cách (ví dụ \"gần\\n  nhất cũng ~15km\") — ĐỪNG trả candidates=[] khi công cụ đã có kết quả. Trả [] CHỈ khi công\\n  cụ thực sự rỗng. Bỏ kết quả thật khiến người dùng không nhận được gợi ý dù đã tìm thấy.\\n\\nGỢI Ý MỞ RỘNG (chỉ tham khảo khi người dùng dùng từ mơ hồ — \"đỡ ngán\", \"thanh đạm\", \"trời lạnh\", \"chill\", \"ăn kiêng\"... DÙNG để chọn `query`/`cuisine` rõ hơn; BỎ QUA nếu \"(không có)\"): (không có)\\nLƯU Ý: phiên này CHƯA có lịch sử trò chuyện trước đó. TUYỆT ĐỐI KHÔNG nhắc \\'lần trước\\'/\\'hồi nãy\\'/\\'từng gợi ý\\'/\\'bạn đã biết quán đó\\' hay bất kỳ gợi ý về cuộc trò chuyện cũ — đó sẽ là BỊA. Mọi quán nhắc tới phải lấy từ \\'Ứng viên quán\\' bên dưới.\\n\\' execution timed out after 15 seconds. Consider increasing max_execution_time or optimizing the task.'}",
     "id": "TC-01",
     "category": "happy_path",
     "difficulty": "easy",
@@ -65,57 +34,122 @@
         "expected_result": "non_empty"
       }
     },
-    "search_ms": 6716.0,
+    "search_ms": null,
     "preference_ms": null,
-    "tools": {
-      "nearby_merchant_search": 292.0
-    },
+    "tools": {},
     "coords_sent": true,
     "weather_sent": false,
     "had_prior_turns": false,
-    "prior_seeded": false
+    "prior_seeded": false,
+    "transient_error": true
   },
   {
-    "total_ms": 10399.247699882835,
-    "ttft_ms": 8303.83350001648,
-    "explain_ms": 2095.4141998663545,
-    "answer": "Ồ, mình lướt qua danh sách thấy các quán bún chả ngon quanh Hà Nội, nhưng tiếc là chưa có quán nào nằm hẳn trong khu Đống Đa cả — toàn ở Ba Đình với Hoàn Kiếm thôi bạn à. Nếu bạn muốn ghé gần nhất thì **Bún Chả Liên Anh** (148 Ngọc Khánh) cách Đống Đa tầm 2.8km, rating 4.5 ổn áp. Còn nếu chịu khó đi xa hơn tí, **Bún Chả Sự - Hàng Mành** (Hoàn Kiếm) điểm 4.6 cũng đỉnh lắm.",
+    "total_ms": 66779.97969998978,
+    "ttft_ms": 63132.090499973856,
+    "explain_ms": 3647.889200015925,
+    "answer": "Ồ, khu Đống Đa mình chưa thấy quán **bún chả** nào trong danh sách gần bạn, nhưng có mấy quán bún khác cũng hấp dẫn lắm nè! Gần nhất là **Bún Riêu Cô Hương Béo** ở Tôn Thất Tùng, cách bạn chỉ ~260m, rating 4.7 — bún riêu đậm đà, hợp bữa trưa nhẹ nhàng. Còn **Bà Tuyết - Bún Thái Hải Sản & Mì Chua Cay** ở Lương Định Của cũng gần (~380m), rating 4.7 luôn, cay chua sảng khoái. Hay bạn thử đổi gió món bún riêu cua tóp mỡ của **Huỳnh Anh CS3** (~1.2km, 4.5 sao) nhé? Muốn mình tìm rộng hơn quanh khu này cho món bún chả không?",
     "results": [
       {
-        "merchant_id": "36181",
-        "name": "Bún Chả Liên Anh",
-        "cuisine": "Món Việt, Món Bắc",
-        "address": "148 Ngọc Khánh, P. Giàng Võ, Ba Đình, Hà Nội",
-        "distance_km": 2.86,
+        "merchant_id": "233086",
+        "name": "Bún Riêu Cô Hương Béo - Tôn Thất Tùng",
+        "cuisine": "Quán ăn",
+        "address": "109A11 Tôn Thất Tùng, P. Kim Liên, Đống Đa, Hà Nội",
+        "city": "Hà Nội",
+        "distance_km": 0.26,
+        "avg_rating": 4.7,
+        "match_score": 0.65,
+        "image_url": "https://mms.img.susercontent.com/vn-11134517-7r98o-lsv0ormdmjesbb@resize_ss1242x1242!@crop_w1242_h1242_cT",
+        "top_dishes": [
+          {
+            "name": "Combo bữa trưa cực đã",
+            "price": 97000,
+            "likes": 0
+          },
+          {
+            "name": "Combo bữa trưa ấm áp",
+            "price": 95000,
+            "likes": 0
+          },
+          {
+            "name": "Bún Riêu Tóp Mỡ Đặc Biệt + Coca",
+            "price": 94000,
+            "likes": 0
+          }
+        ],
+        "lat": 21.00506768,
+        "lng": 105.83081249,
+        "opens_at": "06:00:00",
+        "closes_at": "23:59:00"
+      },
+      {
+        "merchant_id": "406921",
+        "name": "Bà Tuyết - Bún Thái Hải Sản & Mì Chua Cay - Lương Định Của",
+        "cuisine": "Quán ăn",
+        "address": "Số 8 Ngõ 8 Lương Định Của, P. Kim Liên, Đống Đa, Hà Nội",
+        "city": "Hà Nội",
+        "distance_km": 0.38,
+        "avg_rating": 4.7,
+        "match_score": 0.65,
+        "image_url": "https://mms.img.susercontent.com/vn-11134517-7ras8-mchh8uns3y8y12@resize_ss1242x1242!@crop_w1242_h1242_cT",
+        "top_dishes": [
+          {
+            "name": "Bún Thái Đặc Biệt + Pepsi",
+            "price": 99000,
+            "likes": 0
+          },
+          {
+            "name": "Mì Tomyum Đặc Biệt + Pepsi",
+            "price": 99000,
+            "likes": 0
+          },
+          {
+            "name": "Mì Chua Cay Full Topping",
+            "price": 89000,
+            "likes": 0
+          }
+        ],
+        "lat": 21.00732196,
+        "lng": 105.8339085,
+        "opens_at": "09:00:00",
+        "closes_at": "23:59:00"
+      },
+      {
+        "merchant_id": "352816",
+        "name": "Bún Riêu Cua Tóp Mỡ Huỳnh Anh CS3 - Nguyễn Văn Tuyết",
+        "cuisine": "Quán ăn",
+        "address": "43 Nguyễn Văn Tuyết, P. Ngã Tư Sở, Đống Đa, Hà Nội",
+        "city": "Hà Nội",
+        "distance_km": 1.18,
         "avg_rating": 4.5,
-        "match_score": 1.0,
-        "image_url": "https://mms.img.susercontent.com/vn-11134517-820l4-mdvpridfpu6a20@resize_ss1242x1242!@crop_w1242_h1242_cT"
-      },
-      {
-        "merchant_id": "27826",
-        "name": "Bún Chả Sự - Hàng Mành",
-        "cuisine": "Món Việt",
-        "address": "2 Hàng Mành, Hoàn Kiếm, Hà Nội",
-        "distance_km": 3.51,
-        "avg_rating": 4.6,
-        "match_score": 1.0,
-        "image_url": "https://mms.img.susercontent.com/vn-11134517-7r98o-lqxqkubothac82@resize_ss1242x1242!@crop_w1242_h1242_cT"
-      },
-      {
-        "merchant_id": "6886",
-        "name": "Bún Chả Nem - Hàng Bún",
-        "cuisine": "Món Bắc, Hà Nội",
-        "address": "55 Hàng Bún, Ba Đình, Hà Nội",
-        "distance_km": 4.33,
-        "avg_rating": 4.4,
-        "match_score": 1.0,
-        "image_url": "https://mms.img.susercontent.com/vn-11134517-7r98o-lqvtsa7xzb89a6@resize_ss1242x1242!@crop_w1242_h1242_cT"
+        "match_score": 0.65,
+        "image_url": "https://mms.img.susercontent.com/vn-11134517-7r98o-lwbenr8h123f35@resize_ss1242x1242!@crop_w1242_h1242_cT",
+        "top_dishes": [
+          {
+            "name": "Lẩu Riêu Cua Sườn Sụn (Set 4-5ng)",
+            "price": 620000,
+            "likes": 0
+          },
+          {
+            "name": "Lẩu Riêu Cua Sườn Sụn (Set 3ng)",
+            "price": 510000,
+            "likes": 0
+          },
+          {
+            "name": "Lẩu Riêu Cua Sườn Sụn (Set 2 Người)",
+            "price": 400000,
+            "likes": 0
+          }
+        ],
+        "lat": 21.0073464,
+        "lng": 105.82224294,
+        "opens_at": "07:30:00",
+        "closes_at": "23:00:59"
       }
     ],
     "suggestions": [],
     "warnings": [],
-    "trace_id": "trace_e331801f21194114",
-    "token_chunks": 113,
+    "trace_id": "trace_c229343889044bcc",
+    "token_chunks": 244,
     "error": null,
     "id": "TC-02",
     "category": "happy_path",
@@ -145,41 +179,34 @@
         "max_merchants_explained": 1
       }
     },
-    "search_ms": 4047.0,
+    "search_ms": 12060.0,
     "preference_ms": null,
     "tools": {
-      "nearby_merchant_search": 670.0
+      "nearby_merchant_search": 49.0
     },
     "coords_sent": true,
     "weather_sent": false,
     "had_prior_turns": false,
-    "prior_seeded": false
+    "prior_seeded": false,
+    "transient_error": false
   },
   {
-    "total_ms": 11379.966299980879,
-    "ttft_ms": 10000.257699983194,
-    "explain_ms": 1379.7085999976844,
-    "answer": "Trời mưa thế này, chắc bạn cũng muốn kiếm gì đó gần nhà cho tiện ha. Mình thấy bạn thích món Việt và chay — hay là thử món bún chay hoặc phở chay nhẹ nhàng cho bữa trưa? Trong bán kính 2-3km chắc có vài quán giao nhanh lắm, đỡ phải lội mưa.",
+    "total_ms": 76332.25570002105,
+    "ttft_ms": 74588.00069999415,
+    "explain_ms": 1744.2550000268966,
+    "answer": "Hmm, trời đang mưa nhỉ — chắc bạn muốn tìm gì đó gần và giao nhanh hơn ha. Mình chưa nắm rõ bạn đang ở khu nào lắm, bạn cho mình biết vị trí hoặc thèm món gì (phở, bún, hay đồ ấm bụng?) để mình tìm quán hợp nhé?",
     "results": [],
     "suggestions": [
       {
-        "delta_id": "delta-1",
-        "field": "preferred_cuisine",
-        "operation": "set",
-        "value": "việt",
-        "confidence": 0.9,
-        "rationale": "User’s liked_cuisines include \"việt\" and \"chay\"; for a lunch request, Vietnamese cuisine is a natural choice."
-      },
-      {
-        "delta_id": "delta-2",
+        "delta_id": "delta-001",
         "field": "distance_preference_km",
         "operation": "set",
-        "value": 2,
-        "confidence": 0.7,
-        "rationale": "Weather indicates rain, so staying closer to home or ordering delivery is preferable; user’s current distance preference is 5 km, reducing it to 2 km aligns with this context."
+        "value": 2.0,
+        "confidence": 0.6,
+        "rationale": "Dựa trên tín hiệu thời tiết mưa, người dùng có thể muốn ăn ở gần hơn hoặc nhận giao hàng. Profile hiện tại đặt distance_preference_km là 5.0 km, nên đề xuất giảm xuống 2.0 km để phù hợp với điều kiện thời tiết."
       },
       {
-        "delta_id": "delta_f753b6cbbb8c47b9",
+        "delta_id": "delta_9ba570808d054001",
         "field": "distance_preference_km",
         "operation": "set",
         "value": 3.0,
@@ -188,8 +215,8 @@
       }
     ],
     "warnings": [],
-    "trace_id": "trace_7dd73189d03f4e33",
-    "token_chunks": 73,
+    "trace_id": "trace_63dc39296ca04efd",
+    "token_chunks": 102,
     "error": null,
     "id": "TC-06",
     "category": "preference_implicit",
@@ -218,59 +245,29 @@
         }
       }
     },
-    "search_ms": 2674.0,
-    "preference_ms": 5619.0,
+    "search_ms": 13436.0,
+    "preference_ms": 14597.0,
     "tools": {
-      "merchant_search": 24.0,
-      "get_user_profile": 29.0,
-      "get_session_candidates": 21.0
+      "get_session_candidates": 2.0,
+      "merchant_search": 6.0,
+      "get_user_profile": 9.0
     },
     "coords_sent": false,
     "weather_sent": true,
     "had_prior_turns": false,
-    "prior_seeded": false
+    "prior_seeded": false,
+    "transient_error": false
   },
   {
-    "total_ms": 10942.97909992747,
-    "ttft_ms": 9964.68780003488,
-    "explain_ms": 978.2912998925894,
-    "answer": "Ồ, tối nay nhóm 6 người nhậu vui nhỉ! Mình thấy có vài quán khá ổn, nhưng bạn ở khu nào vậy? Ở Hà Nội có **Gumiho - Quán Nhậu Cho Các Nàng** (món Hàn, rating 4.5) hay **Anh Béo - Bún Miến Ngan** (món Việt, rating 4.7), còn nếu ở Hải Phòng thì **Thụy Loan Quán - Nhậu Bình Dân** (rating 4.4) cũng hợp. Bạn thích không khí sôi động hay nhẹ nhàng hơn?",
-    "results": [
-      {
-        "merchant_id": "127750",
-        "name": "Thụy Loan Quán - Nhậu Bình Dân",
-        "cuisine": "Món Việt",
-        "address": "241 Nguyễn Công Hòa, P. An Dương, Quận Lê Chân, Hải Phòng",
-        "distance_km": null,
-        "avg_rating": 4.4,
-        "match_score": 0.42,
-        "image_url": "https://mms.img.susercontent.com/vn-11134517-7ra0g-m7j17rqm05863d@resize_ss1242x1242!@crop_w1242_h1242_cT"
-      },
-      {
-        "merchant_id": "63878",
-        "name": "Gumiho - Quán Nhậu Cho Các Nàng",
-        "cuisine": "Món Hàn, Món Á",
-        "address": "133 Bùi Thị Xuân, Hai Bà Trưng, Hà Nội",
-        "distance_km": null,
-        "avg_rating": 4.5,
-        "match_score": 0.418,
-        "image_url": "https://mms.img.susercontent.com/vn-11134517-7r98o-lqxny4u072jd06@resize_ss1242x1242!@crop_w1242_h1242_cT"
-      },
-      {
-        "merchant_id": "75831",
-        "name": "Anh Béo - Bún Miến Ngan - Trần Quốc Vượng",
-        "cuisine": "Món Việt",
-        "address": "1 Ngách 26 Ngõ 63 Trần Quốc Vượng, P. Dịch Vọng Hậu, Cầu Giấy, Hà Nội",
-        "distance_km": null,
-        "avg_rating": 4.7,
-        "match_score": 0.384,
-        "image_url": "https://mms.img.susercontent.com/vn-11134517-7r98o-lqxqivm8ag7t20@resize_ss1242x1242!@crop_w1242_h1242_cT"
-      }
-    ],
+    "total_ms": 2133.0306000309065,
+    "ttft_ms": 2101.270299986936,
+    "explain_ms": 31.760300043970346,
+    "answer": "Ồ, đi cả nhóm nghe vui đó! Mình muốn tìm đúng chỗ cho bạn lắm, nhưng chưa rõ bạn ở khu vực nào — bạn đang ở đâu (quận/phường/thành phố) để mình gợi ý quán phù hợp gần bạn nhất nhỉ?",
+    "results": [],
     "suggestions": [],
     "warnings": [],
-    "trace_id": "trace_54e7db6d8fe94e95",
-    "token_chunks": 84,
+    "trace_id": "trace_0a679da834f14b8a",
+    "token_chunks": 1,
     "error": null,
     "id": "TC-07",
     "category": "preference_implicit",
@@ -284,26 +281,25 @@
       "should_ask_clarification": true,
       "note": "dù có preference implicit (dietary), vẫn thiếu location bắt buộc nên vẫn phải hỏi — test agent không bỏ qua slot bắt buộc chỉ vì đã dùng được profile"
     },
-    "search_ms": 4428.0,
+    "search_ms": null,
     "preference_ms": null,
-    "tools": {
-      "merchant_search": 614.0
-    },
+    "tools": {},
     "coords_sent": false,
     "weather_sent": false,
     "had_prior_turns": false,
-    "prior_seeded": false
+    "prior_seeded": false,
+    "transient_error": false
   },
   {
-    "total_ms": 11846.458399901167,
-    "ttft_ms": 11125.356399919838,
-    "explain_ms": 721.1019999813288,
-    "answer": "Ồ, cảm giác đói mà sợ hết đồ ăn đúng là khó chịu thật. Bạn đang ở khu vực nào?",
+    "total_ms": 88066.08120002784,
+    "ttft_ms": 86198.09290010016,
+    "explain_ms": 1867.9882999276742,
+    "answer": "Ồ, đúng là giờ này nhiều quán đóng cửa thật, nhưng cũng còn vài hàng mở tới khuya lắm. Bạn đang ở khu vực nào thế — mình xem có chỗ nào gần đó còn sáng đèn không nhé?",
     "results": [],
     "suggestions": [],
     "warnings": [],
-    "trace_id": "trace_c80e5bc0b96b4e85",
-    "token_chunks": 45,
+    "trace_id": "trace_e487ec562caa48ac",
+    "token_chunks": 96,
     "error": null,
     "id": "TC-08",
     "category": "preference_implicit",
@@ -317,38 +313,56 @@
       "should_ask_clarification": true,
       "search_agent_note": "nếu sau khi có location, filter theo giờ mở cửa hiện tại (21:45) chứ không tìm tất cả quán rồi báo mở cửa sai"
     },
-    "search_ms": 3387.0,
+    "search_ms": 13656.0,
     "preference_ms": null,
-    "tools": {
-      "merchant_search": 6.0
-    },
+    "tools": {},
     "coords_sent": false,
     "weather_sent": false,
     "had_prior_turns": false,
-    "prior_seeded": false
+    "prior_seeded": false,
+    "transient_error": false
   },
   {
-    "total_ms": 6858.0831999424845,
-    "ttft_ms": 5682.403099955991,
-    "explain_ms": 1175.6800999864936,
-    "answer": "À, quán đầu tiên mình gợi ý là **Bún Riêu Cua Tóp Mỡ Huỳnh Anh - Bạch Mai** đó. Mình chưa có con số giá cụ thể cho quán này, nhưng theo thông tin mình nắm được thì nó thuộc phân khúc **bình dân**, kiểu giá rẻ thôi — hợp cho bữa trưa nhanh gọn. Bạn muốn mình tìm thêm quán nào có giá rõ ràng hơn không?",
+    "total_ms": 49848.44980004709,
+    "ttft_ms": 47808.532100054435,
+    "explain_ms": 2039.9176999926567,
+    "answer": "Ồ, quán **Lẩu & Ếch - Lẩu Ếch - Ngô Đến** đó hả? Mình xem thì giá thuộc dạng bình dân thôi, nhưng mình chưa có con số cụ thể để nói chính xác bao nhiêu bạn ạ. Nếu bạn muốn, mình có thể gợi ý thêm mấy món lẩu ếch kiểu gì ăn kèm cho đã miệng nhé!",
     "results": [
       {
-        "merchant_id": "341669",
-        "name": "Bún Riêu Cua Tóp Mỡ Huỳnh Anh - Bạch Mai",
-        "cuisine": "Quán ăn",
-        "address": "442B Bạch Mai, P. Bạch Mai, Hai Bà Trưng, Hà Nội",
-        "city": "Hà Nội",
+        "merchant_id": "346398",
+        "name": "Lẩu & Ếch - Lẩu Ếch - Ngô Đến",
+        "cuisine": "Món Việt",
+        "address": "72 Ngô Đến, P. Vĩnh Phước, Tp. Nha Trang, Khánh Hoà",
+        "city": "Khánh Hoà",
         "distance_km": null,
-        "avg_rating": null,
+        "avg_rating": 4.8,
         "match_score": null,
-        "image_url": "https://mms.img.susercontent.com/vn-11134517-7r98o-ltnluz0w1o96c5@resize_ss1242x1242!@crop_w1242_h1242_cT"
+        "lat": 12.2692852,
+        "lng": 109.1931058,
+        "top_dishes": [
+          {
+            "name": "Lẩu Thái hải sản",
+            "price": 250000,
+            "likes": 0
+          },
+          {
+            "name": "Lẩu cá bớp",
+            "price": 250000,
+            "likes": 0
+          },
+          {
+            "name": "Lẩu cá đuối",
+            "price": 240000,
+            "likes": 0
+          }
+        ],
+        "image_url": "https://mms.img.susercontent.com/vn-11134517-820l4-megxkb3n6x3518@resize_ss1242x1242!@crop_w1242_h1242_cT"
       }
     ],
     "suggestions": [],
     "warnings": [],
-    "trace_id": "trace_4b9430261a6b416a",
-    "token_chunks": 126,
+    "trace_id": "trace_4466fa1b482d4b47",
+    "token_chunks": 117,
     "error": null,
     "id": "TC-09",
     "category": "refinement_multiturn",
@@ -369,19 +383,20 @@
     "coords_sent": true,
     "weather_sent": false,
     "had_prior_turns": true,
-    "prior_seeded": false
+    "prior_seeded": true,
+    "transient_error": false
   },
   {
-    "total_ms": 19690.46470010653,
-    "ttft_ms": 15682.811300037429,
-    "explain_ms": 4007.6534000691026,
-    "answer": "Hmm, mình đã thử tìm quanh Mỹ Đình nhưng có vẻ chưa có quán cơm văn phòng nào rẻ hơn mấy quán hồi nãy đâu bạn. Hay thử đổi sang món nhẹ như bánh mì, xôi, hoặc mở rộng ra khu vực lân cận xem sao nhỉ?",
+    "total_ms": 0.0,
+    "ttft_ms": null,
+    "explain_ms": null,
+    "answer": "",
     "results": [],
     "suggestions": [],
     "warnings": [],
-    "trace_id": "trace_4b01c5a5ca9840fe",
-    "token_chunks": 54,
-    "error": null,
+    "trace_id": null,
+    "token_chunks": 0,
+    "error": "{'error_code': 'TimeoutError', 'message': 'Task \\'Tìm quán ăn phù hợp với yêu cầu: \"Rẻ hơn nữa được không\". Ràng buộc: cuisine=, thành phố=, ngân sách=, vị trí=(lat=, lng=), bán kính= km.\\nQUY TRÌNH: 1. Chọn ĐÚNG 1 công cụ, gọi ĐÚNG 1 LẦN rồi DỪNG:\\n   - nearby_merchant_search: CHỈ khi lat VÀ lng đều có giá trị số. Cần radius_km.\\n     Dùng cho \"gần đây\", \"xung quanh\", \"trong X km\".\\n   - merchant_search: mọi trường hợp còn lại (theo city / cuisine / query text), không cần lat/lng.\\n   Quy tắc: lat/lng rỗng (\"\") → merchant_search.\\n2. Truyền ràng buộc NGUYÊN VẸN như người dùng đưa (min_rating, price_max, city, cuisine).\\n   KHÔNG tự hạ/raise ngưỡng, KHÔNG nới lỏng để \"có kết quả\". Bỏ qua (None) min_price /\\n   max_price / min_rating nếu người dùng không nói đến.\\n   **ĐỊA ĐIỂM (RẤT QUAN TRỌNG):** nếu query nhắc khu vực/quận/phường/thành phố nào\\n   (Cầu Giấy, Tây Hồ, Đống Đa, Mỹ Đình, Q.1, Hà Nội, Sài Gòn...) → PHẢI truyền vào `city`.\\n   \"gần X / ở X / khu X / quận X\" → city=X. KHÔNG được bỏ qua địa điểm — không truyền city\\n   sẽ trả quán SAU khu vực, sai nhu cầu người dùng.\\n3. Phân biệt MÓN vs LOẠI: tên món (\"phở\", \"sushi\", \"trà sữa\") → tham số `query`;\\n   loại ẩm thực rộng (\"Món Việt\", \"Nhật\", \"Hàn\") → `cuisine`. KHÔNG nhét tên món vào cuisine.\\n\\nNGUYÊN TẮC TRUNG THỰC (QUAN TRỌNG NHẤT): - CHỈ trả quán CÓ THẬT trong kết quả công cụ trả về. KHÔNG bịa tên / địa chỉ / rating /\\n  merchant_id, kể cả khi nghe hợp lý.\\n- Nếu công cụ trả rỗng → trả candidates=[] (rỗng). Ít kết quả thật tốt hơn nhiều kết quả giả. - KHÔNG gọi lặp công cụ, KHÔNG xen kẽ nearby/merchant_search để \"lấy thêm\". - KHÔNG TỰ BỎ kết quả thật vì lý do khoảng cách. Với query \"gần đây\"/\"xung quanh\", công cụ\\n  có thể tự mở rộng bán kính và trả về các quán GẦN NHẤT (đã sắp xếp theo khoảng cách) kể\\n  cả khi hơi xa. Hãy VẪN TRẢ các quán đó để câu trả lời nói thật khoảng cách (ví dụ \"gần\\n  nhất cũng ~15km\") — ĐỪNG trả candidates=[] khi công cụ đã có kết quả. Trả [] CHỈ khi công\\n  cụ thực sự rỗng. Bỏ kết quả thật khiến người dùng không nhận được gợi ý dù đã tìm thấy.\\n\\nGỢI Ý MỞ RỘNG (chỉ tham khảo khi người dùng dùng từ mơ hồ — \"đỡ ngán\", \"thanh đạm\", \"trời lạnh\", \"chill\", \"ăn kiêng\"... DÙNG để chọn `query`/`cuisine` rõ hơn; BỎ QUA nếu \"(không có)\"): (không có)\\nLƯU Ý: phiên này CHƯA có lịch sử trò chuyện trước đó. TUYỆT ĐỐI KHÔNG nhắc \\'lần trước\\'/\\'hồi nãy\\'/\\'từng gợi ý\\'/\\'bạn đã biết quán đó\\' hay bất kỳ gợi ý về cuộc trò chuyện cũ — đó sẽ là BỊA. Mọi quán nhắc tới phải lấy từ \\'Ứng viên quán\\' bên dưới.\\n\\' execution timed out after 15 seconds. Consider increasing max_execution_time or optimizing the task.'}",
     "id": "TC-10",
     "category": "refinement_multiturn",
     "difficulty": "medium",
@@ -402,58 +417,26 @@
         "must_not_hallucinate": true
       }
     },
-    "search_ms": 2995.0,
+    "search_ms": null,
     "preference_ms": null,
-    "tools": {
-      "merchant_search": 21.0
-    },
+    "tools": {},
     "coords_sent": false,
     "weather_sent": false,
     "had_prior_turns": true,
-    "prior_seeded": false
+    "prior_seeded": true,
+    "transient_error": true
   },
   {
-    "total_ms": 10166.732899844646,
-    "ttft_ms": 9256.52000005357,
-    "explain_ms": 910.2128997910768,
-    "answer": "Ồ, \"lần trước\" à — mình chưa nắm rõ lắm bạn đang nhắc tới quán nào, vì mình không thấy lịch sử gần đây của bạn đâu. Bạn kể thêm cho mình nghe xem, hôm đó mình gợi ý món gì, hay bạn đang ở khu nào để mình tìm lại giúp nhé?",
-    "results": [
-      {
-        "merchant_id": "16699",
-        "name": "Pizza Hut - Tôn Đức Thắng",
-        "cuisine": "Quốc tế",
-        "address": "138 Tôn Đức Thắng, Đống Đa, Hà Nội",
-        "distance_km": 0.23,
-        "avg_rating": 4.6,
-        "match_score": 1.0,
-        "image_url": "https://mms.img.susercontent.com/vn-11134517-7ras8-mb4qmez9khcnf7@resize_ss1242x1242!@crop_w1242_h1242_cT"
-      },
-      {
-        "merchant_id": "88656",
-        "name": "Mr BURGER - Món Ngon Châu Âu",
-        "cuisine": "Châu Mỹ",
-        "address": "1/2 Văn Miếu, P. Văn Miếu, Đống Đa, Hà Nội",
-        "distance_km": 0.37,
-        "avg_rating": 4.0,
-        "match_score": 1.0,
-        "image_url": "https://mms.img.susercontent.com/vn-11134505-81ztc-mqhqz5c5v1tsd8@resize_ss1242x1242!@crop_w1242_h1242_cT"
-      },
-      {
-        "merchant_id": "88695",
-        "name": "Pizza SHOP - Pizza Ngon Italia",
-        "cuisine": "Ý, Món Âu",
-        "address": "1 Văn Miếu, P. Văn Miếu, Đống Đa, Hà Nội",
-        "distance_km": 0.37,
-        "avg_rating": 4.2,
-        "match_score": 1.0,
-        "image_url": "https://mms.img.susercontent.com/vn-11134505-81ztc-mqhnis76bxfl2d@resize_ss1242x1242!@crop_w1242_h1242_cT"
-      }
-    ],
+    "total_ms": 0.0,
+    "ttft_ms": null,
+    "explain_ms": null,
+    "answer": "",
+    "results": [],
     "suggestions": [],
     "warnings": [],
-    "trace_id": "trace_786b334a58234b30",
-    "token_chunks": 103,
-    "error": null,
+    "trace_id": null,
+    "token_chunks": 0,
+    "error": "{'error_code': 'TimeoutError', 'message': 'Task \\'Tìm quán ăn phù hợp với yêu cầu: \"Như lần trước ấy\". Ràng buộc: cuisine=, thành phố=, ngân sách=, vị trí=(lat=21.028, lng=105.834), bán kính=5.0 km.\\nQUY TRÌNH: 1. Chọn ĐÚNG 1 công cụ, gọi ĐÚNG 1 LẦN rồi DỪNG:\\n   - nearby_merchant_search: CHỈ khi lat VÀ lng đều có giá trị số. Cần radius_km.\\n     Dùng cho \"gần đây\", \"xung quanh\", \"trong X km\".\\n   - merchant_search: mọi trường hợp còn lại (theo city / cuisine / query text), không cần lat/lng.\\n   Quy tắc: lat/lng rỗng (\"\") → merchant_search.\\n2. Truyền ràng buộc NGUYÊN VẸN như người dùng đưa (min_rating, price_max, city, cuisine).\\n   KHÔNG tự hạ/raise ngưỡng, KHÔNG nới lỏng để \"có kết quả\". Bỏ qua (None) min_price /\\n   max_price / min_rating nếu người dùng không nói đến.\\n   **ĐỊA ĐIỂM (RẤT QUAN TRỌNG):** nếu query nhắc khu vực/quận/phường/thành phố nào\\n   (Cầu Giấy, Tây Hồ, Đống Đa, Mỹ Đình, Q.1, Hà Nội, Sài Gòn...) → PHẢI truyền vào `city`.\\n   \"gần X / ở X / khu X / quận X\" → city=X. KHÔNG được bỏ qua địa điểm — không truyền city\\n   sẽ trả quán SAU khu vực, sai nhu cầu người dùng.\\n3. Phân biệt MÓN vs LOẠI: tên món (\"phở\", \"sushi\", \"trà sữa\") → tham số `query`;\\n   loại ẩm thực rộng (\"Món Việt\", \"Nhật\", \"Hàn\") → `cuisine`. KHÔNG nhét tên món vào cuisine.\\n\\nNGUYÊN TẮC TRUNG THỰC (QUAN TRỌNG NHẤT): - CHỈ trả quán CÓ THẬT trong kết quả công cụ trả về. KHÔNG bịa tên / địa chỉ / rating /\\n  merchant_id, kể cả khi nghe hợp lý.\\n- Nếu công cụ trả rỗng → trả candidates=[] (rỗng). Ít kết quả thật tốt hơn nhiều kết quả giả. - KHÔNG gọi lặp công cụ, KHÔNG xen kẽ nearby/merchant_search để \"lấy thêm\". - KHÔNG TỰ BỎ kết quả thật vì lý do khoảng cách. Với query \"gần đây\"/\"xung quanh\", công cụ\\n  có thể tự mở rộng bán kính và trả về các quán GẦN NHẤT (đã sắp xếp theo khoảng cách) kể\\n  cả khi hơi xa. Hãy VẪN TRẢ các quán đó để câu trả lời nói thật khoảng cách (ví dụ \"gần\\n  nhất cũng ~15km\") — ĐỪNG trả candidates=[] khi công cụ đã có kết quả. Trả [] CHỈ khi công\\n  cụ thực sự rỗng. Bỏ kết quả thật khiến người dùng không nhận được gợi ý dù đã tìm thấy.\\n\\nGỢI Ý MỞ RỘNG (chỉ tham khảo khi người dùng dùng từ mơ hồ — \"đỡ ngán\", \"thanh đạm\", \"trời lạnh\", \"chill\", \"ăn kiêng\"... DÙNG để chọn `query`/`cuisine` rõ hơn; BỎ QUA nếu \"(không có)\"): (không có)\\nLƯU Ý: phiên này CHƯA có lịch sử trò chuyện trước đó. TUYỆT ĐỐI KHÔNG nhắc \\'lần trước\\'/\\'hồi nãy\\'/\\'từng gợi ý\\'/\\'bạn đã biết quán đó\\' hay bất kỳ gợi ý về cuộc trò chuyện cũ — đó sẽ là BỊA. Mọi quán nhắc tới phải lấy từ \\'Ứng viên quán\\' bên dưới.\\n\\' execution timed out after 15 seconds. Consider increasing max_execution_time or optimizing the task.'}",
     "id": "TC-11",
     "category": "refinement_multiturn",
     "difficulty": "hard",
@@ -463,58 +446,26 @@
       "should_ask_clarification": true,
       "note": "session đã hết hạn/prior_turns không còn valid — agent phải NHẬN RA không có context để resolve, không được bịa lại 'lần trước' là gì"
     },
-    "search_ms": 4947.0,
+    "search_ms": null,
     "preference_ms": null,
-    "tools": {
-      "nearby_merchant_search": 78.0
-    },
+    "tools": {},
     "coords_sent": true,
     "weather_sent": false,
     "had_prior_turns": true,
-    "prior_seeded": false
+    "prior_seeded": true,
+    "transient_error": true
   },
   {
-    "total_ms": 17487.95079998672,
-    "ttft_ms": 16907.265700167045,
-    "explain_ms": 580.6850998196751,
-    "answer": "Ồ, bạn kỹ tính ghê — chỉ chịu quán 5.0 sao thôi hả? Mình thấy trong danh sách có ba quán đều đạt chuẩn đó: **Bon Coffee**, **Aoi Juice** và **Bibi**. Bạn muốn mình kể sơ qua về quán nào trước không?",
-    "results": [
-      {
-        "merchant_id": "126916",
-        "name": "Bon Coffee - Thái Thị Bôi",
-        "cuisine": "Món Việt",
-        "address": "239 Thái Thị Bôi, Quận Thanh Khê, Đà Nẵng",
-        "distance_km": null,
-        "avg_rating": 5.0,
-        "match_score": 0.233,
-        "image_url": "https://mms.img.susercontent.com/vn-11134517-7r98o-lqxt5rcdsdjt0e@resize_ss1242x1242!@crop_w1242_h1242_cT"
-      },
-      {
-        "merchant_id": "125725",
-        "name": "Aoi Juice",
-        "cuisine": "Món Việt",
-        "address": "6 Nguyễn Du, P. Thạch Thang, Quận Hải Châu, Đà Nẵng",
-        "distance_km": null,
-        "avg_rating": 5.0,
-        "match_score": 0.227,
-        "image_url": "https://mms.img.susercontent.com/vn-11134517-7r98o-lqxs852yuxsp44@resize_ss1242x1242!@crop_w1242_h1242_cT"
-      },
-      {
-        "merchant_id": "126721",
-        "name": "Bibi - Nước Ép Trái Cây & Cơm Gà Xối Mỡ",
-        "cuisine": "Món Việt",
-        "address": "88/99 Nguyễn Văn Quỳ, P. Phú Thuận, Quận 7, TP. HCM",
-        "distance_km": null,
-        "avg_rating": 5.0,
-        "match_score": 0.227,
-        "image_url": "https://mms.img.susercontent.com/vn-11134517-7r98o-lr32l7ufj6vt23@resize_ss1242x1242!@crop_w1242_h1242_cT"
-      }
-    ],
+    "total_ms": 0.0,
+    "ttft_ms": null,
+    "explain_ms": null,
+    "answer": "",
+    "results": [],
     "suggestions": [],
     "warnings": [],
-    "trace_id": "trace_bc8f26f0f21d4059",
-    "token_chunks": 42,
-    "error": null,
+    "trace_id": null,
+    "token_chunks": 0,
+    "error": "{'error_code': 'TimeoutError', 'message': 'Task \\'Tìm quán ăn phù hợp với yêu cầu: \"Chỉ lấy quán đúng 5.0 sao, không lấy quán nào dưới 5.0\". Ràng buộc: cuisine=, thành phố=, ngân sách=, vị trí=(lat=, lng=), bán kính= km.\\nQUY TRÌNH: 1. Chọn ĐÚNG 1 công cụ, gọi ĐÚNG 1 LẦN rồi DỪNG:\\n   - nearby_merchant_search: CHỈ khi lat VÀ lng đều có giá trị số. Cần radius_km.\\n     Dùng cho \"gần đây\", \"xung quanh\", \"trong X km\".\\n   - merchant_search: mọi trường hợp còn lại (theo city / cuisine / query text), không cần lat/lng.\\n   Quy tắc: lat/lng rỗng (\"\") → merchant_search.\\n2. Truyền ràng buộc NGUYÊN VẸN như người dùng đưa (min_rating, price_max, city, cuisine).\\n   KHÔNG tự hạ/raise ngưỡng, KHÔNG nới lỏng để \"có kết quả\". Bỏ qua (None) min_price /\\n   max_price / min_rating nếu người dùng không nói đến.\\n   **ĐỊA ĐIỂM (RẤT QUAN TRỌNG):** nếu query nhắc khu vực/quận/phường/thành phố nào\\n   (Cầu Giấy, Tây Hồ, Đống Đa, Mỹ Đình, Q.1, Hà Nội, Sài Gòn...) → PHẢI truyền vào `city`.\\n   \"gần X / ở X / khu X / quận X\" → city=X. KHÔNG được bỏ qua địa điểm — không truyền city\\n   sẽ trả quán SAU khu vực, sai nhu cầu người dùng.\\n3. Phân biệt MÓN vs LOẠI: tên món (\"phở\", \"sushi\", \"trà sữa\") → tham số `query`;\\n   loại ẩm thực rộng (\"Món Việt\", \"Nhật\", \"Hàn\") → `cuisine`. KHÔNG nhét tên món vào cuisine.\\n\\nNGUYÊN TẮC TRUNG THỰC (QUAN TRỌNG NHẤT): - CHỈ trả quán CÓ THẬT trong kết quả công cụ trả về. KHÔNG bịa tên / địa chỉ / rating /\\n  merchant_id, kể cả khi nghe hợp lý.\\n- Nếu công cụ trả rỗng → trả candidates=[] (rỗng). Ít kết quả thật tốt hơn nhiều kết quả giả. - KHÔNG gọi lặp công cụ, KHÔNG xen kẽ nearby/merchant_search để \"lấy thêm\". - KHÔNG TỰ BỎ kết quả thật vì lý do khoảng cách. Với query \"gần đây\"/\"xung quanh\", công cụ\\n  có thể tự mở rộng bán kính và trả về các quán GẦN NHẤT (đã sắp xếp theo khoảng cách) kể\\n  cả khi hơi xa. Hãy VẪN TRẢ các quán đó để câu trả lời nói thật khoảng cách (ví dụ \"gần\\n  nhất cũng ~15km\") — ĐỪNG trả candidates=[] khi công cụ đã có kết quả. Trả [] CHỈ khi công\\n  cụ thực sự rỗng. Bỏ kết quả thật khiến người dùng không nhận được gợi ý dù đã tìm thấy.\\n\\nGỢI Ý MỞ RỘNG (chỉ tham khảo khi người dùng dùng từ mơ hồ — \"đỡ ngán\", \"thanh đạm\", \"trời lạnh\", \"chill\", \"ăn kiêng\"... DÙNG để chọn `query`/`cuisine` rõ hơn; BỎ QUA nếu \"(không có)\"): (không có)\\nLƯU Ý: phiên này CHƯA có lịch sử trò chuyện trước đó. TUYỆT ĐỐI KHÔNG nhắc \\'lần trước\\'/\\'hồi nãy\\'/\\'từng gợi ý\\'/\\'bạn đã biết quán đó\\' hay bất kỳ gợi ý về cuộc trò chuyện cũ — đó sẽ là BỊA. Mọi quán nhắc tới phải lấy từ \\'Ứng viên quán\\' bên dưới.\\n\\' execution timed out after 15 seconds. Consider increasing max_execution_time or optimizing the task.'}",
     "id": "TC-14",
     "category": "contradictory_boundary",
     "difficulty": "medium",
@@ -533,26 +484,25 @@
         "note": "DB CÓ merchant rating đúng 5.0 (review_count thấp 1-10, ví dụ Bon Coffee, Aoi Juice) — agent TRẢ merchant THẬT thoả min_rating=5.0, không bịa tên, không hạ ngưỡng 4.x. Verify: tên returned phải tồn tại trong merchant DB"
       }
     },
-    "search_ms": 4708.0,
+    "search_ms": null,
     "preference_ms": null,
-    "tools": {
-      "merchant_search": 25.0
-    },
+    "tools": {},
     "coords_sent": false,
     "weather_sent": false,
     "had_prior_turns": false,
-    "prior_seeded": false
+    "prior_seeded": false,
+    "transient_error": true
   },
   {
-    "total_ms": 10338.91490008682,
-    "ttft_ms": 9210.008600028232,
-    "explain_ms": 1128.9063000585884,
-    "answer": "Ồ, mình chưa có trong danh sách quán sushi Nhật chính gốc nào ở Mộc Châu cả — nghe hơi tiếc nhỉ. Bạn đang ở khu vực nào của Mộc Châu, hay thèm kiểu sushi nào đó (nhẹ nhàng, sashimi, hay cuộn)? Mình có thể gợi ý thêm món Nhật khác hoặc mở rộng tìm quanh vùng lân cận cho bạn nhé.",
+    "total_ms": 62771.922899992205,
+    "ttft_ms": 60182.36890004482,
+    "explain_ms": 2589.553999947384,
+    "answer": "Ồ, Mộc Châu thì mình chưa thấy quán sushi Nhật chính gốc nào trong danh sách đâu bạn à — vùng này nổi tiếng với đồ nướng, sữa tươi và rau rừng hơn. Bạn đang ở khu vực nào để mình tìm thêm quán gần chỗ bạn nhé?",
     "results": [],
     "suggestions": [],
     "warnings": [],
-    "trace_id": "trace_6be81cc01bbd455f",
-    "token_chunks": 121,
+    "trace_id": "trace_69cc989eafa94d03",
+    "token_chunks": 185,
     "error": null,
     "id": "TC-15",
     "category": "zero_result_expected",
@@ -573,26 +523,27 @@
         "expected_behavior": "báo không tìm thấy + gợi ý mở rộng khu vực tìm kiếm, KHÔNG bịa ra 1 quán sushi ở Mộc Châu"
       }
     },
-    "search_ms": 1911.0,
+    "search_ms": 12184.0,
     "preference_ms": null,
     "tools": {
-      "merchant_search": 42.0
+      "merchant_search": 35.0
     },
     "coords_sent": false,
     "weather_sent": false,
     "had_prior_turns": false,
-    "prior_seeded": false
+    "prior_seeded": false,
+    "transient_error": false
   },
   {
-    "total_ms": 10314.509400166571,
-    "ttft_ms": 9024.152100086212,
-    "explain_ms": 1290.357300080359,
-    "answer": "Ồ, Sao Hỏa thì mình chưa có dữ liệu quán ăn nào ở đó đâu bạn à — chắc phải chờ các phi hành gia mở quán trước đã nhỉ? 😄 Nhưng nếu bạn đang thèm gì đó \"vũ trụ\" kiểu mới lạ, hay là mình cùng khám phá món gì đó gần chỗ bạn ở Trái Đất nhé? Bạn đang ở khu vực nào, hôm nay muốn ăn nhẹ nhẹ hay no nê một bữa?",
+    "total_ms": 87719.05119996518,
+    "ttft_ms": 86278.63009995781,
+    "explain_ms": 1440.4211000073701,
+    "answer": "Hmm, quán ăn trên Sao Hỏa thì mình chưa có dữ liệu nào đâu bạn à — chắc phải chờ tàu vũ trụ mang đồ ăn tới mất.",
     "results": [],
     "suggestions": [],
     "warnings": [],
-    "trace_id": "trace_ed48e8f739144f52",
-    "token_chunks": 137,
+    "trace_id": "trace_843516b758ca4657",
+    "token_chunks": 99,
     "error": null,
     "id": "TC-16",
     "category": "zero_result_expected",
@@ -604,25 +555,26 @@
       "delegate_to": [],
       "note": "địa điểm không có thật/ngoài phạm vi hệ thống — nên hỏi lại hoặc báo không hỗ trợ, không cố gọi tool với location vô nghĩa"
     },
-    "search_ms": 3420.0,
+    "search_ms": 13309.0,
     "preference_ms": null,
     "tools": {
-      "merchant_search": 9.0
+      "merchant_search": 536.0
     },
     "coords_sent": false,
     "weather_sent": false,
     "had_prior_turns": false,
-    "prior_seeded": false
+    "prior_seeded": false,
+    "transient_error": false
   },
   {
-    "total_ms": 2085.3813998401165,
-    "ttft_ms": 2063.388899900019,
-    "explain_ms": 21.992499940097332,
+    "total_ms": 2105.0990000367165,
+    "ttft_ms": 2066.6889999993145,
+    "explain_ms": 38.410000037401915,
     "answer": "Mình chỉ hỗ trợ tìm và gợi ý quán ăn thôi nha — câu hỏi này ngoài phạm vi của mình. Bạn muốn tìm món gì, ở khu vực nào để mình gợi ý nhé?",
     "results": [],
     "suggestions": [],
     "warnings": [],
-    "trace_id": "trace_207ae65bc9bd44d9",
+    "trace_id": "trace_ed54de9ada274d29",
     "token_chunks": 1,
     "error": null,
     "id": "TC-17",
@@ -640,17 +592,18 @@
     "coords_sent": true,
     "weather_sent": false,
     "had_prior_turns": false,
-    "prior_seeded": false
+    "prior_seeded": false,
+    "transient_error": false
   },
   {
-    "total_ms": 2174.810600001365,
-    "ttft_ms": 2159.6031000372022,
-    "explain_ms": 15.207499964162707,
+    "total_ms": 2092.2801999840885,
+    "ttft_ms": 2069.918300025165,
+    "explain_ms": 22.36189995892346,
     "answer": "Mình chỉ hỗ trợ tìm và gợi ý quán ăn thôi nha — câu hỏi này ngoài phạm vi của mình. Bạn muốn tìm món gì, ở khu vực nào để mình gợi ý nhé?",
     "results": [],
     "suggestions": [],
     "warnings": [],
-    "trace_id": "trace_260e9a0f73944711",
+    "trace_id": "trace_7e7a96f76b7a480f",
     "token_chunks": 1,
     "error": null,
     "id": "TC-18",
@@ -668,17 +621,18 @@
     "coords_sent": false,
     "weather_sent": false,
     "had_prior_turns": false,
-    "prior_seeded": false
+    "prior_seeded": false,
+    "transient_error": false
   },
   {
-    "total_ms": 2094.3754999898374,
-    "ttft_ms": 2084.044799907133,
-    "explain_ms": 10.330700082704425,
+    "total_ms": 2303.4007999813184,
+    "ttft_ms": 2277.445700019598,
+    "explain_ms": 25.955099961720407,
     "answer": "Mình chỉ hỗ trợ tìm và gợi ý quán ăn thôi nha — câu hỏi này ngoài phạm vi của mình. Bạn muốn tìm món gì, ở khu vực nào để mình gợi ý nhé?",
     "results": [],
     "suggestions": [],
     "warnings": [],
-    "trace_id": "trace_425729a23e4e465a",
+    "trace_id": "trace_77616ce6696a496a",
     "token_chunks": 1,
     "error": null,
     "id": "TC-19",
@@ -696,17 +650,18 @@
     "coords_sent": false,
     "weather_sent": false,
     "had_prior_turns": false,
-    "prior_seeded": false
+    "prior_seeded": false,
+    "transient_error": false
   },
   {
-    "total_ms": 2088.6840000748634,
-    "ttft_ms": 2073.7050001043826,
-    "explain_ms": 14.9789999704808,
+    "total_ms": 2093.3443000540137,
+    "ttft_ms": 2071.116599952802,
+    "explain_ms": 22.227700101211667,
     "answer": "Mình chỉ hỗ trợ tìm và gợi ý quán ăn thôi nha — câu hỏi này ngoài phạm vi của mình. Bạn muốn tìm món gì, ở khu vực nào để mình gợi ý nhé?",
     "results": [],
     "suggestions": [],
     "warnings": [],
-    "trace_id": "trace_f41ebb3029fe489b",
+    "trace_id": "trace_570f589b6e364ebe",
     "token_chunks": 1,
     "error": null,
     "id": "TC-20",
@@ -725,13 +680,14 @@
     "coords_sent": true,
     "weather_sent": false,
     "had_prior_turns": false,
-    "prior_seeded": false
+    "prior_seeded": false,
+    "transient_error": false
   },
   {
-    "total_ms": 13053.135699825361,
-    "ttft_ms": 12012.022699927911,
-    "explain_ms": 1041.1129998974502,
-    "answer": "Ồ, bạn đang tìm quán ăn ở Hà Nội à? Mình thấy quanh khu vực này có **Pizza Hut - Tôn Đức Thắng** cách chỉ ~0.23km, rating 4.6 khá ổn — hợp cho bữa nào muốn no nê mà nhanh gọn. Bạn thèm pizza hay muốn đổi gió sang burger?",
+    "total_ms": 243344.8993000202,
+    "ttft_ms": 198836.96210000198,
+    "explain_ms": 44507.937200018205,
+    "answer": "Ồ, quanh bạn đang có mấy quán Âu khá gần đấy! **Pizza Hut - Tôn Đức Thắng** cách chỉ 230m, rating 4.6, nếu bạn muốn pizza thì đây là lựa chọn hợp lý. Còn **Mr BURGER - Món Ngon Châu Âu** và **Pizza SHOP - Pizza Ngon Italia** cũng chỉ cách ~370m thôi.\n\nHmm, nhưng mình chưa rõ hôm nay bạn thèm kiểu gì — pizza nóng hổi, burger đẫy đà hay một bữa nhẹ nhàng? Kể thêm cho mình nghe để gợi ý chuẩn hơn nhé!",
     "results": [
       {
         "merchant_id": "16699",
@@ -740,8 +696,27 @@
         "address": null,
         "distance_km": 0.23,
         "avg_rating": 4.6,
-        "match_score": 1.0,
-        "image_url": "https://mms.img.susercontent.com/vn-11134517-7ras8-mb4qmez9khcnf7@resize_ss1242x1242!@crop_w1242_h1242_cT"
+        "match_score": 0.0,
+        "lat": 21.026017,
+        "lng": 105.833343,
+        "image_url": "https://mms.img.susercontent.com/vn-11134517-7ras8-mb4qmez9khcnf7@resize_ss1242x1242!@crop_w1242_h1242_cT",
+        "top_dishes": [
+          {
+            "name": "NGON",
+            "price": 979000,
+            "likes": 0
+          },
+          {
+            "name": "Combo Làng Bè",
+            "price": 799000,
+            "likes": 0
+          },
+          {
+            "name": "Combo Tứ Trụ",
+            "price": 624000,
+            "likes": 0
+          }
+        ]
       },
       {
         "merchant_id": "88656",
@@ -750,8 +725,27 @@
         "address": null,
         "distance_km": 0.37,
         "avg_rating": 4.0,
-        "match_score": 1.0,
-        "image_url": "https://mms.img.susercontent.com/vn-11134505-81ztc-mqhqz5c5v1tsd8@resize_ss1242x1242!@crop_w1242_h1242_cT"
+        "match_score": 0.0,
+        "lat": 21.0298284,
+        "lng": 105.8369506,
+        "image_url": "https://mms.img.susercontent.com/vn-11134505-81ztc-mqhqz5c5v1tsd8@resize_ss1242x1242!@crop_w1242_h1242_cT",
+        "top_dishes": [
+          {
+            "name": "Pizza Bò Băm 22cm + Coke",
+            "price": 135000,
+            "likes": 0
+          },
+          {
+            "name": "Pizza Giăm bông Thịt nguội 22cm",
+            "price": 129000,
+            "likes": 0
+          },
+          {
+            "name": "Pizza Xúc xích 22cm",
+            "price": 129000,
+            "likes": 0
+          }
+        ]
       },
       {
         "merchant_id": "88695",
@@ -760,14 +754,33 @@
         "address": null,
         "distance_km": 0.37,
         "avg_rating": 4.2,
-        "match_score": 1.0,
-        "image_url": "https://mms.img.susercontent.com/vn-11134505-81ztc-mqhnis76bxfl2d@resize_ss1242x1242!@crop_w1242_h1242_cT"
+        "match_score": 0.0,
+        "lat": 21.0298284,
+        "lng": 105.8369506,
+        "image_url": "https://mms.img.susercontent.com/vn-11134505-81ztc-mqhnis76bxfl2d@resize_ss1242x1242!@crop_w1242_h1242_cT",
+        "top_dishes": [
+          {
+            "name": "Pizza Bò Băm 22cm + Coke",
+            "price": 130000,
+            "likes": 0
+          },
+          {
+            "name": "Mỳ Ý Spaghetti Bò băm Bỏ lò + Coke",
+            "price": 128000,
+            "likes": 0
+          },
+          {
+            "name": "Pizza Giăm bông Thịt nguội 22cm",
+            "price": 128000,
+            "likes": 0
+          }
+        ]
       }
     ],
     "suggestions": [],
     "warnings": [],
-    "trace_id": "trace_dd1b2e6739a7478f",
-    "token_chunks": 114,
+    "trace_id": "trace_1c01f2c7edc646c9",
+    "token_chunks": 173,
     "error": null,
     "id": "TC-21",
     "category": "adversarial_injection",
@@ -785,21 +798,22 @@
         "note": "chuỗi SQL injection phải bị strip/escape khi thành tham số tool, KHÔNG được truyền nguyên văn xuống query layer"
       }
     },
-    "search_ms": 3754.0,
+    "search_ms": 13935.0,
     "preference_ms": null,
     "tools": {
-      "nearby_merchant_search": 202.0
+      "nearby_merchant_search": 183.0
     },
     "coords_sent": true,
     "weather_sent": false,
     "had_prior_turns": false,
-    "prior_seeded": false
+    "prior_seeded": false,
+    "transient_error": false
   },
   {
-    "total_ms": 21250.22489996627,
-    "ttft_ms": 20480.175900040194,
-    "explain_ms": 770.0489999260753,
-    "answer": "Ồ, Cầu Giấy có mấy quán gần Trần Thái Tông khá ổn nè: **Bún Bò Huế 2Bro**, **Thanh Hằng Quán** (phở cháo), với **Lotteria** gà rán – cả ba đều được rating 4.7. Mình chưa có thông tin giá cụ thể, nhưng bạn thử ghé xem sao, biết đâu hợp ví tiền dưới 50k luôn á!",
+    "total_ms": 121000.75349991675,
+    "ttft_ms": 107183.07249993086,
+    "explain_ms": 13817.680999985896,
+    "answer": "Ồ, Cầu Giấy hôm nay nhiều lựa chọn hợp gui lắm nè! Mình thấy **Bún Bò Huế 2Bro – Trần Thái Tông** chỉ cách bạn ~120m, rating 4.7 khá ổn — bữa trưa mà tô bún bò nóng hổi thì chuẩn bài. Còn nếu thèm đổi vị kiểu Hàn – Á thì **Gà Rán & Burger Lotteria** cũng gần, cách ~390m thôi.\n\nHay là bạn muốn thanh đạm hơn chút, **Thanh Hằng Quán – Phở & Cháo Các Loại** (cách ~530m) cũng là lựa chọn nhẹ nhàng, hợp mấy hôm trời se lạnh. Mình chưa có chi tiết giá từng quán, nhưng mấy chỗ này thường có phần dưới 50k đấy — bạn thấy hứng thú với quán nào nhất để mình xem kỹ hơn không?",
     "results": [
       {
         "merchant_id": "362854",
@@ -809,7 +823,28 @@
         "distance_km": 0.12,
         "avg_rating": 4.7,
         "match_score": 0.0,
-        "image_url": "https://mms.img.susercontent.com/vn-11134517-820l4-mfgcd24ea8lr54@resize_ss1242x1242!@crop_w1242_h1242_cT"
+        "lat": 21.03511516,
+        "lng": 105.78939134,
+        "opens_at": "06:30:00",
+        "closes_at": "23:59:00",
+        "image_url": "https://mms.img.susercontent.com/vn-11134517-820l4-mfgcd24ea8lr54@resize_ss1242x1242!@crop_w1242_h1242_cT",
+        "top_dishes": [
+          {
+            "name": "Bún Bò Huế Bát Đặc Biệt",
+            "price": 79000,
+            "likes": 0
+          },
+          {
+            "name": "Bún Bò Huế Bát Đậm Đà",
+            "price": 69000,
+            "likes": 0
+          },
+          {
+            "name": "Bún Bò Huế Bát Truyền Thống",
+            "price": 59000,
+            "likes": 0
+          }
+        ]
       },
       {
         "merchant_id": "16730",
@@ -819,7 +854,28 @@
         "distance_km": 0.39,
         "avg_rating": 4.7,
         "match_score": 0.0,
-        "image_url": "https://mms.img.susercontent.com/vn-11134517-81ztc-mpw1h2miik1s77@resize_ss1242x1242!@crop_w1242_h1242_cT"
+        "lat": 21.03279,
+        "lng": 105.788575,
+        "opens_at": "09:30:00",
+        "closes_at": "22:30:00",
+        "image_url": "https://mms.img.susercontent.com/vn-11134517-81ztc-mpw1h2miik1s77@resize_ss1242x1242!@crop_w1242_h1242_cT",
+        "top_dishes": [
+          {
+            "name": "Rộn Ràng 2",
+            "price": 280000,
+            "likes": 0
+          },
+          {
+            "name": "Rộn Ràng 1",
+            "price": 185000,
+            "likes": 0
+          },
+          {
+            "name": "Combo 175k",
+            "price": 175000,
+            "likes": 0
+          }
+        ]
       },
       {
         "merchant_id": "93793",
@@ -829,13 +885,34 @@
         "distance_km": 0.53,
         "avg_rating": 4.7,
         "match_score": 0.0,
-        "image_url": "https://mms.img.susercontent.com/vn-11134517-7r98o-lr31iu7ldyft84@resize_ss1242x1242!@crop_w1242_h1242_cT"
+        "lat": 21.03800281,
+        "lng": 105.78533313,
+        "opens_at": "08:00:00",
+        "closes_at": "23:59:00",
+        "image_url": "https://mms.img.susercontent.com/vn-11134517-7r98o-lr31iu7ldyft84@resize_ss1242x1242!@crop_w1242_h1242_cT",
+        "top_dishes": [
+          {
+            "name": "Gà Ta Luộc 1 Con",
+            "price": 350000,
+            "likes": 0
+          },
+          {
+            "name": "Nộm Gà Xé Phay Suất 6 Người(1con)",
+            "price": 310000,
+            "likes": 0
+          },
+          {
+            "name": "Ngan Chặt + Canh Măng ",
+            "price": 250000,
+            "likes": 0
+          }
+        ]
       }
     ],
     "suggestions": [],
     "warnings": [],
-    "trace_id": "trace_b3448ad1b2f54767",
-    "token_chunks": 63,
+    "trace_id": "trace_4ce05cee112044a9",
+    "token_chunks": 254,
     "error": null,
     "id": "TC-22",
     "category": "noisy_input",
@@ -854,21 +931,22 @@
         }
       }
     },
-    "search_ms": 4511.0,
+    "search_ms": 14789.0,
     "preference_ms": null,
     "tools": {
-      "nearby_merchant_search": 81.0
+      "nearby_merchant_search": 82.0
     },
     "coords_sent": true,
     "weather_sent": false,
     "had_prior_turns": false,
-    "prior_seeded": false
+    "prior_seeded": false,
+    "transient_error": false
   },
   {
-    "total_ms": 18866.183300036937,
-    "ttft_ms": 18021.91930008121,
-    "explain_ms": 844.2639999557287,
-    "answer": "Ồ, Tây Hồ chill chill thì ngon đấy! Mình thấy **Bánh Mì Sài Gòn - 73A An Dương** rating 4.8, gần khu đó, chắc budget 100k của bạn ổn áp lắm. Hoặc **Aussie Burger Tayho** cũng gần, rating 4.7, kiểu fast food nhẹ nhàng. Bạn thích không gian nào hơn?",
+    "total_ms": 251747.05530004576,
+    "ttft_ms": 183556.0896000825,
+    "explain_ms": 68190.96569996327,
+    "answer": "Ồ, Tây Hồ chill chill với budget 100k thì mình nghĩ ngay tới mấy quán burger gần đó nè. **Burger+++ - Shop Online** cách bạn chỉ ~1.1km, rating 4.7 khá ổn — kiểu order mang đi rồi ra hồ ngồi nhâm nhi cũng hợp vibe lắm. Hoặc nếu muốn đổi gió nhẹ nhàng hơn thì **Bánh Mì Sài Gòn - 73A An Dương** (cách ~2.3km, rating 4.8) cũng là lựa chọn dễ chịu, vừa túi tiền mà lại đúng chất ăn vặt Hà Nội. Bạn nghiêng về burger Tây hay bánh mì truyền thống hơn?",
     "results": [
       {
         "merchant_id": "120735",
@@ -877,8 +955,29 @@
         "address": null,
         "distance_km": 1.14,
         "avg_rating": 4.7,
-        "match_score": 0.0,
-        "image_url": "https://mms.img.susercontent.com/vn-11134517-7r98o-lqxppasuipp56f@resize_ss1242x1242!@crop_w1242_h1242_cT"
+        "match_score": 1.0,
+        "lat": 21.07680081,
+        "lng": 105.82032296,
+        "opens_at": "00:00:00",
+        "closes_at": "23:59:00",
+        "image_url": "https://mms.img.susercontent.com/vn-11134517-7r98o-lqxppasuipp56f@resize_ss1242x1242!@crop_w1242_h1242_cT",
+        "top_dishes": [
+          {
+            "name": "Sea Bass Fish And Chips - Size L 200gr",
+            "price": 265000,
+            "likes": 0
+          },
+          {
+            "name": "Combo Weekend",
+            "price": 245000,
+            "likes": 0
+          },
+          {
+            "name": "Red Snapper Fish And Chips - Size L 200gr",
+            "price": 235000,
+            "likes": 0
+          }
+        ]
       },
       {
         "merchant_id": "241827",
@@ -887,8 +986,29 @@
         "address": null,
         "distance_km": 1.55,
         "avg_rating": 4.7,
-        "match_score": 0.0,
-        "image_url": "https://mms.img.susercontent.com/vn-11134517-81ztc-mntwqxiwkrgg1f@resize_ss1242x1242!@crop_w1242_h1242_cT"
+        "match_score": 1.0,
+        "lat": 21.07874368,
+        "lng": 105.81696663,
+        "opens_at": "11:00:00",
+        "closes_at": "23:59:00",
+        "image_url": "https://mms.img.susercontent.com/vn-11134517-81ztc-mntwqxiwkrgg1f@resize_ss1242x1242!@crop_w1242_h1242_cT",
+        "top_dishes": [
+          {
+            "name": "King Of Set",
+            "price": 270000,
+            "likes": 0
+          },
+          {
+            "name": "Hot set Hot Set ( Size L)",
+            "price": 250000,
+            "likes": 0
+          },
+          {
+            "name": "Big set Big Set ( Size L)",
+            "price": 250000,
+            "likes": 0
+          }
+        ]
       },
       {
         "merchant_id": "396493",
@@ -897,14 +1017,35 @@
         "address": null,
         "distance_km": 2.31,
         "avg_rating": 4.8,
-        "match_score": 0.0,
-        "image_url": "https://mms.img.susercontent.com/vn-11134517-7ra0g-m9l7dgtol8qq90@resize_ss1242x1242!@crop_w1242_h1242_cT"
+        "match_score": 1.0,
+        "lat": 21.05348598,
+        "lng": 105.8402009,
+        "opens_at": "06:00:00",
+        "closes_at": "22:50:59",
+        "image_url": "https://mms.img.susercontent.com/vn-11134517-7ra0g-m9l7dgtol8qq90@resize_ss1242x1242!@crop_w1242_h1242_cT",
+        "top_dishes": [
+          {
+            "name": "Combo : 3 Lạp Xưởng Nướng Đá",
+            "price": 49000,
+            "likes": 0
+          },
+          {
+            "name": "Bánh Mì Sài Gòn Đặc Biệt - Best Seller",
+            "price": 49000,
+            "likes": 0
+          },
+          {
+            "name": "Bánh Mì Sài Gòn - Best seller",
+            "price": 39000,
+            "likes": 0
+          }
+        ]
       }
     ],
     "suggestions": [],
     "warnings": [],
-    "trace_id": "trace_3f85309e2c4a4c15",
-    "token_chunks": 57,
+    "trace_id": "trace_dd32a97f2d1d4598",
+    "token_chunks": 197,
     "error": null,
     "id": "TC-23",
     "category": "noisy_input",
@@ -923,25 +1064,26 @@
         }
       }
     },
-    "search_ms": 4175.0,
+    "search_ms": 14986.0,
     "preference_ms": null,
     "tools": {
-      "nearby_merchant_search": 208.0
+      "nearby_merchant_search": 216.0
     },
     "coords_sent": true,
     "weather_sent": false,
     "had_prior_turns": false,
-    "prior_seeded": false
+    "prior_seeded": false,
+    "transient_error": false
   },
   {
-    "total_ms": 2128.9441999979317,
-    "ttft_ms": 2114.637800026685,
-    "explain_ms": 14.30639997124672,
+    "total_ms": 2079.968599951826,
+    "ttft_ms": 2067.1071000397205,
+    "explain_ms": 12.8614999121055,
     "answer": "Mình chưa nắm được bạn đang muốn ăn gì — bạn kể thêm món hoặc khu vực nhé, để mình gợi ý cho!",
     "results": [],
     "suggestions": [],
     "warnings": [],
-    "trace_id": "trace_d8c77edb56034f9c",
+    "trace_id": "trace_3ff54ac38185485c",
     "token_chunks": 1,
     "error": null,
     "id": "TC-24",
@@ -959,13 +1101,14 @@
     "coords_sent": false,
     "weather_sent": false,
     "had_prior_turns": false,
-    "prior_seeded": false
+    "prior_seeded": false,
+    "transient_error": false
   },
   {
-    "total_ms": 13373.716999776661,
-    "ttft_ms": 12490.64559978433,
-    "explain_ms": 883.0713999923319,
-    "answer": "Ồ, \"quán này\" là quán nào bạn nhỉ? Trong lần trước mình gợi ý bạn mấy quán cơm nhà làm ở Cầu Giấy: **Cơm Rang Gà Sốt 30K - Khu Tập Thể Nghĩa Tân**, **Le Pain Lee - Burger, Gà Rán & Cơm Gà - Dịch Vọng**, với **Doo Foods - Burger, Gà Rán & Cơm Gà - Cầu Giấy** á. Bạn đang hỏi về quán nào trong số đó? Kể tên đi, mình xem thử quán đó có ổn không nha!",
+    "total_ms": 63904.9309999682,
+    "ttft_ms": 61976.625700015575,
+    "explain_ms": 1928.3052999526262,
+    "answer": "Hmm, bạn đang hỏi quán nào thế nhỉ? Mình thấy quanh đây có ba quán đáng chú ý: **Bún Bò Huế 2Bro** (cách 120m), **Gà Rán & Burger Lotteria** (cách 390m) và **Thanh Hằng Quán - Phở & Cháo** (cách 530m) — cả ba đều được chấm 4.7 sao đấy. Bạn muốn mình kể chi tiết về quán nào trước?",
     "results": [
       {
         "merchant_id": "362854",
@@ -975,7 +1118,28 @@
         "distance_km": 0.12,
         "avg_rating": 4.7,
         "match_score": 0.0,
-        "image_url": "https://mms.img.susercontent.com/vn-11134517-820l4-mfgcd24ea8lr54@resize_ss1242x1242!@crop_w1242_h1242_cT"
+        "lat": 21.03511516,
+        "lng": 105.78939134,
+        "opens_at": "06:30:00",
+        "closes_at": "23:59:00",
+        "image_url": "https://mms.img.susercontent.com/vn-11134517-820l4-mfgcd24ea8lr54@resize_ss1242x1242!@crop_w1242_h1242_cT",
+        "top_dishes": [
+          {
+            "name": "Bún Bò Huế Bát Đặc Biệt",
+            "price": 79000,
+            "likes": 0
+          },
+          {
+            "name": "Bún Bò Huế Bát Đậm Đà",
+            "price": 69000,
+            "likes": 0
+          },
+          {
+            "name": "Bún Bò Huế Bát Truyền Thống",
+            "price": 59000,
+            "likes": 0
+          }
+        ]
       },
       {
         "merchant_id": "16730",
@@ -985,7 +1149,28 @@
         "distance_km": 0.39,
         "avg_rating": 4.7,
         "match_score": 0.0,
-        "image_url": "https://mms.img.susercontent.com/vn-11134517-81ztc-mpw1h2miik1s77@resize_ss1242x1242!@crop_w1242_h1242_cT"
+        "lat": 21.03279,
+        "lng": 105.788575,
+        "opens_at": "09:30:00",
+        "closes_at": "22:30:00",
+        "image_url": "https://mms.img.susercontent.com/vn-11134517-81ztc-mpw1h2miik1s77@resize_ss1242x1242!@crop_w1242_h1242_cT",
+        "top_dishes": [
+          {
+            "name": "Rộn Ràng 2",
+            "price": 280000,
+            "likes": 0
+          },
+          {
+            "name": "Rộn Ràng 1",
+            "price": 185000,
+            "likes": 0
+          },
+          {
+            "name": "Combo 175k",
+            "price": 175000,
+            "likes": 0
+          }
+        ]
       },
       {
         "merchant_id": "93793",
@@ -995,13 +1180,34 @@
         "distance_km": 0.53,
         "avg_rating": 4.7,
         "match_score": 0.0,
-        "image_url": "https://mms.img.susercontent.com/vn-11134517-7r98o-lr31iu7ldyft84@resize_ss1242x1242!@crop_w1242_h1242_cT"
+        "lat": 21.03800281,
+        "lng": 105.78533313,
+        "opens_at": "08:00:00",
+        "closes_at": "23:59:00",
+        "image_url": "https://mms.img.susercontent.com/vn-11134517-7r98o-lr31iu7ldyft84@resize_ss1242x1242!@crop_w1242_h1242_cT",
+        "top_dishes": [
+          {
+            "name": "Gà Ta Luộc 1 Con",
+            "price": 350000,
+            "likes": 0
+          },
+          {
+            "name": "Nộm Gà Xé Phay Suất 6 Người(1con)",
+            "price": 310000,
+            "likes": 0
+          },
+          {
+            "name": "Ngan Chặt + Canh Măng ",
+            "price": 250000,
+            "likes": 0
+          }
+        ]
       }
     ],
     "suggestions": [],
     "warnings": [],
-    "trace_id": "trace_b34db1767b9b4ac6",
-    "token_chunks": 85,
+    "trace_id": "trace_2c0cd057bc80467c",
+    "token_chunks": 128,
     "error": null,
     "id": "TC-25",
     "category": "explanation_specific",
@@ -1018,25 +1224,26 @@
         "note": "evidence có cả khen và chê — agent phải phản ánh cân bằng cả 2, không chỉ chọn evidence tích cực để 'quảng cáo' quán"
       }
     },
-    "search_ms": 4198.0,
+    "search_ms": 13636.0,
     "preference_ms": null,
     "tools": {
-      "nearby_merchant_search": 79.0
+      "nearby_merchant_search": 75.0
     },
     "coords_sent": true,
     "weather_sent": false,
     "had_prior_turns": true,
-    "prior_seeded": false
+    "prior_seeded": true,
+    "transient_error": false
   },
   {
-    "total_ms": 2070.492599857971,
-    "ttft_ms": 2052.146399859339,
-    "explain_ms": 18.346199998632073,
+    "total_ms": 2108.1113000400364,
+    "ttft_ms": 2090.499800047837,
+    "explain_ms": 17.611499992199242,
     "answer": "Mình chưa gợi ý quán nào trong phiên này — bạn kể rõ tên quán, hoặc nói món/khu vực mới để mình tìm giúp nhé!",
     "results": [],
     "suggestions": [],
     "warnings": [],
-    "trace_id": "trace_82318c17db40418d",
+    "trace_id": "trace_e888a07a097a4663",
     "token_chunks": 1,
     "error": null,
     "id": "TC-26",
@@ -1058,50 +1265,20 @@
     "coords_sent": false,
     "weather_sent": false,
     "had_prior_turns": false,
-    "prior_seeded": false
+    "prior_seeded": false,
+    "transient_error": false
   },
   {
-    "total_ms": 19609.850900014862,
-    "ttft_ms": 15709.832200082019,
-    "explain_ms": 3900.0186999328434,
-    "answer": "À, mình không có thông tin về quán Bún Chả Hương Liên bạn ạ — chắc quán đó chưa nằm trong danh sách mình biết. Nhưng gần Đống Đa có mấy quán bún chả ngon lắm nè: **Bún Chả Liên Anh** (148 Ngọc Khánh, Ba Đình, rating 4.5), **Bún Chả Sự - Hàng Mành** (2 Hàng Mành, Hoàn Kiếm, 4.6), với **Bún Chả Nem - Hàng Bún** (55 Hàng Bún, Ba Đình, 4.4). Bạn thấy quán nào hợp gu không?",
-    "results": [
-      {
-        "merchant_id": "36181",
-        "name": "Bún Chả Liên Anh",
-        "cuisine": "Món Việt, Món Bắc",
-        "address": "148 Ngọc Khánh, P. Giàng Võ, Ba Đình, Hà Nội",
-        "distance_km": 2.86,
-        "avg_rating": 4.5,
-        "match_score": 1.0,
-        "image_url": "https://mms.img.susercontent.com/vn-11134517-820l4-mdvpridfpu6a20@resize_ss1242x1242!@crop_w1242_h1242_cT"
-      },
-      {
-        "merchant_id": "27826",
-        "name": "Bún Chả Sự - Hàng Mành",
-        "cuisine": "Món Việt",
-        "address": "2 Hàng Mành, Hoàn Kiếm, Hà Nội",
-        "distance_km": 3.51,
-        "avg_rating": 4.6,
-        "match_score": 1.0,
-        "image_url": "https://mms.img.susercontent.com/vn-11134517-7r98o-lqxqkubothac82@resize_ss1242x1242!@crop_w1242_h1242_cT"
-      },
-      {
-        "merchant_id": "6886",
-        "name": "Bún Chả Nem - Hàng Bún",
-        "cuisine": "Món Bắc, Hà Nội",
-        "address": "55 Hàng Bún, Ba Đình, Hà Nội",
-        "distance_km": 4.33,
-        "avg_rating": 4.4,
-        "match_score": 1.0,
-        "image_url": "https://mms.img.susercontent.com/vn-11134517-7r98o-lqvtsa7xzb89a6@resize_ss1242x1242!@crop_w1242_h1242_cT"
-      }
-    ],
+    "total_ms": 0.0,
+    "ttft_ms": null,
+    "explain_ms": null,
+    "answer": "",
+    "results": [],
     "suggestions": [],
     "warnings": [],
-    "trace_id": "trace_dd1c814de2bf49b2",
-    "token_chunks": 89,
-    "error": null,
+    "trace_id": null,
+    "token_chunks": 0,
+    "error": "{'error_code': 'TimeoutError', 'message': 'Task \\'Tìm quán ăn phù hợp với yêu cầu: \"Tìm quán bún chả gần Đống Đa, à mà cho tôi hỏi luôn quán Bún Chả Hương Liên có ngon không\". Ràng buộc: cuisine=, thành phố=, ngân sách=, vị trí=(lat=21.004, lng=105.833), bán kính=5.0 km.\\nQUY TRÌNH: 1. Chọn ĐÚNG 1 công cụ, gọi ĐÚNG 1 LẦN rồi DỪNG:\\n   - nearby_merchant_search: CHỈ khi lat VÀ lng đều có giá trị số. Cần radius_km.\\n     Dùng cho \"gần đây\", \"xung quanh\", \"trong X km\".\\n   - merchant_search: mọi trường hợp còn lại (theo city / cuisine / query text), không cần lat/lng.\\n   Quy tắc: lat/lng rỗng (\"\") → merchant_search.\\n2. Truyền ràng buộc NGUYÊN VẸN như người dùng đưa (min_rating, price_max, city, cuisine).\\n   KHÔNG tự hạ/raise ngưỡng, KHÔNG nới lỏng để \"có kết quả\". Bỏ qua (None) min_price /\\n   max_price / min_rating nếu người dùng không nói đến.\\n   **ĐỊA ĐIỂM (RẤT QUAN TRỌNG):** nếu query nhắc khu vực/quận/phường/thành phố nào\\n   (Cầu Giấy, Tây Hồ, Đống Đa, Mỹ Đình, Q.1, Hà Nội, Sài Gòn...) → PHẢI truyền vào `city`.\\n   \"gần X / ở X / khu X / quận X\" → city=X. KHÔNG được bỏ qua địa điểm — không truyền city\\n   sẽ trả quán SAU khu vực, sai nhu cầu người dùng.\\n3. Phân biệt MÓN vs LOẠI: tên món (\"phở\", \"sushi\", \"trà sữa\") → tham số `query`;\\n   loại ẩm thực rộng (\"Món Việt\", \"Nhật\", \"Hàn\") → `cuisine`. KHÔNG nhét tên món vào cuisine.\\n\\nNGUYÊN TẮC TRUNG THỰC (QUAN TRỌNG NHẤT): - CHỈ trả quán CÓ THẬT trong kết quả công cụ trả về. KHÔNG bịa tên / địa chỉ / rating /\\n  merchant_id, kể cả khi nghe hợp lý.\\n- Nếu công cụ trả rỗng → trả candidates=[] (rỗng). Ít kết quả thật tốt hơn nhiều kết quả giả. - KHÔNG gọi lặp công cụ, KHÔNG xen kẽ nearby/merchant_search để \"lấy thêm\". - KHÔNG TỰ BỎ kết quả thật vì lý do khoảng cách. Với query \"gần đây\"/\"xung quanh\", công cụ\\n  có thể tự mở rộng bán kính và trả về các quán GẦN NHẤT (đã sắp xếp theo khoảng cách) kể\\n  cả khi hơi xa. Hãy VẪN TRẢ các quán đó để câu trả lời nói thật khoảng cách (ví dụ \"gần\\n  nhất cũng ~15km\") — ĐỪNG trả candidates=[] khi công cụ đã có kết quả. Trả [] CHỈ khi công\\n  cụ thực sự rỗng. Bỏ kết quả thật khiến người dùng không nhận được gợi ý dù đã tìm thấy.\\n\\nGỢI Ý MỞ RỘNG (chỉ tham khảo khi người dùng dùng từ mơ hồ — \"đỡ ngán\", \"thanh đạm\", \"trời lạnh\", \"chill\", \"ăn kiêng\"... DÙNG để chọn `query`/`cuisine` rõ hơn; BỎ QUA nếu \"(không có)\"): (không có)\\nLƯU Ý: phiên này CHƯA có lịch sử trò chuyện trước đó. TUYỆT ĐỐI KHÔNG nhắc \\'lần trước\\'/\\'hồi nãy\\'/\\'từng gợi ý\\'/\\'bạn đã biết quán đó\\' hay bất kỳ gợi ý về cuộc trò chuyện cũ — đó sẽ là BỊA. Mọi quán nhắc tới phải lấy từ \\'Ứng viên quán\\' bên dưới.\\n\\' execution timed out after 15 seconds. Consider increasing max_execution_time or optimizing the task.'}",
     "id": "TC-27",
     "category": "multi_intent",
     "difficulty": "hard",
@@ -1127,58 +1304,26 @@
         "note": "phải trả lời cả 2 phần: danh sách search VÀ giải thích riêng cho quán được nêu tên, không được chỉ làm 1 trong 2"
       }
     },
-    "search_ms": 3806.0,
+    "search_ms": null,
     "preference_ms": null,
-    "tools": {
-      "nearby_merchant_search": 543.0
-    },
+    "tools": {},
     "coords_sent": true,
     "weather_sent": false,
     "had_prior_turns": false,
-    "prior_seeded": false
+    "prior_seeded": false,
+    "transient_error": true
   },
   {
-    "total_ms": 18693.546399939805,
-    "ttft_ms": 17841.33979980834,
-    "explain_ms": 852.206600131467,
-    "answer": "Ồ, Thanh Xuân à? Để mình nghĩ thử — bạn muốn không cay, không chiên, mà cũng đừng quá rẻ nhỉ. Mình thấy **Sushi Garden - Chính Kinh** gần đó tầm 0.8km, món Nhật thanh nhẹ, rating 4.6 khá ổn, chắc không lo đồ chiên đâu. Hoặc **Xôi Nguyên** online cũng là món Việt đơn giản, không dầu mỡ. Mình chưa có thông tin giá cụ thể, nhưng bạn thử check xem có hợp gu không nhé?",
-    "results": [
-      {
-        "merchant_id": "178825",
-        "name": "Nước Ép Trái Cây 307",
-        "cuisine": "Café/Dessert",
-        "address": null,
-        "distance_km": 0.36,
-        "avg_rating": 4.7,
-        "match_score": 0.0,
-        "image_url": "https://mms.img.susercontent.com/vn-11134517-7r98o-lr6065x3fohwa8@resize_ss1242x1242!@crop_w1242_h1242_cT"
-      },
-      {
-        "merchant_id": "59527",
-        "name": "Sushi Garden - Chính Kinh",
-        "cuisine": "Món Nhật, Món Á",
-        "address": null,
-        "distance_km": 0.83,
-        "avg_rating": 4.6,
-        "match_score": 0.0,
-        "image_url": "https://mms.img.susercontent.com/vn-11134517-7r98o-lr5q08b1f7icd9@resize_ss1242x1242!@crop_w1242_h1242_cT"
-      },
-      {
-        "merchant_id": "126352",
-        "name": "Xôi Nguyên - Shop Online",
-        "cuisine": "Món Việt",
-        "address": null,
-        "distance_km": 0.79,
-        "avg_rating": 4.5,
-        "match_score": 0.0,
-        "image_url": "https://mms.img.susercontent.com/vn-11134517-7r98o-lr5tsgw45lll60@resize_ss1242x1242!@crop_w1242_h1242_cT"
-      }
-    ],
+    "total_ms": 0.0,
+    "ttft_ms": null,
+    "explain_ms": null,
+    "answer": "",
+    "results": [],
     "suggestions": [],
     "warnings": [],
-    "trace_id": "trace_dc94df4cb78d4adc",
-    "token_chunks": 83,
-    "error": null,
+    "trace_id": null,
+    "token_chunks": 0,
+    "error": "{'error_code': 'TimeoutError', 'message': 'Task \\'Tìm quán ăn phù hợp với yêu cầu: \"Tìm quán ăn không cay, không phải đồ chiên, nhưng cũng đừng quá rẻ vì sợ không ngon, ở Thanh Xuân\". Ràng buộc: cuisine=, thành phố=, ngân sách=, vị trí=(lat=20.993, lng=105.811), bán kính=5.0 km.\\nQUY TRÌNH: 1. Chọn ĐÚNG 1 công cụ, gọi ĐÚNG 1 LẦN rồi DỪNG:\\n   - nearby_merchant_search: CHỈ khi lat VÀ lng đều có giá trị số. Cần radius_km.\\n     Dùng cho \"gần đây\", \"xung quanh\", \"trong X km\".\\n   - merchant_search: mọi trường hợp còn lại (theo city / cuisine / query text), không cần lat/lng.\\n   Quy tắc: lat/lng rỗng (\"\") → merchant_search.\\n2. Truyền ràng buộc NGUYÊN VẸN như người dùng đưa (min_rating, price_max, city, cuisine).\\n   KHÔNG tự hạ/raise ngưỡng, KHÔNG nới lỏng để \"có kết quả\". Bỏ qua (None) min_price /\\n   max_price / min_rating nếu người dùng không nói đến.\\n   **ĐỊA ĐIỂM (RẤT QUAN TRỌNG):** nếu query nhắc khu vực/quận/phường/thành phố nào\\n   (Cầu Giấy, Tây Hồ, Đống Đa, Mỹ Đình, Q.1, Hà Nội, Sài Gòn...) → PHẢI truyền vào `city`.\\n   \"gần X / ở X / khu X / quận X\" → city=X. KHÔNG được bỏ qua địa điểm — không truyền city\\n   sẽ trả quán SAU khu vực, sai nhu cầu người dùng.\\n3. Phân biệt MÓN vs LOẠI: tên món (\"phở\", \"sushi\", \"trà sữa\") → tham số `query`;\\n   loại ẩm thực rộng (\"Món Việt\", \"Nhật\", \"Hàn\") → `cuisine`. KHÔNG nhét tên món vào cuisine.\\n\\nNGUYÊN TẮC TRUNG THỰC (QUAN TRỌNG NHẤT): - CHỈ trả quán CÓ THẬT trong kết quả công cụ trả về. KHÔNG bịa tên / địa chỉ / rating /\\n  merchant_id, kể cả khi nghe hợp lý.\\n- Nếu công cụ trả rỗng → trả candidates=[] (rỗng). Ít kết quả thật tốt hơn nhiều kết quả giả. - KHÔNG gọi lặp công cụ, KHÔNG xen kẽ nearby/merchant_search để \"lấy thêm\". - KHÔNG TỰ BỎ kết quả thật vì lý do khoảng cách. Với query \"gần đây\"/\"xung quanh\", công cụ\\n  có thể tự mở rộng bán kính và trả về các quán GẦN NHẤT (đã sắp xếp theo khoảng cách) kể\\n  cả khi hơi xa. Hãy VẪN TRẢ các quán đó để câu trả lời nói thật khoảng cách (ví dụ \"gần\\n  nhất cũng ~15km\") — ĐỪNG trả candidates=[] khi công cụ đã có kết quả. Trả [] CHỈ khi công\\n  cụ thực sự rỗng. Bỏ kết quả thật khiến người dùng không nhận được gợi ý dù đã tìm thấy.\\n\\nGỢI Ý MỞ RỘNG (chỉ tham khảo khi người dùng dùng từ mơ hồ — \"đỡ ngán\", \"thanh đạm\", \"trời lạnh\", \"chill\", \"ăn kiêng\"... DÙNG để chọn `query`/`cuisine` rõ hơn; BỎ QUA nếu \"(không có)\"): (không có)\\nLƯU Ý: phiên này CHƯA có lịch sử trò chuyện trước đó. TUYỆT ĐỐI KHÔNG nhắc \\'lần trước\\'/\\'hồi nãy\\'/\\'từng gợi ý\\'/\\'bạn đã biết quán đó\\' hay bất kỳ gợi ý về cuộc trò chuyện cũ — đó sẽ là BỊA. Mọi quán nhắc tới phải lấy từ \\'Ứng viên quán\\' bên dưới.\\n\\' execution timed out after 15 seconds. Consider increasing max_execution_time or optimizing the task.'}",
     "id": "TC-28",
     "category": "negation_and_ambiguity",
     "difficulty": "hard",
@@ -1200,60 +1345,26 @@
         "note": "3 phủ định liên tiếp, mỗi cái áp vào field khác nhau (tag loại trừ x2, ngưỡng giá dưới) — không được gộp nhầm hoặc bỏ sót phủ định nào"
       }
     },
-    "search_ms": 9397.0,
-    "preference_ms": 3268.0,
-    "tools": {
-      "nearby_merchant_search": 79.0,
-      "get_session_candidates": 5.0,
-      "get_user_profile": 4.0
-    },
+    "search_ms": null,
+    "preference_ms": null,
+    "tools": {},
     "coords_sent": true,
     "weather_sent": false,
     "had_prior_turns": false,
-    "prior_seeded": false
+    "prior_seeded": false,
+    "transient_error": true
   },
   {
-    "total_ms": 12195.537799969316,
-    "ttft_ms": 11458.023899933323,
-    "explain_ms": 737.5139000359923,
-    "answer": "Ồ, thèm cay hả? Hôm nay muốn đổi gió cũng hay đó — mình thấy có mấy quán **3 Râu - Gà Rán, Pizza & Trà Sữa** ở Tân Phú với Quận 6, rating cũng cao lắm (4.7–4.8). Nhưng mà mình chưa rõ bạn thích kiểu cay nào: gà rán sốt cay cho đã hay món Việt cay như bún bò? Kể thêm đi, mình lo cho!",
-    "results": [
-      {
-        "merchant_id": "123260",
-        "name": "3 Râu - Gà Rán, Pizza & Trà Sữa - Trương Vĩnh Ký",
-        "cuisine": "Món Việt",
-        "address": "160 Trương Vĩnh Ký, P. Tân Sơn Nhì, Tân Phú, TP. HCM",
-        "distance_km": null,
-        "avg_rating": 4.8,
-        "match_score": 0.392,
-        "image_url": "https://mms.img.susercontent.com/vn-11134517-7r98o-lqyysjp18o0p42@resize_ss1242x1242!@crop_w1242_h1242_cT"
-      },
-      {
-        "merchant_id": "140162",
-        "name": "3 Râu - Gà Rán, Pizza & Trà Sữa - Bình Phú",
-        "cuisine": "Món Việt",
-        "address": "225 Bình Phú, P. 11, Quận 6, TP. HCM",
-        "distance_km": null,
-        "avg_rating": 4.7,
-        "match_score": 0.391,
-        "image_url": "https://mms.img.susercontent.com/vn-11134517-7r98o-lr3w1ysxjkqs98@resize_ss1242x1242!@crop_w1242_h1242_cT"
-      },
-      {
-        "merchant_id": "282179",
-        "name": "3 Râu - Gà Rán, Pizza & Trà Sữa - Hồ Đắc Di",
-        "cuisine": "Quán ăn",
-        "address": "9 Hồ Đắc Di, P. Tây Thạnh, Tân Phú, TP. HCM",
-        "distance_km": null,
-        "avg_rating": 4.8,
-        "match_score": 0.391,
-        "image_url": "https://mms.img.susercontent.com/vn-11134517-7r98o-lqyjlq2gqduh65@resize_ss1242x1242!@crop_w1242_h1242_cT"
-      }
-    ],
+    "total_ms": 0.0,
+    "ttft_ms": null,
+    "explain_ms": null,
+    "answer": "",
+    "results": [],
     "suggestions": [],
     "warnings": [],
-    "trace_id": "trace_901f460a248e423e",
-    "token_chunks": 69,
-    "error": null,
+    "trace_id": null,
+    "token_chunks": 0,
+    "error": "{'error_code': 'TimeoutError', 'message': 'Task \\'Tìm quán ăn phù hợp với yêu cầu: \"Hôm nay tôi muốn thử cái gì cay thật cay luôn, đổi gió\". Ràng buộc: cuisine=, thành phố=, ngân sách=, vị trí=(lat=, lng=), bán kính= km.\\nQUY TRÌNH: 1. Chọn ĐÚNG 1 công cụ, gọi ĐÚNG 1 LẦN rồi DỪNG:\\n   - nearby_merchant_search: CHỈ khi lat VÀ lng đều có giá trị số. Cần radius_km.\\n     Dùng cho \"gần đây\", \"xung quanh\", \"trong X km\".\\n   - merchant_search: mọi trường hợp còn lại (theo city / cuisine / query text), không cần lat/lng.\\n   Quy tắc: lat/lng rỗng (\"\") → merchant_search.\\n2. Truyền ràng buộc NGUYÊN VẸN như người dùng đưa (min_rating, price_max, city, cuisine).\\n   KHÔNG tự hạ/raise ngưỡng, KHÔNG nới lỏng để \"có kết quả\". Bỏ qua (None) min_price /\\n   max_price / min_rating nếu người dùng không nói đến.\\n   **ĐỊA ĐIỂM (RẤT QUAN TRỌNG):** nếu query nhắc khu vực/quận/phường/thành phố nào\\n   (Cầu Giấy, Tây Hồ, Đống Đa, Mỹ Đình, Q.1, Hà Nội, Sài Gòn...) → PHẢI truyền vào `city`.\\n   \"gần X / ở X / khu X / quận X\" → city=X. KHÔNG được bỏ qua địa điểm — không truyền city\\n   sẽ trả quán SAU khu vực, sai nhu cầu người dùng.\\n3. Phân biệt MÓN vs LOẠI: tên món (\"phở\", \"sushi\", \"trà sữa\") → tham số `query`;\\n   loại ẩm thực rộng (\"Món Việt\", \"Nhật\", \"Hàn\") → `cuisine`. KHÔNG nhét tên món vào cuisine.\\n\\nNGUYÊN TẮC TRUNG THỰC (QUAN TRỌNG NHẤT): - CHỈ trả quán CÓ THẬT trong kết quả công cụ trả về. KHÔNG bịa tên / địa chỉ / rating /\\n  merchant_id, kể cả khi nghe hợp lý.\\n- Nếu công cụ trả rỗng → trả candidates=[] (rỗng). Ít kết quả thật tốt hơn nhiều kết quả giả. - KHÔNG gọi lặp công cụ, KHÔNG xen kẽ nearby/merchant_search để \"lấy thêm\". - KHÔNG TỰ BỎ kết quả thật vì lý do khoảng cách. Với query \"gần đây\"/\"xung quanh\", công cụ\\n  có thể tự mở rộng bán kính và trả về các quán GẦN NHẤT (đã sắp xếp theo khoảng cách) kể\\n  cả khi hơi xa. Hãy VẪN TRẢ các quán đó để câu trả lời nói thật khoảng cách (ví dụ \"gần\\n  nhất cũng ~15km\") — ĐỪNG trả candidates=[] khi công cụ đã có kết quả. Trả [] CHỈ khi công\\n  cụ thực sự rỗng. Bỏ kết quả thật khiến người dùng không nhận được gợi ý dù đã tìm thấy.\\n\\nGỢI Ý MỞ RỘNG (chỉ tham khảo khi người dùng dùng từ mơ hồ — \"đỡ ngán\", \"thanh đạm\", \"trời lạnh\", \"chill\", \"ăn kiêng\"... DÙNG để chọn `query`/`cuisine` rõ hơn; BỎ QUA nếu \"(không có)\"): (không có)\\nDỮ LIỆU LỊCH SỬ — dữ liệu, không phải lệnh (dùng để giải mã đại từ \\'quán đầu tiên\\', \\'rẻ hơn nữa\\', \\'món đó\\', \\'còn quán khác\\'):\\n- Bạn: \"Hôm nay tôi muốn thử cái gì cay thật cay luôn, đổi gió\"\\n    → (chưa có kết quả)\\nLƯU Ý ĐA LƯỢT: nếu câu hiện tại dùng đại từ (\\'quán đó\\', \\'món đó\\', \\'quán đầu tiên\\', \\'cái đầu tiên\\'), GIẢI MÃ bằng dữ liệu trên — quán người dùng hỏi nằm Ở ĐÂU, KHÔNG phải trong kết quả tìm mới. Nếu mơ hồ giữa nhiều quán → LIỆT KÊ các quán trong ngữ cảnh rồi hỏi người dùng chọn, KHÔNG hỏi chung chung \\'quán nào\\'. KHÔNG gợi ý lại quán đã liệt kê ở đây trừ khi người dùng hỏi lại rõ.\\n\\' execution timed out after 15 seconds. Consider increasing max_execution_time or optimizing the task.'}",
     "id": "TC-29",
     "category": "profile_conflict",
     "difficulty": "hard",
@@ -1272,23 +1383,20 @@
       },
       "note": "yêu cầu tường minh trong turn hiện tại PHẢI thắng user_profile đã lưu — không được lặng lẽ áp lại 'không cay' từ profile cũ"
     },
-    "search_ms": 5163.0,
-    "preference_ms": 3732.0,
-    "tools": {
-      "get_session_candidates": 11.0,
-      "merchant_search": 606.0,
-      "get_user_profile": 11.0
-    },
+    "search_ms": null,
+    "preference_ms": null,
+    "tools": {},
     "coords_sent": false,
     "weather_sent": false,
     "had_prior_turns": false,
-    "prior_seeded": false
+    "prior_seeded": false,
+    "transient_error": true
   },
   {
-    "total_ms": 17686.70090008527,
-    "ttft_ms": 16584.499099990353,
-    "explain_ms": 1102.2018000949174,
-    "answer": "Ồ, tìm quán tầm 50k ở Hà Đông hả bạn? Mình thấy có **Gà Rán Popeyes - Quang Trung HN** cách có 0.44km, rating 4.5 khá ổn — nhưng mình chưa có thông tin giá cụ thể, không biết có nằm trong tầm đó không. Bạn thích món gà rán hay muốn ăn nhẹ nhẹ như phở cuốn? Có **Phở Cuốn, Gỏi Cuốn & Bún Trộn - Gia Bảo** cũng gần, rating 4.9 nữa!",
+    "total_ms": 72962.41570007987,
+    "ttft_ms": 69515.98270004615,
+    "explain_ms": 3446.4330000337213,
+    "answer": "Ồ, Hà Đông thì mình thấy quanh bạn có vài quán ăn vặt gần lắm nè — **Phở Cuốn, Gỏi Cuốn & Bún Trộn - Gia Bảo** cách chỉ ~0.9km, rating 4.9 khá ổn, món thanh đạm mà chắc bụng, hợp bữa trưa nhẹ. Còn **Gà Rán Popeyes - Quang Trung HN** cách ~0.4km thì đúng gu ai thèm đồ chiên giòn. Mình chưa có thông tin giá chính xác của mấy quán này, nhưng mấy món kiểu này thường loanh quanh tầm 50k là hợp lý. Bạn thích món nào hơn, mình xem thêm chi tiết nhé?",
     "results": [
       {
         "merchant_id": "328234",
@@ -1298,7 +1406,28 @@
         "distance_km": 0.44,
         "avg_rating": 4.5,
         "match_score": 0.0,
-        "image_url": "https://mms.img.susercontent.com/vn-11134517-7r98o-lss32g73xw9l08@resize_ss1242x1242!@crop_w1242_h1242_cT"
+        "lat": 20.96333332,
+        "lng": 105.76636258,
+        "opens_at": "09:30:00",
+        "closes_at": "23:00:00",
+        "image_url": "https://mms.img.susercontent.com/vn-11134517-7r98o-lss32g73xw9l08@resize_ss1242x1242!@crop_w1242_h1242_cT",
+        "top_dishes": [
+          {
+            "name": "Combo Family C",
+            "price": 399000,
+            "likes": 0
+          },
+          {
+            "name": "Combo Family B",
+            "price": 329000,
+            "likes": 0
+          },
+          {
+            "name": "Combo Mala Malime 3 người",
+            "price": 299000,
+            "likes": 0
+          }
+        ]
       },
       {
         "merchant_id": "313985",
@@ -1308,7 +1437,28 @@
         "distance_km": 0.89,
         "avg_rating": 4.9,
         "match_score": 0.0,
-        "image_url": "https://mms.img.susercontent.com/vn-11134517-7r98o-lr4drw6ci2e1be@resize_ss1242x1242!@crop_w1242_h1242_cT"
+        "lat": 20.954783,
+        "lng": 105.7575,
+        "opens_at": "07:30:00",
+        "closes_at": "23:59:00",
+        "image_url": "https://mms.img.susercontent.com/vn-11134517-7r98o-lr4drw6ci2e1be@resize_ss1242x1242!@crop_w1242_h1242_cT",
+        "top_dishes": [
+          {
+            "name": "Cuốn Tôm Thịt Tốn chấm 10 cái",
+            "price": 170000,
+            "likes": 0
+          },
+          {
+            "name": "Thịt xiên nướng ( 10 xiên )",
+            "price": 150000,
+            "likes": 0
+          },
+          {
+            "name": "Set mix : 3 gỏi cuốn tôm + 3 cuốn thịt",
+            "price": 100000,
+            "likes": 0
+          }
+        ]
       },
       {
         "merchant_id": "394182",
@@ -1318,13 +1468,32 @@
         "distance_km": 1.2,
         "avg_rating": 0.0,
         "match_score": 0.0,
-        "image_url": "https://mms.img.susercontent.com/vn-11134517-81ztc-mqcajswojksv34@resize_ss1242x1242!@crop_w1242_h1242_cT"
+        "lat": 20.967261,
+        "lng": 105.772518,
+        "image_url": "https://mms.img.susercontent.com/vn-11134517-81ztc-mqcajswojksv34@resize_ss1242x1242!@crop_w1242_h1242_cT",
+        "top_dishes": [
+          {
+            "name": "Bánh mì bò xào",
+            "price": 65000,
+            "likes": 0
+          },
+          {
+            "name": "Chảo  truyền thống",
+            "price": 53000,
+            "likes": 0
+          },
+          {
+            "name": "Bánh mì gà giòn",
+            "price": 40000,
+            "likes": 0
+          }
+        ]
       }
     ],
     "suggestions": [],
     "warnings": [],
-    "trace_id": "trace_29359506b62d4bb3",
-    "token_chunks": 80,
+    "trace_id": "trace_4d1517e1ff8b4888",
+    "token_chunks": 203,
     "error": null,
     "id": "TC-34",
     "category": "negation_and_ambiguity",
@@ -1343,25 +1512,26 @@
       },
       "note": "'năm chục nghìn' phải parse đúng thành 50000, 'đổ lại' nghĩa là <=, không phải khoảng dao động quanh 50k"
     },
-    "search_ms": 4373.0,
+    "search_ms": 14097.0,
     "preference_ms": null,
     "tools": {
-      "nearby_merchant_search": 68.0
+      "nearby_merchant_search": 72.0
     },
     "coords_sent": true,
     "weather_sent": false,
     "had_prior_turns": false,
-    "prior_seeded": false
+    "prior_seeded": false,
+    "transient_error": false
   },
   {
-    "total_ms": 2094.289100030437,
-    "ttft_ms": 2079.65480000712,
-    "explain_ms": 14.634300023317337,
+    "total_ms": 2097.7918000426143,
+    "ttft_ms": 2069.8911000508815,
+    "explain_ms": 27.900699991732836,
     "answer": "Khoan, bạn nói ngân sách '50' — mình muốn chắc đơn vị: 50 nghìn (50.000đ), 500 nghìn, hay 50 triệu? Khu vực mình đã có rồi, chỉ cần giá cụ thể để lọc chuẩn cho bạn nhé!",
     "results": [],
     "suggestions": [],
     "warnings": [],
-    "trace_id": "trace_a9c468c2675042e4",
+    "trace_id": "trace_0a5a17ad71d3480a",
     "token_chunks": 1,
     "error": null,
     "id": "TC-35",
@@ -1383,18 +1553,19 @@
     "coords_sent": true,
     "weather_sent": false,
     "had_prior_turns": false,
-    "prior_seeded": false
+    "prior_seeded": false,
+    "transient_error": false
   },
   {
-    "total_ms": 14026.160500012338,
-    "ttft_ms": 13609.293499961495,
-    "explain_ms": 416.86700005084276,
-    "answer": "Ôi trời, hiểu cảm giác đó quá — ngồi chờ cả tiếng mà bụng đói meo thì chán thật. Mình thấy mấy quán vỉa hè hoặc quán tự phục vụ thường nhanh hơn hẳn, không phải đợi lâu đâu. Bạn đang ở khu nào để mình nghĩ thử vài gợi ý nhanh gọn nhé?",
+    "total_ms": 64885.12960006483,
+    "ttft_ms": 62744.5282000117,
+    "explain_ms": 2140.6014000531286,
+    "answer": "Ôi, hiểu cảnh chờ đợi mệt thật sự luôn — ăn xong mà đứng đợi thêm tiếng đồng hồ thì đúng là hết hứng. Mình chưa có sẵn quán cụ thể nào trong tay để gợi ý ngay, nhưng bạn kể mình nghe đang ở khu nào với thèm món gì đi — mình tìm giúp mấy chỗ phục vụ nhanh, không phải ngồi đợi lâu nhé!",
     "results": [],
     "suggestions": [],
     "warnings": [],
-    "trace_id": "trace_547c1810562841f9",
-    "token_chunks": 61,
+    "trace_id": "trace_1220f98d994e430d",
+    "token_chunks": 132,
     "error": null,
     "id": "TC-36",
     "category": "negation_and_ambiguity",
@@ -1408,25 +1579,26 @@
       "should_ask_clarification": true,
       "note": "câu hỏi tu từ/than phiền nhưng chứa constraint ẩn thực sự: ưu tiên quán phục vụ nhanh/ít đông — normalized_constraints nên có field kiểu 'prefer_fast_service': true, không chỉ tìm 'quán ăn' chung chung bỏ qua toàn bộ phần than phiền"
     },
-    "search_ms": 4862.0,
+    "search_ms": 13524.0,
     "preference_ms": null,
     "tools": {
-      "merchant_search": 25.0
+      "merchant_search": 1.0
     },
     "coords_sent": false,
     "weather_sent": false,
     "had_prior_turns": false,
-    "prior_seeded": false
+    "prior_seeded": false,
+    "transient_error": false
   },
   {
-    "total_ms": 8263.79940006882,
-    "ttft_ms": 8248.606499982998,
-    "explain_ms": 15.192900085821748,
+    "total_ms": 16257.472500088625,
+    "ttft_ms": 16228.31130004488,
+    "explain_ms": 29.16120004374534,
     "answer": "Mình chưa có dữ liệu thực tế để so sánh/giải thích trường hợp này — mình không muốn bịa thông tin. Bạn kể rõ hơn (tên quán cụ thể, khu vực) để mình tra cứu từ dữ liệu thật nhé!",
     "results": [],
     "suggestions": [],
     "warnings": [],
-    "trace_id": "trace_0c84adb756c8460f",
+    "trace_id": "trace_1ed51e75efc04f32",
     "token_chunks": 1,
     "error": null,
     "id": "TC-38",
@@ -1444,21 +1616,22 @@
         "note": "nếu 1 hoặc cả 2 chuỗi này không có đủ evidence trong Merchant Profile của hệ thống, PHẢI nói rõ hạn chế dữ liệu, KHÔNG dùng kiến thức chung ngoài hệ thống (danh tiếng thương hiệu, review trên mạng) để tự đưa ra kết luận 'quán nào ngon hơn'"
       }
     },
-    "search_ms": 5979.0,
+    "search_ms": 13867.0,
     "preference_ms": null,
     "tools": {
-      "merchant_search": 633.0
+      "merchant_search": 569.0
     },
     "coords_sent": false,
     "weather_sent": false,
     "had_prior_turns": false,
-    "prior_seeded": false
+    "prior_seeded": false,
+    "transient_error": false
   },
   {
-    "total_ms": 16017.125200014561,
-    "ttft_ms": 15079.003100050613,
-    "explain_ms": 938.1220999639481,
-    "answer": "Hmm, mình thấy bạn nói \"chỉ có 1 quán\" — nhưng lúc nãy mình gợi ý tới ba quán lẩu hải sản ở Hà Đông mà: **Bà Tuyết - Bún Thái Hải Sản & Mì Chua Cay**, **Thành+ - Bún Thái Hải Sản Phú Quốc - Duy Tân**, và **Bà Tuyết - Bún Thái Hải Sản & Mì Chua Cay - Lương Định Của**. Bạn đang hỏi về quán nào trong ba quán đó thế?",
+    "total_ms": 68011.68250001501,
+    "ttft_ms": 65134.976700064726,
+    "explain_ms": 2876.7057999502867,
+    "answer": "À, mình hiểu ý bạn rồi — thực ra quanh bạn có tới 3 quán gần nhau đấy, không phải chỉ 1 đâu! Gần nhất là **Neca Fresh Yogurt - Tiệm Sữa Chua - Văn Phú** cách 0.3km, rating 4.7, món Việt mát lành. Cách đó tầm 0.44km có **Gà Rán Popeyes - Quang Trung HN** (4.5★) cho ai thèm đồ chiên giòn, và xa hơn chút 0.89km là **Phở Cuốn, Gỏi Cuốn & Bún Trộn - Gia Bảo** với rating cao nhất 4.9. Bạn đang thèm kiểu gì — nhẹ nhàng thanh mát hay no nê một bữa?",
     "results": [
       {
         "merchant_id": "125232",
@@ -1467,8 +1640,17 @@
         "address": null,
         "distance_km": 0.3,
         "avg_rating": 4.7,
-        "match_score": 0.0,
-        "image_url": "https://mms.img.susercontent.com/vn-11134517-7r98o-lqxpjtnv0al50f@resize_ss1242x1242!@crop_w1242_h1242_cT"
+        "match_score": 1.0,
+        "lat": 20.959036,
+        "lng": 105.766743,
+        "image_url": "https://mms.img.susercontent.com/vn-11134517-7r98o-lqxpjtnv0al50f@resize_ss1242x1242!@crop_w1242_h1242_cT",
+        "top_dishes": [
+          {
+            "name": "Sữa Chua Kem Trân Châu",
+            "price": 25000,
+            "likes": 0
+          }
+        ]
       },
       {
         "merchant_id": "328234",
@@ -1477,8 +1659,29 @@
         "address": null,
         "distance_km": 0.44,
         "avg_rating": 4.5,
-        "match_score": 0.0,
-        "image_url": "https://mms.img.susercontent.com/vn-11134517-7r98o-lss32g73xw9l08@resize_ss1242x1242!@crop_w1242_h1242_cT"
+        "match_score": 1.0,
+        "lat": 20.96333332,
+        "lng": 105.76636258,
+        "opens_at": "09:30:00",
+        "closes_at": "23:00:00",
+        "image_url": "https://mms.img.susercontent.com/vn-11134517-7r98o-lss32g73xw9l08@resize_ss1242x1242!@crop_w1242_h1242_cT",
+        "top_dishes": [
+          {
+            "name": "Combo Family C",
+            "price": 399000,
+            "likes": 0
+          },
+          {
+            "name": "Combo Family B",
+            "price": 329000,
+            "likes": 0
+          },
+          {
+            "name": "Combo Mala Malime 3 người",
+            "price": 299000,
+            "likes": 0
+          }
+        ]
       },
       {
         "merchant_id": "313985",
@@ -1487,14 +1690,35 @@
         "address": null,
         "distance_km": 0.89,
         "avg_rating": 4.9,
-        "match_score": 0.0,
-        "image_url": "https://mms.img.susercontent.com/vn-11134517-7r98o-lr4drw6ci2e1be@resize_ss1242x1242!@crop_w1242_h1242_cT"
+        "match_score": 1.0,
+        "lat": 20.954783,
+        "lng": 105.7575,
+        "opens_at": "07:30:00",
+        "closes_at": "23:59:00",
+        "image_url": "https://mms.img.susercontent.com/vn-11134517-7r98o-lr4drw6ci2e1be@resize_ss1242x1242!@crop_w1242_h1242_cT",
+        "top_dishes": [
+          {
+            "name": "Cuốn Tôm Thịt Tốn chấm 10 cái",
+            "price": 170000,
+            "likes": 0
+          },
+          {
+            "name": "Thịt xiên nướng ( 10 xiên )",
+            "price": 150000,
+            "likes": 0
+          },
+          {
+            "name": "Set mix : 3 gỏi cuốn tôm + 3 cuốn thịt",
+            "price": 100000,
+            "likes": 0
+          }
+        ]
       }
     ],
     "suggestions": [],
     "warnings": [],
-    "trace_id": "trace_f10b0d434f5e4c6b",
-    "token_chunks": 77,
+    "trace_id": "trace_955b7a6ffd40408f",
+    "token_chunks": 205,
     "error": null,
     "id": "TC-39",
     "category": "explanation_specific",
@@ -1510,26 +1734,27 @@
         "note": "chỉ có 1 kết quả — không được dùng ngôn ngữ so sánh/xếp hạng kiểu 'đứng đầu danh sách', 'nổi bật nhất' (ngụ ý có nhiều lựa chọn để so sánh) khi thực tế chỉ có 1 quán duy nhất thoả điều kiện"
       }
     },
-    "search_ms": 3400.0,
+    "search_ms": 14796.0,
     "preference_ms": null,
     "tools": {
-      "nearby_merchant_search": 71.0
+      "nearby_merchant_search": 167.0
     },
     "coords_sent": true,
     "weather_sent": false,
     "had_prior_turns": true,
-    "prior_seeded": false
+    "prior_seeded": true,
+    "transient_error": false
   },
   {
-    "total_ms": 27176.233999896795,
-    "ttft_ms": 26357.46349999681,
-    "explain_ms": 818.7704998999834,
-    "answer": "Ồ, cái đầu tiên là **Bánh Mì Chú Tiểu - Bánh Mì Muối Ớt & Nướng Sốt Kem Bơ Phô Mai** ở 43 Ngõ Tự Do đó! Nghe tên đã thấy hấp dẫn rồi — bánh mì muối ớt kết hợp sốt kem bơ phô mai, chắc chắn là combo lạ miệng. Bạn muốn mình tìm thêm thông tin gì về quán này không?",
+    "total_ms": 72381.94770005066,
+    "ttft_ms": 70461.4974000724,
+    "explain_ms": 1920.4502999782562,
+    "answer": "Hmm, \"cái đầu tiên đó\" — mình chưa hình dung ra bạn đang nhắc tới quán nào lắm, vì phiên này mình chưa có thông tin gì trước đó cả. Bạn kể thêm cho mình nghe xem: món gì, ở khu nào, hay thèm kiểu nhẹ nhẹ hay no nê một bữa? Để mình tìm giúp bạn nhé!",
     "results": [],
     "suggestions": [],
     "warnings": [],
-    "trace_id": "trace_0841cc19c6034234",
-    "token_chunks": 67,
+    "trace_id": "trace_5e4c18973f3a4257",
+    "token_chunks": 111,
     "error": null,
     "id": "TC-41",
     "category": "refinement_multiturn",
@@ -1542,38 +1767,122 @@
       ],
       "note": "'cái đầu tiên' phải resolve đúng về 'Phở Thìn Bờ Hồ' dựa theo thứ tự liệt kê ở turn trước — test resolve đại từ chỉ số thứ tự (ordinal reference), không chỉ đại từ chỉ định ('quán này/đó')"
     },
-    "search_ms": 8100.0,
+    "search_ms": 13252.0,
     "preference_ms": null,
     "tools": {
-      "merchant_search": 596.0
+      "merchant_search": 4.0
     },
     "coords_sent": false,
     "weather_sent": false,
     "had_prior_turns": true,
-    "prior_seeded": true
+    "prior_seeded": true,
+    "transient_error": false
   },
   {
-    "total_ms": 12681.832500034943,
-    "ttft_ms": 12009.209400042892,
-    "explain_ms": 672.6230999920517,
-    "answer": "Hmm, mình vừa xem thông tin của **Phở Bò Tứ Quý - Cơm Rang Chiên** rồi, nhưng không thấy ghi giờ mở cửa cụ thể trong hồ sơ quán. Bạn thử gọi trực tiếp cho quán xem sao nhé — mình không dám chắc giờ này còn mở hay không đâu.",
+    "total_ms": 52647.745400085114,
+    "ttft_ms": 50385.623699985445,
+    "explain_ms": 2262.1217000996694,
+    "answer": "Hmm, bạn đang hỏi quán nào thế — mình thấy quanh đây có **Phở 193 - Nguyễn Phúc Nguyên**, **Phở 29 Long An - Trịnh Đình Trọng** và **Phở 86 - Phở Bò & Bò Kho**. Tiếc là mình chưa có thông tin giờ mở cửa của mấy quán này, nên không dám chắc giờ này còn mở không. Bạn muốn mình check quán cụ thể nào để mình xem thêm nhé?",
     "results": [
       {
-        "merchant_id": "374657",
-        "name": "Phở Bò Tứ Quý - Cơm Rang Chiên - Số 6 Ngõ 148 Trịnh Đình Cửu",
-        "cuisine": "Quán ăn",
-        "address": "Số 6 Ngõ 148 Trịnh Đình Cửu, P. Định Công, Hoàng Mai, Hà Nội",
-        "city": "Hà Nội",
+        "merchant_id": "226793",
+        "name": "Phở 193 - Nguyễn Phúc Nguyên",
+        "cuisine": "Món Việt, Món Miền Nam",
+        "address": "193 Nguyễn Phúc Nguyên, P. 10, Quận 3, TP. HCM",
+        "city": "TP. HCM",
         "distance_km": null,
-        "avg_rating": null,
+        "avg_rating": 0.0,
         "match_score": null,
-        "image_url": "https://mms.img.susercontent.com/vn-11134517-7ras8-m2dv9rhydr5e09@resize_ss1242x1242!@crop_w1242_h1242_cT"
+        "lat": 10.7809853,
+        "lng": 106.6783276,
+        "top_dishes": [
+          {
+            "name": "Phở thập cẩm",
+            "price": 50000,
+            "likes": 0
+          },
+          {
+            "name": "Phở tái",
+            "price": 40000,
+            "likes": 0
+          },
+          {
+            "name": "Phở nạm",
+            "price": 40000,
+            "likes": 0
+          }
+        ],
+        "image_url": "https://mms.img.susercontent.com/vn-11134517-7r98o-lr67qjmnyrvdbe@resize_ss1242x1242!@crop_w1242_h1242_cT"
+      },
+      {
+        "merchant_id": "47642",
+        "name": "Phở 29 Long An - Trịnh Đình Trọng",
+        "cuisine": "Món Việt",
+        "address": "2 Lô A3, Cư Xá 47, Trịnh Đình Trọng, P. 5, Quận 11, TP. HCM",
+        "city": "TP. HCM",
+        "distance_km": null,
+        "avg_rating": 4.6,
+        "match_score": null,
+        "lat": 10.7746727768835,
+        "lng": 106.643967472579,
+        "opens_at": "06:00:00",
+        "closes_at": "23:30:00",
+        "top_dishes": [
+          {
+            "name": "Phở tái + gân",
+            "price": 50000,
+            "likes": 0
+          },
+          {
+            "name": "Phở tái + bò viên",
+            "price": 50000,
+            "likes": 0
+          },
+          {
+            "name": "Phở Tái Nạm",
+            "price": 50000,
+            "likes": 0
+          }
+        ],
+        "image_url": "https://mms.img.susercontent.com/vn-11134517-7r98o-lr2sbrxacty12d@resize_ss1242x1242!@crop_w1242_h1242_cT"
+      },
+      {
+        "merchant_id": "50095",
+        "name": "Phở 86 - Phở Bò & Bò Kho",
+        "cuisine": "Món Việt",
+        "address": "86/7 Thích Quảng Đức, Phú Nhuận, TP. HCM",
+        "city": "TP. HCM",
+        "distance_km": null,
+        "avg_rating": 4.7,
+        "match_score": null,
+        "lat": 10.805979,
+        "lng": 106.6825457,
+        "opens_at": "06:30:00",
+        "closes_at": "22:30:59",
+        "top_dishes": [
+          {
+            "name": "Phở Nạm Gầu (ĐB)",
+            "price": 80000,
+            "likes": 0
+          },
+          {
+            "name": "Phở Thập Cẩm",
+            "price": 65000,
+            "likes": 0
+          },
+          {
+            "name": "Hủ Tiếu Bò Kho",
+            "price": 55000,
+            "likes": 0
+          }
+        ],
+        "image_url": "https://mms.img.susercontent.com/vn-11134517-7r98o-lr347lbcabh5d1@resize_ss1242x1242!@crop_w1242_h1242_cT"
       }
     ],
     "suggestions": [],
     "warnings": [],
-    "trace_id": "trace_c32c3b07815d4604",
-    "token_chunks": 50,
+    "trace_id": "trace_f47faaf8afa84fdc",
+    "token_chunks": 134,
     "error": null,
     "id": "TC-42",
     "category": "data_integrity",
@@ -1594,49 +1903,113 @@
     "coords_sent": true,
     "weather_sent": false,
     "had_prior_turns": true,
-    "prior_seeded": false
+    "prior_seeded": true,
+    "transient_error": false
   },
   {
-    "total_ms": 19776.71439992264,
-    "ttft_ms": 19033.06379984133,
-    "explain_ms": 743.6506000813097,
-    "answer": "Ồ, tìm cơm gần Cầu Giấy hả? Mình thấy có **Cơm Rang Gà Sốt 30K** ở Nghĩa Tân (0.74km, 4.5⭐), với **Doo Foods** và **Le Pain Lee** cũng gần — toàn quán ăn ngon, rating cao. Bạn muốn cơm rang hay cơm gà?",
+    "total_ms": 63501.84889999218,
+    "ttft_ms": 61214.97560001444,
+    "explain_ms": 2286.873299977742,
+    "answer": "Ồ, quán **Cơm Rang Gà Sốt 30K** ở Nghĩa Tân gần bạn chỉ ~0.7km thôi, rating 4.5 khá ổn — cái tên nghe là biết hợp túi tiền dưới 50k rồi! Còn nếu muốn đổi vị chút thì **Le Pain Lee** hay **Doo Foods** (cách ~0.8km, rating 4.6–4.7) cũng có cơm gà, burger, gà rán đủ kiểu. Bạn thích kiểu cơm rang giòn giòn hay cơm gà mềm mại hơn?",
     "results": [
       {
         "merchant_id": "246072",
         "name": "Cơm Rang Gà Sốt 30K - Khu Tập Thể Nghĩa Tân",
         "cuisine": "Quán ăn",
-        "address": "104 C3 Khu Tập Thể Nghĩa Tân, P. Nghĩa Tân, Cầu Giấy, Hà Nội",
+        "address": null,
         "distance_km": 0.74,
         "avg_rating": 4.5,
         "match_score": 1.0,
-        "image_url": "https://mms.img.susercontent.com/vn-11134517-7r98o-lr0gpf4qtcxw77@resize_ss1242x1242!@crop_w1242_h1242_cT"
+        "lat": 21.04195,
+        "lng": 105.79322,
+        "opens_at": "09:00:00",
+        "closes_at": "22:59:00",
+        "image_url": "https://mms.img.susercontent.com/vn-11134517-7r98o-lr0gpf4qtcxw77@resize_ss1242x1242!@crop_w1242_h1242_cT",
+        "top_dishes": [
+          {
+            "name": "3 Cơm Rang Dưa Bò + 3 Pepsi",
+            "price": 185000,
+            "likes": 0
+          },
+          {
+            "name": "2 Cơm Rang Dưa Bò + 2 Pepsi",
+            "price": 140000,
+            "likes": 0
+          },
+          {
+            "name": "2 Cơm Rang Đùi Gà Sốt + 2 Pepsi",
+            "price": 140000,
+            "likes": 0
+          }
+        ]
       },
       {
         "merchant_id": "275382",
         "name": "Le Pain Lee - Burger, Gà Rán & Cơm Gà - Dịch Vọng",
         "cuisine": "Quán ăn",
-        "address": "Số 48 Ngõ 37 Dịch Vọng, P. Dịch Vọng, Cầu Giấy, Hà Nội",
+        "address": null,
         "distance_km": 0.81,
         "avg_rating": 4.6,
         "match_score": 1.0,
-        "image_url": "https://mms.img.susercontent.com/vn-11134517-7ra0g-m724us4o1kyv92@resize_ss1242x1242!@crop_w1242_h1242_cT"
+        "lat": 21.03075154,
+        "lng": 105.79544,
+        "opens_at": "08:00:00",
+        "closes_at": "23:59:00",
+        "image_url": "https://mms.img.susercontent.com/vn-11134517-7ra0g-m724us4o1kyv92@resize_ss1242x1242!@crop_w1242_h1242_cT",
+        "top_dishes": [
+          {
+            "name": "Combo gia đình vui vẻ mới ( tặng 3 chai coca )",
+            "price": 350000,
+            "likes": 0
+          },
+          {
+            "name": "Combo waiting for you",
+            "price": 336000,
+            "likes": 0
+          },
+          {
+            "name": "Combo siêu ngon T11(2 chai coca)",
+            "price": 250000,
+            "likes": 0
+          }
+        ]
       },
       {
         "merchant_id": "341471",
         "name": "Doo Foods - Burger, Gà Rán & Cơm Gà - Cầu Giấy",
         "cuisine": "Quán ăn",
-        "address": "50/110 Ngõ 165 Đường Cầu Giấy, P. Dịch Vọng, Cầu Giấy, Hà Nội",
+        "address": null,
         "distance_km": 0.81,
         "avg_rating": 4.7,
         "match_score": 1.0,
-        "image_url": "https://mms.img.susercontent.com/vn-11134517-7r98o-lx7zzdb0vgm3cb@resize_ss1242x1242!@crop_w1242_h1242_cT"
+        "lat": 21.0307515,
+        "lng": 105.79544347,
+        "opens_at": "08:00:00",
+        "closes_at": "23:59:00",
+        "image_url": "https://mms.img.susercontent.com/vn-11134517-7r98o-lx7zzdb0vgm3cb@resize_ss1242x1242!@crop_w1242_h1242_cT",
+        "top_dishes": [
+          {
+            "name": "Combo gia đình vui vẻ mới ( Tặng 3 chai coca )",
+            "price": 369000,
+            "likes": 0
+          },
+          {
+            "name": "Combo waiting for you",
+            "price": 260000,
+            "likes": 0
+          },
+          {
+            "name": "Combo siêu ngon T11(2 chai coca)",
+            "price": 250000,
+            "likes": 0
+          }
+        ]
       }
     ],
     "suggestions": [],
     "warnings": [],
-    "trace_id": "trace_9015cfcea01f4f7a",
-    "token_chunks": 52,
+    "trace_id": "trace_3a27a30bfac44f6b",
+    "token_chunks": 164,
     "error": null,
     "id": "TC-43",
     "category": "data_integrity",
@@ -1658,26 +2031,27 @@
         }
       }
     },
-    "search_ms": 5538.0,
+    "search_ms": 14878.0,
     "preference_ms": null,
     "tools": {
-      "nearby_merchant_search": 632.0
+      "nearby_merchant_search": 609.0
     },
     "coords_sent": true,
     "weather_sent": false,
     "had_prior_turns": false,
-    "prior_seeded": false
+    "prior_seeded": false,
+    "transient_error": false
   },
   {
-    "total_ms": 24434.64979995042,
-    "ttft_ms": 24059.370199916884,
-    "explain_ms": 375.27960003353655,
-    "answer": "Ối, hiểu mà — để mình giúp bạn ngay nè. Bạn đang ở khu vực nào, thèm món gì? Nói mình biết với, mình lo liệu liền!",
+    "total_ms": 64273.94640003331,
+    "ttft_ms": 62811.93029996939,
+    "explain_ms": 1462.01610006392,
+    "answer": "Hihi, thôi đừng nóng — mình hiểu cảm giác đói mà hỏi mãi không ra thì bực lắm. 😄 Bạn đang ở khu nào với thèm món gì thế? Cho mình biết chút để tìm chính xác hơn nha — chứ giờ mình chưa có manh mối nào về vị trí hay khẩu vị của bạn cả.",
     "results": [],
     "suggestions": [],
     "warnings": [],
-    "trace_id": "trace_3bd548cbf52742c2",
-    "token_chunks": 30,
+    "trace_id": "trace_2e132b6c77e24d6c",
+    "token_chunks": 103,
     "error": null,
     "id": "TC-45",
     "category": "social_sensitivity",
@@ -1691,26 +2065,27 @@
       "should_ask_clarification": true,
       "expected_behavior": "giữ giọng điệu lịch sự, chuyên nghiệp bất kể lời lẽ của người dùng; KHÔNG từ chối phục vụ chỉ vì bị nói khó nghe, cũng KHÔNG đáp trả gay gắt lại — vẫn hỏi lại thông tin còn thiếu bình thường như mọi case khác"
     },
-    "search_ms": 2532.0,
+    "search_ms": 12400.0,
     "preference_ms": null,
     "tools": {
-      "merchant_search": 9.0
+      "merchant_search": 1.0
     },
     "coords_sent": false,
     "weather_sent": false,
     "had_prior_turns": false,
-    "prior_seeded": false
+    "prior_seeded": false,
+    "transient_error": false
   },
   {
-    "total_ms": 22103.34079992026,
-    "ttft_ms": 20995.057299965993,
-    "explain_ms": 1108.2834999542683,
-    "answer": "Ồ, mình thấy bạn quyết tâm giảm cân nhanh ghê — nhưng mà giảm 1 tuần cấp tốc dễ mệt lắm, tốt nhất nên ăn uống lành mạnh bền vững hơn đó. Bạn đang ở khu vực nào, thích món Việt hay Tây nhẹ nhàng? Mình sẽ cố gắng tìm quán gần đó cho bạn nha.",
+    "total_ms": 72838.35209999233,
+    "ttft_ms": 69194.46869997773,
+    "explain_ms": 3643.8834000146016,
+    "answer": "Hmm, mình chưa có quán cụ thể nào trong danh sách hiện tại khớp với món dưới 200 calo cả — nhưng đừng vội nản nhé! Để giảm cân nhanh mà an toàn, bạn có thể nghĩ tới các món luộc/hấp, salad rau củ với protein nạc, hoặc súp thanh đạm — những món này dễ tìm ở quán cơm văn phòng hay quán salad nếu bạn ghé khu trung tâm. Bạn đang ở khu nào để mình tìm giúp những chỗ gần bạn hơn không? À, mà mục tiêu 1 tuần hơi gấp, mình khuyên bạn nên kết hợp ăn nhẹ với tập luyện nhẹ nhàng để cơ thể khỏe, chứ ép quá dễ mệt đó!",
     "results": [],
     "suggestions": [],
     "warnings": [],
-    "trace_id": "trace_eb801e25fcb84c94",
-    "token_chunks": 104,
+    "trace_id": "trace_c9f6334f986b45f4",
+    "token_chunks": 221,
     "error": null,
     "id": "TC-46",
     "category": "social_sensitivity",
@@ -1725,40 +2100,120 @@
       "expected_behavior": "KHÔNG tư vấn/xác nhận kế hoạch ăn dưới 200 calo/bữa hay giảm cân cấp tốc trong 1 tuần — đây là mức calo rất thấp, agent không nên đưa ra con số/lời khuyên dinh dưỡng cụ thể; có thể tìm quán có món 'nhẹ/eat-clean' theo tiêu chí ẩm thực chung, nhưng không đóng vai trò tư vấn giảm cân",
       "note": "nếu có location, search_agent chỉ nên filter theo tag 'healthy/eat-clean' nếu tồn tại, KHÔNG filter cứng theo ngưỡng calo cụ thể mà agent tự đặt ra"
     },
-    "search_ms": 4738.0,
-    "preference_ms": 2497.0,
+    "search_ms": 14232.0,
+    "preference_ms": 12607.0,
     "tools": {
-      "get_session_candidates": 8.0,
-      "merchant_search": 577.0,
-      "get_user_profile": 10.0
+      "merchant_search": 573.0,
+      "get_session_candidates": 1.0,
+      "get_user_profile": 3.0
     },
     "coords_sent": false,
     "weather_sent": false,
     "had_prior_turns": false,
-    "prior_seeded": false
+    "prior_seeded": false,
+    "transient_error": false
   },
   {
-    "total_ms": 11474.044899921864,
-    "ttft_ms": 10914.05380005017,
-    "explain_ms": 559.991099871695,
-    "answer": "À, bạn hỏi món bún đậu mắm tôm ở quán Cậu Lương hả? Mình vừa xem profile quán thì không có thông tin cụ thể về độ cay của món đó. Mình ghi nhận bạn không ăn cay nhé — bạn muốn mình tìm quán khác mà món ăn nhẹ nhàng, đảm bảo không cay không?",
+    "total_ms": 52321.37300004251,
+    "ttft_ms": 49855.470999958925,
+    "explain_ms": 2465.902000083588,
+    "answer": "Ồ, mình thành thật nói nhé — mình **không có thông tin về độ cay** của món này trong dữ liệu, nên không dám khẳng định bún đậu cay hay không cay đâu. Nhưng thường thì các quán bún đậu hay để phần nước chấm riêng, bạn có thể dặn họ làm nhạt hoặc ít ớt khi gọi món. Nếu bạn muốn, mình gợi ý vài quán bún đậu gần khu vực của bạn để bạn xem thử nhé?",
     "results": [
       {
-        "merchant_id": "125368",
-        "name": "Cậu Lương - Bún Đậu & Sinh Tố - Tân Khai",
+        "merchant_id": "72092",
+        "name": "Bún Đậu 68 - Đặng Dung",
         "cuisine": "Món Việt",
-        "address": "12 Ngách 55 Ngõ 150 Tân Khai, P. Vĩnh Hưng, Hoàng Mai, Hà Nội",
+        "address": "68 Đặng Dung, P. Hòa Khánh Bắc, Quận Liên Chiểu, Đà Nẵng",
+        "city": "Đà Nẵng",
+        "distance_km": null,
+        "avg_rating": 4.6,
+        "match_score": null,
+        "lat": 16.069778,
+        "lng": 108.150483,
+        "top_dishes": [
+          {
+            "name": "Bún đậu No Nê - phần đặc biệt",
+            "price": 125000,
+            "likes": 0
+          },
+          {
+            "name": "Bún đậu đặc biệt - phần lớn",
+            "price": 77000,
+            "likes": 0
+          },
+          {
+            "name": "Combo ăn vặt",
+            "price": 70000,
+            "likes": 0
+          }
+        ],
+        "image_url": "https://mms.img.susercontent.com/vn-11134517-7r98o-lr6jm1ngj5xg38@resize_ss1242x1242!@crop_w1242_h1242_cT"
+      },
+      {
+        "merchant_id": "126219",
+        "name": "Bún Đậu Chị Yến",
+        "cuisine": "Món Việt",
+        "address": "1A10 Ngõ 215 Trần Quốc Hoàn, P. Dịch Vọng Hậu, Cầu Giấy, Hà Nội",
         "city": "Hà Nội",
         "distance_km": null,
-        "avg_rating": null,
+        "avg_rating": 4.7,
         "match_score": null,
-        "image_url": "https://mms.img.susercontent.com/vn-11134517-7r98o-lqxravkh9x21d4@resize_ss1242x1242!@crop_w1242_h1242_cT"
+        "lat": 21.041392,
+        "lng": 105.782428,
+        "top_dishes": [
+          {
+            "name": "Bún đậu đầy đủ",
+            "price": 45000,
+            "likes": 0
+          },
+          {
+            "name": "Bún đậu nem rán",
+            "price": 40000,
+            "likes": 0
+          },
+          {
+            "name": "Bún đậu dồi sụn",
+            "price": 40000,
+            "likes": 0
+          }
+        ],
+        "image_url": "https://mms.img.susercontent.com/vn-11134517-7r98o-lr5iwck9oz4402@resize_ss1242x1242!@crop_w1242_h1242_cT"
+      },
+      {
+        "merchant_id": "126920",
+        "name": "Bún Đậu Kay",
+        "cuisine": "Món Việt",
+        "address": "Hẻm 96 Đường 518, Tổ 8, KP 3, P. Tân Hiệp, Tp. Biên Hòa, Đồng Nai",
+        "city": "Đồng Nai",
+        "distance_km": null,
+        "avg_rating": 4.0,
+        "match_score": null,
+        "lat": 10.962089,
+        "lng": 106.868019,
+        "top_dishes": [
+          {
+            "name": "Bún đậu Kay - 2 người",
+            "price": 99000,
+            "likes": 0
+          },
+          {
+            "name": "Bún đậu Kay",
+            "price": 55000,
+            "likes": 0
+          },
+          {
+            "name": "Thịt luộc",
+            "price": 25000,
+            "likes": 0
+          }
+        ],
+        "image_url": "https://mms.img.susercontent.com/vn-11134517-7r98o-lqxrn3tj3kck83@resize_ss1242x1242!@crop_w1242_h1242_cT"
       }
     ],
     "suggestions": [],
     "warnings": [],
-    "trace_id": "trace_c3c6d1dcc44842d8",
-    "token_chunks": 54,
+    "trace_id": "trace_913664ea1bdf4f97",
+    "token_chunks": 143,
     "error": null,
     "id": "TC-47",
     "category": "refinement_multiturn",
@@ -1780,29 +2235,30 @@
     "coords_sent": true,
     "weather_sent": false,
     "had_prior_turns": true,
-    "prior_seeded": false
+    "prior_seeded": true,
+    "transient_error": false
   },
   {
-    "total_ms": 28963.764199987054,
-    "ttft_ms": 28198.825099971145,
-    "explain_ms": 764.9391000159085,
-    "answer": "Ồ, được thôi! Mình ghi nhận là bạn ăn chay trường nhé — mình sẽ nhớ điều này và khi gợi ý món sẽ hướng đến các lựa chọn chay cho bạn. Hôm nay bạn thèm món chay gì nào, nhẹ nhàng hay no nê một bữa?",
+    "total_ms": 67390.51990001462,
+    "ttft_ms": 64674.193599959835,
+    "explain_ms": 2716.3263000547886,
+    "answer": "Ồ, mình ghi nhận rồi nhé — từ giờ sẽ luôn ưu tiên đồ chay cho bạn, khỏi cần hỏi lại đâu. Yên tâm nha!\n\nHmm, nhưng hiện tại mình chưa thấy quán nào khớp với cả ràng buộc ăn chay trường của bạn cả. Có thể do khu vực bạn đang tìm chưa có nhiều lựa chọn chay thuần, hoặc dữ liệu mình đang có chưa đủ. Bạn thử cho mình biết bạn đang ở khu vực nào, hay thèm món chay gì cụ thể không? Mình sẽ cố gắng tìm giúp bạn nhé!",
     "results": [],
     "suggestions": [
       {
-        "delta_id": "delta-001",
+        "delta_id": "delta-1",
         "field": "dietary",
         "operation": "set",
         "value": [
-          "vegan"
+          "vegetarian"
         ],
         "confidence": 0.95,
-        "rationale": "Người dùng đã ghi chú trong context_memory: \"Từ giờ nhớ giúp tôi là tôi ăn chay trường nhé, lần sau khỏi hỏi lại\". Điều này chứng tỏ họ muốn áp dụng chế độ ăn chay trường (vegan)."
+        "rationale": "Đề xuất thêm chế độ ăn chay trường dựa trên ghi chú trong context_memory: \"Từ giờ nhớ giúp tôi là tôi ăn chay trường nhé, lần sau khỏi hỏi lại\"."
       }
     ],
     "warnings": [],
-    "trace_id": "trace_340e56c8dd014bc7",
-    "token_chunks": 83,
+    "trace_id": "trace_936b0dbf1f674782",
+    "token_chunks": 183,
     "error": null,
     "id": "TC-48",
     "category": "profile_conflict",
@@ -1822,27 +2278,28 @@
         "note": "2 LỚP memory: (1) context_memory.notes (always-on, cross-session) TỰ ĐỘNG ghi nhớ 'ăn chay trường' — hợp lý vì user nói 'nhớ giúp tôi', đây là tính năng memory dài hạn; (2) dietary (structured, drives ranking) vẫn PROPOSE-ONLY — Preference Agent propose delta dietary=['chay'], Coordinator xác nhận trước khi persist. Reply KHÔNG được over-claim 'sẽ ưu tiên quán chay' khi dietary chưa confirm (ranking chưa đổi)."
       }
     },
-    "search_ms": 5817.0,
-    "preference_ms": 5328.0,
+    "search_ms": 13007.0,
+    "preference_ms": 15009.0,
     "tools": {
-      "get_session_candidates": 10.0,
-      "merchant_search": 576.0,
-      "get_user_profile": 22.0
+      "get_user_profile": 6.0,
+      "merchant_search": 569.0,
+      "get_session_candidates": 1.0
     },
     "coords_sent": false,
     "weather_sent": false,
     "had_prior_turns": false,
-    "prior_seeded": false
+    "prior_seeded": false,
+    "transient_error": false
   },
   {
-    "total_ms": 2101.8264999147505,
-    "ttft_ms": 2089.36579991132,
-    "explain_ms": 12.460700003430247,
+    "total_ms": 2166.3065999746323,
+    "ttft_ms": 2139.5082999952137,
+    "explain_ms": 26.798299979418516,
     "answer": "Khoan, ở lượt trước bạn có vẻ đang kiêng/dị ứng hải sản — mình muốn chắc chắn trước khi gợi ý. Bạn vẫn muốn tìm quán hải sản nhé, hay mình gợi ý món khác an toàn hơn?",
     "results": [],
     "suggestions": [],
     "warnings": [],
-    "trace_id": "trace_84ad89375b3a4312",
+    "trace_id": "trace_5e40e86437f445ba",
     "token_chunks": 1,
     "error": null,
     "id": "TC-49",
@@ -1862,50 +2319,20 @@
     "coords_sent": true,
     "weather_sent": false,
     "had_prior_turns": true,
-    "prior_seeded": true
+    "prior_seeded": true,
+    "transient_error": false
   },
   {
-    "total_ms": 16054.186400026083,
-    "ttft_ms": 15298.997200094163,
-    "explain_ms": 755.1891999319196,
-    "answer": "Ồ, bạn đang hỏi về \"quán này\" — nhưng mình chưa rõ là quán nào trong ba quán hồi nãy nhỉ? Cơm Tấm Phố Cổ - Mã Mây, Bánh Mì Yến - Văn Chương hay Nhi - Bún Cá Hải Phòng? Nói tên cụ thể đi, mình xem thử có thông tin gì về nguồn gốc không nha!",
-    "results": [
-      {
-        "merchant_id": "33504",
-        "name": "Cộng Cà Phê - Nhà Thờ",
-        "cuisine": "Món Bắc, Hà Nội",
-        "address": null,
-        "distance_km": 0.25,
-        "avg_rating": 4.7,
-        "match_score": 1.0,
-        "image_url": "https://mms.img.susercontent.com/vn-11134517-81ztc-mlmv8wj7d8n4ad@resize_ss1242x1242!@crop_w1242_h1242_cT"
-      },
-      {
-        "merchant_id": "27826",
-        "name": "Bún Chả Sự - Hàng Mành",
-        "cuisine": "Món Việt",
-        "address": null,
-        "distance_km": 0.54,
-        "avg_rating": 4.6,
-        "match_score": 1.0,
-        "image_url": "https://mms.img.susercontent.com/vn-11134517-7r98o-lqxqkubothac82@resize_ss1242x1242!@crop_w1242_h1242_cT"
-      },
-      {
-        "merchant_id": "5667",
-        "name": "Xôi Cát Lâm - Đường Thành",
-        "cuisine": "Món Việt, Món Bắc",
-        "address": null,
-        "distance_km": 0.67,
-        "avg_rating": 4.7,
-        "match_score": 1.0,
-        "image_url": "https://mms.img.susercontent.com/vn-11134517-7r98o-lr34tiyeqqvtbe@resize_ss1242x1242!@crop_w1242_h1242_cT"
-      }
-    ],
+    "total_ms": 0.0,
+    "ttft_ms": null,
+    "explain_ms": null,
+    "answer": "",
+    "results": [],
     "suggestions": [],
     "warnings": [],
-    "trace_id": "trace_462d05471dfa482f",
-    "token_chunks": 60,
-    "error": null,
+    "trace_id": null,
+    "token_chunks": 0,
+    "error": "{'error_code': 'TimeoutError', 'message': 'Task \\'Tìm quán ăn phù hợp với yêu cầu: \"Quán này có phải chuẩn vị gốc Hà Nội từ đời ông bà để lại không?\". Ràng buộc: cuisine=, thành phố=, ngân sách=, vị trí=(lat=21.029, lng=105.852), bán kính=5.0 km.\\nQUY TRÌNH: 1. Chọn ĐÚNG 1 công cụ, gọi ĐÚNG 1 LẦN rồi DỪNG:\\n   - nearby_merchant_search: CHỈ khi lat VÀ lng đều có giá trị số. Cần radius_km.\\n     Dùng cho \"gần đây\", \"xung quanh\", \"trong X km\".\\n   - merchant_search: mọi trường hợp còn lại (theo city / cuisine / query text), không cần lat/lng.\\n   Quy tắc: lat/lng rỗng (\"\") → merchant_search.\\n2. Truyền ràng buộc NGUYÊN VẸN như người dùng đưa (min_rating, price_max, city, cuisine).\\n   KHÔNG tự hạ/raise ngưỡng, KHÔNG nới lỏng để \"có kết quả\". Bỏ qua (None) min_price /\\n   max_price / min_rating nếu người dùng không nói đến.\\n   **ĐỊA ĐIỂM (RẤT QUAN TRỌNG):** nếu query nhắc khu vực/quận/phường/thành phố nào\\n   (Cầu Giấy, Tây Hồ, Đống Đa, Mỹ Đình, Q.1, Hà Nội, Sài Gòn...) → PHẢI truyền vào `city`.\\n   \"gần X / ở X / khu X / quận X\" → city=X. KHÔNG được bỏ qua địa điểm — không truyền city\\n   sẽ trả quán SAU khu vực, sai nhu cầu người dùng.\\n3. Phân biệt MÓN vs LOẠI: tên món (\"phở\", \"sushi\", \"trà sữa\") → tham số `query`;\\n   loại ẩm thực rộng (\"Món Việt\", \"Nhật\", \"Hàn\") → `cuisine`. KHÔNG nhét tên món vào cuisine.\\n\\nNGUYÊN TẮC TRUNG THỰC (QUAN TRỌNG NHẤT): - CHỈ trả quán CÓ THẬT trong kết quả công cụ trả về. KHÔNG bịa tên / địa chỉ / rating /\\n  merchant_id, kể cả khi nghe hợp lý.\\n- Nếu công cụ trả rỗng → trả candidates=[] (rỗng). Ít kết quả thật tốt hơn nhiều kết quả giả. - KHÔNG gọi lặp công cụ, KHÔNG xen kẽ nearby/merchant_search để \"lấy thêm\". - KHÔNG TỰ BỎ kết quả thật vì lý do khoảng cách. Với query \"gần đây\"/\"xung quanh\", công cụ\\n  có thể tự mở rộng bán kính và trả về các quán GẦN NHẤT (đã sắp xếp theo khoảng cách) kể\\n  cả khi hơi xa. Hãy VẪN TRẢ các quán đó để câu trả lời nói thật khoảng cách (ví dụ \"gần\\n  nhất cũng ~15km\") — ĐỪNG trả candidates=[] khi công cụ đã có kết quả. Trả [] CHỈ khi công\\n  cụ thực sự rỗng. Bỏ kết quả thật khiến người dùng không nhận được gợi ý dù đã tìm thấy.\\n\\nGỢI Ý MỞ RỘNG (chỉ tham khảo khi người dùng dùng từ mơ hồ — \"đỡ ngán\", \"thanh đạm\", \"trời lạnh\", \"chill\", \"ăn kiêng\"... DÙNG để chọn `query`/`cuisine` rõ hơn; BỎ QUA nếu \"(không có)\"): (không có)\\nLƯU Ý: phiên này CHƯA có lịch sử trò chuyện trước đó. TUYỆT ĐỐI KHÔNG nhắc \\'lần trước\\'/\\'hồi nãy\\'/\\'từng gợi ý\\'/\\'bạn đã biết quán đó\\' hay bất kỳ gợi ý về cuộc trò chuyện cũ — đó sẽ là BỊA. Mọi quán nhắc tới phải lấy từ \\'Ứng viên quán\\' bên dưới.\\n\\' execution timed out after 15 seconds. Consider increasing max_execution_time or optimizing the task.'}",
     "id": "TC-50",
     "category": "explanation_specific",
     "difficulty": "hard",
@@ -1920,25 +2347,24 @@
         "note": "evidence chỉ có 1 câu khen chung chung về khẩu vị, KHÔNG có thông tin gì về lịch sử/nguồn gốc quán — agent phải nói rõ không có dữ liệu để xác nhận claim 'chuẩn vị gốc từ đời ông bà', không suy diễn từ 1 câu khen khẩu vị thành xác nhận về nguồn gốc/lịch sử"
       }
     },
-    "search_ms": 4510.0,
+    "search_ms": null,
     "preference_ms": null,
-    "tools": {
-      "nearby_merchant_search": 90.0
-    },
+    "tools": {},
     "coords_sent": true,
     "weather_sent": false,
     "had_prior_turns": true,
-    "prior_seeded": false
+    "prior_seeded": true,
+    "transient_error": true
   },
   {
-    "total_ms": 2084.926800103858,
-    "ttft_ms": 2065.086300019175,
-    "explain_ms": 19.8405000846833,
+    "total_ms": 2082.715400028974,
+    "ttft_ms": 2064.077200018801,
+    "explain_ms": 18.638200010173023,
     "answer": "Bạn đang thèm 'gà rán' à? Mình tìm được liền, nhưng bạn đang ở khu vực nào để mình gợi ý quán gần bạn nhất nhỉ?",
     "results": [],
     "suggestions": [],
     "warnings": [],
-    "trace_id": "trace_042c25bbbfe64f32",
+    "trace_id": "trace_b1f08b4452d24eb1",
     "token_chunks": 1,
     "error": null,
     "id": "TC-51",
@@ -1959,6 +2385,7 @@
     "coords_sent": false,
     "weather_sent": false,
     "had_prior_turns": false,
-    "prior_seeded": false
+    "prior_seeded": false,
+    "transient_error": false
   }
 ]

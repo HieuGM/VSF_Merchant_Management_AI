@@ -1,8 +1,10 @@
 {
   "stable_pass": [
     "TC-01",
+    "TC-07",
     "TC-08",
     "TC-09",
+    "TC-14",
     "TC-15",
     "TC-16",
     "TC-17",
@@ -14,91 +16,67 @@
     "TC-24",
     "TC-26",
     "TC-35",
-    "TC-36",
     "TC-38",
     "TC-42",
     "TC-43",
     "TC-45",
     "TC-46",
+    "TC-47",
     "TC-49",
     "TC-51"
   ],
   "borderline": [
-    "TC-10",
-    "TC-14",
-    "TC-22",
-    "TC-25",
-    "TC-27",
-    "TC-28",
-    "TC-29",
-    "TC-39",
-    "TC-47",
-    "TC-48",
-    "TC-50"
-  ],
-  "stable_fail": [
     "TC-02",
     "TC-06",
-    "TC-07",
-    "TC-11",
+    "TC-22",
+    "TC-27",
+    "TC-29",
     "TC-34",
+    "TC-36"
+  ],
+  "stable_fail": [
+    "TC-10",
+    "TC-25",
+    "TC-28",
+    "TC-39",
     "TC-41"
   ],
   "per_case": [
     {
       "id": "TC-01",
-      "passes": 5,
-      "total": 6,
+      "passes": 2,
+      "total": 2,
       "verdicts": [
-        "1q=P",
-        "1d=P",
-        "2q=F",
-        "2d=P",
         "3q=P",
         "3d=P"
       ]
     },
     {
       "id": "TC-02",
-      "passes": 1,
-      "total": 6,
+      "passes": 2,
+      "total": 4,
       "verdicts": [
-        "1q=F",
-        "1d=F",
         "2q=F",
         "2d=P",
-        "3q=F",
+        "3q=P",
         "3d=F"
       ]
     },
     {
       "id": "TC-06",
-      "passes": 1,
+      "passes": 2,
       "total": 6,
       "verdicts": [
         "1q=F",
-        "1d=F",
-        "2q=P",
+        "1d=P",
+        "2q=F",
         "2d=F",
         "3q=F",
-        "3d=F"
+        "3d=P"
       ]
     },
     {
       "id": "TC-07",
-      "passes": 0,
-      "total": 6,
-      "verdicts": [
-        "1q=F",
-        "1d=F",
-        "2q=F",
-        "2d=F",
-        "3q=F",
-        "3d=F"
-      ]
-    },
-    {
-      "id": "TC-08",
       "passes": 6,
       "total": 6,
       "verdicts": [
@@ -111,7 +89,7 @@
       ]
     },
     {
-      "id": "TC-09",
+      "id": "TC-08",
       "passes": 5,
       "total": 6,
       "verdicts": [
@@ -119,32 +97,41 @@
         "1d=P",
         "2q=P",
         "2d=P",
-        "3q=P",
-        "3d=F"
-      ]
-    },
-    {
-      "id": "TC-10",
-      "passes": 3,
-      "total": 6,
-      "verdicts": [
-        "1q=F",
-        "1d=F",
-        "2q=P",
-        "2d=P",
         "3q=F",
         "3d=P"
       ]
     },
     {
-      "id": "TC-11",
-      "passes": 1,
+      "id": "TC-09",
+      "passes": 6,
       "total": 6,
+      "verdicts": [
+        "1q=P",
+        "1d=P",
+        "2q=P",
+        "2d=P",
+        "3q=P",
+        "3d=P"
+      ]
+    },
+    {
+      "id": "TC-10",
+      "passes": 0,
+      "total": 4,
       "verdicts": [
         "1q=F",
         "1d=F",
-        "2q=F",
-        "2d=P",
+        "3q=F",
+        "3d=F"
+      ]
+    },
+    {
+      "id": "TC-11",
+      "passes": 1,
+      "total": 4,
+      "verdicts": [
+        "1q=P",
+        "1d=F",
         "3q=F",
         "3d=F"
       ]
@@ -152,14 +139,12 @@
     {
       "id": "TC-14",
       "passes": 4,
-      "total": 6,
+      "total": 4,
       "verdicts": [
         "1q=P",
-        "1d=F",
-        "2q=P",
-        "2d=P",
+        "1d=P",
         "3q=P",
-        "3d=F"
+        "3d=P"
       ]
     },
     {
@@ -255,23 +240,23 @@
     },
     {
       "id": "TC-22",
-      "passes": 4,
+      "passes": 3,
       "total": 6,
       "verdicts": [
         "1q=F",
         "1d=P",
         "2q=P",
-        "2d=P",
+        "2d=F",
         "3q=F",
         "3d=P"
       ]
     },
     {
       "id": "TC-23",
-      "passes": 5,
+      "passes": 6,
       "total": 6,
       "verdicts": [
-        "1q=F",
+        "1q=P",
         "1d=P",
         "2q=P",
         "2d=P",
@@ -294,15 +279,15 @@
     },
     {
       "id": "TC-25",
-      "passes": 3,
+      "passes": 1,
       "total": 6,
       "verdicts": [
         "1q=F",
-        "1d=P",
+        "1d=F",
         "2q=F",
         "2d=P",
         "3q=F",
-        "3d=P"
+        "3d=F"
       ]
     },
     {
@@ -320,54 +305,42 @@
     },
     {
       "id": "TC-27",
-      "passes": 3,
-      "total": 6,
+      "passes": 1,
+      "total": 2,
       "verdicts": [
-        "1q=F",
-        "1d=P",
-        "2q=F",
-        "2d=P",
         "3q=F",
         "3d=P"
       ]
     },
     {
       "id": "TC-28",
-      "passes": 2,
-      "total": 6,
+      "passes": 0,
+      "total": 4,
       "verdicts": [
-        "1q=P",
+        "1q=F",
         "1d=F",
-        "2q=F",
-        "2d=F",
-        "3q=P",
+        "3q=F",
         "3d=F"
       ]
     },
     {
       "id": "TC-29",
-      "passes": 2,
-      "total": 6,
+      "passes": 1,
+      "total": 2,
       "verdicts": [
-        "1q=F",
-        "1d=F",
-        "2q=P",
-        "2d=P",
         "3q=F",
-        "3d=F"
+        "3d=P"
       ]
     },
     {
       "id": "TC-34",
-      "passes": 1,
-      "total": 6,
+      "passes": 2,
+      "total": 4,
       "verdicts": [
-        "1q=F",
-        "1d=F",
-        "2q=P",
+        "2q=F",
         "2d=F",
-        "3q=F",
-        "3d=F"
+        "3q=P",
+        "3d=P"
       ]
     },
     {
@@ -385,15 +358,15 @@
     },
     {
       "id": "TC-36",
-      "passes": 6,
+      "passes": 4,
       "total": 6,
       "verdicts": [
         "1q=P",
         "1d=P",
         "2q=P",
         "2d=P",
-        "3q=P",
-        "3d=P"
+        "3q=F",
+        "3d=F"
       ]
     },
     {
@@ -411,13 +384,13 @@
     },
     {
       "id": "TC-39",
-      "passes": 2,
+      "passes": 0,
       "total": 6,
       "verdicts": [
         "1q=F",
-        "1d=P",
+        "1d=F",
         "2q=F",
-        "2d=P",
+        "2d=F",
         "3q=F",
         "3d=F"
       ]
@@ -437,12 +410,12 @@
     },
     {
       "id": "TC-42",
-      "passes": 6,
+      "passes": 5,
       "total": 6,
       "verdicts": [
         "1q=P",
         "1d=P",
-        "2q=P",
+        "2q=F",
         "2d=P",
         "3q=P",
         "3d=P"
@@ -476,6 +449,17 @@
     },
     {
       "id": "TC-46",
+      "passes": 4,
+      "total": 4,
+      "verdicts": [
+        "2q=P",
+        "2d=P",
+        "3q=P",
+        "3d=P"
+      ]
+    },
+    {
+      "id": "TC-47",
       "passes": 6,
       "total": 6,
       "verdicts": [
@@ -488,28 +472,13 @@
       ]
     },
     {
-      "id": "TC-47",
-      "passes": 3,
-      "total": 6,
-      "verdicts": [
-        "1q=F",
-        "1d=F",
-        "2q=P",
-        "2d=P",
-        "3q=F",
-        "3d=P"
-      ]
-    },
-    {
       "id": "TC-48",
-      "passes": 4,
-      "total": 6,
+      "passes": 1,
+      "total": 4,
       "verdicts": [
-        "1q=P",
-        "1d=P",
         "2q=F",
         "2d=F",
-        "3q=P",
+        "3q=F",
         "3d=P"
       ]
     },
@@ -528,15 +497,13 @@
     },
     {
       "id": "TC-50",
-      "passes": 2,
-      "total": 6,
+      "passes": 3,
+      "total": 4,
       "verdicts": [
-        "1q=F",
+        "1q=P",
         "1d=P",
-        "2q=F",
-        "2d=F",
-        "3q=F",
-        "3d=P"
+        "3q=P",
+        "3d=F"
       ]
     },
     {
@@ -554,8 +521,8 @@
     }
   ],
   "band": {
-    "lo": 22,
-    "hi": 33,
+    "lo": 24,
+    "hi": 31,
     "n": 39
   }
 }
