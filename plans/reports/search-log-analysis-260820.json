@@ -1,0 +1,714 @@
+{
+  "total_rows": 412,
+  "span": [
+    "2026-08-11",
+    "2026-08-20"
+  ],
+  "test_noise": 243,
+  "real": 169,
+  "by_tool": {
+    "merchant_search": 130,
+    "nearby_merchant_search": 39
+  },
+  "empty_by_tool": {
+    "merchant_search": 102,
+    "nearby_merchant_search": 6
+  },
+  "zero_result_distinct": 22,
+  "zero_result_geo": 7,
+  "zero_result_keyword": 15,
+  "zero_result_calls": [
+    {
+      "tool": "merchant_search",
+      "query": "'; drop table--",
+      "cuisine": "",
+      "has_geo": true,
+      "radius_km": 5.0,
+      "count": 40,
+      "args": {
+        "query": "'; DROP TABLE--",
+        "radius_km": 5.0
+      },
+      "class": "noise"
+    },
+    {
+      "tool": "merchant_search",
+      "query": "pho restaurant",
+      "cuisine": "",
+      "has_geo": true,
+      "radius_km": 5.0,
+      "count": 40,
+      "args": {
+        "query": "pho restaurant",
+        "radius_km": 5.0
+      },
+      "class": "noise"
+    },
+    {
+      "tool": "merchant_search",
+      "query": "chay",
+      "cuisine": "",
+      "has_geo": false,
+      "radius_km": null,
+      "count": 4,
+      "args": {
+        "query": "chay",
+        "city": "Cầu Giấy"
+      },
+      "class": "recall-gap",
+      "corpus_hits": 19,
+      "sample_hit": "Cơm Cháy Cu Rum - Lê Đại Hành"
+    },
+    {
+      "tool": "merchant_search",
+      "query": "sushi",
+      "cuisine": "Nhật",
+      "has_geo": false,
+      "radius_km": null,
+      "count": 2,
+      "args": {
+        "query": "sushi",
+        "cuisine": "Nhật",
+        "city": "Mộc Châu"
+      },
+      "class": "recall-gap",
+      "corpus_hits": 173,
+      "sample_hit": "Sushi 81"
+    },
+    {
+      "tool": "merchant_search",
+      "query": "highlands coffee the coffee house",
+      "cuisine": "",
+      "has_geo": false,
+      "radius_km": null,
+      "count": 2,
+      "args": {
+        "query": "Highlands Coffee The Coffee House"
+      },
+      "class": "recall-gap",
+      "corpus_hits": 54,
+      "sample_hit": "Highlands Coffee - Trà, Cà Phê & Bánh - Nguyễn Văn Cừ Cần Th"
+    },
+    {
+      "tool": "merchant_search",
+      "query": "cay",
+      "cuisine": "",
+      "has_geo": false,
+      "radius_km": null,
+      "count": 2,
+      "args": {
+        "query": "cay"
+      },
+      "class": "recall-gap",
+      "corpus_hits": 40,
+      "sample_hit": "Nước Ép Trái Cây - 234 Hoàng Quốc Việt"
+    },
+    {
+      "tool": "merchant_search",
+      "query": "dau phong",
+      "cuisine": "",
+      "has_geo": false,
+      "radius_km": null,
+      "count": 2,
+      "args": {
+        "query": "đậu phộng"
+      },
+      "class": "recall-gap",
+      "corpus_hits": 55,
+      "sample_hit": "Bánh Mì Que - Chuẩn Vị Hải Phòng - Trương Định"
+    },
+    {
+      "tool": "nearby_merchant_search",
+      "query": "hello",
+      "cuisine": "",
+      "has_geo": true,
+      "radius_km": 5.0,
+      "count": 2,
+      "args": {
+        "query": "hello",
+        "lat": 20.988824369667512,
+        "lng": 105.94243908950384,
+        "radius_km": 5.0
+      },
+      "class": "noise"
+    },
+    {
+      "tool": "nearby_merchant_search",
+      "query": "com nha lam",
+      "cuisine": "",
+      "has_geo": true,
+      "radius_km": 5.0,
+      "count": 1,
+      "args": {
+        "query": "cơm nhà làm",
+        "lat": 21.036,
+        "lng": 105.79,
+        "radius_km": 5.0
+      },
+      "class": "recall-gap",
+      "corpus_hits": 217,
+      "in_radius": 21,
+      "sample_hit": "Haruichiban - Tiệm Cơm Nhật Bản - Kim Mã"
+    },
+    {
+      "tool": "nearby_merchant_search",
+      "query": "lau hai san",
+      "cuisine": "",
+      "has_geo": true,
+      "radius_km": 5.0,
+      "count": 1,
+      "args": {
+        "query": "lẩu hải sản",
+        "lat": 20.96,
+        "lng": 105.764,
+        "radius_km": 5.0
+      },
+      "class": "data-thin-geo",
+      "corpus_hits": 40,
+      "in_radius": 0,
+      "sample_hit": "Nhà Hàng Lẩu Neo Shabu Suki - Phan Trung"
+    },
+    {
+      "tool": "merchant_search",
+      "query": "diem calo thap",
+      "cuisine": "",
+      "has_geo": false,
+      "radius_km": null,
+      "count": 1,
+      "args": {
+        "query": "điểm calo thấp"
+      },
+      "class": "recall-gap",
+      "corpus_hits": 3,
+      "sample_hit": "Phở Gà Bà Ba - Phở Gà Gia Truyền - Vĩnh Điềm Trung"
+    },
+    {
+      "tool": "merchant_search",
+      "query": "com van phong",
+      "cuisine": "",
+      "has_geo": false,
+      "radius_km": null,
+      "count": 1,
+      "args": {
+        "query": "cơm văn phòng",
+        "city": "Mỹ Đình",
+        "max_price": 40000
+      },
+      "class": "recall-gap",
+      "corpus_hits": 18,
+      "sample_hit": "Kim Chi House - Cơm Văn Phòng & Ăn Vặt - Ngô Quyền"
+    },
+    {
+      "tool": "merchant_search",
+      "query": "pho thin",
+      "cuisine": "",
+      "has_geo": false,
+      "radius_km": null,
+      "count": 1,
+      "args": {
+        "query": "phở Thìn",
+        "city": "Hanoi"
+      },
+      "class": "recall-gap",
+      "corpus_hits": 3,
+      "sample_hit": "Phở Thịnh - Phở Bò & Phở Gà - Lương Thế Vinh"
+    },
+    {
+      "tool": "merchant_search",
+      "query": "cai dau tien do",
+      "cuisine": "",
+      "has_geo": false,
+      "radius_km": null,
+      "count": 1,
+      "args": {
+        "query": "Cái đầu tiên đó"
+      },
+      "class": "noise"
+    },
+    {
+      "tool": "merchant_search",
+      "query": "do an 200 calo",
+      "cuisine": "",
+      "has_geo": false,
+      "radius_km": null,
+      "count": 1,
+      "args": {
+        "query": "đồ ăn 200 calo"
+      },
+      "class": "data-thin",
+      "corpus_hits": 0
+    },
+    {
+      "tool": "nearby_merchant_search",
+      "query": "do thuan viet",
+      "cuisine": "Vietnamese",
+      "has_geo": true,
+      "radius_km": 5.0,
+      "count": 1,
+      "args": {
+        "query": "đồ thuần việt",
+        "cuisine": "Vietnamese",
+        "lat": 21.028,
+        "lng": 105.948,
+        "radius_km": 5.0
+      },
+      "class": "data-thin-geo",
+      "corpus_hits": 11,
+      "in_radius": 0,
+      "sample_hit": "TocoToco Bubble Tea - Phạm Văn Thuận"
+    },
+    {
+      "tool": "merchant_search",
+      "query": "trua",
+      "cuisine": "",
+      "has_geo": false,
+      "radius_km": null,
+      "count": 1,
+      "args": {
+        "query": "trưa"
+      },
+      "class": "recall-gap",
+      "corpus_hits": 3,
+      "sample_hit": "Cơm Trưa Hello 5 - Tôn Thất Đạm"
+    },
+    {
+      "tool": "merchant_search",
+      "query": "khong cay",
+      "cuisine": "",
+      "has_geo": false,
+      "radius_km": null,
+      "count": 1,
+      "args": {
+        "query": "không cay"
+      },
+      "class": "recall-gap",
+      "corpus_hits": 3,
+      "sample_hit": "Cơm Không Béo Healthy & Eatclean - Bãi Sậy"
+    },
+    {
+      "tool": "merchant_search",
+      "query": "thanh dam",
+      "cuisine": "",
+      "has_geo": false,
+      "radius_km": null,
+      "count": 1,
+      "args": {
+        "query": "thanh đạm"
+      },
+      "class": "recall-gap",
+      "corpus_hits": 64,
+      "sample_hit": "Tiệm Bánh Mì Những Chàng Trai - Thành Thái"
+    },
+    {
+      "tool": "merchant_search",
+      "query": "sang trong",
+      "cuisine": "",
+      "has_geo": false,
+      "radius_km": null,
+      "count": 1,
+      "args": {
+        "query": "sang trọng"
+      },
+      "class": "recall-gap",
+      "corpus_hits": 2,
+      "sample_hit": "Gà Rán KFC - Phan Văn Hớn"
+    },
+    {
+      "tool": "merchant_search",
+      "query": "lau",
+      "cuisine": "",
+      "has_geo": false,
+      "radius_km": null,
+      "count": 1,
+      "args": {
+        "query": "lẩu"
+      },
+      "class": "recall-gap",
+      "corpus_hits": 40,
+      "sample_hit": "Nhà Hàng Lẩu Neo Shabu Suki - Phan Trung"
+    },
+    {
+      "tool": "nearby_merchant_search",
+      "query": "korean",
+      "cuisine": "Hàn",
+      "has_geo": true,
+      "radius_km": 5.0,
+      "count": 1,
+      "args": {
+        "query": "korean",
+        "cuisine": "Hàn",
+        "lat": 21.036,
+        "lng": 105.79,
+        "radius_km": 5.0
+      },
+      "class": "data-thin",
+      "corpus_hits": 0
+    }
+  ],
+  "classified_calls": [
+    {
+      "tool": "merchant_search",
+      "query": "'; drop table--",
+      "cuisine": "",
+      "has_geo": true,
+      "radius_km": 5.0,
+      "count": 40,
+      "args": {
+        "query": "'; DROP TABLE--",
+        "radius_km": 5.0
+      },
+      "class": "noise"
+    },
+    {
+      "tool": "merchant_search",
+      "query": "pho restaurant",
+      "cuisine": "",
+      "has_geo": true,
+      "radius_km": 5.0,
+      "count": 40,
+      "args": {
+        "query": "pho restaurant",
+        "radius_km": 5.0
+      },
+      "class": "noise"
+    },
+    {
+      "tool": "merchant_search",
+      "query": "chay",
+      "cuisine": "",
+      "has_geo": false,
+      "radius_km": null,
+      "count": 4,
+      "args": {
+        "query": "chay",
+        "city": "Cầu Giấy"
+      },
+      "class": "data-thin",
+      "corpus_hits": 19,
+      "sample_hit": "Cơm Cháy Cu Rum - Lê Đại Hành",
+      "prod_semantics_hits": 0,
+      "corpus_hits_kw": 19,
+      "prod_exact_hits": 0
+    },
+    {
+      "tool": "merchant_search",
+      "query": "sushi",
+      "cuisine": "Nhật",
+      "has_geo": false,
+      "radius_km": null,
+      "count": 2,
+      "args": {
+        "query": "sushi",
+        "cuisine": "Nhật",
+        "city": "Mộc Châu"
+      },
+      "class": "data-thin",
+      "corpus_hits": 173,
+      "sample_hit": "Sushi 81",
+      "prod_semantics_hits": 0,
+      "corpus_hits_kw": 173,
+      "prod_exact_hits": 0
+    },
+    {
+      "tool": "merchant_search",
+      "query": "highlands coffee the coffee house",
+      "cuisine": "",
+      "has_geo": false,
+      "radius_km": null,
+      "count": 2,
+      "args": {
+        "query": "Highlands Coffee The Coffee House"
+      },
+      "class": "data-thin",
+      "corpus_hits": 54,
+      "sample_hit": "Highlands Coffee - Trà, Cà Phê & Bánh - Nguyễn Văn Cừ Cần Th",
+      "prod_exact_hits": 0
+    },
+    {
+      "tool": "merchant_search",
+      "query": "cay",
+      "cuisine": "",
+      "has_geo": false,
+      "radius_km": null,
+      "count": 2,
+      "args": {
+        "query": "cay"
+      },
+      "class": "recall-gap",
+      "corpus_hits": 40,
+      "sample_hit": "Nước Ép Trái Cây - 234 Hoàng Quốc Việt",
+      "prod_exact_hits": 40
+    },
+    {
+      "tool": "merchant_search",
+      "query": "dau phong",
+      "cuisine": "",
+      "has_geo": false,
+      "radius_km": null,
+      "count": 2,
+      "args": {
+        "query": "đậu phộng"
+      },
+      "class": "data-thin",
+      "corpus_hits": 55,
+      "sample_hit": "Bánh Mì Que - Chuẩn Vị Hải Phòng - Trương Định",
+      "prod_exact_hits": 0
+    },
+    {
+      "tool": "nearby_merchant_search",
+      "query": "hello",
+      "cuisine": "",
+      "has_geo": true,
+      "radius_km": 5.0,
+      "count": 2,
+      "args": {
+        "query": "hello",
+        "lat": 20.988824369667512,
+        "lng": 105.94243908950384,
+        "radius_km": 5.0
+      },
+      "class": "noise"
+    },
+    {
+      "tool": "nearby_merchant_search",
+      "query": "com nha lam",
+      "cuisine": "",
+      "has_geo": true,
+      "radius_km": 5.0,
+      "count": 1,
+      "args": {
+        "query": "cơm nhà làm",
+        "lat": 21.036,
+        "lng": 105.79,
+        "radius_km": 5.0
+      },
+      "class": "data-thin",
+      "corpus_hits": 217,
+      "in_radius": 21,
+      "sample_hit": "Haruichiban - Tiệm Cơm Nhật Bản - Kim Mã",
+      "prod_exact_hits": 0
+    },
+    {
+      "tool": "nearby_merchant_search",
+      "query": "lau hai san",
+      "cuisine": "",
+      "has_geo": true,
+      "radius_km": 5.0,
+      "count": 1,
+      "args": {
+        "query": "lẩu hải sản",
+        "lat": 20.96,
+        "lng": 105.764,
+        "radius_km": 5.0
+      },
+      "class": "data-thin",
+      "corpus_hits": 40,
+      "in_radius": 0,
+      "sample_hit": "Nhà Hàng Lẩu Neo Shabu Suki - Phan Trung",
+      "prod_exact_hits": 0
+    },
+    {
+      "tool": "merchant_search",
+      "query": "diem calo thap",
+      "cuisine": "",
+      "has_geo": false,
+      "radius_km": null,
+      "count": 1,
+      "args": {
+        "query": "điểm calo thấp"
+      },
+      "class": "data-thin",
+      "corpus_hits": 3,
+      "sample_hit": "Phở Gà Bà Ba - Phở Gà Gia Truyền - Vĩnh Điềm Trung",
+      "prod_exact_hits": 0
+    },
+    {
+      "tool": "merchant_search",
+      "query": "com van phong",
+      "cuisine": "",
+      "has_geo": false,
+      "radius_km": null,
+      "count": 1,
+      "args": {
+        "query": "cơm văn phòng",
+        "city": "Mỹ Đình",
+        "max_price": 40000
+      },
+      "class": "data-thin",
+      "corpus_hits": 18,
+      "sample_hit": "Kim Chi House - Cơm Văn Phòng & Ăn Vặt - Ngô Quyền",
+      "prod_semantics_hits": 0,
+      "corpus_hits_kw": 18,
+      "prod_exact_hits": 0
+    },
+    {
+      "tool": "merchant_search",
+      "query": "pho thin",
+      "cuisine": "",
+      "has_geo": false,
+      "radius_km": null,
+      "count": 1,
+      "args": {
+        "query": "phở Thìn",
+        "city": "Hanoi"
+      },
+      "class": "data-thin",
+      "corpus_hits": 3,
+      "sample_hit": "Phở Thịnh - Phở Bò & Phở Gà - Lương Thế Vinh",
+      "prod_semantics_hits": 0,
+      "corpus_hits_kw": 3,
+      "prod_exact_hits": 0
+    },
+    {
+      "tool": "merchant_search",
+      "query": "cai dau tien do",
+      "cuisine": "",
+      "has_geo": false,
+      "radius_km": null,
+      "count": 1,
+      "args": {
+        "query": "Cái đầu tiên đó"
+      },
+      "class": "noise"
+    },
+    {
+      "tool": "merchant_search",
+      "query": "do an 200 calo",
+      "cuisine": "",
+      "has_geo": false,
+      "radius_km": null,
+      "count": 1,
+      "args": {
+        "query": "đồ ăn 200 calo"
+      },
+      "class": "data-thin",
+      "corpus_hits": 0,
+      "prod_exact_hits": 0
+    },
+    {
+      "tool": "nearby_merchant_search",
+      "query": "do thuan viet",
+      "cuisine": "Vietnamese",
+      "has_geo": true,
+      "radius_km": 5.0,
+      "count": 1,
+      "args": {
+        "query": "đồ thuần việt",
+        "cuisine": "Vietnamese",
+        "lat": 21.028,
+        "lng": 105.948,
+        "radius_km": 5.0
+      },
+      "class": "data-thin",
+      "corpus_hits": 11,
+      "in_radius": 0,
+      "sample_hit": "TocoToco Bubble Tea - Phạm Văn Thuận",
+      "prod_exact_hits": 0
+    },
+    {
+      "tool": "merchant_search",
+      "query": "trua",
+      "cuisine": "",
+      "has_geo": false,
+      "radius_km": null,
+      "count": 1,
+      "args": {
+        "query": "trưa"
+      },
+      "class": "recall-gap",
+      "corpus_hits": 3,
+      "sample_hit": "Cơm Trưa Hello 5 - Tôn Thất Đạm",
+      "prod_exact_hits": 3
+    },
+    {
+      "tool": "merchant_search",
+      "query": "khong cay",
+      "cuisine": "",
+      "has_geo": false,
+      "radius_km": null,
+      "count": 1,
+      "args": {
+        "query": "không cay"
+      },
+      "class": "data-thin",
+      "corpus_hits": 3,
+      "sample_hit": "Cơm Không Béo Healthy & Eatclean - Bãi Sậy",
+      "prod_exact_hits": 0
+    },
+    {
+      "tool": "merchant_search",
+      "query": "thanh dam",
+      "cuisine": "",
+      "has_geo": false,
+      "radius_km": null,
+      "count": 1,
+      "args": {
+        "query": "thanh đạm"
+      },
+      "class": "data-thin",
+      "corpus_hits": 64,
+      "sample_hit": "Tiệm Bánh Mì Những Chàng Trai - Thành Thái",
+      "prod_exact_hits": 0
+    },
+    {
+      "tool": "merchant_search",
+      "query": "sang trong",
+      "cuisine": "",
+      "has_geo": false,
+      "radius_km": null,
+      "count": 1,
+      "args": {
+        "query": "sang trọng"
+      },
+      "class": "recall-gap",
+      "corpus_hits": 2,
+      "sample_hit": "Gà Rán KFC - Phan Văn Hớn",
+      "prod_exact_hits": 2
+    },
+    {
+      "tool": "merchant_search",
+      "query": "lau",
+      "cuisine": "",
+      "has_geo": false,
+      "radius_km": null,
+      "count": 1,
+      "args": {
+        "query": "lẩu"
+      },
+      "class": "recall-gap",
+      "corpus_hits": 40,
+      "sample_hit": "Nhà Hàng Lẩu Neo Shabu Suki - Phan Trung",
+      "prod_exact_hits": 40
+    },
+    {
+      "tool": "nearby_merchant_search",
+      "query": "korean",
+      "cuisine": "Hàn",
+      "has_geo": true,
+      "radius_km": 5.0,
+      "count": 1,
+      "args": {
+        "query": "korean",
+        "cuisine": "Hàn",
+        "lat": 21.036,
+        "lng": 105.79,
+        "radius_km": 5.0
+      },
+      "class": "data-thin",
+      "corpus_hits": 0,
+      "prod_exact_hits": 0
+    }
+  ],
+  "final_counts": {
+    "distinct": {
+      "noise": 4,
+      "data-thin": 14,
+      "recall-gap": 4
+    },
+    "weighted": {
+      "noise": 83,
+      "data-thin": 20,
+      "recall-gap": 5
+    }
+  }
+}
