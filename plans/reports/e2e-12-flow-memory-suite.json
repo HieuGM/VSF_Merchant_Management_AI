@@ -1,0 +1,796 @@
+[
+  {
+    "fid": 1,
+    "name": "MEMORY DÀI #1 — 3 fact + 15 tin + fresh-session recall",
+    "kind": "memory-long",
+    "uid": "e2e12_1_1787217902",
+    "turns": [
+      {
+        "msg": "Tôi dị ứng tôm nhé, nhớ giúp tôi",
+        "latency_ms": 26400,
+        "ok": true,
+        "n_results": 0,
+        "memory_updates": {
+          "added": [
+            "•"
+          ],
+          "removed": []
+        },
+        "answer": "Ồ, ghi nhận ngay nhé — **tôm** là mình sẽ loại hẳn ra khỏi mọi gợi ý cho bạn, kể cả những món dễ dính tôm băm như chả giò, bánh xèo hay lẩu, mình cũng sẽ nhắc trước để bạn an tâm.\n\nGiờ bạn đang thèm kiểu gì nào? Món Việt"
+      },
+      {
+        "msg": "Mà tôi cũng ăn chay vào thứ Hai hàng tuần",
+        "latency_ms": 63400,
+        "ok": true,
+        "n_results": 2,
+        "memory_updates": {
+          "added": [
+            "•"
+          ],
+          "removed": []
+        },
+        "answer": "Ồ thú vị đấy — ăn chay thứ Hai mỗi tuần nghe nhẹ nhàng mà cũng thanh đạm lắm. Mình ghi nhận sở thích này nhé, và đề xuất cập nhật hồ sơ của bạn thêm chế độ **ăn chay** để sau này mình ưu tiên những quán phù hợp hơn — bạn"
+      },
+      {
+        "msg": "Ngân sách của mình thường dưới 100k một bữa",
+        "latency_ms": 14800,
+        "ok": true,
+        "n_results": 0,
+        "memory_updates": {},
+        "answer": "Hmm, mình có tìm thấy quán khớp với yêu cầu của bạn, nhưng toàn bộ bị loại vì ràng buộc tôm, đồ chay mà mình đang nhớ cho bạn. Nếu hôm nay muốn tạm gỡ ràng buộc này (ví dụ đi ăn cùng người khác), bạn cứ nói nhé!"
+      },
+      {
+        "msg": "Hôm nay có quán nào ngon không",
+        "latency_ms": 15800,
+        "ok": true,
+        "n_results": 0,
+        "memory_updates": {},
+        "answer": "Hmm, mình có tìm thấy quán khớp với yêu cầu của bạn, nhưng toàn bộ bị loại vì ràng buộc tôm, đồ chay mà mình đang nhớ cho bạn. Nếu hôm nay muốn tạm gỡ ràng buộc này (ví dụ đi ăn cùng người khác), bạn cứ nói nhé!"
+      },
+      {
+        "msg": "Mình đang ở Cầu Giấy",
+        "latency_ms": 24300,
+        "ok": true,
+        "n_results": 0,
+        "memory_updates": {},
+        "answer": "Hmm, mình có tìm thấy quán khớp với yêu cầu của bạn, nhưng toàn bộ bị loại vì ràng buộc tôm, đồ chay mà mình đang nhớ cho bạn. Nếu hôm nay muốn tạm gỡ ràng buộc này (ví dụ đi ăn cùng người khác), bạn cứ nói nhé!"
+      },
+      {
+        "msg": "Thèm món nhẹ thôi",
+        "latency_ms": 12600,
+        "ok": true,
+        "n_results": 0,
+        "memory_updates": {},
+        "answer": "Ồ, món nhẹ nhẹ thì dễ chịu ghê — bạn đang nghĩ tới kiểu gì, salad, cháo, bún thanh đạm hay gì đó mát mát? Mình nhớ bạn có dị ứng tôm nên sẽ né mấy món đó giúp bạn luôn nhé. Kể thêm xem bạn thèm vị gì, để mình tìm gợi ý h"
+      },
+      {
+        "msg": "Trà sữa ở đâu ngon",
+        "latency_ms": 20000,
+        "ok": true,
+        "n_results": 0,
+        "memory_updates": {},
+        "answer": "Hmm, mình có tìm thấy quán khớp với yêu cầu của bạn, nhưng toàn bộ bị loại vì ràng buộc tôm, đồ chay mà mình đang nhớ cho bạn. Nếu hôm nay muốn tạm gỡ ràng buộc này (ví dụ đi ăn cùng người khác), bạn cứ nói nhé!"
+      },
+      {
+        "msg": "Quán nào rating cao nhé",
+        "latency_ms": 24900,
+        "ok": true,
+        "n_results": 0,
+        "memory_updates": {},
+        "answer": "Hmm, mình có tìm thấy quán khớp với yêu cầu của bạn, nhưng toàn bộ bị loại vì ràng buộc tôm, đồ chay mà mình đang nhớ cho bạn. Nếu hôm nay muốn tạm gỡ ràng buộc này (ví dụ đi ăn cùng người khác), bạn cứ nói nhé!"
+      },
+      {
+        "msg": "Có quán nào mở khuya không",
+        "latency_ms": 15500,
+        "ok": true,
+        "n_results": 0,
+        "memory_updates": {},
+        "answer": "Hmm, mình có tìm thấy quán khớp với yêu cầu của bạn, nhưng toàn bộ bị loại vì ràng buộc tôm, đồ chay mà mình đang nhớ cho bạn. Nếu hôm nay muốn tạm gỡ ràng buộc này (ví dụ đi ăn cùng người khác), bạn cứ nói nhé!"
+      },
+      {
+        "msg": "Đổi món đi, thèm bún",
+        "latency_ms": 17000,
+        "ok": true,
+        "n_results": 0,
+        "memory_updates": {},
+        "answer": "Hmm, mình có tìm thấy quán khớp với yêu cầu của bạn, nhưng toàn bộ bị loại vì ràng buộc tôm, đồ chay mà mình đang nhớ cho bạn. Nếu hôm nay muốn tạm gỡ ràng buộc này (ví dụ đi ăn cùng người khác), bạn cứ nói nhé!"
+      },
+      {
+        "msg": "Gần hồ Tây có gì",
+        "latency_ms": 27700,
+        "ok": true,
+        "n_results": 0,
+        "memory_updates": {},
+        "answer": "Hmm, mình có tìm thấy quán khớp với yêu cầu của bạn, nhưng toàn bộ bị loại vì ràng buộc tôm mà mình đang nhớ cho bạn. Nếu hôm nay muốn tạm gỡ ràng buộc này (ví dụ đi ăn cùng người khác), bạn cứ nói nhé!"
+      },
+      {
+        "msg": "Nhà hàng nào phù hợp đi cùng bạn bè",
+        "latency_ms": 15600,
+        "ok": true,
+        "n_results": 0,
+        "memory_updates": {},
+        "answer": "Hmm, mình có tìm thấy quán khớp với yêu cầu của bạn, nhưng toàn bộ bị loại vì ràng buộc tôm, đồ chay mà mình đang nhớ cho bạn. Nếu hôm nay muốn tạm gỡ ràng buộc này (ví dụ đi ăn cùng người khác), bạn cứ nói nhé!"
+      },
+      {
+        "msg": "Món chay ở đâu ngon",
+        "latency_ms": 23700,
+        "ok": true,
+        "n_results": 0,
+        "memory_updates": {},
+        "answer": ""
+      },
+      {
+        "msg": "Món chay ở đâu ngon",
+        "latency_ms": 23700,
+        "ok": true,
+        "n_results": 0,
+        "memory_updates": {},
+        "answer": "Hmm, mình có tìm thấy quán khớp với yêu cầu của bạn, nhưng toàn bộ bị loại vì ràng buộc tôm, đồ chay mà mình đang nhớ cho bạn. Nếu hôm nay muốn tạm gỡ ràng buộc này (ví dụ đi ăn cùng người khác), bạn cứ nói nhé!"
+      },
+      {
+        "msg": "Quán nào view đẹp",
+        "latency_ms": 13600,
+        "ok": true,
+        "n_results": 0,
+        "memory_updates": {},
+        "answer": "Hmm, mình có tìm thấy quán khớp với yêu cầu của bạn, nhưng toàn bộ bị loại vì ràng buộc tôm, đồ chay mà mình đang nhớ cho bạn. Nếu hôm nay muốn tạm gỡ ràng buộc này (ví dụ đi ăn cùng người khác), bạn cứ nói nhé!"
+      },
+      {
+        "msg": "Có chỗ nào cho nhóm 8 người không",
+        "latency_ms": 2100,
+        "ok": true,
+        "n_results": 0,
+        "memory_updates": {},
+        "answer": "Ồ, đi cả nhóm nghe vui đó! Mình muốn tìm đúng chỗ cho bạn lắm, nhưng chưa rõ bạn ở khu vực nào — bạn đang ở đâu (quận/phường/thành phố) để mình gợi ý quán phù hợp gần bạn nhất nhỉ?"
+      },
+      {
+        "msg": "OK cảm ơn nhé",
+        "latency_ms": 13600,
+        "ok": true,
+        "n_results": 0,
+        "memory_updates": {},
+        "answer": "Hihi, không có gì đâu bạn! Lúc nào thèm món gì, muốn tìm quán theo vibe hay túi tiền thì cứ nhắn mình, mình sẵn sàng rủ bạn đi ăn cùng 😄 Chúc bạn một ngày ngon miệng nhé!"
+      },
+      {
+        "msg": "Gợi ý mình quán ăn nhé",
+        "latency_ms": 12800,
+        "ok": true,
+        "n_results": 0,
+        "memory_updates": {},
+        "answer": "Hmm, mình có tìm thấy quán khớp với yêu cầu của bạn, nhưng toàn bộ bị loại vì ràng buộc tôm, đồ chay mà mình đang nhớ cho bạn. Nếu hôm nay muốn tạm gỡ ràng buộc này (ví dụ đi ăn cùng người khác), bạn cứ nói nhé!"
+      },
+      {
+        "msg": "Hôm nay thứ Hai, mình ăn gì giờ trưa?",
+        "latency_ms": 12100,
+        "ok": true,
+        "n_results": 0,
+        "memory_updates": {},
+        "answer": "Hmm, mình có tìm thấy quán khớp với yêu cầu của bạn, nhưng toàn bộ bị loại vì ràng buộc tôm, đồ chay mà mình đang nhớ cho bạn. Nếu hôm nay muốn tạm gỡ ràng buộc này (ví dụ đi ăn cùng người khác), bạn cứ nói nhé!"
+      },
+      {
+        "msg": "Nói mình nghe quán nào hợp với mình nhất đi?",
+        "latency_ms": null,
+        "ok": true,
+        "n_results": 0,
+        "memory_updates": {},
+        "answer": "Hmm, mình muốn gợi ý cho bạn lắm mà chưa biết bạn đang ở đâu với thèm kiểu gì nữa à. Bạn kể thử xem — hôm nay muốn món Việt, Nhật hay gì đó nhẹ nhẹ cho bữa trưa? Cho mình biết thêm chút là mình lo liền!"
+      }
+    ],
+    "n_turns": 20,
+    "n_ok": 19,
+    "verdicts": {
+      "note dị ứng tôm được lưu": true,
+      "note chay được lưu": true,
+      "fresh-session vẫn enforce (tôm+chay)": false,
+      "note ngân sách được lưu (chỉ L1-suggestion, không phải note)": true,
+      "fresh-session recall: enforce tôm+chay (constraint payload)": true
+    },
+    "median_latency_ms": 15800,
+    "max_latency_ms": 63400
+  },
+  {
+    "fid": 2,
+    "name": "MEMORY DÀI #2 — 3 sở thích + 14 tin + tổng hợp",
+    "kind": "memory-long",
+    "uid": "e2e12_2_1787217902",
+    "turns": [
+      {
+        "msg": "Gợi ý mình quán ăn nhé",
+        "latency_ms": null,
+        "ok": true,
+        "n_results": 0,
+        "memory_updates": {},
+        "answer": "Hmm, mình có tìm thấy quán khớp với yêu cầu của bạn, nhưng toàn bộ bị loại vì ràng buộc tôm, đồ chay mà mình đang nhớ cho bạn. Nếu hôm nay muốn tạm gỡ ràng buộc này (ví dụ đi ăn cùng người khác), bạn cứ nói nhé!"
+      },
+      {
+        "msg": "Hôm nay thứ Hai, mình ăn gì giờ trưa?",
+        "latency_ms": null,
+        "ok": true,
+        "n_results": 0,
+        "memory_updates": {},
+        "answer": "Hmm, mình có tìm thấy quán khớp với yêu cầu của bạn, nhưng toàn bộ bị loại vì ràng buộc tôm, đồ chay mà mình đang nhớ cho bạn. Nếu hôm nay muốn tạm gỡ ràng buộc này (ví dụ đi ăn cùng người khác), bạn cứ nói nhé!"
+      },
+      {
+        "msg": "Mình thích quán cà phê yên tĩnh để làm việc",
+        "latency_ms": 19400,
+        "ok": true,
+        "n_results": 0,
+        "memory_updates": {},
+        "answer": "Ồ, nghe hợp gu mình ghê — quán cà phê yên tĩnh mà có góc ngồi làm việc thì chuẩn bài luôn. Hmm, mình chưa nắm rõ bạn đang ở khu nào lắm, bạn ở Hà Nội hay Sài Gòn thế?\n\nKể thêm cho mình nghe nhé: bạn thích kiểu quán view "
+      },
+      {
+        "msg": "Mình không thích đồ cay, ăn cay bị đau dạ dày",
+        "latency_ms": 12000,
+        "ok": true,
+        "n_results": 0,
+        "memory_updates": {
+          "added": [
+            "•"
+          ],
+          "removed": []
+        },
+        "answer": "Ồ, mình hiểu mà — cay mà đau dạ dày thì đúng là khổ thật. Mình ghi nhận là bạn cần tránh đồ cay nhé, để sau này mình sẽ ưu tiên những món thanh đạm, nhẹ nhàng hơn cho bạn.\n\nHmm, bạn đang muốn tìm món gì đó dịu dịu để ăn "
+      },
+      {
+        "msg": "Mình sống ở Cầu Giấy, hay tìm quán gần đó",
+        "latency_ms": 27500,
+        "ok": true,
+        "n_results": 3,
+        "memory_updates": {},
+        "answer": "Ồ, Cầu Giấy thì mình nghĩ ngay đến **Anh Béo – Bún Miến Ngan** ở Trần Quốc Vượng, ngay trong khu bạn luôn đó. Quán này rating 4.7 khá ổn, món ngan thanh đạm mà đậm đà, hợp bữa trưa nhẹ nhàng. Mà bạn từng nói không ăn cay"
+      },
+      {
+        "msg": "Cho mình hỏi món trưa hôm nay",
+        "latency_ms": 21600,
+        "ok": true,
+        "n_results": 0,
+        "memory_updates": {},
+        "answer": "Ồ, bữa trưa hôm nay à — bạn ở Cầu Giấy nhỉ, mình nhớ bạn không ăn cay được nên sẽ né mấy món đó giúp bạn. Hmm, bạn đang thèm kiểu gì: món Việt thanh đạm, hay cơm/quán ăn nhanh gì đó cho nhanh gọn? Kể thêm chút mình gợi ý"
+      },
+      {
+        "msg": "Quán nào đông người vậy",
+        "latency_ms": 22900,
+        "ok": true,
+        "n_results": 0,
+        "memory_updates": {},
+        "answer": "Ồ, câu này khiến mình tò mò ghê — bạn đang muốn tìm chỗ đông vui để ăn theo vibe, hay chỉ tình cờ thấy quán nào đông mà muốn hỏi mình biết không?\n\nMình chưa có thông tin cụ thể về quán nào đang đông nhất lúc này đâu, à n"
+      },
+      {
+        "msg": "Món ngọt gì ngon nhỉ",
+        "latency_ms": 42400,
+        "ok": true,
+        "n_results": 3,
+        "memory_updates": {},
+        "answer": ""
+      },
+      {
+        "msg": "Món ngọt gì ngon nhỉ",
+        "latency_ms": 42400,
+        "ok": true,
+        "n_results": 3,
+        "memory_updates": {},
+        "answer": "Ồ, thèm đồ ngọt à — mình biết cảm giác đó! 😄 Hmm, mình vừa rà qua thì thấy mấy quán tìm được toàn ở tận TP.HCM, mà bạn lại ở Cầu Giấy thì hơi xa xôi quá nhỉ.\n\nNếu muốn mình tìm quán gần chỗ bạn hơn thì cho mình biết bạn "
+      },
+      {
+        "msg": "Trời hôm nay mưa không",
+        "latency_ms": 19100,
+        "ok": true,
+        "n_results": 0,
+        "memory_updates": {},
+        "answer": "Ồ, thời tiết thì mình không tra được rồi, mình chỉ rành chuyện ăn uống thôi à. Nhưng nếu trời mưa mà bạn muốn tìm gì đó ấm bụng gần Cầu Giấy, mình sẵn sàng gợi ý ngay — bạn thèm món gì nào?"
+      },
+      {
+        "msg": "Cơm nhà nào ổn",
+        "latency_ms": 34500,
+        "ok": true,
+        "n_results": 3,
+        "memory_updates": {},
+        "answer": "Hmm, \"cơm nhà\" kiểu ấm cúng thế này mình thấy **Cơm Nhà - Cơm Gà Xối Mỡ** (Hoàng Văn Thụ, Cần Thơ) hợp ghê — giá rẻ, giao nhanh tầm 24 phút mà tỉ lệ đúng giờ cũng ổn, đóng gói tốt nữa. Rating 4.2, khách sinh viên với dân"
+      },
+      {
+        "msg": "Quán nào bán xôi ngon",
+        "latency_ms": 24300,
+        "ok": true,
+        "n_results": 3,
+        "memory_updates": {},
+        "answer": "Hmm, mình tìm theo \"xôi\" mà kết quả lại nghiêng về mấy quán **cơm gà** xối mỡ hơn — như Bento Delichi ở Dương Khuê (Cầu Giấy) hay chi nhánh Trần Đại Nghĩa (Hoàng Mai), còn ở Sài Gòn thì có Bibi cơm gà xối mỡ quận 7, rati"
+      },
+      {
+        "msg": "Có quán Hàn nào không",
+        "latency_ms": 28000,
+        "ok": true,
+        "n_results": 3,
+        "memory_updates": {},
+        "answer": "Ồ, có chứ! Mình thấy vài chi nhánh **Lotteria** kiểu món Hàn — gà rán với burger, menu khá đa dạng đấy. Ví dụ **Gà Rán & Burger Lotteria - Huế CoopMart** (ở 6 Trần Hưng Đạo, Huế) rating 4.8 khá ổn, giao đúng giờ lắm; còn"
+      },
+      {
+        "msg": "Gần-big-c mặt hồ có gì",
+        "latency_ms": 22700,
+        "ok": true,
+        "n_results": 0,
+        "memory_updates": {},
+        "answer": "Ồ, \"Big C mặt hồ\" nghe quen mà mình chưa chắc bạn đang nói chi nhánh nào lắm — ở Huế hay chỗ khác vậy? Bạn cho mình biết thêm khu vực với, để mình soi quanh đó xem có gì ngon đáng thử nhé. 😊"
+      },
+      {
+        "msg": "Món ăn vặt ngon đường phố",
+        "latency_ms": 32600,
+        "ok": true,
+        "n_results": 3,
+        "memory_updates": {},
+        "answer": "Ồ, bạn đang thèm đồ ăn vặt đường phố à — mình tìm được vài chỗ hợp gu đấy. **Mr. Tôm - Sushi Đường Phố** ở Lê Thị Hồng (Gò Vấp) giá tầm trung, rating 4.5, menu đa dạng tới 195 món, giao cũng nhanh, hợp để nhâm nhi chiều "
+      },
+      {
+        "msg": "Quán nào phù hợp hẹn hò",
+        "latency_ms": 2100,
+        "ok": true,
+        "n_results": 0,
+        "memory_updates": {},
+        "answer": "Ồ, đi cả nhóm nghe vui đó! Mình muốn tìm đúng chỗ cho bạn lắm, nhưng chưa rõ bạn ở khu vực nào — bạn đang ở đâu (quận/phường/thành phố) để mình gợi ý quán phù hợp gần bạn nhất nhỉ?"
+      },
+      {
+        "msg": "View đẹp ở Tây Hồ nhỉ",
+        "latency_ms": 26000,
+        "ok": true,
+        "n_results": 0,
+        "memory_updates": {},
+        "answer": "Ồ, Tây Hồ thì khỏi bàn — chiều tà ngồi nhìn mặt hồ lấp lánh là đã nhất luôn. Mình chưa có sẵn quán cụ thể nào ở khu đó trong tay, nhưng bạn đang nghĩ tới kiểu view nào: quán cà phê nhìn thẳng ra hồ, hay chỗ nào vừa ăn vừ"
+      },
+      {
+        "msg": "Có quán nào bán bánh mì long xuôi không",
+        "latency_ms": 16600,
+        "ok": true,
+        "n_results": 0,
+        "memory_updates": {},
+        "answer": "Ồ, bánh mì long xuôi — nghe quen quen mà mình chưa có quán cụ thể nào trong tay để gợi ý cho bạn lúc này à. Bạn đang ở khu nào thế? Kể thêm chút xem bạn thèm kiểu bánh mì truyền thống hay muốn tìm gần chỗ mình ở, để mình"
+      },
+      {
+        "msg": "OK vậy thôi",
+        "latency_ms": 20500,
+        "ok": true,
+        "n_results": 0,
+        "memory_updates": {},
+        "answer": "Ồ, vậy thôi nhé! Mình hy vọng bạn có một bữa ăn ngon hôm nay dù chưa chốt được quán nào. 😊 Khi nào thèm gì cứ quay lại, mình sẵn lòng gợi ý tiếp mà — chúc bạn buổi chiều vui vẻ nha!"
+      },
+      {
+        "msg": "Cảm ơn bạn",
+        "latency_ms": 15700,
+        "ok": true,
+        "n_results": 0,
+        "memory_updates": {},
+        "answer": "Ôi không có gì đâu, mình vui lắm khi được trò chuyện cùng bạn! 😊 Nếu lát nữa bạn thèm món gì — bữa trưa nhẹ nhàng, hay tối nay muốn đổi gió chút — cứ ghé lại nhé, mình sẵn sàng rủ bạn đi ăn bất cứ lúc nào."
+      },
+      {
+        "msg": "Nói mình nghe quán nào hợp với mình nhất đi?",
+        "latency_ms": 12700,
+        "ok": true,
+        "n_results": 0,
+        "memory_updates": {},
+        "answer": "Hmm, mình muốn gợi ý cho bạn lắm mà chưa biết bạn đang ở đâu với thèm kiểu gì nữa à. Bạn kể thử xem — hôm nay muốn món Việt, Nhật hay gì đó nhẹ nhẹ cho bữa trưa? Cho mình biết thêm chút là mình lo liền!"
+      }
+    ],
+    "n_turns": 21,
+    "n_ok": 19,
+    "verdicts": {
+      "note không-thích-cay được lưu": true,
+      "thích cafe → L1 suggestion (by-design)": true,
+      "sống Cầu Giấy không lưu (gap thật)": true
+    },
+    "median_latency_ms": 22700,
+    "max_latency_ms": 42400
+  },
+  {
+    "fid": 3,
+    "name": "MEMORY — rút lại dị ứng (retract)",
+    "kind": "memory",
+    "uid": "e2e12_3_1787217902",
+    "turns": [
+      {
+        "msg": "Tôi dị ứng hải sản đấy",
+        "latency_ms": 14400,
+        "ok": true,
+        "n_results": 0,
+        "memory_updates": {
+          "added": [
+            "•"
+          ],
+          "removed": []
+        },
+        "answer": "Hmm, mình có tìm thấy quán khớp với yêu cầu của bạn, nhưng toàn bộ bị loại vì ràng buộc hải sản, tôm mà mình đang nhớ cho bạn. Nếu hôm nay muốn tạm gỡ ràng buộc này (ví dụ đi ăn cùng người khác), bạn cứ nói nhé!"
+      },
+      {
+        "msg": "Bác sĩ nói tôi hết dị ứng hải sản rồi",
+        "latency_ms": 24100,
+        "ok": true,
+        "n_results": 3,
+        "memory_updates": {
+          "added": [],
+          "removed": [
+            "•"
+          ]
+        },
+        "answer": "Ôi, tin vui đó! 🎉 Hết dị ứng hải sản là cả một thế giới món ngon mở ra cho bạn rồi — từ tôm nướng, ghẹ hấp đến lẩu cá hồi đều gọi được hết. Mình ghi nhận thông tin này nhé, bạn xác nhận để mình cập nhật lại hồ sơ ăn uống"
+      },
+      {
+        "msg": "Gợi ý quán hải sản gần đây nhé",
+        "latency_ms": 40900,
+        "ok": true,
+        "n_results": 3,
+        "memory_updates": {},
+        "answer": "Hmm, mình tìm thử thì chưa thấy quán hải sản nào khớp lắm — các quán mình có đang là **3 Râu** (gà rán, pizza & trà sữa) ở Tân Phú, Quận 6 và Hồ Đắc Di thôi, không phải hải sản đâu bạn à. Bạn đang ở khu nào, và thèm hải "
+      }
+    ],
+    "n_turns": 3,
+    "n_ok": 3,
+    "verdicts": {
+      "note hải sản đã bị xóa sau retract": true,
+      "allergen đã bị xóa": true,
+      "session 3 không bị chặn sai": true
+    },
+    "median_latency_ms": 24100,
+    "max_latency_ms": 40900
+  },
+  {
+    "fid": 4,
+    "name": "MEMORY — constraint tạm thời có TTL",
+    "kind": "memory",
+    "uid": "e2e12_4_1787217902",
+    "turns": [
+      {
+        "msg": "Tuần này mình đang ăn kiêng ít dầu mỡ nhé",
+        "latency_ms": 19100,
+        "ok": true,
+        "n_results": 0,
+        "memory_updates": {
+          "added": [
+            "•"
+          ],
+          "removed": []
+        },
+        "answer": "Ồ, tuần này thanh đạm nhỉ — nghe cũng thư thái đấy! Mình ghi nhận bạn muốn ăn ít dầu mỡ, để mình đề xuất cập nhật vào hồ sơ là \"low_oil\" nhé, bạn xác nhận giúp mình nha.\n\nGiờ thì mình nghĩ đến mấy món hấp, luộc, salad ho"
+      },
+      {
+        "msg": "Trưa nay ăn gì được?",
+        "latency_ms": 18600,
+        "ok": true,
+        "n_results": 3,
+        "memory_updates": {},
+        "answer": "Hmm, trưa nay bạn ở khu Q1/Q5 đúng không nhỉ? Mình thấy **Cơm Trưa Hello 5** có hai chi nhánh khá hợp bữa trưa văn phòng — một ở Tôn Thất Đạm (Q1) giá rẻ hơn, một ở Trần Hưng Đạo (Q5), cả hai đều rating 4.6, đóng gói và "
+      }
+    ],
+    "n_turns": 2,
+    "n_ok": 2,
+    "verdicts": {
+      "note kiêng có expiry (TTL)": true,
+      "note kiêng tồn tại": true
+    },
+    "median_latency_ms": 19100,
+    "max_latency_ms": 19100
+  },
+  {
+    "fid": 5,
+    "name": "MEMORY — vị trí tin đầu, dùng ở tin 12",
+    "kind": "memory",
+    "uid": "e2e12_5_1787217902",
+    "turns": [
+      {
+        "msg": "Mình ở Đống Đa",
+        "latency_ms": 48800,
+        "ok": true,
+        "n_results": 3,
+        "memory_updates": {},
+        "answer": "Ồ, Đống Đa thì mình có mấy gợi ý hay lắm nè. **Bánh Mì Yến** ở Văn Chương nghe tên là thấy hợp gu rồi — bánh mì muối ớt sốt kem phô mai, giá rẻ mà rating tới 4.8, đồ ăn chuẩn bị nhanh chỉ tầm 6 phút thôi, hợp bữa trưa vă"
+      },
+      {
+        "msg": "Thèm phở quá",
+        "latency_ms": 26600,
+        "ok": true,
+        "n_results": 3,
+        "memory_updates": {},
+        "answer": "Ôi, thèm phở là cái cảm giác khó cưỡi lắm á! Hmm, mà mình chưa tìm được quán phở cụ thể nào phù hợp quanh bạn lúc này — hay kể thêm cho mình nghe bạn đang ở đâu và thèm kiểu phở nào, phở bò truyền thống hay phở gà thanh "
+      },
+      {
+        "msg": "Có quán nào bán bún bò không",
+        "latency_ms": 29400,
+        "ok": true,
+        "n_results": 3,
+        "memory_updates": {},
+        "answer": "Ồ, bún bò thì có đấy! Nếu bạn ở **Đống Đa** thì **Bún Bò Huế Vân Nguyệt** ở Ngõ 26B Trần Quý Cáp gần chỗ bạn, rating 4.9 với tô bún bò truyền thống được nhiều người khen lắm — chất lượng món ăn lẫn dịch vụ đều ổn áp. Mìn"
+      },
+      {
+        "msg": "Rating cao nhất khu này là quán nào",
+        "latency_ms": 18100,
+        "ok": true,
+        "n_results": 0,
+        "memory_updates": {},
+        "answer": "Hmm, mình chưa có dữ liệu quán nào trong khu vực bạn đang hỏi để so rating cao thấp được — bạn đang ở khu nào vậy? Cho mình biết chỗ cụ thể (kiểu quận/huyện ấy), mình tra xem quanh đó quán nào điểm ổn nhất nhé."
+      },
+      {
+        "msg": "Món gì no mà rẻ",
+        "latency_ms": 14100,
+        "ok": true,
+        "n_results": 0,
+        "memory_updates": {},
+        "answer": "Hmm, \"no mà rẻ\" thì mình nghĩ ngay đến mấy món cơm tấm, bún đậu hay xôi — vừa no nê lại không tốn kém lắm. Kiểu cơm tấm sườn trứng ăn kèm dưa chua là combo \"đã miệng + chắc bụng\" kinh điển luôn. Bạn đang ở khu nào để mìn"
+      },
+      {
+        "msg": "Trưa nay gợi ý gì",
+        "latency_ms": 21900,
+        "ok": true,
+        "n_results": 0,
+        "memory_updates": {},
+        "answer": "Hmm, trưa nay bạn thèm gì nào? Hôm trước mình thấy bạn chuộng phở với bún bò Huế ghê — giờ muốn ăn lại món quen hay đổi gió gì đó nhẹ nhàng? Cho mình biết bạn đang ở khu nào nữa, để mình tìm quán gần mà rủ bạn đi cho tiệ"
+      },
+      {
+        "msg": "Quán nào đông nhất",
+        "latency_ms": 21100,
+        "ok": true,
+        "n_results": 0,
+        "memory_updates": {},
+        "answer": "Hmm, \"đông nhất\" thì mình chưa có dữ liệu theo dõi độ đông của quán lúc này được — cái đó phụ thuộc giờ giấc với khu vực lắm. Bạn đang muốn tìm ở khu nào, kiểu món gì để mình gợi ý vài chỗ đáng thử nhé?"
+      },
+      {
+        "msg": "Có chỗ nào bán cơm gà không",
+        "latency_ms": 19600,
+        "ok": true,
+        "n_results": 3,
+        "memory_updates": {},
+        "answer": "Ồ, cơm gà thì mình có vài gợi ý đấy! Nếu bạn ở khu **Cầu Giấy**, thì **Bento Delichi (by Cooky) - Cơm Gà Mắm Tỏi, Xối Mỡ** ở Dương Khuê khá ổn — rating 4.6, menu đa dạng lắm, mà phần đóng gói cũng được khen. Còn chi nhán"
+      },
+      {
+        "msg": "Bánh cuốn ở đâu ngon",
+        "latency_ms": 27100,
+        "ok": true,
+        "n_results": 3,
+        "memory_updates": {},
+        "answer": "Hmm, mình thấy **Bánh Cuốn Nam Việt** ở Q.5 (TP.HCM) khá nổi bật đấy — rating 4.9, chất lượng món tốt, giao nhanh tầm 22 phút, mà menu lại đa dạng cả chay lẫn mặn nên ai đi cùng cũng hợp. Còn nếu bạn ở Đà Nẵng thì **Bánh"
+      },
+      {
+        "msg": "Quán nào giao nhanh",
+        "latency_ms": 17700,
+        "ok": true,
+        "n_results": 0,
+        "memory_updates": {},
+        "answer": "Hmm, mình chưa có dữ liệu cụ thể về quán nào giao nhanh nhất chỗ bạn lắm — mà tốc độ giao cũng phụ thuộc vào khu vực nữa. Bạn đang ở đâu, và trưa nay thèm món gì nhỉ? Để mình tìm chỗ gần, dễ giao cho bạn một cách hợp lý "
+      },
+      {
+        "msg": "Có quán nem nào không",
+        "latency_ms": 38100,
+        "ok": true,
+        "n_results": 3,
+        "memory_updates": {},
+        "answer": "Ồ, nem thì ngon ghê á! Hmm, mình chưa nắm được quán nem cụ thể nào trong tay bạn đang ở đâu — bạn kể thêm cho mình nghe xem, bạn ở HN hay SG, và thèm **nem rán** giòn tan hay **nem cuốn** thanh mát, hay cả **nem chua** n"
+      },
+      {
+        "msg": "Gợi ý quán gần đây cho mình nhé",
+        "latency_ms": 15700,
+        "ok": true,
+        "n_results": 0,
+        "memory_updates": {},
+        "answer": "Ồ, bạn muốn tìm quán gần chỗ mình ở à? Mình rất muốn rủ bạn đi ăn, nhưng mà cần biết bạn đang ở khu nào đã — bạn cho mình biết thành phố hoặc địa điểm gần đó nhé?\n\nChẳng hạn bạn đang ở Hà Nội hay TP.HCM, hay khu quận nào"
+      }
+    ],
+    "n_turns": 12,
+    "n_ok": 12,
+    "verdicts": {
+      "vị trí tin-1 được dùng ngay (turn r=3)": true,
+      "tin-12 hỏi lại vị trí (gap thật)": true
+    },
+    "median_latency_ms": 21900,
+    "max_latency_ms": 48800
+  },
+  {
+    "fid": 6,
+    "name": "MEMORY — isolation (nói hộ bạn)",
+    "kind": "memory",
+    "uid": "e2e12_6_1787217902",
+    "turns": [
+      {
+        "msg": "Bạn tôi cực thích đồ Hàn, hôm nay đi ăn với nó",
+        "latency_ms": 17400,
+        "ok": true,
+        "n_results": 3,
+        "memory_updates": {},
+        "answer": "Ồ, bạn có người bạn mê đồ Hàn thì chuẩn bài rồi — mình thấy **Bún Thái & Mì Độ Hàn Quốc 76** ở Trần Quốc Toản (Biên Hòa) hợp ghê. Rating 4.7, giao đúng giờ tốt mà đồ Hàn như mì kim chi hải sản, mì kim chi thập cẩm được k"
+      }
+    ],
+    "n_turns": 1,
+    "n_ok": 1,
+    "verdicts": {
+      "không lưu sở thích người khác": true
+    },
+    "median_latency_ms": 17400,
+    "max_latency_ms": 17400
+  },
+  {
+    "fid": 7,
+    "name": "MEMORY — transparency (toast add/remove)",
+    "kind": "memory",
+    "uid": "e2e12_7_1787217902",
+    "turns": [
+      {
+        "msg": "Tôi dị ứng đậu phộng nhé",
+        "latency_ms": 15000,
+        "ok": true,
+        "n_results": 0,
+        "memory_updates": {
+          "added": [
+            "•"
+          ],
+          "removed": []
+        },
+        "answer": "Hmm, mình có tìm thấy quán khớp với yêu cầu của bạn, nhưng toàn bộ bị loại vì ràng buộc đậu phộng mà mình đang nhớ cho bạn. Nếu hôm nay muốn tạm gỡ ràng buộc này (ví dụ đi ăn cùng người khác), bạn cứ nói nhé!"
+      },
+      {
+        "msg": "Quên chuyện dị ứng đậu phộng đi, mình hết rồi",
+        "latency_ms": 38300,
+        "ok": true,
+        "n_results": 3,
+        "memory_updates": {
+          "added": [],
+          "removed": [
+            "•"
+          ]
+        },
+        "answer": "Ồ vui ghê, vậy là giờ đậu phộng lại \"lên sổ\" được rồi ha 😄 Mình ghi nhận thay đổi này — để mình đề xuất cập nhật hồ sơ của bạn là **hết dị ứng đậu phộng**, bạn xác nhận nhé thì mình mới áp dụng cho những lần tìm sau. Giờ"
+      }
+    ],
+    "n_turns": 2,
+    "n_ok": 2,
+    "verdicts": {
+      "toast thêm khi khai (MEM+)": true,
+      "toast bớt khi rút (MEM−)": true
+    },
+    "median_latency_ms": 38300,
+    "max_latency_ms": 38300
+  },
+  {
+    "fid": 8,
+    "name": "MEMORY — history lưu + mở lại",
+    "kind": "memory",
+    "uid": "e2e12_8_1787217902",
+    "turns": [
+      {
+        "msg": "Mình thèm bún chả ở Đống Đa",
+        "latency_ms": 30800,
+        "ok": true,
+        "n_results": 1,
+        "memory_updates": {},
+        "answer": "Hmm, mình tìm thử ở Đống Đa thì chưa thấy quán bún chả nào khớp đâu bạn ơi — quán duy nhất hệ thống gợi ý là **Phở Bò Tám Lâm** ở ngõ 157 Chùa Láng, mà đây là quán phở bò chứ không phải bún chả à nhỉ.\n\nQuán này cũng khá "
+      },
+      {
+        "msg": "Quán đầu tiên giờ mở cửa tới mấy giờ?",
+        "latency_ms": 30000,
+        "ok": true,
+        "n_results": 0,
+        "memory_updates": {},
+        "answer": "Ồ, bạn hỏi **Phở Bò Tám Lâm – Chùa Láng** đúng không? Mình rất tiếc là chưa có thông tin giờ mở cửa cụ thể của quán này trong dữ liệu mình đang có.\n\nNhưng mình biết quán này đông nhất vào khoảng **11h–13h trưa và 18h–20h"
+      }
+    ],
+    "n_turns": 2,
+    "n_ok": 2,
+    "verdicts": {
+      "session được lưu vào history": true,
+      "mở lại đủ 4 tin": true
+    },
+    "median_latency_ms": 30800,
+    "max_latency_ms": 30800
+  },
+  {
+    "fid": 9,
+    "name": "MEMORY — Preference Center sync",
+    "kind": "memory",
+    "uid": "e2e12_9_1787217902",
+    "turns": [
+      {
+        "msg": "Mình dị ứng tôm và không ăn được nội tạng nhé",
+        "latency_ms": 26300,
+        "ok": true,
+        "n_results": 0,
+        "memory_updates": {
+          "added": [
+            "•"
+          ],
+          "removed": []
+        },
+        "answer": "Hmm, mình có tìm thấy quán khớp với yêu cầu của bạn, nhưng toàn bộ bị loại vì ràng buộc tôm, nội tạng mà mình đang nhớ cho bạn. Nếu hôm nay muốn tạm gỡ ràng buộc này (ví dụ đi ăn cùng người khác), bạn cứ nói nhé!"
+      }
+    ],
+    "n_turns": 1,
+    "n_ok": 1,
+    "verdicts": {
+      "allergen tôm vào profile": true,
+      "allergen nội tạng vào profile": true
+    },
+    "median_latency_ms": 26300,
+    "max_latency_ms": 26300
+  },
+  {
+    "fid": 10,
+    "name": "SEARCH — kết quả + card",
+    "kind": "search",
+    "uid": "e2e12_10_1787217902",
+    "turns": [
+      {
+        "msg": "Tìm quán bún đậu ngon ở Hà Nội cho mình nhé",
+        "latency_ms": 15200,
+        "ok": true,
+        "n_results": 3,
+        "memory_updates": {},
+        "answer": "Ồ, thèm bún đậu Hà Nội thì chuẩn bài luôn! Mình thấy **Cậu Lương - Bún Đậu & Sinh Tố** ở Tân Khai (Hoàng Mai) đáng thử ghê — rating 5.0, giá tầm trung, mà đồ ăn lẫn dịch vụ đều được khen tốt. Còn nếu muốn nhẹ túi hơn thì"
+      }
+    ],
+    "n_turns": 1,
+    "n_ok": 1,
+    "verdicts": {
+      "trả ≥3 kết quả": true,
+      "card có tên+địa chỉ": true,
+      "answer nêu đúng tên quán": true
+    },
+    "median_latency_ms": 15200,
+    "max_latency_ms": 15200
+  },
+  {
+    "fid": 11,
+    "name": "REFINE — rẻ hơn nữa",
+    "kind": "refine",
+    "uid": "e2e12_11_1787217902",
+    "turns": [
+      {
+        "msg": "Tìm quán cơm văn phòng gần Mỹ Đình dưới 40k",
+        "latency_ms": 24000,
+        "ok": true,
+        "n_results": 3,
+        "memory_updates": {},
+        "answer": "Ồ, mình tìm thử thì các quán **Cơm Văn Phòng & Cơm Niêu Hợp Tác Xã** nổi bật nhất, nhưng thành thật là chúng hơi xa Mỹ Đình nhé — nằm ở Tây Sơn, Ngọc Lâm với Hoàng Mai, chứ chưa thấy chi nhánh nào ngay trong khu vực bạn."
+      },
+      {
+        "msg": "Rẻ hơn nữa được không",
+        "latency_ms": 25300,
+        "ok": true,
+        "n_results": 3,
+        "memory_updates": {},
+        "answer": "Hmm, rẻ hơn nữa thì mình chưa nắm chắc quán cụ thể nào có giá rõ ràng dưới mức đó đâu bạn à — mình không muốn đoán bừa chi phí. Bạn đang muốn rơi vào khoảng bao nhiêu, và vẫn quanh Mỹ Đình chứ? Kiểu cơm bụi, bánh mì hay "
+      }
+    ],
+    "n_turns": 2,
+    "n_ok": 2,
+    "verdicts": {
+      "refine giữ ngữ cảnh (không hỏi lại vị trí)": true,
+      "áp mức giá thấp hơn (lần này LLM từ chối đoán)": false
+    },
+    "median_latency_ms": 25300,
+    "max_latency_ms": 25300
+  },
+  {
+    "fid": 12,
+    "name": "ANAPHORA — cái đầu tiên",
+    "kind": "anaphora",
+    "uid": "e2e12_12_1787217902",
+    "turns": [
+      {
+        "msg": "Tìm quán phở ngon ở Hà Nội",
+        "latency_ms": 12700,
+        "ok": true,
+        "n_results": 0,
+        "memory_updates": {},
+        "answer": "Ồ, tìm phở ngon ở Hà Nội thì đúng gu rồi đó! Hmm, nhưng mình chưa nắm được bạn đang ở khu nào hay thèm kiểu phở gì — phở bò truyền thống nước trong, hay phở gà thanh nhẹ, hay phở xào giòn?\n\nBạn kể thêm chút cho mình nghe"
+      },
+      {
+        "msg": "Cái đầu tiên đó thế nào?",
+        "latency_ms": 19000,
+        "ok": true,
+        "n_results": 0,
+        "memory_updates": {},
+        "answer": "Hmm, à nhỉ — hình như lần trước mình chưa tìm ra quán phở cụ thể nào ở Hà Nội để gợi ý cho bạn đâu. Nên \"cái đầu tiên\" này mình cũng chưa có thông tin gì để nói rõ được. Hay bạn kể thêm mình nghe xem đang thèm kiểu gì — "
+      }
+    ],
+    "n_turns": 2,
+    "n_ok": 2,
+    "verdicts": {
+      "turn-1 không bịa (honest clarify)": true,
+      "turn-2 không bịa quán (ordinal honest)": true
+    },
+    "median_latency_ms": 19000,
+    "max_latency_ms": 19000
+  }
+]
