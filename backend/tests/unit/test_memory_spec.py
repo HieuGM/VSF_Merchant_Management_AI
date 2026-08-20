@@ -167,7 +167,9 @@ def test_casual_ban_does_not_suspend_diet():
 def test_catalog_allergy_still_hard_filtered():
     # Seafood IS a catalog scope → enforced as a hard constraint (unchanged behavior).
     cs = build(prof(["Tôi dị ứng hải sản"]), [], "Gợi ý sushi")
+    # Seafood declaration enforces the parent scope AND its child shrimp (260820 hierarchy).
     assert any(c.scope == "seafood" for c in cs.hard)
+    assert any(c.scope == "shrimp" for c in cs.hard)
 
 
 def test_mixed_catalog_and_noncatalog_allergy_surfaced():
@@ -176,6 +178,7 @@ def test_mixed_catalog_and_noncatalog_allergy_surfaced():
     # just because the catalog handled the seafood half.
     cs = build(prof(["Tôi dị ứng hải sản và đậu phộng"]), [], "Gợi ý buffet")
     assert any(c.scope == "seafood" for c in cs.hard)  # seafood still hard-filtered
+    assert any(c.scope == "shrimp" for c in cs.hard)   # + child scope (260820 hierarchy)
     assert any("đậu phộng" in n for n in cs.health_notes)  # peanut surfaced to LLM
 
 
@@ -249,7 +252,8 @@ def test_valid_temporary_constraint_still_enforced():
     # A note whose expiry is in the future still enforces normally.
     future = (datetime.now(timezone.utc) + timedelta(days=5)).isoformat()
     cs = build(_prof_with_expiry(["Tôi dị ứng tôm"], future), [], "Gợi ý hải sản")
-    assert any(c.scope == "seafood" for c in cs.hard)
+    # 'dị ứng tôm' now maps to the dedicated shrimp scope (2.2 fix), not bucket seafood.
+    assert any(c.scope == "shrimp" for c in cs.hard)
 
 
 # --- Phase 2 (6.1): no-cap `allergens` store survives FIFO eviction ---
@@ -266,4 +270,5 @@ def test_allergens_catalog_still_hard_filtered():
     # an evicted-from-notes seafood allergy still removes violating merchants.
     prof_s = NS(dietary=[], disliked_cuisines=[], allergens=["Tôi dị ứng hải sản"], context_memory={})
     cs = build(prof_s, [], "Gợi ý sushi")
-    assert any(c.scope == "seafood" for c in cs.hard)
+    # 'dị ứng tôm' now maps to the dedicated shrimp scope (2.2 fix), not bucket seafood.
+    assert any(c.scope == "shrimp" for c in cs.hard)
